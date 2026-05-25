@@ -35,6 +35,6 @@ Route::post('/logout', function () {
     return redirect(env('PORTAL_LOGIN_URL', 'https://promise.summitadyawinsa.co.id/login'));
 })->name('logout');
 
-Route::get('/', function () {
+Route::get('/dashboard', function () {
     return view('welcome');
-});
+})->middleware('auth')->name('dashboard');
