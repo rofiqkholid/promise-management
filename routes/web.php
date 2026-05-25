@@ -36,5 +36,6 @@ Route::post('/logout', function () {
 })->name('logout');
 
 Route::get('/dashboard', function () {
-    return view('welcome');
+    return view('dashboard');
 })->middleware('auth')->name('dashboard');
+
