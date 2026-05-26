@@ -28,9 +28,9 @@
     @stack('styles')
 </head>
 <body x-data="{ darkMode: localStorage.getItem('theme') === 'dark', sidebarOpen: false }"
-      x-init="$watch('darkMode', val => { localStorage.setItem('theme', val ? 'dark' : 'light'); if(window.updateChartThemes) window.updateChartThemes(); })"
+      x-init="$watch('darkMode', val => { localStorage.setItem('theme', val ? 'dark' : 'light'); if (val) { document.documentElement.classList.add('dark'); } else { document.documentElement.classList.remove('dark'); } if(window.updateChartThemes) window.updateChartThemes(); })"
       x-bind:class="{ 'dark': darkMode }"
-      class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 min-h-screen font-sans antialiased transition-colors duration-200">
+      class="bg-gray-100 dark:bg-slate-900 text-slate-900 dark:text-slate-100 min-h-screen font-sans antialiased transition-colors duration-200">
     <div class="relative min-h-screen flex overflow-hidden">
         
         <!-- Sidebar -->

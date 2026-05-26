@@ -5,7 +5,7 @@
 
 @section('content')
             <!-- Dashboard Content -->
-            <div class="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900 p-2 pt-17.5 space-y-2 transition-colors duration-200">
+            <div class="flex-1 overflow-y-auto p-2 pt-17.5 space-y-2 transition-colors duration-200">
 
                 <!-- KPI Summary Stats Grid -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
