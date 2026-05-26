@@ -4,7 +4,7 @@
             <i class="fa-solid fa-bars text-lg"></i>
         </button>
         <div class="flex flex-col">
-            <h1 class="titlePromise text-[1.5rem] font-semibold text-gray-700 dark:text-gray-200 leading-none">Promise</h1>
+            <h1 class="titlePromise text-[1.5rem] font-semibold text-gray-700 dark:text-gray-200 leading-none">Promise <span class="text-gray-400 dark:text-gray-600 mx-1 font-light">|</span> <span class="text-[0.7rem] font-normal text-gray-500 dark:text-gray-400 tracking-widest">Management</span></h1>
             <p class="hidden sm:block text-[0.7rem] text-gray-400 dark:text-gray-200 mt-1">Project Management Integrated System Engineering</p>
         </div>
     </div>
