@@ -33,7 +33,7 @@
                 class="absolute right-0 mt-2 w-72 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-slate-100 dark:border-gray-700 p-4 z-50 origin-top-right"
                 style="display: none;">
                 
-                <div class="grid grid-cols-4 gap-1">
+                <div class="grid grid-cols-3 gap-1">
                     <a href="{{ env('APP_DRAWING_URL') }}"
                         class="flex flex-col items-center justify-center p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 group text-center">
                         <div class="w-11 h-11 rounded-full flex items-center justify-center bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 mb-2 group-hover:scale-110 transition-transform shadow-sm">
@@ -64,6 +64,14 @@
                             <i class="fa-solid fa-chart-pie text-lg"></i>
                         </div>
                         <span class="text-[0.65rem] font-semibold text-gray-700 dark:text-gray-300 leading-tight">All Dashboard</span>
+                    </a>
+
+                    <a href="{{ env('APP_MNG_URL') }}"
+                        class="flex flex-col items-center justify-center p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 group text-center">
+                        <div class="w-11 h-11 rounded-full flex items-center justify-center bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 mb-2 group-hover:scale-110 transition-transform shadow-sm">
+                            <i class="fa-solid fa-briefcase text-lg"></i>
+                        </div>
+                        <span class="text-[0.65rem] font-semibold text-gray-700 dark:text-gray-300">Management</span>
                     </a>
                 </div>
             </div>
