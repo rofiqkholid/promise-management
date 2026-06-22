@@ -22,7 +22,9 @@ class User extends Authenticatable
         'name',
         'email',
         'nik',
+        'id_dept',
         'password',
+        'is_active',
     ];
 
     /**
@@ -45,6 +47,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean',
         ];
     }
 
@@ -56,5 +59,13 @@ class User extends Authenticatable
     public function getAuthIdentifierName()
     {
         return 'nik';
+    }
+
+    /**
+     * Get the department that the user belongs to.
+     */
+    public function department()
+    {
+        return $this->belongsTo(Department::class, 'id_dept');
     }
 }

@@ -12,7 +12,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(
+            \App\Repositories\Management\InquiryRepositoryInterface::class,
+            \App\Repositories\Management\InquiryRepository::class
+        );
     }
 
     public function boot(): void

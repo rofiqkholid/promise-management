@@ -1,0 +1,50 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class InquiryProduct extends Model
+{
+    use HasFactory, SoftDeletes;
+
+    protected $table = 'mng_inquiry_products';
+    protected $primaryKey = 'inquiry_product_id';
+
+    protected $fillable = [
+        'inquiry_id',
+        'model_name',
+        'customer_part_no',
+        'customer_part_name',
+        'part_category',
+        'destination',
+        'sop_date',
+        'eol_date',
+        'model_life',
+        'annual_volume',
+        'has_2d_data',
+        'has_3d_data',
+        'has_tech_doc',
+        'remarks',
+    ];
+
+    protected $casts = [
+        'sop_date' => 'date',
+        'eol_date' => 'date',
+        'has_2d_data' => 'boolean',
+        'has_3d_data' => 'boolean',
+        'has_tech_doc' => 'boolean',
+    ];
+
+    public function inquiry()
+    {
+        return $this->belongsTo(ProjectInquiry::class, 'inquiry_id', 'inquiry_id');
+    }
+
+    public function assessment()
+    {
+        return $this->hasOne(PriorityAssessment::class, 'inquiry_product_id', 'inquiry_product_id');
+    }
+}
