@@ -37,7 +37,7 @@
             </tr>
         </thead>
         <tbody>
-            @forelse($workOrders as $index => $wo)
+            @foreach($workOrders as $index => $wo)
                 @php
                     $statusCls = match($wo->status) {
                         'Draft'             => 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-900/30',
@@ -84,15 +84,7 @@
                         </a>
                     </td>
                 </tr>
-            @empty
-                <tr>
-                    <td colspan="9" class="py-16 text-center">
-                        <i class="fa-solid fa-file-signature text-4xl text-slate-300 dark:text-slate-600 block mb-3"></i>
-                        <p class="text-sm font-semibold text-slate-400">No Work Orders created yet.</p>
-                        <p class="text-xs text-slate-400 mt-1">Go to an Inquiry Detail page and select products to generate an SPK.</p>
-                    </td>
-                </tr>
-            @endforelse
+            @endforeach
         </tbody>
     </x-table>
 </div>
@@ -101,7 +93,18 @@
 <script>
     $(function() {
         defaultDataTable('#work-orders-table', {
-            order: [[0, 'asc']]
+            order: [[0, 'asc']],
+            language: {
+                emptyTable: `
+                    <div class="py-16 flex flex-col items-center justify-center text-center w-full">
+                        <div>
+                            <i class="fa-solid fa-file-signature text-3xl text-slate-300 dark:text-slate-600 m-4"></i>
+                        </div>
+                        <h4 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-widest mb-2">No Work Orders Created Yet</h4>
+                        <p class="text-xs text-gray-400 dark:text-gray-500 max-w-xs mx-auto font-medium leading-relaxed">Go to an Inquiry Detail page and select products to generate an SPK.</p>
+                    </div>
+                `
+            }
         });
     });
 </script>

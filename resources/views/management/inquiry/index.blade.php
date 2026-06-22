@@ -244,7 +244,7 @@
             </tr>
         </thead>
         <tbody class="divide-y divide-slate-200 dark:divide-slate-700/80 text-sm">
-            @forelse($inquiries as $inquiry)
+            @foreach($inquiries as $inquiry)
                 <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 text-slate-800 dark:text-slate-100 transition-colors duration-150">
                     <td class="p-3 font-semibold text-blue-600 dark:text-blue-400">
                         <a href="{{ route('management.inquiry.show', $inquiry->inquiry_id) }}" class="hover:underline">
@@ -312,14 +312,7 @@
                         </div>
                     </td>
                 </tr>
-            @empty
-                <tr>
-                    <td colspan="7" class="p-6 text-center text-slate-500 dark:text-slate-400">
-                        <i class="fa-solid fa-inbox text-3xl mb-2 block"></i>
-                        No Project Inquiries found.
-                    </td>
-                </tr>
-            @endforelse
+            @endforeach
         </tbody>
     </x-table>
 
@@ -548,7 +541,18 @@
 <script>
     $(function() {
         defaultDataTable('#inquiries-table', {
-            order: [[0, 'desc']]
+            order: [[0, 'desc']],
+            language: {
+                emptyTable: `
+                    <div class="py-16 flex flex-col items-center justify-center text-center w-full">
+                        <div>
+                            <i class="fa-solid fa-inbox text-3xl text-slate-300 dark:text-slate-600 m-4"></i>
+                        </div>
+                        <h4 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-widest mb-2">No Project Inquiries Found</h4>
+                        <p class="text-xs text-gray-400 dark:text-gray-500 max-w-xs mx-auto font-medium leading-relaxed">It looks like there are no inquiries created yet. Try creating a new project inquiry using the button above.</p>
+                    </div>
+                `
+            }
         });
     });
 </script>
