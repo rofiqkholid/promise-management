@@ -55,25 +55,20 @@ class InquiryProductImport
         $cleanHeaders = [];
         foreach ($headers as $colIdx => $h) {
             $hClean = strtolower(trim($h));
-            // Normalize common headers to match original structure
-            if ($hClean === 'part num' || $hClean === 'part no' || $hClean === 'part_num' || $hClean === 'part_no') {
+            // Replace non-alphanumeric with underscores
+            $hClean = preg_replace('/[^a-z0-9]/', '_', $hClean);
+            $hClean = preg_replace('/_+/', '_', $hClean);
+            $hClean = trim($hClean, '_');
+
+            // Alias mapping
+            if ($hClean === 'part_num' || $hClean === 'part_no') {
                 $hClean = 'part_num';
-            } elseif ($hClean === 'part name' || $hClean === 'part_name') {
-                $hClean = 'part_name';
-            } elseif ($hClean === 'sop date' || $hClean === 'sop') {
+            } elseif ($hClean === 'sop_date' || $hClean === 'sop') {
                 $hClean = 'sop';
-            } elseif ($hClean === 'eol date' || $hClean === 'eol') {
+            } elseif ($hClean === 'eol_date' || $hClean === 'eol') {
                 $hClean = 'eol';
-            } elseif ($hClean === 'annual volume' || $hClean === 'volumey' || $hClean === 'volume_y') {
+            } elseif ($hClean === 'volume_y' || $hClean === 'volumey' || $hClean === 'volume' || $hClean === 'annual_volume') {
                 $hClean = 'volumey';
-            } elseif ($hClean === '2d data' || $hClean === '2d_data') {
-                $hClean = '2d_data';
-            } elseif ($hClean === '3d data' || $hClean === '3d_data') {
-                $hClean = '3d_data';
-            } elseif ($hClean === 'tech doc' || $hClean === 'tech_doc') {
-                $hClean = 'tech_doc';
-            } elseif ($hClean === 'type product') {
-                $hClean = 'type_product';
             }
             $cleanHeaders[$colIdx] = $hClean;
         }
