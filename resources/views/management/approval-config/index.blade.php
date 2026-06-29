@@ -33,6 +33,16 @@
             <i class="fa-solid fa-triangle-exclamation mr-1.5"></i> {{ session('error') }}
         </div>
     @endif
+    @if($errors->any())
+        <div class="p-3 bg-rose-50 dark:bg-rose-950/30 border-l-4 border-rose-500 text-rose-700 dark:text-rose-400 text-xs rounded-r-xs">
+            <div class="font-bold mb-1"><i class="fa-solid fa-triangle-exclamation mr-1.5"></i> Please correct the following errors:</div>
+            <ul class="list-disc pl-4 space-y-1">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
     {{-- How it works banner --}}
     <div class="p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/50 rounded-xs flex gap-3">
