@@ -286,7 +286,7 @@
 
 <script>
 function openEditModal(rule) {
-    document.getElementById('edit-form').action = '/management/approval-config/' + rule.rule_id + '/update';
+    document.getElementById('edit-form').action = '{{ url('management/approval-config') }}/' + rule.rule_id + '/update';
     document.getElementById('edit_approval_level').value = rule.approval_level;
     document.getElementById('edit_position_label').value = rule.position_label;
     document.getElementById('edit_action_label').value = rule.action_label ?? 'Checked';

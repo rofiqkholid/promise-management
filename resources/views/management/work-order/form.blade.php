@@ -1200,7 +1200,7 @@ function openEditProcessModal(proc) {
 }
 
 function openEditApprovalModal(rule) {
-    document.getElementById('edit-approval-form').action = '/management/approval-config/' + rule.id + '/update';
+    document.getElementById('edit-approval-form').action = '{{ url('management/approval-config') }}/' + rule.id + '/update';
     document.getElementById('edit_app_level').value = rule.approval_level;
     document.getElementById('edit_app_position').value = rule.position_label;
     document.getElementById('edit_app_action').value = rule.action_label ?? 'Checked';
