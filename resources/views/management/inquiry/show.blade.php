@@ -961,12 +961,16 @@ document.addEventListener('alpine:init', () => {
             let url    = this.productModalMode === 'add'
                 ? '{{ url('management/inquiry') }}/{{ $inquiry->id }}/product'
                 : '{{ url('management/inquiry-product') }}/' + this.productId;
-            let method = this.productModalMode === 'add' ? 'POST' : 'PATCH';
+            
+            let bodyData = { ...this.productForm };
+            if (this.productModalMode !== 'add') {
+                bodyData._method = 'PATCH';
+            }
 
             fetch(url, {
-                method,
+                method: 'POST',
                 headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN':'{{ csrf_token() }}', 'Accept':'application/json' },
-                body: JSON.stringify(this.productForm)
+                body: JSON.stringify(bodyData)
             })
             .then(r => r.json())
             .then(data => {
@@ -1151,9 +1155,10 @@ document.addEventListener('alpine:init', () => {
         submitEdit() {
             this.loading = true;
             fetch('{{ url('management/inquiry') }}/' + this.editForm.id, {
-                method: 'PATCH',
+                method: 'POST',
                 headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN':'{{ csrf_token() }}', 'Accept':'application/json' },
                 body: JSON.stringify({
+                    _method: 'PATCH',
                     customer_id: this.editForm.customer_id,
                     project_id:  this.editForm.project_id,
                     inquiry_date: this.editForm.inquiry_date,
@@ -1209,11 +1214,12 @@ document.addEventListener('alpine:init', () => {
                 onConfirm: () => {
                     this.loading = true;
                     fetch('{{ url('management/inquiry-product') }}/' + id, {
-                        method: 'DELETE',
+                        method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                             'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        }
+                        },
+                        body: JSON.stringify({ _method: 'DELETE' })
                     })
                     .then(res => res.json())
                     .then(res => {

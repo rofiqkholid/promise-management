@@ -552,13 +552,14 @@
                 }
                 this.loading = true;
                 fetch('{{ url('management/inquiry') }}/' + this.editForm.id, {
-                    method: 'PATCH',
+                    method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
                         'Accept': 'application/json'
                     },
                     body: JSON.stringify({
+                        _method: 'PATCH',
                         customer_id: this.editForm.customer_id,
                         project_id: this.editForm.project_id,
                         project_name: this.editForm.project_name,
