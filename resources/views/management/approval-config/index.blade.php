@@ -121,7 +121,8 @@
                                 @else
                                     <span class="inline-block px-2 py-0.5 text-[10px] font-bold bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-600 rounded-xs">Inactive</span>
                                 @endif
-                                                   <td class="px-4 py-3 text-right">
+                            </td>
+                            <td class="px-4 py-3 text-right">
                                 <div class="flex justify-end gap-1.5 align-middle">
                                     <button onclick="openEditModal({{ $rule }})" title="Edit"
                                             class="w-6 h-6 flex items-center justify-center bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 hover:border-blue-400 hover:text-blue-700 text-slate-600 dark:text-slate-300 transition-colors">
