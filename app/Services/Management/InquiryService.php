@@ -74,13 +74,10 @@ class InquiryService
         return $this->inquiryRepo->update($id, ['status' => 'Closed']);
     }
 
-    /**
-     * Import products from uploaded Excel file.
-     */
     public function importProducts($inquiryId, $file)
     {
-        $import = new InquiryProductImport($inquiryId, $file);
-        Excel::import($import, $file);
+        $import = new InquiryProductImport($inquiryId);
+        $import->import($file->getRealPath());
         
         return [
             'success' => true,

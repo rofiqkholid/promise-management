@@ -2,80 +2,104 @@
 
 namespace App\Imports;
 
-use App\Models\InquiryProduct;
-use Illuminate\Support\Collection;
-use Maatwebsite\Excel\Concerns\ToCollection;
-use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use ZipArchive;
+use SimpleXMLElement;
 use Carbon\Carbon;
+use App\Models\InquiryProduct;
 use Illuminate\Support\Facades\Validator;
 
-class InquiryProductImport implements ToCollection, WithHeadingRow
+class InquiryProductImport
 {
     protected $inquiryId;
     protected $importedCount = 0;
     protected $errors = [];
-    protected $headingRow = 5;
 
-    public function __construct($inquiryId, $file = null)
+    public function __construct($inquiryId)
     {
         $this->inquiryId = $inquiryId;
-        if ($file) {
-            $this->headingRow = $this->detectHeadingRow($file);
-        }
     }
 
-    private function detectHeadingRow($file)
+    /**
+     * Parse the XLSX file using native PHP ZipArchive and XML Parser.
+     */
+    public function import($filePath)
     {
-        try {
-            $path = is_string($file) ? $file : $file->getRealPath();
-            $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($path);
-            $reader->setReadDataOnly(true);
-            $spreadsheet = $reader->load($path);
-            $worksheet = $spreadsheet->getActiveSheet();
-            
-            // Check first 10 rows
-            for ($row = 1; $row <= 10; $row++) {
-                $cols = [];
-                for ($col = 1; $col <= 15; $col++) {
-                    $val = $worksheet->getCell([$col, $row])->getValue();
-                    if ($val !== null && $val !== '') {
-                        $cols[] = strtolower(trim($val));
-                    }
-                }
-                
-                // Check if this row looks like the header row
-                if (in_array('part num', $cols) || in_array('part no', $cols) || in_array('part name', $cols)) {
-                    return $row;
-                }
+        $rows = $this->parseXlsx($filePath);
+        if (empty($rows)) {
+            $this->errors[] = [
+                'row' => 0,
+                'errors' => ['Failed to read Excel file or file is empty.']
+            ];
+            return;
+        }
+
+        // Find header row (1-indexed)
+        $headerRowIndex = 0;
+        $headers = [];
+        foreach ($rows as $index => $row) {
+            $cols = array_map('strtolower', array_map('trim', $row));
+            if (in_array('part num', $cols) || in_array('part no', $cols) || in_array('part name', $cols)) {
+                $headerRowIndex = $index;
+                $headers = $row;
+                break;
             }
-        } catch (\Exception $e) {
-            // Fallback to default
         }
-        return 5;
-    }
 
-    public function headingRow(): int
-    {
-        return $this->headingRow;
-    }
+        if ($headerRowIndex === 0) {
+            // Fallback to row 5 if not found
+            $headerRowIndex = min(5, count($rows));
+            $headers = $rows[$headerRowIndex - 1] ?? [];
+        }
 
-    public function collection(Collection $rows)
-    {
-        $rowIndex = $this->headingRow;
-        
-        foreach ($rows as $row) {
+        // Clean headers: convert to slug-like keys
+        $cleanHeaders = [];
+        foreach ($headers as $colIdx => $h) {
+            $hClean = strtolower(trim($h));
+            // Normalize common headers to match original structure
+            if ($hClean === 'part num' || $hClean === 'part no' || $hClean === 'part_num' || $hClean === 'part_no') {
+                $hClean = 'part_num';
+            } elseif ($hClean === 'part name' || $hClean === 'part_name') {
+                $hClean = 'part_name';
+            } elseif ($hClean === 'sop date' || $hClean === 'sop') {
+                $hClean = 'sop';
+            } elseif ($hClean === 'eol date' || $hClean === 'eol') {
+                $hClean = 'eol';
+            } elseif ($hClean === 'annual volume' || $hClean === 'volumey' || $hClean === 'volume_y') {
+                $hClean = 'volumey';
+            } elseif ($hClean === '2d data' || $hClean === '2d_data') {
+                $hClean = '2d_data';
+            } elseif ($hClean === '3d data' || $hClean === '3d_data') {
+                $hClean = '3d_data';
+            } elseif ($hClean === 'tech doc' || $hClean === 'tech_doc') {
+                $hClean = 'tech_doc';
+            } elseif ($hClean === 'type product') {
+                $hClean = 'type_product';
+            }
+            $cleanHeaders[$colIdx] = $hClean;
+        }
+
+        $rowIndex = $headerRowIndex;
+        for ($i = $headerRowIndex; $i < count($rows); $i++) {
             $rowIndex++;
+            $rawRow = $rows[$i];
             
             // Skip empty rows
-            if (empty(array_filter($row->toArray()))) {
+            if (empty(array_filter($rawRow))) {
                 continue;
             }
 
-            // Normalization
+            // Map row to headers
+            $row = [];
+            foreach ($cleanHeaders as $colIdx => $headerKey) {
+                if ($headerKey !== '') {
+                    $row[$headerKey] = $rawRow[$colIdx] ?? null;
+                }
+            }
+
             $partNo   = $row['part_num'] ?? null;
             $partName = $row['part_name'] ?? null;
             
-            $validator = Validator::make($row->toArray(), [
+            $validator = Validator::make($row, [
                 'part_num'  => 'required',
                 'part_name' => 'required',
             ]);
@@ -122,7 +146,7 @@ class InquiryProductImport implements ToCollection, WithHeadingRow
                 'sop_date' => $sopDate,
                 'eol_date' => $eolDate,
                 'model_life' => !empty($row['model_life']) ? (int) $row['model_life'] : null,
-                'annual_volume' => !empty($row['volumey']) ? (int) $row['volumey'] : (!empty($row['volume_y']) ? (int) $row['volume_y'] : null),
+                'annual_volume' => !empty($row['volumey']) ? (int) $row['volumey'] : null,
                 'has_2d_data' => $has2d,
                 'has_3d_data' => $has3d,
                 'has_tech_doc' => $hasTech,
@@ -137,6 +161,101 @@ class InquiryProductImport implements ToCollection, WithHeadingRow
         }
     }
 
+    private function parseXlsx($filePath)
+    {
+        $zip = new ZipArchive();
+        if ($zip->open($filePath) !== true) {
+            return [];
+        }
+
+        // 1. Get Shared Strings
+        $sharedStrings = [];
+        $stringsEntry = $zip->getFromName('xl/sharedStrings.xml');
+        if ($stringsEntry) {
+            $xml = simplexml_load_string($stringsEntry);
+            foreach ($xml->si as $si) {
+                if (isset($si->t)) {
+                    $sharedStrings[] = (string)$si->t;
+                } elseif (isset($si->r)) {
+                    // Rich text parts
+                    $text = '';
+                    foreach ($si->r as $r) {
+                        $text .= (string)$r->t;
+                    }
+                    $sharedStrings[] = $text;
+                } else {
+                    $sharedStrings[] = '';
+                }
+            }
+        }
+
+        // 2. Parse Sheet1
+        $sheetEntry = $zip->getFromName('xl/worksheets/sheet1.xml');
+        if (!$sheetEntry) {
+            $zip->close();
+            return [];
+        }
+
+        $xml = simplexml_load_string($sheetEntry);
+        $rows = [];
+
+        foreach ($xml->sheetData->row as $rowNode) {
+            $rowIndex = (int)$rowNode['r'] - 1;
+            $rowCells = [];
+
+            foreach ($rowNode->c as $cell) {
+                $ref = (string)$cell['r'];
+                // Get column index from cell reference e.g. "A1" -> 0, "B3" -> 1
+                preg_match('/^[A-Z]+/', $ref, $matches);
+                $colStr = $matches[0];
+                $colIdx = $this->columnLetterToIndex($colStr);
+
+                $val = (string)$cell->v;
+                $type = (string)$cell['t'];
+
+                if ($type === 's' && isset($sharedStrings[(int)$val])) {
+                    $value = $sharedStrings[(int)$val];
+                } else {
+                    $value = $val;
+                }
+
+                $rowCells[$colIdx] = $value;
+            }
+
+            // Fill missing columns in between
+            $maxIdx = count($rowCells) > 0 ? max(array_keys($rowCells)) : 0;
+            for ($c = 0; $c <= $maxIdx; $c++) {
+                if (!isset($rowCells[$c])) {
+                    $rowCells[$c] = '';
+                }
+            }
+            ksort($rowCells);
+            $rows[$rowIndex] = $rowCells;
+        }
+
+        // Fill empty rows in between
+        $maxRowIdx = count($rows) > 0 ? max(array_keys($rows)) : 0;
+        for ($r = 0; $r <= $maxRowIdx; $r++) {
+            if (!isset($rows[$r])) {
+                $rows[$r] = [];
+            }
+        }
+        ksort($rows);
+
+        $zip->close();
+        return $rows;
+    }
+
+    private function columnLetterToIndex($letter)
+    {
+        $len = strlen($letter);
+        $idx = 0;
+        for ($i = 0; $i < $len; $i++) {
+            $idx = $idx * 26 + (ord($letter[$i]) - 64);
+        }
+        return $idx - 1;
+    }
+
     private function autoAssess($product, $row)
     {
         $categoryMappings = [
@@ -147,7 +266,6 @@ class InquiryProductImport implements ToCollection, WithHeadingRow
             'investment_requirement' => $row['investment'] ?? null,
         ];
 
-        // Filter out empty category values
         $activeMappings = array_filter($categoryMappings);
         if (empty($activeMappings)) {
             return;
@@ -160,7 +278,6 @@ class InquiryProductImport implements ToCollection, WithHeadingRow
             $category = \App\Models\ScoreCategory::where('category_code', $categoryCode)->first();
             if (!$category) continue;
 
-            // Look up corresponding option
             $option = \App\Models\ScoreOption::where('category_id', $category->id)
                 ->where(function($query) use ($optionValue) {
                     $query->where('option_name', 'like', $optionValue)
@@ -178,13 +295,11 @@ class InquiryProductImport implements ToCollection, WithHeadingRow
             return;
         }
 
-        // Find ranking mapping
         $ranking = \App\Models\AssessmentRanking::where('min_score', '<=', $totalScore)
             ->where('max_score', '>=', $totalScore)
             ->where('is_active', true)
             ->first();
 
-        // Create the assessment
         $assessment = \App\Models\PriorityAssessment::create([
             'inquiry_product_id' => $product->id,
             'total_score' => $totalScore,
@@ -209,7 +324,10 @@ class InquiryProductImport implements ToCollection, WithHeadingRow
         if (empty($value)) return null;
         if (is_numeric($value)) {
             try {
-                return \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($value)->format('Y-m-d');
+                // Excel base date is 1900-01-01
+                $utc_days = $value - 25569;
+                $utc_value = $utc_days * 86400;
+                return date('Y-m-d', $utc_value);
             } catch (\Exception $e) {
                 return null;
             }

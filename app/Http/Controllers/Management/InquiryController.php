@@ -593,7 +593,11 @@ class InquiryController extends Controller
 
     public function downloadTemplate()
     {
-        return Excel::download(new InquiryTemplateExport, 'inquiry_products_template.xlsx');
+        $filePath = public_path('inquiry_products_template.xlsx');
+        if (file_exists($filePath)) {
+            return response()->download($filePath, 'inquiry_products_template.xlsx');
+        }
+        abort(404, 'Template file not found.');
     }
 
     public function destroy($id)
