@@ -1183,7 +1183,7 @@ function openAddApprovalModal() {
 }
 
 function openEditProcessModal(proc) {
-    document.getElementById('edit-process-form').action = '/management/process-checklist/' + proc.id + '/update';
+    document.getElementById('edit-process-form').action = '{{ url('management/process-checklist') }}/' + proc.id + '/update';
     document.getElementById('edit_proc_code').value = proc.process_code;
     document.getElementById('edit_proc_name').value = proc.process_name;
     document.getElementById('edit_proc_sort').value = proc.sort_order;
