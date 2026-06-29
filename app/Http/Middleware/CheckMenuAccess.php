@@ -36,8 +36,11 @@ class CheckMenuAccess
                     ->orderBy('sort_order', 'asc')
                     ->first();
 
-                if ($firstMenu && Route::has($firstMenu->route)) {
-                    return redirect()->route($firstMenu->route);
+                if ($firstMenu) {
+                    if (Route::has($firstMenu->route)) {
+                        return redirect()->route($firstMenu->route);
+                    }
+                    return redirect($firstMenu->route);
                 }
             }
         }
