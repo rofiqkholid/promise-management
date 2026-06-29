@@ -35,7 +35,7 @@ class ApprovalRuleController extends Controller
             'action_label'       => 'nullable|string|max:50',
             'sort_order'         => 'required|integer',
         ]);
-        $validated['is_active'] = $request->has('is_active');
+        $validated['is_active'] = $request->boolean('is_active');
         $validated['action_label'] = $request->input('action_label') ?: 'Checked';
 
         ApprovalRule::create($validated);
@@ -57,7 +57,7 @@ class ApprovalRuleController extends Controller
             'action_label'       => 'nullable|string|max:50',
             'sort_order'         => 'required|integer',
         ]);
-        $validated['is_active'] = $request->has('is_active');
+        $validated['is_active'] = $request->boolean('is_active');
         $validated['action_label'] = $request->input('action_label') ?: 'Checked';
 
         // Ensure empty array is saved properly if no users are selected
