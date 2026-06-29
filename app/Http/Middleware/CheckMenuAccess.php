@@ -40,7 +40,7 @@ class CheckMenuAccess
                     if (Route::has($firstMenu->route)) {
                         return redirect()->route($firstMenu->route);
                     }
-                    return redirect($firstMenu->route);
+                    return redirect()->to(url($firstMenu->route));
                 }
             }
         }
