@@ -920,7 +920,7 @@ document.addEventListener('alpine:init', () => {
 
         openEditProduct(prodId) {
             this.loading = true;
-            fetch(`/management/inquiry-product/${prodId}`, {
+            fetch('{{ url('management/inquiry-product') }}/' + prodId, {
                 headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
             })
             .then(r => r.json())
@@ -959,8 +959,8 @@ document.addEventListener('alpine:init', () => {
         submitProductForm() {
             this.loading = true;
             let url    = this.productModalMode === 'add'
-                ? `/management/inquiry/{{ $inquiry->id }}/product`
-                : `/management/inquiry-product/${this.productId}`;
+                ? '{{ url('management/inquiry') }}/{{ $inquiry->id }}/product'
+                : '{{ url('management/inquiry-product') }}/' + this.productId;
             let method = this.productModalMode === 'add' ? 'POST' : 'PATCH';
 
             fetch(url, {
@@ -985,7 +985,7 @@ document.addEventListener('alpine:init', () => {
                         if (id) selections.push(parseInt(id));
                     });
                     
-                    fetch(`/management/inquiry-product/${prodId}/assess`, {
+                    fetch('{{ url('management/inquiry-product') }}/' + prodId + '/assess', {
                         method: 'POST',
                         headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN':'{{ csrf_token() }}', 'Accept':'application/json' },
                         body: JSON.stringify({
@@ -1122,7 +1122,7 @@ document.addEventListener('alpine:init', () => {
         saveOrder() {
             this.savingOrder = true;
             const orderedIds = this.products.map(p => p.id);
-            fetch(`/management/inquiry-product/reorder-all`, {
+            fetch('{{ url('management/inquiry-product/reorder-all') }}', {
                 method: 'POST',
                 headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN':'{{ csrf_token() }}', 'Accept':'application/json' },
                 body: JSON.stringify({ ids: orderedIds })
@@ -1150,7 +1150,7 @@ document.addEventListener('alpine:init', () => {
 
         submitEdit() {
             this.loading = true;
-            fetch(`/management/inquiry/${this.editForm.id}`, {
+            fetch('{{ url('management/inquiry') }}/' + this.editForm.id, {
                 method: 'PATCH',
                 headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN':'{{ csrf_token() }}', 'Accept':'application/json' },
                 body: JSON.stringify({
@@ -1208,7 +1208,7 @@ document.addEventListener('alpine:init', () => {
                 cancelButtonText: 'No',
                 onConfirm: () => {
                     this.loading = true;
-                    fetch(`/management/inquiry-product/${id}`, {
+                    fetch('{{ url('management/inquiry-product') }}/' + id, {
                         method: 'DELETE',
                         headers: {
                             'Content-Type': 'application/json',

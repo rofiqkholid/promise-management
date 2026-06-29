@@ -467,7 +467,7 @@ document.addEventListener('alpine:init', () => {
 
         submitEventForm() {
             let url = this.isEditMode 
-                ? `/management/calendar/events/${this.form.id}`
+                ? '{{ url('management/calendar/events') }}/' + this.form.id
                 : '{{ route("management.calendar.store") }}';
             let method = this.isEditMode ? 'PATCH' : 'POST';
 
@@ -496,7 +496,7 @@ document.addEventListener('alpine:init', () => {
         deleteEvent() {
             if (!confirm('Are you sure you want to delete this event?')) return;
 
-            fetch(`/management/calendar/events/${this.form.id}`, {
+            fetch('{{ url('management/calendar/events') }}/' + this.form.id, {
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': '{{ csrf_token() }}',

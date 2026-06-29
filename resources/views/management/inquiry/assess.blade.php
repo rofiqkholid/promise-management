@@ -53,7 +53,7 @@
              }
 
              this.loading = true;
-             fetch(`/management/inquiry-product/{{ $product->id }}/assess`, {
+             fetch('{{ url('management/inquiry-product') }}/{{ $product->id }}/assess', {
                  method: 'POST',
                  headers: {
                      'Content-Type': 'application/json',
