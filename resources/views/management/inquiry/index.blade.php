@@ -446,7 +446,7 @@
                     return;
                 }
                 this.loading = true;
-                fetch('/management/inquiry', {
+                fetch('{{ route('management.inquiry.store') }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -492,7 +492,7 @@
                 const formData = new FormData();
                 formData.append('excel_file', fileInput.files[0]);
 
-                fetch(`/management/inquiry/${this.inquiryId}/parse-excel`, {
+                fetch('{{ url('management/inquiry') }}/' + this.inquiryId + '/parse-excel', {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -521,7 +521,7 @@
 
             finalizeInquiry() {
                 this.loading = true;
-                fetch(`/management/inquiry/${this.inquiryId}/finalize`, {
+                fetch('{{ url('management/inquiry') }}/' + this.inquiryId + '/finalize', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -551,7 +551,7 @@
                     return;
                 }
                 this.loading = true;
-                fetch(`/management/inquiry/${this.editForm.id}`, {
+                fetch('{{ url('management/inquiry') }}/' + this.editForm.id, {
                     method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json',
