@@ -1151,6 +1151,10 @@
                 <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Sort Order</label>
                 <input type="number" name="sort_order" value="0" min="0" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
             </div>
+            <div class="flex items-center gap-2 py-1">
+                <input type="checkbox" name="is_active" id="add_app_active" value="1" checked class="rounded-xs text-blue-600">
+                <label for="add_app_active" class="font-semibold text-slate-700 dark:text-slate-350">Active status</label>
+            </div>
             <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-750">
                 <button type="button" onclick="document.getElementById('modal-add-approval').classList.add('hidden')" class="px-3.5 py-2 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xs font-bold text-xs transition-colors cursor-pointer">Cancel</button>
                 <button type="submit" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xs text-xs transition-colors cursor-pointer">Save Rule</button>
