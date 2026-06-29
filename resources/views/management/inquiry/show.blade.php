@@ -1212,7 +1212,7 @@ document.addEventListener('alpine:init', () => {
                         method: 'DELETE',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
                         }
                     })
                     .then(res => res.json())
