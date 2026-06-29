@@ -558,9 +558,7 @@ class InquiryController extends Controller
             $product = \App\Models\InquiryProduct::findOrFail($id);
             
             // Check if product is used in SPK (Work Order)
-            $spkCount = \Illuminate\Support\Facades\DB::table('work_order_products')
-                ->where('inquiry_product_id', $id)
-                ->count();
+            $spkCount = \App\Models\WorkOrderProduct::where('inquiry_product_id', $id)->count();
             if ($spkCount > 0) {
                 return response()->json([
                     'success' => false,
