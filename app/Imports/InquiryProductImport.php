@@ -73,9 +73,8 @@ class InquiryProductImport
             $cleanHeaders[$colIdx] = $hClean;
         }
 
-        $rowIndex = $headerRowIndex;
-        for ($i = $headerRowIndex; $i < count($rows); $i++) {
-            $rowIndex++;
+        for ($i = $headerRowIndex + 1; $i < count($rows); $i++) {
+            $rowIndex = $i + 1;
             $rawRow = $rows[$i];
             
             // Skip empty rows
