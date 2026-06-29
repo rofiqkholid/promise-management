@@ -9,16 +9,12 @@ class WorkOrderProcess extends Model
 {
     use HasFactory;
 
-    protected $table = 'mng_work_order_processes';
-    protected $primaryKey = 'process_id';
-
-    const CREATED_AT = 'created_at';
-    const UPDATED_AT = null;
+    protected $table = 'mng_wo_processes';
 
     protected $fillable = [
         'process_code',
         'process_name',
-        'owner_department_id',
+        'default_assigned_departments',
         'sort_order',
         'is_active',
     ];
@@ -27,8 +23,12 @@ class WorkOrderProcess extends Model
         'is_active' => 'boolean',
     ];
 
-    public function ownerDepartment()
+    public function getDefaultAssignedDepartments()
     {
-        return $this->belongsTo(Department::class, 'owner_department_id', 'id');
+        $ids = json_decode($this->default_assigned_departments ?? '[]', true);
+        if (empty($ids)) {
+            return collect();
+        }
+        return Department::whereIn('id', $ids)->get();
     }
 }

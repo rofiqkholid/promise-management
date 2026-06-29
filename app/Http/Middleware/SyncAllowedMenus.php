@@ -61,18 +61,31 @@ class SyncAllowedMenus
                 ->pluck('route')
                 ->toArray();
 
-            // Get matching ids from local mng_menus
-            $allowedMngMenuIds = DB::table('mng_menus')
-                ->whereIn('route', $allowedRoutes)
-                ->pluck('id')
+            // Include parent route names if they exist to be safe
+            $parentRoutes = [];
+            $parentIds = DB::table('menus')
+                ->whereIn('id', $allowedGlobalMenuIds)
+                ->where('scope_id', 'app_management')
+                ->whereNotNull('parent_id')
+                ->pluck('parent_id')
                 ->toArray();
 
-            // Also always allow dashboard (id = 1) if they have access to management
-            if (!empty($allowedMngMenuIds) && !in_array(1, $allowedMngMenuIds)) {
-                $allowedMngMenuIds[] = 1;
+            if (!empty($parentIds)) {
+                $parentRoutes = DB::table('menus')
+                    ->whereIn('id', $parentIds)
+                    ->where('scope_id', 'app_management')
+                    ->pluck('route')
+                    ->toArray();
             }
 
-            session(['allowed_menus' => $allowedMngMenuIds]);
+            $allowedRoutes = array_unique(array_merge($allowedRoutes, $parentRoutes));
+
+            // Also always allow dashboard route
+            if (!in_array('dashboard', $allowedRoutes)) {
+                $allowedRoutes[] = 'dashboard';
+            }
+
+            session(['allowed_menus' => $allowedRoutes]);
         }
 
         return $next($request);

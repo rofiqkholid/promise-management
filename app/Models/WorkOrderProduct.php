@@ -10,8 +10,7 @@ class WorkOrderProduct extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $table = 'mng_work_order_products';
-    protected $primaryKey = 'work_order_product_id';
+    protected $table = 'mng_wo_products';
 
     protected $fillable = [
         'work_order_id',
@@ -20,6 +19,9 @@ class WorkOrderProduct extends Model
         'model_name',
         'customer_part_no',
         'customer_part_name',
+        'eo',
+        'class_id',
+        'uom',
         'destination',
         'sop_date',
         'eol_date',
@@ -28,6 +30,7 @@ class WorkOrderProduct extends Model
         'first_sample_date',
         'due_date_approval',
         'due_date_closed',
+        'variant',
         'remarks',
     ];
 
@@ -41,16 +44,11 @@ class WorkOrderProduct extends Model
 
     public function workOrder()
     {
-        return $this->belongsTo(WorkOrder::class, 'work_order_id', 'work_order_id');
+        return $this->belongsTo(WorkOrder::class, 'work_order_id', 'id');
     }
 
     public function inquiryProduct()
     {
-        return $this->belongsTo(InquiryProduct::class, 'inquiry_product_id', 'inquiry_product_id');
-    }
-
-    public function parts()
-    {
-        return $this->hasMany(WorkOrderPart::class, 'work_order_product_id', 'work_order_product_id');
+        return $this->belongsTo(InquiryProduct::class, 'inquiry_product_id', 'id');
     }
 }

@@ -9,8 +9,7 @@ class PriorityAssessmentDetail extends Model
 {
     use HasFactory;
 
-    protected $table = 'mng_priority_assessment_details';
-    protected $primaryKey = 'detail_id';
+    protected $table = 'mng_inq_assessment_details';
     public $timestamps = false;
 
     protected $fillable = [
@@ -23,16 +22,16 @@ class PriorityAssessmentDetail extends Model
 
     public function assessment()
     {
-        return $this->belongsTo(PriorityAssessment::class, 'assessment_id', 'assessment_id');
+        return $this->belongsTo(PriorityAssessment::class, 'assessment_id', 'id');
     }
 
     public function category()
     {
-        return $this->belongsTo(ScoreCategory::class, 'category_id', 'category_id');
+        return $this->belongsTo(ScoreCategory::class, 'category_id', 'id');
     }
 
     public function option()
     {
-        return $this->belongsTo(ScoreOption::class, 'option_id', 'option_id');
+        return $this->belongsTo(ScoreOption::class, 'option_id', 'id');
     }
 }

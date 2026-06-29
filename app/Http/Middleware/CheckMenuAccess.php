@@ -15,20 +15,21 @@ class CheckMenuAccess
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next, $menuId): Response
+    public function handle(Request $request, Closure $next, $menuRoute): Response
     {
         $user = $request->user();
         if ($user) {
-            $allowedMenuIds = session('allowed_menus', []);
+            $allowedRoutes = session('allowed_menus', []);
 
-            if (in_array($menuId, $allowedMenuIds)) {
+            if (in_array($menuRoute, $allowedRoutes)) {
                 return $next($request);
             }
 
             // If not directly allowed, let's try to redirect them to their first allowed menu
-            if (!empty($allowedMenuIds)) {
-                $firstMenu = DB::table('mng_menus')
-                    ->whereIn('id', $allowedMenuIds)
+            if (!empty($allowedRoutes)) {
+                $firstMenu = DB::table('menus')
+                    ->whereIn('route', $allowedRoutes)
+                    ->where('scope_id', 'app_management')
                     ->where('is_active', 1)
                     ->whereNotNull('route')
                     ->where('route', '!=', '')

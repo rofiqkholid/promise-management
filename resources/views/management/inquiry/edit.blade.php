@@ -7,7 +7,7 @@
     
     <!-- Breadcrumb & Back -->
     <div>
-        <a href="{{ route('management.inquiry.show', $inquiry->inquiry_id) }}" class="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline mb-2">
+        <a href="{{ route('management.inquiry.show', $inquiry->id) }}" class="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline mb-2">
             <i class="fa-solid fa-arrow-left"></i> Back to Detail
         </a>
         <h1 class="text-2xl font-bold tracking-tight text-slate-800 dark:text-white">Edit Inquiry: {{ $inquiry->inquiry_no }}</h1>
@@ -23,7 +23,7 @@
 
     <!-- Form Card -->
     <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 p-6 transition-colors duration-200 max-w-2xl">
-        <form method="POST" action="{{ route('management.inquiry.update', $inquiry->inquiry_id) }}" class="space-y-4">
+        <form method="POST" action="{{ route('management.inquiry.update', $inquiry->id) }}" class="space-y-4">
             @csrf
             @method('PUT')
             
@@ -63,7 +63,7 @@
             </div>
 
             <div class="pt-2 flex justify-end gap-3 border-t border-slate-200 dark:border-slate-700">
-                <a href="{{ route('management.inquiry.show', $inquiry->inquiry_id) }}" 
+                <a href="{{ route('management.inquiry.show', $inquiry->id) }}" 
                    class="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-medium py-2 px-4 rounded-none text-sm transition-colors">
                     Cancel
                 </a>

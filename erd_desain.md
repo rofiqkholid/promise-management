@@ -6,7 +6,7 @@ Table users {
   id_dept int [ref: > departments.id]
   password varchar
   remember_token varchar
-  email_verification_at datetime
+  email_verified_at datetime
   created_at datetime
   updated_at datetime
   is_active boolean
@@ -20,11 +20,12 @@ Table departments {
   updated_at datetime
 }
 
-Table project_inquiries {
-  inquiry_id int [pk, increment]
+Table mng_inquiries {
+  id int [pk, increment]
   inquiry_no varchar [unique]
-  customer_name varchar
+  customer_id int [null]
   project_name varchar
+  model_id int [null]
   inquiry_date date
   status varchar
   remarks text
@@ -33,10 +34,10 @@ Table project_inquiries {
   deleted_at datetime
 }
 
-Table inquiry_products {
-  inquiry_product_id int [pk, increment]
-  inquiry_id int [ref: > project_inquiries.inquiry_id]
-  model_name varchar
+Table mng_inquiry_products {
+  id int [pk, increment]
+  inquiry_id int [ref: > mng_inquiries.id]
+  variant varchar
   customer_part_no varchar
   customer_part_name varchar
   part_category varchar
@@ -45,6 +46,7 @@ Table inquiry_products {
   eol_date date
   model_life int
   annual_volume int
+  sort_order int
   has_2d_data boolean
   has_3d_data boolean
   has_tech_doc boolean
@@ -54,27 +56,29 @@ Table inquiry_products {
   deleted_at datetime
 }
 
-Table score_categories {
-  category_id int [pk, increment]
+Table mng_inq_score_categories {
+  id int [pk, increment]
   category_code varchar [unique]
   category_name varchar
   sort_order int
   is_active boolean
   created_at datetime
+  updated_at datetime
 }
 
-Table score_options {
-  option_id int [pk, increment]
-  category_id int [ref: > score_categories.category_id]
+Table mng_inq_score_options {
+  id int [pk, increment]
+  category_id int [ref: > mng_inq_score_categories.id]
   option_name varchar
   score_value int
   description text
   sort_order int
   created_at datetime
+  updated_at datetime
 }
 
-Table assessment_rankings {
-  ranking_id int [pk, increment]
+Table mng_inq_rankings {
+  id int [pk, increment]
   rank_code varchar
   min_score int
   max_score int
@@ -83,85 +87,88 @@ Table assessment_rankings {
   sort_order int
   is_active boolean
   created_at datetime
+  updated_at datetime
 }
 
-Table priority_assessments {
-  assessment_id int [pk, increment]
-  inquiry_product_id int [ref: > inquiry_products.inquiry_product_id]
+Table mng_inq_assessments {
+  id int [pk, increment]
+  inquiry_product_id int [ref: > mng_inquiry_products.id]
   total_score int
-  ranking_id int [ref: > assessment_rankings.ranking_id]
+  ranking_id int [ref: > mng_inq_rankings.id]
   action varchar
-  action_override varchar
   remarks text
   assessed_by varchar
   assessed_at datetime
   created_at datetime
+  updated_at datetime
   deleted_at datetime
 }
 
-Table priority_assessment_details {
-  detail_id int [pk, increment]
-  assessment_id int [ref: > priority_assessments.assessment_id]
-  category_id int [ref: > score_categories.category_id]
-  option_id int [ref: > score_options.option_id]
+Table mng_inq_assessment_details {
+  id int [pk, increment]
+  assessment_id int [ref: > mng_inq_assessments.id]
+  category_id int [ref: > mng_inq_score_categories.id]
+  option_id int [ref: > mng_inq_score_options.id]
   score_snapshot int
   remarks text
 }
 
-Table work_orders {
-  work_order_id int [pk, increment]
-  inquiry_id int [ref: > project_inquiries.inquiry_id]
-  work_order_no varchar
+Table mng_work_orders {
+  id int [pk, increment]
+  inquiry_id int [ref: > mng_inquiries.id]
+  wo_number varchar
   revision_no int [default: 0]
-  revised_from_id int [ref: > work_orders.work_order_id, null]
+  revised_from_id int [ref: > mng_work_orders.id, null]
   is_latest boolean [default: true]
+  header_id int [ref: > mng_wo_doc_format.id] // Link to QEMS Document Header template (wo_doc_format)
   department_id int [ref: > departments.id] // Owner Department / Tujuan Utama SPK
   priority varchar
   subject varchar
+  request_types text // JSON Array of request types
   status varchar
   remarks text
   created_by varchar
+  released_at datetime
   created_at datetime
   updated_at datetime
   deleted_at datetime
 
   indexes {
-    (work_order_no, revision_no) [unique]
+    (wo_number, revision_no) [unique]
   }
 }
 
-Table work_order_departments {
-  work_order_department_id int [pk, increment]
-  work_order_id int [ref: > work_orders.work_order_id]
-  department_id int [ref: > departments.id] // Support Department
-  remarks text
-}
-
-Table work_order_processes {
-  process_id int [pk, increment]
+Table mng_wo_processes {
+  id int [pk, increment]
   process_code varchar [unique]
   process_name varchar
-  owner_department_id int [ref: > departments.id]
+  default_assigned_departments text // JSON Array of Department IDs
   sort_order int
   is_active boolean
   created_at datetime
+  updated_at datetime
 }
 
-Table work_order_process_details {
-  process_detail_id int [pk, increment]
-  work_order_id int [ref: > work_orders.work_order_id]
-  process_id int [ref: > work_order_processes.process_id]
+Table mng_wo_process_details {
+  id int [pk, increment]
+  work_order_id int [ref: > mng_work_orders.id]
+  process_id int [ref: > mng_wo_processes.id]
+  assigned_departments text // JSON Array of Department IDs
   remarks text
 }
 
-Table work_order_products {
-  work_order_product_id int [pk, increment]
-  work_order_id int [ref: > work_orders.work_order_id]
-  inquiry_product_id int [ref: > inquiry_products.inquiry_product_id]
+Table mng_wo_products {
+  id int [pk, increment]
+  work_order_id int [ref: > mng_work_orders.id]
+  inquiry_product_id int [ref: > mng_inquiry_products.id]
   customer_name varchar
   model_name varchar
+  variant varchar
   customer_part_no varchar
   customer_part_name varchar
+  eo varchar
+  class_id varchar
+  uom varchar
   destination varchar
   sop_date date
   eol_date date
@@ -172,34 +179,24 @@ Table work_order_products {
   due_date_closed date
   remarks text
   created_at datetime
+  updated_at datetime
   deleted_at datetime
 }
 
-Table work_order_parts {
-  work_order_part_id int [pk, increment]
-  work_order_product_id int [ref: > work_order_products.work_order_product_id]
-  eo varchar
-  part_no varchar
-  part_name varchar
-  class_id varchar
-  uom varchar
-  remarks text
-  created_at datetime
-  deleted_at datetime
-}
-
-Table work_order_attachments {
-  attachment_id int [pk, increment]
-  work_order_id int [ref: > work_orders.work_order_id]
+Table mng_wo_attachments {
+  id int [pk, increment]
+  work_order_id int [ref: > mng_work_orders.id]
   file_name varchar
   file_path varchar
   uploaded_by varchar
   uploaded_at datetime
+  created_at datetime
+  updated_at datetime
 }
 
-Table work_order_approvals {
-  approval_id int [pk, increment]
-  work_order_id int [ref: > work_orders.work_order_id]
+Table mng_wo_approvals {
+  id int [pk, increment]
+  work_order_id int [ref: > mng_work_orders.id]
   approval_level int
   department_id int [ref: > departments.id]
   approver_name varchar
@@ -207,10 +204,48 @@ Table work_order_approvals {
   status varchar
   approved_at datetime
   remarks text
+  created_at datetime
+  updated_at datetime
 }
 
-Table audit_logs {
-  audit_log_id int [pk, increment]
+Table mng_wo_doc_format {
+  id int [pk, increment]
+  document_no varchar
+  doc_department varchar
+  doc_publish_date date
+  page_hal varchar
+  is_current boolean [default: true]
+  created_at datetime
+  updated_at datetime
+}
+
+Table mng_approval_rules {
+  id int [pk, increment]
+  document_type varchar
+  approval_level int
+  department_id int [ref: > departments.id]
+  approver_user_id int [ref: > users.id, null]
+  position_label varchar
+  is_active boolean
+  sort_order int
+  created_at datetime
+  updated_at datetime
+}
+
+Table mng_calendar_events {
+  id int [pk, increment]
+  title varchar
+  start_date date
+  end_date date
+  is_holiday boolean
+  description text
+  color varchar
+  created_at datetime
+  updated_at datetime
+}
+
+Table mng_audit_logs {
+  id int [pk, increment]
   user_id int [ref: > users.id]
   module_name varchar
   action varchar
@@ -219,4 +254,5 @@ Table audit_logs {
   new_values text
   ip_address varchar
   created_at datetime
+  updated_at datetime
 }

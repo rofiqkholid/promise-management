@@ -24,33 +24,34 @@ class AppServiceProvider extends ServiceProvider
             static $menus = null;
 
             if ($menus === null) {
-                $allowedMenuIds = session('allowed_menus', []);
-                
-                $allMenusQuery = \Illuminate\Support\Facades\DB::table('mng_menus')
+                $allowedRoutes = session('allowed_menus', []);
+
+                $allMenusQuery = \Illuminate\Support\Facades\DB::table('menus')
+                    ->where('scope_id', 'app_management')
                     ->where('is_active', 1)
                     ->where('is_visible', 1);
-                    
-                if (!empty($allowedMenuIds)) {
-                    $allMenusQuery->whereIn('id', $allowedMenuIds);
+
+                if (!empty($allowedRoutes)) {
+                    $allMenusQuery->whereIn('route', $allowedRoutes);
                 }
-                
+
                 $allMenus = $allMenusQuery->orderBy('sort_order', 'asc')->get();
-                
-                // Group menus by level/hierarchy
+
+                // Group menus by level/hierarchy using parent_id from global menus table
                 $menus = [];
                 $byParent = [];
-                
+
                 foreach ($allMenus as $menu) {
                     $menu->children = collect();
-                    
-                    // Top level menus
-                    if ($menu->level == 1 || is_null($menu->parent_id) || $menu->parent_id == $menu->id) {
+
+                    // Top level menus: no parent, or parent_id equals own id
+                    if (is_null($menu->parent_id) || $menu->parent_id == $menu->id) {
                         $menus[] = $menu;
                     } else {
                         $byParent[$menu->parent_id][] = $menu;
                     }
                 }
-                
+
                 // Assign children to their respective parent menus
                 foreach ($menus as $rootMenu) {
                     if (isset($byParent[$rootMenu->id])) {

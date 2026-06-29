@@ -8,10 +8,10 @@ use App\Models\InquiryProduct;
 use App\Models\Department;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderProduct;
-use App\Models\WorkOrderPart;
 use App\Models\WorkOrderProcess;
 use App\Models\WorkOrderApproval;
 use App\Models\ApprovalRule;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -20,7 +20,12 @@ class WorkOrderController extends Controller
 {
     public function index()
     {
-        $workOrders = WorkOrder::with(['inquiry', 'ownerDepartment'])->orderBy('created_at', 'desc')->get();
+        $workOrders = WorkOrder::with(['inquiry', 'ownerDepartment'])
+            ->where(function($q) {
+                $q->where('is_latest', true)->orWhereNull('is_latest');
+            })
+            ->orderBy('created_at', 'desc')
+            ->get();
         return view('management.work-order.index', compact('workOrders'));
     }
 
@@ -37,7 +42,7 @@ class WorkOrderController extends Controller
         $inquiry = ProjectInquiry::with(['products' => function($q) use ($productsParam) {
             if ($productsParam) {
                 $ids = array_filter(explode(',', $productsParam));
-                $q->whereIn('inquiry_product_id', $ids);
+                $q->whereIn('id', $ids);
             }
         }, 'products.assessment.ranking'])->findOrFail($inquiryId);
 
@@ -49,9 +54,11 @@ class WorkOrderController extends Controller
         $departments = Department::orderBy('name', 'asc')->get();
         $processes = WorkOrderProcess::orderBy('sort_order', 'asc')->get();
         $approvalRules = ApprovalRule::activeFor('SPK')->get();
+        $users = User::orderBy('name', 'asc')->get();
 
-        // Generate dynamic SPK No. (matching No. 002/MKT-SPK/SAI/V/26 format)
-        $count = WorkOrder::count() + 1;
+        // Reset counter per year based on created_at year
+        $currentYear = now()->year;
+        $count = WorkOrder::whereYear('created_at', $currentYear)->count() + 1;
         $romans = [
             1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV', 5 => 'V', 6 => 'VI',
             7 => 'VII', 8 => 'VIII', 9 => 'IX', 10 => 'X', 11 => 'XI', 12 => 'XII'
@@ -59,14 +66,17 @@ class WorkOrderController extends Controller
         $romanMonth = $romans[now()->month] ?? 'I';
         $defaultSpkNo = sprintf("%03d/MKT-SPK/SAI/%s/%02d", $count, $romanMonth, now()->year % 100);
 
-        return view('management.work-order.form', compact('inquiry', 'departments', 'processes', 'defaultSpkNo', 'approvalRules'));
+        // Fetch master QEMS header
+        $woHeader = DB::table('mng_wo_doc_format')->where('is_current', true)->first() ?: DB::table('mng_wo_doc_format')->first();
+
+        return view('management.work-order.form', compact('inquiry', 'departments', 'processes', 'defaultSpkNo', 'approvalRules', 'woHeader', 'users'));
     }
 
     public function store(Request $request)
     {
         Log::info('WorkOrderController@store request inputs', $request->all());
         $validated = $request->validate([
-            'inquiry_id' => 'required|exists:mng_project_inquiries,inquiry_id',
+            'inquiry_id' => 'required|exists:mng_inquiries,id',
             'work_order_no' => 'required|string|max:100',
             'subject' => 'required|string|max:255',
             'department_id' => 'required|exists:departments,id',
@@ -75,40 +85,40 @@ class WorkOrderController extends Controller
             'support_departments' => 'nullable|array',
             'support_departments.*' => 'exists:departments,id',
             'processes' => 'nullable|array',
-            'processes.*' => 'exists:mng_work_order_processes,process_id',
+            'processes.*' => 'exists:mng_wo_processes,id',
             'remarks' => 'nullable|string',
             'products' => 'required|array',
-            'products.*.inquiry_product_id' => 'required|exists:mng_inquiry_products,inquiry_product_id',
-            'products.*.first_sample_date' => 'nullable|date',
-            'products.*.due_date_approval' => 'nullable|date',
-            'products.*.due_date_closed' => 'nullable|date',
+            'products.*.inquiry_product_id' => 'required|exists:mng_inquiry_products,id',
+            'products.*.eo' => 'nullable|string|max:100',
+            'products.*.class_id' => 'nullable|string|max:100',
+            'products.*.uom' => 'nullable|string|max:50',
             'products.*.remarks' => 'nullable|string',
-            'parts' => 'nullable|array',
-            'document_no' => 'nullable|string|max:100',
-            'doc_department' => 'nullable|string|max:100',
-            'publish_date' => 'nullable|date',
-            'page_hal' => 'nullable|string|max:50',
+            'header_id' => 'required|exists:mng_wo_doc_format,id',
+            'first_sample_date' => 'nullable|date',
+            'due_date_approval' => 'nullable|date',
+            'due_date_closed' => 'nullable|date',
+            'process_depts' => 'nullable|array',
+            'selected_approval_rules' => 'nullable|array',
+            'selected_approval_rules.*' => 'exists:mng_approval_rules,id',
         ]);
 
         DB::beginTransaction();
         try {
-            $spkParts = explode('/', $validated['work_order_no']);
-            $revNo = isset($spkParts[0]) ? (int)$spkParts[0] : 0;
-
-            $exists = WorkOrder::where('work_order_no', $validated['work_order_no'])
-                ->where('revision_no', $revNo)
+            $exists = WorkOrder::where('wo_number', $validated['work_order_no'])
+                ->where('revision_no', 0)
                 ->exists();
             if ($exists) {
                 return redirect()->back()
                     ->withInput()
-                    ->with('error', 'Work Order number already exists for this revision.');
+                    ->with('error', 'Work Order number already exists.');
             }
 
             $workOrder = WorkOrder::create([
                 'inquiry_id' => $validated['inquiry_id'],
-                'work_order_no' => $validated['work_order_no'],
-                'revision_no' => $revNo,
+                'wo_number' => $validated['work_order_no'],
+                'revision_no' => 0,
                 'is_latest' => true,
+                'header_id' => $validated['header_id'],
                 'department_id' => $validated['department_id'],
                 'priority' => $validated['priority'],
                 'subject' => $validated['subject'],
@@ -116,21 +126,20 @@ class WorkOrderController extends Controller
                 'status' => 'Draft',
                 'remarks' => $validated['remarks'],
                 'created_by' => auth()->user() ? auth()->user()->name : 'System',
-                'document_no' => $validated['document_no'] ?? 'FO-13-02',
-                'doc_department' => $validated['doc_department'] ?? 'Sales',
-                'publish_date' => $validated['publish_date'] ?? now()->toDateString(),
-                'page_hal' => $validated['page_hal'] ?? '1',
+                'first_sample_date' => $validated['first_sample_date'] ?? null,
+                'due_date_approval' => $validated['due_date_approval'] ?? null,
+                'due_date_closed' => $validated['due_date_closed'] ?? null,
+                'selected_approval_rule_ids' => $validated['selected_approval_rules'] ?? [],
             ]);
 
-            if (!empty($validated['support_departments'])) {
-                foreach ($validated['support_departments'] as $deptId) {
-                    $workOrder->supportDepartments()->attach($deptId);
-                }
-            }
 
+            $processDepts = $request->input('process_depts', []);
             if (!empty($validated['processes'])) {
                 foreach ($validated['processes'] as $procId) {
-                    $workOrder->processes()->attach($procId);
+                    $depts = isset($processDepts[$procId]) ? array_map('intval', $processDepts[$procId]) : [];
+                    $workOrder->processes()->attach($procId, [
+                        'assigned_departments' => json_encode($depts)
+                    ]);
                 }
             }
 
@@ -139,11 +148,11 @@ class WorkOrderController extends Controller
             foreach ($validated['products'] as $prodInput) {
                 $inqProd = InquiryProduct::findOrFail($prodInput['inquiry_product_id']);
 
-                $woProduct = WorkOrderProduct::create([
-                    'work_order_id' => $workOrder->work_order_id,
-                    'inquiry_product_id' => $inqProd->inquiry_product_id,
-                    'customer_name' => $inquiry->customer_name,
-                    'model_name' => $inqProd->model_name,
+                WorkOrderProduct::create([
+                    'work_order_id' => $workOrder->id,
+                    'inquiry_product_id' => $inqProd->id,
+                    'customer_name' => $inquiry->customer->name ?? '',
+                    'model_name' => $inquiry->model->name ?? '',
                     'customer_part_no' => $inqProd->customer_part_no,
                     'customer_part_name' => $inqProd->customer_part_name,
                     'destination' => $inqProd->destination,
@@ -151,34 +160,20 @@ class WorkOrderController extends Controller
                     'eol_date' => $inqProd->eol_date,
                     'model_life' => $inqProd->model_life,
                     'annual_volume' => $inqProd->annual_volume,
-                    'first_sample_date' => $prodInput['first_sample_date'],
-                    'due_date_approval' => $prodInput['due_date_approval'],
-                    'due_date_closed' => $prodInput['due_date_closed'],
+                    'first_sample_date' => $validated['first_sample_date'],
+                    'due_date_approval' => $validated['due_date_approval'],
+                    'due_date_closed' => $validated['due_date_closed'],
+                    'variant' => $inqProd->variant,
+                    'eo' => $prodInput['eo'] ?? '-',
+                    'class_id' => $prodInput['class_id'] ?? 'RM',
+                    'uom' => $prodInput['uom'] ?? 'Pcs',
                     'remarks' => $prodInput['remarks'],
                 ]);
-
-                $prodIdKey = $inqProd->inquiry_product_id;
-                if (!empty($validated['parts'][$prodIdKey])) {
-                    foreach ($validated['parts'][$prodIdKey] as $partInput) {
-                        if (empty($partInput['part_no']) || empty($partInput['part_name'])) {
-                            continue;
-                        }
-                        WorkOrderPart::create([
-                            'work_order_product_id' => $woProduct->work_order_product_id,
-                            'eo' => $partInput['eo'] ?: '-',
-                            'part_no' => $partInput['part_no'],
-                            'part_name' => $partInput['part_name'],
-                            'class_id' => $partInput['class_id'] ?: 'RM',
-                            'uom' => $partInput['uom'] ?: 'Pcs',
-                            'remarks' => $partInput['remarks'],
-                        ]);
-                    }
-                }
             }
 
             // Create initial approval record
-            \App\Models\WorkOrderApproval::create([
-                'work_order_id' => $workOrder->work_order_id,
+            WorkOrderApproval::create([
+                'work_order_id' => $workOrder->id,
                 'approval_level' => 1,
                 'department_id' => $validated['department_id'],
                 'status' => 'Pending',
@@ -214,29 +209,28 @@ class WorkOrderController extends Controller
             'support_departments' => 'nullable|array',
             'support_departments.*' => 'exists:departments,id',
             'processes' => 'nullable|array',
-            'processes.*' => 'exists:mng_work_order_processes,process_id',
+            'processes.*' => 'exists:mng_wo_processes,id',
             'remarks' => 'nullable|string',
             'products' => 'required|array',
-            'products.*.work_order_product_id' => 'required|exists:mng_work_order_products,work_order_product_id',
-            'products.*.first_sample_date' => 'nullable|date',
-            'products.*.due_date_approval' => 'nullable|date',
-            'products.*.due_date_closed' => 'nullable|date',
+            'products.*.work_order_product_id' => 'required|exists:mng_wo_products,id',
+            'products.*.eo' => 'nullable|string|max:100',
+            'products.*.class_id' => 'nullable|string|max:100',
+            'products.*.uom' => 'nullable|string|max:50',
             'products.*.remarks' => 'nullable|string',
-            'parts' => 'nullable|array',
-            'document_no' => 'nullable|string|max:100',
-            'doc_department' => 'nullable|string|max:100',
-            'publish_date' => 'nullable|date',
-            'page_hal' => 'nullable|string|max:50',
+            'header_id' => 'required|exists:mng_wo_doc_format,id',
+            'first_sample_date' => 'nullable|date',
+            'due_date_approval' => 'nullable|date',
+            'due_date_closed' => 'nullable|date',
+            'process_depts' => 'nullable|array',
+            'selected_approval_rules' => 'nullable|array',
+            'selected_approval_rules.*' => 'exists:mng_approval_rules,id',
         ]);
 
         DB::beginTransaction();
         try {
-            $spkParts = explode('/', $validated['work_order_no']);
-            $revNo = isset($spkParts[0]) ? (int)$spkParts[0] : 0;
-
-            $exists = WorkOrder::where('work_order_no', $validated['work_order_no'])
-                ->where('revision_no', $revNo)
-                ->where('work_order_id', '!=', $id)
+            $exists = WorkOrder::where('wo_number', $validated['work_order_no'])
+                ->where('revision_no', $workOrder->revision_no)
+                ->where('id', '!=', $id)
                 ->exists();
             if ($exists) {
                 return redirect()->back()
@@ -245,50 +239,42 @@ class WorkOrderController extends Controller
             }
 
             $workOrder->update([
-                'work_order_no' => $validated['work_order_no'],
-                'revision_no' => $revNo,
+                'wo_number' => $validated['work_order_no'],
                 'department_id' => $validated['department_id'],
                 'priority' => $validated['priority'],
                 'subject' => $validated['subject'],
                 'remarks' => $validated['remarks'],
-                'document_no' => $validated['document_no'] ?? 'FO-13-02',
-                'doc_department' => $validated['doc_department'] ?? 'Sales',
-                'publish_date' => $validated['publish_date'] ?? now()->toDateString(),
-                'page_hal' => $validated['page_hal'] ?? '1',
+                'header_id' => $validated['header_id'],
+                'first_sample_date' => $validated['first_sample_date'] ?? null,
+                'due_date_approval' => $validated['due_date_approval'] ?? null,
+                'due_date_closed' => $validated['due_date_closed'] ?? null,
+                'selected_approval_rule_ids' => $validated['selected_approval_rules'] ?? [],
             ]);
 
-            $workOrder->supportDepartments()->sync($validated['support_departments'] ?? []);
-            $workOrder->processes()->sync($validated['processes'] ?? []);
+            $processDepts = $request->input('process_depts', []);
+            $syncData = [];
+            if (!empty($validated['processes'])) {
+                foreach ($validated['processes'] as $procId) {
+                    $depts = isset($processDepts[$procId]) ? array_map('intval', $processDepts[$procId]) : [];
+                    $syncData[$procId] = [
+                        'assigned_departments' => json_encode($depts)
+                    ];
+                }
+            }
+
+            $workOrder->processes()->sync($syncData);
 
             foreach ($validated['products'] as $prodInput) {
                 $woProduct = WorkOrderProduct::findOrFail($prodInput['work_order_product_id']);
                 $woProduct->update([
-                    'first_sample_date' => $prodInput['first_sample_date'],
-                    'due_date_approval' => $prodInput['due_date_approval'],
-                    'due_date_closed' => $prodInput['due_date_closed'],
+                    'first_sample_date' => $validated['first_sample_date'],
+                    'due_date_approval' => $validated['due_date_approval'],
+                    'due_date_closed' => $validated['due_date_closed'],
+                    'eo' => $prodInput['eo'] ?? '-',
+                    'class_id' => $prodInput['class_id'] ?? 'RM',
+                    'uom' => $prodInput['uom'] ?? 'Pcs',
                     'remarks' => $prodInput['remarks'],
                 ]);
-
-                // Delete existing parts and insert new
-                $woProduct->parts()->delete();
-
-                $prodIdKey = $woProduct->inquiry_product_id;
-                if (!empty($validated['parts'][$prodIdKey])) {
-                    foreach ($validated['parts'][$prodIdKey] as $partInput) {
-                        if (empty($partInput['part_no']) || empty($partInput['part_name'])) {
-                            continue;
-                        }
-                        WorkOrderPart::create([
-                            'work_order_product_id' => $woProduct->work_order_product_id,
-                            'eo' => $partInput['eo'] ?: '-',
-                            'part_no' => $partInput['part_no'],
-                            'part_name' => $partInput['part_name'],
-                            'class_id' => $partInput['class_id'] ?: 'RM',
-                            'uom' => $partInput['uom'] ?: 'Pcs',
-                            'remarks' => $partInput['remarks'],
-                        ]);
-                    }
-                }
             }
 
             DB::commit();
@@ -306,18 +292,18 @@ class WorkOrderController extends Controller
 
     public function show($id)
     {
-        $workOrder = WorkOrder::with(['inquiry', 'ownerDepartment', 'supportDepartments', 'processes', 'products.parts', 'approvals.department'])->findOrFail($id);
+        $workOrder = WorkOrder::with(['inquiry', 'ownerDepartment', 'processes', 'products', 'approvals.department'])->findOrFail($id);
         $inquiry = $workOrder->inquiry;
         $departments = Department::orderBy('name', 'asc')->get();
-        $processes = \App\Models\WorkOrderProcess::where('is_active', true)->orderBy('sort_order', 'asc')->get();
+        $processes = WorkOrderProcess::where('is_active', true)->orderBy('sort_order', 'asc')->get();
         $approvalRules = ApprovalRule::activeFor('SPK')->get();
-        return view('management.work-order.form', compact('workOrder', 'inquiry', 'departments', 'processes', 'approvalRules'));
+        $users = User::orderBy('name', 'asc')->get();
+
+        $woHeader = $workOrder->docFormat;
+
+        return view('management.work-order.form', compact('workOrder', 'inquiry', 'departments', 'processes', 'approvalRules', 'woHeader', 'users'));
     }
 
-    /**
-     * Submit SPK for Approval.
-     * Generates approval rows based on active approval rules (sequential).
-     */
     public function submit($id)
     {
         $workOrder = WorkOrder::findOrFail($id);
@@ -328,8 +314,16 @@ class WorkOrderController extends Controller
 
         $rules = ApprovalRule::activeFor('SPK')->get();
 
+        // Filter based on user's selection
+        $selectedRuleIds = $workOrder->selected_approval_rule_ids ?? [];
+        if (is_array($selectedRuleIds) && count($selectedRuleIds) > 0) {
+            $rules = $rules->filter(function($rule) use ($selectedRuleIds) {
+                return in_array($rule->id, $selectedRuleIds);
+            });
+        }
+
         if ($rules->isEmpty()) {
-            return redirect()->back()->with('error', 'No active approval rules configured. Please set up the Approval Matrix in Settings before submitting.');
+            return redirect()->back()->with('error', 'No active approval rules configured or selected. Please select at least one approval level.');
         }
 
         DB::beginTransaction();
@@ -337,14 +331,17 @@ class WorkOrderController extends Controller
             // Delete old pending approvals and regenerate from rules
             $workOrder->approvals()->delete();
 
+            // Find lowest approval level to set as Pending
+            $minLevel = $rules->min('approval_level');
+
             foreach ($rules as $rule) {
                 WorkOrderApproval::create([
-                    'work_order_id'     => $workOrder->work_order_id,
+                    'work_order_id'     => $workOrder->id,
                     'approval_level'    => $rule->approval_level,
                     'department_id'     => $rule->department_id,
                     'approver_name'     => $rule->approverUser?->name,
                     'approver_position' => $rule->position_label,
-                    'status'            => $rule->approval_level === 1 ? 'Pending' : 'Waiting', // Only Level 1 starts as Pending
+                    'status'            => $rule->approval_level === $minLevel ? 'Pending' : 'Waiting',
                     'remarks'           => null,
                     'approved_at'       => null,
                 ]);
@@ -363,10 +360,6 @@ class WorkOrderController extends Controller
             ->with('success', 'SPK successfully submitted for approval!');
     }
 
-    /**
-     * Approve the current pending level.
-     * Sequential: advances to next level, or marks SPK as Approved if last level.
-     */
     public function approve(Request $request, $id)
     {
         $workOrder = WorkOrder::with('approvals')->findOrFail($id);
@@ -375,23 +368,32 @@ class WorkOrderController extends Controller
             return redirect()->back()->with('error', 'This Work Order is not pending approval.');
         }
 
-        // Find the current pending approval level
-        $pendingApproval = $workOrder->approvals()->where('status', 'Pending')->orderBy('approval_level')->first();
+        // Find the current pending approvals
+        $pendingApprovals = $workOrder->approvals()->where('status', 'Pending')->get();
 
-        if (!$pendingApproval) {
+        if ($pendingApprovals->isEmpty()) {
             return redirect()->back()->with('error', 'No pending approval step found.');
         }
 
-        // Authorize: check if the logged-in user matches the rule for this level
-        $rule = ApprovalRule::activeFor('SPK')
-            ->where('approval_level', $pendingApproval->approval_level)
-            ->first();
+        // Authorize: find the pending approval step that matches the logged-in user
+        $user = auth()->user();
+        $pendingApproval = null;
+        $rule = null;
 
-        if ($rule) {
-            $user = auth()->user();
-            if (!$rule->canBeApprovedBy($user)) {
-                return redirect()->back()->with('error', 'You are not authorized to approve this level. Required: ' . $rule->position_label . ' (' . $rule->department->name . ')');
+        foreach ($pendingApprovals as $approval) {
+            $checkRule = ApprovalRule::activeFor('SPK')
+                ->where('approval_level', $approval->approval_level)
+                ->where('department_id', $approval->department_id)
+                ->first();
+            if ($checkRule && $checkRule->canBeApprovedBy($user)) {
+                $pendingApproval = $approval;
+                $rule = $checkRule;
+                break;
             }
+        }
+
+        if (!$pendingApproval) {
+            return redirect()->back()->with('error', 'You are not authorized to approve this level.');
         }
 
         DB::beginTransaction();
@@ -405,13 +407,29 @@ class WorkOrderController extends Controller
                 'remarks'           => $request->input('remarks'),
             ]);
 
-            // Find next level (Waiting)
-            $nextApproval = $workOrder->approvals()->where('status', 'Waiting')->orderBy('approval_level')->first();
+            // OR Logic: Mark other approvals at the same level as "Not Required"
+            $workOrder->approvals()
+                ->where('approval_level', $pendingApproval->approval_level)
+                ->where('status', '!=', 'Approved')
+                ->where('id', '!=', $pendingApproval->id)
+                ->update([
+                    'status'            => 'Not Required',
+                    'approver_name'     => 'System',
+                    'approved_at'       => now(),
+                    'remarks'           => 'Approved by ' . auth()->user()->name . ' (OR Logic)',
+                ]);
 
-            if ($nextApproval) {
-                // Advance to next level
-                $nextApproval->update(['status' => 'Pending']);
-                // SPK still Pending Approval
+            // Find next level
+            $nextLevel = $workOrder->approvals()
+                ->where('approval_level', '>', $pendingApproval->approval_level)
+                ->orderBy('approval_level')
+                ->value('approval_level');
+
+            if ($nextLevel) {
+                // Advance to next level: set all to Pending
+                $workOrder->approvals()
+                    ->where('approval_level', $nextLevel)
+                    ->update(['status' => 'Pending']);
             } else {
                 // All levels done — mark SPK as Approved
                 $workOrder->update(['status' => 'Approved']);
@@ -432,9 +450,6 @@ class WorkOrderController extends Controller
         return redirect()->route('management.work-order.show', $id)->with('success', $message);
     }
 
-    /**
-     * Reject the SPK — returns to Draft.
-     */
     public function reject(Request $request, $id)
     {
         $workOrder = WorkOrder::findOrFail($id);
@@ -471,5 +486,183 @@ class WorkOrderController extends Controller
 
         return redirect()->route('management.work-order.show', $id)
             ->with('success', 'SPK rejected and returned to Draft. The creator can now revise and re-submit.');
+    }
+
+    public function revise($id)
+    {
+        $original = WorkOrder::with(['processes', 'products'])->findOrFail($id);
+
+        if ($original->status !== 'Approved') {
+            return redirect()->back()->with('error', 'Only approved Work Orders can be revised.');
+        }
+
+        if (!$original->is_latest) {
+            return redirect()->back()->with('error', 'Only the latest revision of a Work Order can be revised.');
+        }
+
+        DB::beginTransaction();
+        try {
+            // Set old latest to false
+            $original->is_latest = false;
+            $original->save();
+
+            // Create new revision WorkOrder
+            $newRevision = $original->replicate([
+                'status',
+                'created_by',
+                'is_latest',
+                'revision_no',
+                'revised_from_id',
+                'created_at',
+                'updated_at'
+            ]);
+
+            $newRevision->status = 'Draft';
+            $newRevision->created_by = auth()->user() ? auth()->user()->name : 'System';
+            $newRevision->is_latest = true;
+            $newRevision->revision_no = $original->revision_no + 1;
+            $newRevision->revised_from_id = $original->id;
+            $newRevision->save();
+
+            // Clone processes
+            foreach ($original->processes as $proc) {
+                $newRevision->processes()->attach($proc->id, [
+                    'assigned_departments' => $proc->pivot->assigned_departments,
+                    'remarks' => $proc->pivot->remarks
+                ]);
+            }
+
+            // Clone products
+            foreach ($original->products as $prod) {
+                $newProd = $prod->replicate(['work_order_id', 'created_at', 'updated_at']);
+                $newProd->work_order_id = $newRevision->id;
+                $newProd->save();
+            }
+
+            // Create initial approval record for the new draft revision
+            WorkOrderApproval::create([
+                'work_order_id' => $newRevision->id,
+                'approval_level' => 1,
+                'department_id' => $newRevision->department_id,
+                'status' => 'Pending',
+            ]);
+
+            DB::commit();
+
+            return redirect()->route('management.work-order.show', $newRevision->id)
+                ->with('success', 'New draft revision ' . sprintf('Rev. %02d', $newRevision->revision_no) . ' has been created.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to revise Work Order', ['error' => $e->getMessage()]);
+            return redirect()->back()->with('error', 'Failed to create new revision: ' . $e->getMessage());
+        }
+    }
+
+    public function approvalInbox()
+    {
+        $user = auth()->user();
+
+        // 1. Recent (Pending Approval assigned to me)
+        $pendingSPKs = WorkOrder::with(['inquiry', 'ownerDepartment'])
+            ->where('status', 'Pending Approval')
+            ->get();
+
+        $recent = $pendingSPKs->filter(function($wo) use ($user) {
+            return $wo->isApprover($user);
+        })->values();
+
+        // 2. Approved (approved by me)
+        $approved = WorkOrder::with(['inquiry', 'ownerDepartment'])
+            ->whereHas('approvals', function($q) use ($user) {
+                $q->where('status', 'Approved')
+                  ->where('approver_name', $user->name);
+            })
+            ->orderBy('updated_at', 'desc')
+            ->get();
+
+        // 3. Rejected (rejected by me)
+        $rejected = WorkOrder::with(['inquiry', 'ownerDepartment'])
+            ->whereHas('approvals', function($q) use ($user) {
+                $q->where('status', 'Rejected')
+                  ->where('approver_name', $user->name);
+            })
+            ->orderBy('updated_at', 'desc')
+            ->get();
+
+        // 4. All (Recent + Approved + Rejected)
+        $all = WorkOrder::with(['inquiry', 'ownerDepartment'])
+            ->where(function($q) use ($user, $recent) {
+                $q->whereIn('id', $recent->pluck('id'))
+                  ->orWhereHas('approvals', function($sub) use ($user) {
+                      $sub->where('approver_name', $user->name);
+                  });
+            })
+            ->orderBy('updated_at', 'desc')
+            ->get();
+
+        return view('management.work-order.inbox', compact('recent', 'approved', 'rejected', 'all'));
+    }
+
+    public function reviewPage($id)
+    {
+        $workOrder = WorkOrder::with(['inquiry', 'ownerDepartment', 'processes', 'products', 'approvals.department'])->findOrFail($id);
+        $inquiry = $workOrder->inquiry;
+        $departments = Department::orderBy('name', 'asc')->get();
+        $processes = WorkOrderProcess::where('is_active', true)->orderBy('sort_order', 'asc')->get();
+        $approvalRules = ApprovalRule::activeFor('SPK')->get();
+        $users = User::orderBy('name', 'asc')->get();
+        $woHeader = $workOrder->docFormat;
+
+        return view('management.work-order.review', compact('workOrder', 'inquiry', 'departments', 'processes', 'approvalRules', 'woHeader', 'users'));
+    }
+
+    public function storeProcess(Request $request)
+    {
+        $validated = $request->validate([
+            'process_code' => 'required|string|max:50|unique:mng_wo_processes,process_code',
+            'process_name' => 'required|string|max:255',
+            'default_assigned_departments' => 'nullable|array',
+            'sort_order' => 'required|integer|min:0',
+        ]);
+
+        WorkOrderProcess::create([
+            'process_code' => $validated['process_code'],
+            'process_name' => $validated['process_name'],
+            'default_assigned_departments' => json_encode(array_map('intval', $validated['default_assigned_departments'] ?? [])),
+            'sort_order' => $validated['sort_order'],
+            'is_active' => true,
+        ]);
+
+        return redirect()->back()->with('success', 'Master Process Checklist berhasil ditambahkan.');
+    }
+
+    public function updateProcess(Request $request, $id)
+    {
+        $process = WorkOrderProcess::findOrFail($id);
+        $validated = $request->validate([
+            'process_code' => 'required|string|max:50|unique:mng_wo_processes,process_code,' . $id,
+            'process_name' => 'required|string|max:255',
+            'default_assigned_departments' => 'nullable|array',
+            'sort_order' => 'required|integer|min:0',
+            'is_active' => 'nullable|boolean',
+        ]);
+
+        $process->update([
+            'process_code' => $validated['process_code'],
+            'process_name' => $validated['process_name'],
+            'default_assigned_departments' => json_encode(array_map('intval', $validated['default_assigned_departments'] ?? [])),
+            'sort_order' => $validated['sort_order'],
+            'is_active' => $request->has('is_active'),
+        ]);
+
+        return redirect()->back()->with('success', 'Master Process Checklist berhasil diubah.');
+    }
+
+    public function destroyProcess($id)
+    {
+        $process = WorkOrderProcess::findOrFail($id);
+        $process->delete();
+
+        return redirect()->back()->with('success', 'Master Process Checklist berhasil dihapus.');
     }
 }

@@ -3,6 +3,7 @@
 @section('title', 'Assessment Configuration - Promise Management')
 
 @section('content')
+<x-sweetalert />
 <div class="flex-1 overflow-y-auto p-4 pt-17.5 space-y-4 transition-colors duration-200" 
      x-data="{ 
         activeTab: 'categories', 
@@ -97,8 +98,8 @@
                                             is_active: {{ $cat->is_active ? 'true' : 'false' }} 
                                         };
                                         showCatModal = true;"
-                                        class="px-2.5 py-1 text-xs font-semibold border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300">
-                                        Edit
+                                        class="w-6 h-6 inline-flex items-center justify-center bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 hover:border-blue-400 text-slate-600 dark:text-slate-300 transition-colors" title="Edit">
+                                        <i class="fa-solid fa-pen text-[10px]"></i>
                                     </button>
                                 </td>
                             </tr>
@@ -209,8 +210,8 @@
                                             is_active: {{ $rank->is_active ? 'true' : 'false' }}
                                         };
                                         showRankModal = true;"
-                                        class="px-2.5 py-1 text-xs font-semibold border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300">
-                                        Edit
+                                        class="w-6 h-6 inline-flex items-center justify-center bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 hover:border-blue-400 text-slate-600 dark:text-slate-300 transition-colors" title="Edit">
+                                        <i class="fa-solid fa-pen text-[10px]"></i>
                                     </button>
                                 </td>
                             </tr>

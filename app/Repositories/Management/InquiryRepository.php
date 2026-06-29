@@ -9,14 +9,16 @@ class InquiryRepository implements InquiryRepositoryInterface
 {
     public function paginate($perPage = 10, array $filters = [])
     {
-        $query = ProjectInquiry::query();
+        $query = ProjectInquiry::with(['customer', 'projectModel']);
 
         if (!empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('inquiry_no', 'like', "%{$search}%")
-                  ->orWhere('customer_name', 'like', "%{$search}%")
-                  ->orWhere('project_name', 'like', "%{$search}%");
+                  ->orWhere('project_name', 'like', "%{$search}%")
+                  ->orWhereHas('customer', fn($cq) => $cq->where('name', 'like', "%{$search}%")
+                                                          ->orWhere('code', 'like', "%{$search}%"))
+                  ->orWhereHas('projectModel', fn($mq) => $mq->where('name', 'like', "%{$search}%"));
             });
         }
 
@@ -37,23 +39,22 @@ class InquiryRepository implements InquiryRepositoryInterface
 
     public function findById($id)
     {
-        $inquiry = ProjectInquiry::with(['products.assessment.ranking'])->findOrFail($id);
+        $inquiry = ProjectInquiry::with(['customer', 'projectModel', 'products.assessment.ranking'])->findOrFail($id);
         
         $sortedProducts = $inquiry->products->sort(function ($a, $b) {
-            $scoreA = $a->assessment ? $a->assessment->total_score : 0;
-            $scoreB = $b->assessment ? $b->assessment->total_score : 0;
-            
-            if ($scoreA !== $scoreB) {
-                return $scoreB <=> $scoreA;
-            }
-            
             $sortA = $a->sort_order;
             $sortB = $b->sort_order;
             if ($sortA !== $sortB) {
                 return $sortA <=> $sortB;
             }
+
+            $scoreA = $a->assessment ? $a->assessment->total_score : 0;
+            $scoreB = $b->assessment ? $b->assessment->total_score : 0;
+            if ($scoreA !== $scoreB) {
+                return $scoreB <=> $scoreA;
+            }
             
-            return $a->inquiry_product_id <=> $b->inquiry_product_id;
+            return $a->id <=> $b->id;
         })->values();
 
         $inquiry->setRelation('products', $sortedProducts);

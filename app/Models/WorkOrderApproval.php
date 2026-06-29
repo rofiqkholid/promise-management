@@ -9,8 +9,7 @@ class WorkOrderApproval extends Model
 {
     use HasFactory;
 
-    protected $table = 'mng_work_order_approvals';
-    protected $primaryKey = 'approval_id';
+    protected $table = 'mng_wo_approvals';
     public $timestamps = false;
 
     protected $fillable = [
@@ -31,7 +30,7 @@ class WorkOrderApproval extends Model
 
     public function workOrder()
     {
-        return $this->belongsTo(WorkOrder::class, 'work_order_id', 'work_order_id');
+        return $this->belongsTo(WorkOrder::class, 'work_order_id', 'id');
     }
 
     public function department()

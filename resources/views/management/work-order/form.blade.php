@@ -4,7 +4,7 @@
 
 @section('content')
 @php
-    $isEditable = !isset($workOrder) || ($workOrder->status === 'Draft');
+    $isEditable = !isset($workOrder) || ($workOrder->status === 'Draft' && ($workOrder->is_latest ?? true));
 @endphp
 <style>
     /* Premium layout styles for side-by-side creation */
@@ -48,19 +48,15 @@
     /* Premium inputs and components styling */
     .form-card {
         background-color: #ffffff;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #cbd5e1;
         border-radius: 2px;
         padding: 20px;
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
-        transition: all 0.2s ease-in-out;
+        box-shadow: none;
     }
     .dark .form-card {
         background-color: #1e293b;
         border-color: #334155;
         box-shadow: none;
-    }
-    .form-card:hover {
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
     }
     
     .form-input-premium {
@@ -71,7 +67,6 @@
         padding: 8px 12px;
         font-size: 0.75rem;
         color: #0f172a;
-        transition: all 0.2s ease;
     }
     .dark .form-input-premium {
         background-color: #0f172a;
@@ -80,14 +75,12 @@
     }
     .form-input-premium:focus {
         background-color: #ffffff;
-        border-color: #64748b;
+        border-color: #3b82f6;
         outline: none;
-        box-shadow: 0 0 0 1px #64748b;
     }
     .dark .form-input-premium:focus {
         background-color: #0f172a;
-        border-color: #94a3b8;
-        box-shadow: 0 0 0 1px #94a3b8;
+        border-color: #3b82f6;
     }
     .form-input-premium:disabled {
         background-color: #e2e8f0;
@@ -176,20 +169,20 @@
 <div class="split-container" x-data="spkForm" id="spkFormContainer">
     
     {{-- ── LEFT SIDE: Detail Configuration Form ─────────────────────────── --}}
-    <form action="{{ isset($workOrder) ? route('management.work-order.update', $workOrder->work_order_id) : route('management.work-order.store') }}" method="POST" 
+    <form action="{{ isset($workOrder) ? route('management.work-order.update', $workOrder->id) : route('management.work-order.store') }}" method="POST" 
           class="spk-form-panel" :style="showPreview ? 'width: 50%' : 'width: 100%'">
         @csrf
         @if(isset($workOrder))
             @method('PUT')
         @else
-            <input type="hidden" name="inquiry_id" value="{{ $inquiry->inquiry_id }}">
+            <input type="hidden" name="inquiry_id" value="{{ $inquiry->id }}">
         @endif
         <input type="hidden" name="department_id" :value="department_id">
         
         {{-- Fixed Header --}}
         <div class="p-6 pb-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900 z-10 flex-none">
             <div class="flex items-center gap-3">
-                <a href="{{ isset($workOrder) ? route('management.work-order.index') : route('management.inquiry.show', $inquiry->inquiry_id) }}"
+                <a href="{{ isset($workOrder) ? route('management.work-order.index') : route('management.inquiry.show', $inquiry->id) }}"
                    class="flex items-center justify-center w-7 h-7 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-500 hover:text-blue-600 hover:border-blue-500 transition-colors text-xs rounded-xs"
                    title="{{ isset($workOrder) ? 'Back to SPK List' : 'Back to Inquiry' }}">
                     <i class="fa-solid fa-arrow-left"></i>
@@ -224,6 +217,19 @@
 
         {{-- Scrollable Container --}}
         <div class="flex-1 overflow-y-auto p-6 space-y-6">
+            @if(isset($workOrder) && !$workOrder->is_latest)
+                <div class="p-3.5 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 text-amber-800 dark:text-amber-400 text-xs flex items-center justify-between">
+                    <span>
+                        <i class="fa-solid fa-triangle-exclamation mr-1.5"></i>
+                        This is an outdated revision (Rev. {{ sprintf('%02d', $workOrder->revision_no) }}). A newer revision of this SPK exists.
+                    </span>
+                    <a href="{{ route('management.work-order.show', \App\Models\WorkOrder::where('wo_number', $workOrder->wo_number)->where('is_latest', true)->first()->id ?? $workOrder->id) }}" 
+                       class="font-bold underline hover:text-amber-600 dark:hover:text-amber-300 ml-3">
+                        View Latest Revision &rarr;
+                    </a>
+                </div>
+            @endif
+
             @if(session('success'))
                 <div class="p-3.5 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-400 text-xs border-l-4 border-emerald-500 rounded-r-xs">
                     {{ session('success') }}
@@ -306,7 +312,7 @@
                     @if($pendingStep && $canActOnThis)
                         <div class="px-4 py-3 bg-slate-50 dark:bg-slate-900/40 border-t border-slate-200 dark:border-slate-700 flex flex-wrap items-center gap-2">
                             <span class="text-[10px] text-slate-500 flex-1">Your turn to review as <strong>{{ $pendingStep->approver_position }}</strong>:</span>
-                            <form action="{{ route('management.work-order.approve', $workOrder->work_order_id) }}" method="POST" class="flex items-center gap-2">
+                            <form action="{{ route('management.work-order.approve', $workOrder->id) }}" method="POST" class="flex items-center gap-2">
                                 @csrf
                                 <input type="text" name="remarks" placeholder="Optional comments..."
                                        class="px-2.5 py-1.5 text-[10px] border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-xs w-40 focus:outline-none focus:border-blue-400">
@@ -315,7 +321,7 @@
                                     <i class="fa-solid fa-check text-[9px]"></i> Approve
                                 </button>
                             </form>
-                            <form action="{{ route('management.work-order.reject', $workOrder->work_order_id) }}" method="POST"
+                            <form action="{{ route('management.work-order.reject', $workOrder->id) }}" method="POST"
                                   onsubmit="return confirm('Reject this SPK? It will be returned to Draft.')">
                                 @csrf
                                 <button type="submit"
@@ -339,263 +345,314 @@
         {{-- General Configuration Card --}}
         <div class="form-card space-y-4">
             <h3 class="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-widest pb-2 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
-                <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> 1. General Information
+                <i class="fa-solid fa-circle-info text-blue-500 mr-1"></i> 1. General Information
             </h3>
             
+            {{-- Link to WO Doc Format master header (header_id) --}}
+            <input type="hidden" name="header_id" value="{{ isset($workOrder) ? $workOrder->header_id : ($woHeader->id ?? 1) }}">
+            {{-- Subject field made hidden to preserve DB column value --}}
+            <input type="hidden" name="subject" value="{{ isset($workOrder) ? $workOrder->subject : 'SPK for Project ' . $inquiry->project_name }}">
+
             <div class="space-y-4">
-                {{-- Document Header Configuration (Moved to Top) --}}
-                <div class="pb-4 border-b border-slate-100 dark:border-slate-800 space-y-4">
-                    <h4 class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Document Header Configuration</h4>
-                    
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="form-label-premium">Nomor Dokumen</label>
-                            <input type="text" name="document_no" x-model="document_no" class="form-input-premium" {{ !$isEditable ? 'disabled' : '' }}>
-                        </div>
-                        <div>
-                            <label class="form-label-premium">Departemen (Header)</label>
-                            <input type="text" name="doc_department" value="Sales" readonly class="form-input-premium bg-slate-100 dark:bg-slate-800 text-slate-500 cursor-not-allowed">
-                        </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="form-label-premium">
+                            SPK Number <span class="text-rose-500">*</span>
+                            <i class="fa-solid fa-lock text-[9px] text-slate-400 ml-1" title="System Generated"></i>
+                        </label>
+                        <input type="text" name="work_order_no" x-model="work_order_no" required readonly class="form-input-premium bg-slate-50 dark:bg-slate-900/50 cursor-not-allowed">
                     </div>
-
-                    <div class="grid grid-cols-3 gap-3">
-                        <div>
-                            <label class="form-label-premium">Tanggal Terbit</label>
-                            <input type="date" name="publish_date" x-model="publish_date" class="form-input-premium" {{ !$isEditable ? 'disabled' : '' }}>
-                        </div>
-                        <div>
-                            <label class="form-label-premium">Nomor Revisi</label>
-                            <input type="text" disabled :value="computedRevisionNo()" class="form-input-premium bg-slate-100 dark:bg-slate-800 text-slate-500 cursor-not-allowed">
-                        </div>
-                        <div>
-                            <label class="form-label-premium">Hal</label>
-                            <input type="text" name="page_hal" x-model="page_hal" class="form-input-premium" {{ !$isEditable ? 'disabled' : '' }}>
-                        </div>
+                    <div>
+                        <label class="form-label-premium">
+                            SPK Publish Date <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="date" name="publish_date" x-model="publish_date" required class="form-input-premium">
                     </div>
                 </div>
 
-                <div>
-                    <label class="form-label-premium">SPK Number <span class="text-rose-500">*</span></label>
-                    <input type="text" name="work_order_no" x-model="work_order_no" required class="form-input-premium" {{ !$isEditable ? 'disabled' : '' }}>
-                </div>
-
-                <div>
-                    <label class="form-label-premium">Subject / Deskripsi SPK <span class="text-rose-500">*</span></label>
-                    <input type="text" name="subject" x-model="subject" required class="form-input-premium" {{ !$isEditable ? 'disabled' : '' }}>
+                <div class="grid grid-cols-3 gap-3 border-t border-slate-100 dark:border-slate-800 pt-3">
+                    <div>
+                        <label class="form-label-premium">First Sample Date</label>
+                        <input type="date" name="first_sample_date" x-model="first_sample_date" class="form-input-premium" {{ !$isEditable ? 'disabled' : '' }}>
+                    </div>
+                    <div>
+                        <label class="form-label-premium">Due Date (Plan) <span class="text-rose-500">*</span></label>
+                        <input type="date" name="due_date_approval" x-model="due_date_approval" required @change="checkPrioritySuggestions();" class="form-input-premium" {{ !$isEditable ? 'disabled' : '' }}>
+                    </div>
+                    <div>
+                        <label class="form-label-premium">Due Date Closed <span class="text-rose-500">*</span></label>
+                        <input type="date" name="due_date_closed" x-model="due_date_closed" required class="form-input-premium" {{ !$isEditable ? 'disabled' : '' }}>
+                    </div>
                 </div>
             </div>
         </div>
 
         {{-- Request Type Checklist & Priority Card --}}
         <div class="form-card space-y-4">
-            <h3 class="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-widest pb-2 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
-                <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> 2. Priority &amp; Request Type (Proses)
+            <h3 class="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-widest pb-2 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+                <span class="flex items-center gap-2">
+                    <i class="fa-solid fa-list-check text-blue-500"></i> 2. Priority &amp; Request Type (Proses)
+                </span>
+                <button type="button" onclick="document.getElementById('modal-master-process').classList.remove('hidden')"
+                        class="text-[10px] font-bold text-blue-600 hover:text-blue-700 bg-blue-50 dark:bg-blue-950/40 px-2 py-1 rounded-xs transition-colors">
+                    <i class="fa-solid fa-gear mr-1"></i> Master Process
+                </button>
             </h3>
             
             <div class="space-y-4">
                 <div class="space-y-2">
                     <label class="form-label-premium">Priority <span class="text-rose-500">*</span></label>
-                    <select name="priority" x-model="priority" required class="form-input-premium cursor-pointer" {{ !$isEditable ? 'disabled' : '' }}>
-                        <option value="URGENT">URGENT</option>
-                        <option value="STANDARD">STANDARD</option>
-                        <option value="LOW">LOW</option>
-                    </select>
+                    <div class="grid grid-cols-3 gap-2.5">
+                        <button type="button" @click="priority = 'URGENT'" :disabled="!isEditable"
+                                class="flex flex-col items-center justify-center py-2 px-3 border rounded-xs cursor-pointer"
+                                :class="priority === 'URGENT' 
+                                    ? 'border-rose-500 bg-rose-50 text-rose-700 dark:bg-rose-950/20 dark:text-rose-400 font-bold' 
+                                    : 'border-slate-200 bg-white text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed'">
+                            <span class="text-[10px] font-bold tracking-wider uppercase">URGENT</span>
+                            <span class="text-[8px] opacity-75 mt-0.5">&lt; 10 Working Days</span>
+                        </button>
+                        <button type="button" @click="priority = 'STANDARD'" :disabled="!isEditable"
+                                class="flex flex-col items-center justify-center py-2 px-3 border rounded-xs cursor-pointer"
+                                :class="priority === 'STANDARD' 
+                                    ? 'border-amber-500 bg-amber-50 text-amber-700 dark:bg-amber-950/20 dark:text-amber-400 font-bold' 
+                                    : 'border-slate-200 bg-white text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed'">
+                            <span class="text-[10px] font-bold tracking-wider uppercase">STANDARD</span>
+                            <span class="text-[8px] opacity-75 mt-0.5">10 - 14 Working Days</span>
+                        </button>
+                        <button type="button" @click="priority = 'LOW'" :disabled="!isEditable"
+                                class="flex flex-col items-center justify-center py-2 px-3 border rounded-xs cursor-pointer"
+                                :class="priority === 'LOW' 
+                                    ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-950/20 dark:text-blue-400 font-bold' 
+                                    : 'border-slate-200 bg-white text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed'">
+                            <span class="text-[10px] font-bold tracking-wider uppercase">LOW</span>
+                            <span class="text-[8px] opacity-75 mt-0.5">&gt; 14 Working Days</span>
+                        </button>
+                    </div>
+                    <p class="text-[10px] text-slate-500 mt-2 flex items-start gap-1">
+                        <i class="fa-solid fa-circle-info text-blue-500 mt-0.5"></i>
+                        <span>* Priority is automatically selected based on the Due Date (Plan) and calculated using effective working days only (Monday-Friday, excluding holidays).</span>
+                    </p>
+                    <input type="hidden" name="priority" :value="priority">
                 </div>
                 
-                <div class="space-y-2 border-t border-slate-100 dark:border-slate-800 pt-3">
+                <div class="space-y-3 border-t border-slate-100 dark:border-slate-800 pt-4">
                     <label class="form-label-premium">Request Type / Process Checklist</label>
-                    <div class="grid grid-cols-2 gap-x-2 gap-y-1.5 text-xs text-slate-700 dark:text-slate-300">
+                    <div class="space-y-2.5">
                         @foreach($processes as $proc)
-                            <label class="flex items-center gap-2.5 cursor-pointer p-1 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-xs transition-colors">
-                                <input type="checkbox" name="processes[]" value="{{ $proc->process_id }}" 
-                                       :checked="selected_processes.includes({{ $proc->process_id }})"
-                                       @change="toggleProcess({{ $proc->process_id }})"
-                                       class="rounded-xs border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500"
-                                       {{ !$isEditable ? 'disabled' : '' }}>
-                                <span>{{ $proc->process_name }}</span>
-                            </label>
+                            @php
+                                $procDetail = isset($workOrder) ? $workOrder->processes->find($proc->id) : null;
+                                $savedDepts = $procDetail ? json_decode($procDetail->pivot->assigned_departments ?? '[]') : null;
+                                $defaultDepts = json_decode($proc->default_assigned_departments ?? '[]', true) ?: [];
+                            @endphp
+                            <div class="flex flex-col p-3.5 border rounded-xs"
+                                 :class="isProcessSelected({{ $proc->id }}) 
+                                    ? 'border-slate-300 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/50' 
+                                    : 'border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/50'">
+                                
+                                {{-- Left Side: Custom Checkbox & Process info --}}
+                                <div class="flex items-center gap-3">
+                                    <label class="relative flex items-center justify-center cursor-pointer select-none">
+                                        <input type="checkbox" name="processes[]" value="{{ $proc->id }}" 
+                                               :checked="isProcessSelected({{ $proc->id }})"
+                                               @change="toggleProcess({{ $proc->id }})"
+                                               class="peer h-4.5 w-4.5 cursor-pointer appearance-none rounded-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 checked:border-blue-600 checked:bg-blue-600 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                                               {{ !$isEditable ? 'disabled' : '' }}>
+                                        <span class="absolute text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none text-xs">
+                                            <i class="fa-solid fa-check text-[9px]"></i>
+                                        </span>
+                                    </label>
+                                    <div>
+                                        <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block"
+                                              :class="isProcessSelected({{ $proc->id }}) ? 'text-blue-700 dark:text-blue-400 font-extrabold' : ''">
+                                            {{ $proc->process_name }}
+                                        </span>
+                                        <span class="text-[9px] text-slate-400 block mt-0.5">Owner: {{ $proc->getDefaultAssignedDepartments()->pluck('name')->implode(', ') ?: 'N/A' }}</span>
+                                    </div>
+                                </div>
+                                
+                                {{-- Assigned Departments checkable badges list --}}
+                                <div x-show="isProcessSelected({{ $proc->id }})" class="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+                                    <div class="text-[9px] text-slate-400 uppercase font-semibold mb-1.5">Assigned Departments:</div>
+                                    <div class="flex flex-wrap gap-1.5">
+                                        @foreach($departments as $dept)
+                                            <label class="inline-flex items-center gap-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-2 py-0.5 text-[10px] cursor-pointer select-none rounded-xs font-semibold"
+                                                   :class="process_departments[{{ $proc->id }}] && process_departments[{{ $proc->id }}].map(Number).includes({{ $dept->id }}) 
+                                                        ? 'bg-blue-50 border-blue-300 text-blue-700 dark:bg-blue-950/20 dark:border-blue-800 dark:text-blue-400 font-bold' 
+                                                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50'">
+                                                <input type="checkbox" 
+                                                       name="process_depts[{{ $proc->id }}][]"
+                                                       value="{{ $dept->id }}" 
+                                                       x-model.number="process_departments[{{ $proc->id }}]"
+                                                       @change="syncGlobalSupportDepartments()"
+                                                       class="h-3 w-3 rounded-xs border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-0"
+                                                       {{ !$isEditable ? 'disabled' : '' }}>
+                                                <span>{{ $dept->code }}</span>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
                         @endforeach
                     </div>
                 </div>
             </div>
         </div>
 
-        {{-- Support Departments --}}
+
+
+        {{-- Approval Workflow Card --}}
         <div class="form-card space-y-4">
-            <h3 class="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-widest pb-2 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
-                <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> 3. Assignments
+            <h3 class="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-widest pb-2 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+                <span class="flex items-center gap-2">
+                    <i class="fa-solid fa-user-shield text-blue-500"></i> 3. Approval Workflow Steps
+                </span>
+                <button type="button" onclick="document.getElementById('modal-master-approval').classList.remove('hidden')"
+                        class="text-[10px] font-bold text-blue-600 hover:text-blue-700 bg-blue-50 dark:bg-blue-950/40 px-2 py-1 rounded-xs transition-colors">
+                    <i class="fa-solid fa-gear mr-1"></i> Master Approval Rule
+                </button>
             </h3>
+            <p class="text-[10px] text-slate-400">Pilih approval level mana yang diperlukan. Approval yang <span class="text-blue-600 font-semibold">ditandai biru</span> adalah saran berdasarkan department yang dipilih pada Process Checklist.</p>
             
-            <div class="space-y-4">
-                {{-- Support Departments --}}
-                <div>
-                    <label class="form-label-premium">Support Departments (Departemen Pendukung)</label>
-                    <select name="support_departments[]" multiple class="select2-support-depts w-full" {{ !$isEditable ? 'disabled' : '' }}>
-                        @foreach($departments as $dept)
-                            <option value="{{ $dept->id }}"
-                                    {{ isset($workOrder) && $workOrder->supportDepartments->contains($dept->id) ? 'selected' : '' }}>
-                                {{ $dept->name }} ({{ $dept->code }})
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
+            <div class="space-y-2">
+                @foreach($approvalRules->filter(fn($r) => is_array($r->approver_user_ids) && count($r->approver_user_ids) > 0) as $rule)
+                    @php $ruleId = $rule->id; $ruleDeptId = $rule->department_id; @endphp
+                    <label class="flex items-start gap-3 p-3 border rounded-xs cursor-pointer select-none transition-all duration-150"
+                           :class="{
+                               'border-blue-400 bg-blue-50/40 dark:border-blue-700 dark:bg-blue-950/20 shadow-sm': selected_approval_rules.map(Number).includes({{ $ruleId }}) && isSuggestedRule({{ $ruleDeptId }}),
+                               'border-slate-300 bg-slate-50/60 dark:border-slate-700 dark:bg-slate-800/30': selected_approval_rules.map(Number).includes({{ $ruleId }}) && !isSuggestedRule({{ $ruleDeptId }}),
+                               'border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/50 opacity-60': !selected_approval_rules.map(Number).includes({{ $ruleId }})
+                           }">
+                        <input type="checkbox" name="selected_approval_rules[]" value="{{ $ruleId }}"
+                               x-model.number="selected_approval_rules"
+                               :disabled="!isEditable"
+                               class="h-4 w-4 rounded-xs border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-0 mt-0.5 flex-shrink-0">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="text-xs font-bold text-slate-800 dark:text-slate-200">
+                                    Level {{ $rule->approval_level }}: {{ $rule->position_label }} ({{ $rule->action_label }})
+                                </span>
+                                {{-- Suggested badge --}}
+                                <span x-show="isSuggestedRule({{ $ruleDeptId }})"
+                                      class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 border border-blue-200 dark:border-blue-800 rounded-full">
+                                    <i class="fa-solid fa-bolt text-[8px]"></i> Sesuai Dept
+                                </span>
+                                {{-- Not matching badge --}}
+                                <span x-show="!isSuggestedRule({{ $ruleDeptId }})"
+                                      class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-semibold bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500 border border-slate-200 dark:border-slate-700 rounded-full">
+                                    <i class="fa-solid fa-minus text-[8px]"></i> Dept lain
+                                </span>
+                            </div>
+                            <span class="text-[9px] text-slate-400 block mt-0.5">
+                                Dept: {{ $rule->department->name ?? '—' }}
+                                @if($rule->approverUsers->isNotEmpty())
+                                    · Approver: {{ $rule->approverUsers->pluck('name')->implode(', ') }}
+                                @endif
+                            </span>
+                        </div>
+                    </label>
+                @endforeach
+
+                @if($approvalRules->filter(fn($r) => is_array($r->approver_user_ids) && count($r->approver_user_ids) > 0)->isEmpty())
+                    <div class="py-6 text-center text-slate-400">
+                        <i class="fa-solid fa-triangle-exclamation text-amber-400 mr-1"></i>
+                        <span class="text-xs">Belum ada approval rule aktif dengan approver terdaftar. Silakan konfigurasi di <a href="{{ route('management.approval-config.index') }}" class="text-blue-500 underline">Approval Matrix</a>.</span>
+                    </div>
+                @endif
             </div>
-        </div>
-
-        {{-- Products Schedule & Parts Configuration --}}
-        <div class="space-y-4">
-            <h3 class="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-widest">4. Products &amp; Parts Details</h3>
-            
-            @php
-                $formProducts = isset($workOrder) ? $workOrder->products : $inquiry->products;
-            @endphp
-            @foreach($formProducts as $index => $prod)
-                <div class="form-card space-y-4">
-                    <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
-                        <span class="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">
-                            {{ $prod->model_name }} &middot; {{ $prod->customer_part_name }}
-                        </span>
-                        @if(isset($workOrder))
-                            <input type="hidden" name="products[{{ $index }}][work_order_product_id]" value="{{ $prod->work_order_product_id }}">
-                        @else
-                            <input type="hidden" name="products[{{ $index }}][inquiry_product_id]" value="{{ $prod->inquiry_product_id }}">
-                        @endif
-                    </div>
-
-                    {{-- Product schedule details --}}
-                    <div class="grid grid-cols-3 gap-2">
-                        <div>
-                            <label class="form-label-premium text-[9px] mb-1">First Sample</label>
-                            <input type="date" name="products[{{ $index }}][first_sample_date]"
-                                   value="{{ $prod->first_sample_date ? (is_string($prod->first_sample_date) ? substr($prod->first_sample_date, 0, 10) : $prod->first_sample_date->format('Y-m-d')) : '' }}"
-                                   @change="updateProductDate({{ $prod->inquiry_product_id }}, 'first_sample_date', $event.target.value)"
-                                   class="form-input-premium" {{ !$isEditable ? 'disabled' : '' }}>
-                        </div>
-                        <div>
-                            <label class="form-label-premium text-[9px] mb-1">Due Date Approval</label>
-                            <input type="date" name="products[{{ $index }}][due_date_approval]"
-                                   value="{{ $prod->due_date_approval ? (is_string($prod->due_date_approval) ? substr($prod->due_date_approval, 0, 10) : $prod->due_date_approval->format('Y-m-d')) : '' }}"
-                                   @change="updateProductDate({{ $prod->inquiry_product_id }}, 'due_date_approval', $event.target.value)"
-                                   class="form-input-premium" {{ !$isEditable ? 'disabled' : '' }}>
-                        </div>
-                        <div>
-                            <label class="form-label-premium text-[9px] mb-1">Due Date Closed</label>
-                            <input type="date" name="products[{{ $index }}][due_date_closed]"
-                                   value="{{ $prod->due_date_closed ? (is_string($prod->due_date_closed) ? substr($prod->due_date_closed, 0, 10) : $prod->due_date_closed->format('Y-m-d')) : '' }}"
-                                   @change="updateProductDate({{ $prod->inquiry_product_id }}, 'due_date_closed', $event.target.value)"
-                                   class="form-input-premium" {{ !$isEditable ? 'disabled' : '' }}>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="form-label-premium text-[9px] mb-1">Product Remarks</label>
-                        <input type="text" name="products[{{ $index }}][remarks]"
-                               value="{{ $prod->remarks }}"
-                               @input="updateProductRemarks({{ $prod->inquiry_product_id }}, $event.target.value)"
-                               placeholder="Specific requirements/remarks for schedule"
-                               class="form-input-premium" {{ !$isEditable ? 'disabled' : '' }}>
-                    </div>
-
-                    {{-- Parts configuration --}}
-                    <div class="space-y-3">
-                        <div class="flex items-center justify-between">
-                            <label class="form-label-premium text-[9px] mb-0">Parts List (BOM Components)</label>
-                            @if($isEditable)
-                                <button type="button" @click="addPartRow({{ $prod->inquiry_product_id }})"
-                                        class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-xs text-[9px] font-bold transition-colors cursor-pointer">
-                                    <i class="fa-solid fa-plus text-[8px]"></i> Add Part
-                                </button>
-                            @endif
-                        </div>
-
-                        <div class="border border-slate-100 dark:border-slate-800 rounded-xs overflow-x-auto">
-                            <table class="w-full text-left text-[10px] divide-y divide-slate-100 dark:divide-slate-800">
-                                <thead class="bg-slate-50 dark:bg-slate-900/60 font-bold text-slate-400">
-                                    <tr>
-                                        <th class="p-2 w-12">EO</th>
-                                        <th class="p-2 w-28">Part Number</th>
-                                        <th class="p-2">Part Name</th>
-                                        <th class="p-2 w-14">Class</th>
-                                        <th class="p-2 w-14">UOM</th>
-                                        <th class="p-2">Remarks</th>
-                                        @if($isEditable)
-                                            <th class="p-2 w-6 text-center"></th>
-                                        @endif
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                                    <template x-for="(part, idx) in parts[{{ $prod->inquiry_product_id }}]" :key="idx">
-                                        <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-900/30">
-                                            <td class="p-1">
-                                                <input type="text" :name="'parts[' + {{ $prod->inquiry_product_id }} + '][' + idx + '][eo]'" x-model="part.eo"
-                                                       class="w-full bg-transparent border-0 p-1 text-[10px] text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-300 rounded-xs"
-                                                       {{ !$isEditable ? 'disabled' : '' }}>
-                                            </td>
-                                            <td class="p-1">
-                                                <input type="text" :name="'parts[' + {{ $prod->inquiry_product_id }} + '][' + idx + '][part_no]'" x-model="part.part_no" required
-                                                       class="w-full bg-transparent border border-transparent hover:border-slate-200 dark:hover:border-slate-700 focus:border-slate-300 dark:focus:border-slate-600 p-1 text-[10px] text-slate-800 dark:text-slate-100 focus:outline-none rounded-xs"
-                                                       {{ !$isEditable ? 'disabled' : '' }}>
-                                            </td>
-                                            <td class="p-1">
-                                                <input type="text" :name="'parts[' + {{ $prod->inquiry_product_id }} + '][' + idx + '][part_name]'" x-model="part.part_name" required
-                                                       class="w-full bg-transparent border border-transparent hover:border-slate-200 dark:hover:border-slate-700 focus:border-slate-300 dark:focus:border-slate-600 p-1 text-[10px] text-slate-800 dark:text-slate-100 focus:outline-none rounded-xs"
-                                                       {{ !$isEditable ? 'disabled' : '' }}>
-                                            </td>
-                                            <td class="p-1">
-                                                <select :name="'parts[' + {{ $prod->inquiry_product_id }} + '][' + idx + '][class_id]'" x-model="part.class_id"
-                                                        class="w-full bg-transparent border border-transparent hover:border-slate-200 dark:hover:border-slate-700 focus:border-slate-300 dark:focus:border-slate-600 p-1 text-[10px] text-slate-800 dark:text-slate-100 focus:outline-none cursor-pointer rounded-xs"
-                                                        {{ !$isEditable ? 'disabled' : '' }}>
-                                                    <option value="FG">FG</option>
-                                                    <option value="RM">RM</option>
-                                                    <option value="SF">SF</option>
-                                                </select>
-                                            </td>
-                                            <td class="p-1">
-                                                <select :name="'parts[' + {{ $prod->inquiry_product_id }} + '][' + idx + '][uom]'" x-model="part.uom"
-                                                        class="w-full bg-transparent border border-transparent hover:border-slate-200 dark:hover:border-slate-700 focus:border-slate-300 dark:focus:border-slate-600 p-1 text-[10px] text-slate-800 dark:text-slate-100 focus:outline-none cursor-pointer rounded-xs"
-                                                        {{ !$isEditable ? 'disabled' : '' }}>
-                                                    <option value="Kg">Kg</option>
-                                                    <option value="Sheet">Sheet</option>
-                                                    <option value="Pcs">Pcs</option>
-                                                </select>
-                                            </td>
-                                            <td class="p-1">
-                                                <input type="text" :name="'parts[' + {{ $prod->inquiry_product_id }} + '][' + idx + '][remarks]'" x-model="part.remarks"
-                                                       class="w-full bg-transparent border border-transparent hover:border-slate-200 dark:hover:border-slate-700 focus:border-slate-300 dark:focus:border-slate-600 p-1 text-[10px] text-slate-800 dark:text-slate-100 focus:outline-none rounded-xs"
-                                                       {{ !$isEditable ? 'disabled' : '' }}>
-                                            </td>
-                                            @if($isEditable)
-                                                <td class="p-1 text-center">
-                                                    <button type="button" @click="removePartRow({{ $prod->inquiry_product_id }}, idx)" class="text-rose-500 hover:text-rose-700">
-                                                        <i class="fa-solid fa-trash-can text-[9px]"></i>
-                                                    </button>
-                                                </td>
-                                            @endif
-                                        </tr>
-                                    </template>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            @endforeach
         </div>
 
         {{-- General Remarks --}}
         <div class="form-card space-y-3">
-            <label class="form-label-premium">Catatan Tambahan SPK (General Remarks)</label>
+            <label class="form-label-premium flex items-center gap-1.5">
+                <i class="fa-solid fa-file-lines text-blue-500 text-xs"></i> Additional SPK Notes (General Remarks)
+            </label>
             <textarea name="remarks" x-model="remarks" rows="3" placeholder="Enter any extra notes or instructions..."
                       class="form-input-premium resize-none" {{ !$isEditable ? 'disabled' : '' }}></textarea>
         </div>
+
+        {{-- Product Specifications Card (BOM) --}}
+        <div class="form-card space-y-4">
+            <h3 class="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-widest pb-2 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-boxes-stacked text-blue-500 mr-1"></i> 3. Product Specifications (BOM)
+            </h3>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/30 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                            <th class="p-2">Part Number / Name</th>
+                            <th class="p-2 w-24">EO</th>
+                            <th class="p-2 w-28">Class ID</th>
+                            <th class="p-2 w-20">UOM</th>
+                            <th class="p-2">Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template x-for="(prod, index) in products" :key="index">
+                            <tr class="border-b border-slate-100 dark:border-slate-800/60 hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
+                                <td class="p-2">
+                                    <div class="font-bold text-slate-800 dark:text-slate-200" x-text="prod.customer_part_no"></div>
+                                    <div class="text-[10px] text-slate-400" x-text="prod.customer_part_name"></div>
+                                </td>
+                                <td class="p-2">
+                                    <input type="text" x-model="prod.eo" class="form-input-premium py-1 px-1.5 text-xs text-center" :disabled="!isEditable">
+                                </td>
+                                <td class="p-2">
+                                    <select x-model="prod.class_id" class="form-input-premium py-1 px-1.5 text-xs" :disabled="!isEditable">
+                                        <option value="RM">RM (Raw Material)</option>
+                                        <option value="FG">FG (Finished Good)</option>
+                                        <option value="SA">SA (Sub Assembly)</option>
+                                        <option value="CO">CO (Component)</option>
+                                    </select>
+                                </td>
+                                <td class="p-2">
+                                    <select x-model="prod.uom" class="form-input-premium py-1 px-1.5 text-xs text-center" :disabled="!isEditable">
+                                        <option value="Kg">Kg</option>
+                                        <option value="Sheet">Sheet</option>
+                                        <option value="Pcs">Pcs</option>
+                                    </select>
+                                </td>
+                                <td class="p-2">
+                                    <input type="text" x-model="prod.remarks" class="form-input-premium py-1 px-1.5 text-xs" placeholder="Remarks..." :disabled="!isEditable">
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {{-- Hidden inputs for products mapping (for submission) --}}
+        <template x-for="(prod, index) in products" :key="index">
+            <div>
+                <template x-if="prod.work_order_product_id">
+                    <input type="hidden" :name="`products[${index}][work_order_product_id]`" :value="prod.work_order_product_id">
+                </template>
+                <input type="hidden" :name="`products[${index}][inquiry_product_id]`" :value="prod.inquiry_product_id">
+                <input type="hidden" :name="`products[${index}][eo]`" :value="prod.eo">
+                <input type="hidden" :name="`products[${index}][class_id]`" :value="prod.class_id">
+                <input type="hidden" :name="`products[${index}][uom]`" :value="prod.uom">
+                <input type="hidden" :name="`products[${index}][remarks]`" :value="prod.remarks">
+            </div>
+        </template>
 
         </div> {{-- End Scrollable Container --}}
 
         {{-- Fixed Footer --}}
         <div class="p-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2.5 bg-slate-50 dark:bg-slate-900/60 z-10 flex-none">
-            <a href="{{ isset($workOrder) ? route('management.work-order.index') : route('management.inquiry.show', $inquiry->inquiry_id) }}"
+            <a href="{{ isset($workOrder) ? route('management.work-order.index') : route('management.inquiry.show', $inquiry->id) }}"
                class="px-4 py-2 text-xs font-bold border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xs transition-colors">
                 {{ isset($workOrder) ? 'Back to SPK List' : 'Back to Inquiry' }}
             </a>
+            @if(isset($workOrder) && $workOrder->status === 'Approved' && $workOrder->is_latest)
+                <form action="{{ route('management.work-order.revise', $workOrder->id) }}" method="POST" onsubmit="return confirm('Create a new draft revision of this SPK? This will make the current revision read-only.')" class="inline">
+                    @csrf
+                    <button type="submit"
+                            class="px-4 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xs shadow-xs transition-colors cursor-pointer flex items-center gap-1.5">
+                        <i class="fa-solid fa-code-branch"></i> Revise SPK (New Revision)
+                    </button>
+                </form>
+            @endif
             @if($isEditable)
                 <button type="submit"
                         class="px-4 py-2 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xs shadow-xs transition-colors cursor-pointer">
@@ -612,279 +669,553 @@
     </form>
 
     @if(isset($workOrder) && $workOrder->status === 'Draft')
-        <form id="submitApprovalForm" action="{{ route('management.work-order.submit', $workOrder->work_order_id) }}" method="POST" class="hidden">
+        <form id="submitApprovalForm" action="{{ route('management.work-order.submit', $workOrder->id) }}" method="POST" class="hidden">
             @csrf
         </form>
     @endif
     
-    {{-- ── RIGHT SIDE: Live SPK Document Preview (MS Word Style) ────────── --}}
-    <div class="spk-preview-panel p-8 flex flex-col items-center overflow-y-auto border-l border-slate-200 dark:border-slate-800 space-y-6"
-         x-show="showPreview" style="width: 50%">
-        
-        {{-- UNIFIED SPK DOCUMENT --}}
-        <div class="spk-paper w-full max-w-[760px] p-8 border shadow-lg flex flex-col justify-between flex-none min-h-[1075px]">
-            <div class="space-y-6">
-                {{-- Document Header Table --}}
-                <table class="w-full border-collapse border border-slate-900 text-xs font-serif text-slate-900">
-                    <tbody>
-                        <tr class="divide-x divide-slate-900">
-                            <td class="w-[30%] p-2 text-center border-b border-slate-900 align-middle">
-                                <img src="{{ asset('assets/image/sai-logo.png') }}" class="h-12 mx-auto object-contain mb-1">
-                                <div class="text-[9px] font-bold uppercase tracking-tight leading-none text-center">PT SUMMIT ADYAWINSA INDONESIA</div>
-                            </td>
-                            <td class="w-[45%] p-3 text-center font-extrabold text-sm uppercase tracking-wide border-b border-slate-900 align-middle">
-                                SURAT PERINTAH KERJA
-                            </td>
-                            <td class="w-[25%] text-[10px] border-b border-slate-900 p-0">
-                                <table class="w-full h-full text-[9px] border-collapse">
-                                    <tbody>
-                                        <tr class="border-b border-slate-900">
-                                            <td class="p-1 font-semibold border-r border-slate-900 w-[50%]">Nomor Dokumen</td>
-                                            <td class="p-1">: <span x-text="document_no"></span></td>
-                                        </tr>
-                                        <tr class="border-b border-slate-900">
-                                            <td class="p-1 font-semibold border-r border-slate-900">Departemen</td>
-                                            <td class="p-1">: <span x-text="doc_department"></span></td>
-                                        </tr>
-                                        <tr class="border-b border-slate-900">
-                                            <td class="p-1 font-semibold border-r border-slate-900">Tanggal Terbit</td>
-                                            <td class="p-1">: <span x-text="formatDateStr(publish_date)"></span></td>
-                                        </tr>
-                                        <tr class="border-b border-slate-900">
-                                            <td class="p-1 font-semibold border-r border-slate-900">Nomor Revisi</td>
-                                            <td class="p-1">: <span x-text="computedRevisionNo()"></span></td>
-                                        </tr>
-                                        <tr>
-                                            <td class="p-1 font-semibold border-r border-slate-900">Hal</td>
-                                            <td class="p-1">: <span x-text="page_hal"></span></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
- 
-                {{-- SPK Info & Priority Block --}}
-                <div class="flex justify-between items-start text-xs text-slate-900">
-                    <div class="space-y-1">
-                        <div>No. <span class="font-bold" x-text="work_order_no"></span></div>
-                        <div>Kepada : <span class="font-bold" x-text="getDepartmentName(department_id) + (support_departments.length ? ' / ' + support_departments.map(d => d.name).join(', ') : '')"></span></div>
-                    </div>
-                    <div class="text-[10px] w-32">
-                        <span class="block font-bold mb-1">Prioritas :</span>
-                        <div class="space-y-0.5">
-                            <label class="flex items-center gap-1.5 cursor-default">
-                                <input type="checkbox" disabled :checked="priority === 'URGENT'" class="w-3.5 h-3.5 text-slate-900 border-slate-900 rounded-none">
-                                <span class="font-semibold text-[10px]">URGENT</span>
-                            </label>
-                            <label class="flex items-center gap-1.5 cursor-default">
-                                <input type="checkbox" disabled :checked="priority === 'STANDARD'" class="w-3.5 h-3.5 text-slate-900 border-slate-900 rounded-none">
-                                <span class="font-semibold text-[10px]">STANDARD</span>
-                            </label>
-                            <label class="flex items-center gap-1.5 cursor-default">
-                                <input type="checkbox" disabled :checked="priority === 'LOW'" class="w-3.5 h-3.5 text-slate-900 border-slate-900 rounded-none">
-                                <span class="font-semibold text-[10px]">LOW</span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
- 
-                {{-- Dengan hormat... --}}
-                <div class="text-[10px] text-slate-900 space-y-1">
-                    <p>Dengan hormat,</p>
-                    <p>Mohon dibuatkan item dibawah ini :</p>
-                    
-                    <div class="grid grid-cols-3 gap-y-1 gap-x-2 py-1">
-                        <template x-for="proc in processesList" :key="proc.process_id">
-                            <template x-if="selected_processes.includes(proc.process_id)">
-                                <div class="flex items-center gap-1.5">
-                                    <span class="font-bold text-black text-[10px]">&check;</span>
-                                    <span class="text-[10px] text-black font-semibold" x-text="proc.process_name"></span>
-                                </div>
-                            </template>
-                        </template>
-                    </div>
-                </div>
- 
-                {{-- Attachments Block --}}
-                <div class="p-2 border border-dashed border-slate-400 text-[10px] text-slate-600">
-                    <span class="font-bold">Attachments:</span>
-                    <ul class="list-disc list-inside ml-2">
-                        <li>None</li>
-                    </ul>
-                </div>
- 
-                {{-- Table 1: Parts List (BOM) --}}
-                <div class="text-[10px] text-slate-900">
-                    <p class="font-bold mb-1">Data atau informasi yang bisa dilampirkan :</p>
-                    <table class="w-full text-center border-collapse border border-slate-900 text-[10px]">
-                        <thead>
-                            <tr class="divide-x divide-slate-900 border-b border-slate-900 font-bold bg-slate-50/50">
-                                <th class="p-1 w-6">No</th>
-                                <th class="p-1 w-20">Customer</th>
-                                <th class="p-1 w-16">Model</th>
-                                <th class="p-1 w-8">EO</th>
-                                <th class="p-1">Part Number</th>
-                                <th class="p-1">Part Name</th>
-                                <th class="p-1 w-10">Class ID</th>
-                                <th class="p-1 w-10">UOM</th>
-                                <th class="p-1">Remarks</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <template x-if="getAllParts().length === 0">
-                                <tr>
-                                    <td colspan="9" class="p-4 text-center text-slate-400 italic">No parts added. Add rows on the left side form.</td>
-                                </tr>
-                            </template>
-                            <template x-for="(part, index) in getAllParts()" :key="index">
-                                <tr class="divide-x divide-y divide-slate-900 border-b border-slate-900 align-middle">
-                                    <td class="p-1" x-text="index + 1"></td>
-                                    <td class="p-1" x-text="part.customer_name"></td>
-                                    <td class="p-1" x-text="part.model_name"></td>
-                                    <td class="p-1" x-text="part.eo"></td>
-                                    <td class="p-1" x-text="part.part_no"></td>
-                                    <td class="p-1 text-left" x-text="part.part_name"></td>
-                                    <td class="p-1 font-bold text-black" x-text="part.class_id"></td>
-                                    <td class="p-1" x-text="part.uom"></td>
-                                    <td class="p-1 text-left" x-text="part.remarks || '—'"></td>
-                                </tr>
-                            </template>
-                        </tbody>
-                    </table>
-                </div>
+    @include('management.work-order.preview')
+</div>
 
-                {{-- Table 2: Schedule & Volume --}}
-                <div class="text-[10px] text-slate-900 pt-2">
-                    <p class="font-bold mb-1">Schedule &amp; Volume Target :</p>
-                    <table class="w-full text-center border-collapse border border-slate-900 text-[10px]">
-                        <thead>
-                            <tr class="divide-x divide-slate-900 border-b border-slate-900 font-bold bg-slate-50/50">
-                                <th class="p-1 w-6">No</th>
-                                <th class="p-1">SOP</th>
-                                <th class="p-1 w-20">Model Life</th>
-                                <th class="p-1">First Sample</th>
-                                <th class="p-1">DueDate Approval</th>
-                                <th class="p-1">DueDate Closed</th>
-                                <th class="p-1">Vol/Years</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <template x-for="(prod, index) in products" :key="index">
-                                <tr class="divide-x divide-y divide-slate-900 border-b border-slate-900 align-middle">
-                                    <td class="p-1" x-text="index + 1"></td>
-                                    <td class="p-1 text-left">
-                                        <span x-text="prod.destination ? (prod.destination + ' : ') : ''"></span>
-                                        <span x-text="formatDateStr(prod.sop_date)"></span>
-                                    </td>
-                                    <td class="p-1" x-text="prod.model_life ? (prod.model_life + ' Years') : '—'"></td>
-                                    <td class="p-1" x-text="formatDateStr(prod.first_sample_date) || '—'"></td>
-                                    <td class="p-1 font-bold text-black" x-text="formatDateStr(prod.due_date_approval) || '—'"></td>
-                                    <td class="p-1 font-bold text-black" x-text="formatDateStr(prod.due_date_closed) || '—'"></td>
-                                    <td class="p-1" x-text="prod.annual_volume ? (Number(prod.annual_volume).toLocaleString() + ' /') : '—'"></td>
-                                </tr>
-                            </template>
-                        </tbody>
-                    </table>
-                </div>
- 
-                {{-- Remarks section --}}
-                <div class="text-[10px] text-slate-900 border border-slate-900 p-2 bg-slate-50/50">
-                    <span class="font-bold">Remarks:</span>
-                    <span class="ml-1" x-text="remarks || '—'"></span>
-                </div>
+{{-- ── MODAL: MASTER PROCESS CHECKLIST ────────────────────────── --}}
+<div id="modal-master-process" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-xs shadow-2xl w-full max-w-3xl border border-slate-200 dark:border-slate-700 flex flex-col max-h-[85vh]">
+        <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center flex-none">
+            <h3 class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                <i class="fa-solid fa-gear text-blue-500"></i> Master Process Checklist
+            </h3>
+            <button onclick="document.getElementById('modal-master-process').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 text-lg leading-none cursor-pointer">&times;</button>
+        </div>
+        
+        <div class="p-5 overflow-y-auto flex-1 text-xs space-y-4">
+            <div class="flex justify-end">
+                <button type="button" onclick="openAddProcessModal()" class="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] rounded-xs transition-colors flex items-center gap-1.5 shadow-sm">
+                    <i class="fa-solid fa-plus text-[9px]"></i> Add Process
+                </button>
             </div>
- 
-            {{-- Signature Table (Approval Workflow) --}}
-            @php
-                // Build a lookup of approvals by level for quick access
-                $approvalsByLevel = isset($workOrder)
-                    ? $workOrder->approvals->keyBy('approval_level')
-                    : collect();
-                // Determine column width based on number of rules (min 2: Dibuat + at least 1 approver)
-                $totalCols = max(2, $approvalRules->count() + 1);
-                $colPct = round(100 / $totalCols) . '%';
-            @endphp
-            <div class="pt-6">
-                <table class="w-full border-collapse border border-slate-900 text-[10px] text-slate-900 text-center">
-                    <tbody>
-                        {{-- Header row --}}
-                        <tr class="divide-x divide-slate-900 font-bold bg-slate-50/50">
-                            {{-- Dibuat column --}}
-                            <td class="p-1 border-b border-slate-900" style="width: {{ $colPct }}">Dibuat</td>
-                            {{-- Dynamic approver columns --}}
-                            @forelse($approvalRules as $rule)
-                                <td class="p-1 border-b border-slate-900" style="width: {{ $colPct }}">
-                                    {{ $rule->approval_level === $approvalRules->last()->approval_level ? 'Disetujui' : 'Diketahui' }}
-                                </td>
-                            @empty
-                                {{-- Fallback if no rules configured yet: show 2 placeholder columns --}}
-                                <td class="p-1 border-b border-slate-900">Diketahui</td>
-                                <td class="p-1 border-b border-slate-900">Disetujui</td>
-                            @endforelse
+            
+            <div class="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-xs">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 text-[10px] font-bold text-slate-400 uppercase">
+                            <th class="p-2.5 w-24">Code</th>
+                            <th class="p-2.5">Process Name</th>
+                            <th class="p-2.5">Default Dept(s)</th>
+                            <th class="p-2.5 w-16 text-center">Order</th>
+                            <th class="p-2.5 w-16 text-center">Status</th>
+                            <th class="p-2.5 w-24 text-right">Actions</th>
                         </tr>
-                        {{-- Signature body row --}}
-                        <tr class="divide-x divide-slate-900" style="height: 100px">
-                            {{-- Dibuat / Creator --}}
-                            <td class="p-2 border-b border-slate-900 align-bottom relative">
-                                <div class="absolute inset-x-0 top-2 text-center text-[9px] text-emerald-600 font-bold italic">APPROVED</div>
-                                <div class="absolute inset-x-0 top-6 text-center text-[8px] text-slate-400">
-                                    {{ isset($workOrder) ? $workOrder->created_at->format('d-M-Y H:i') : now()->format('d-M-Y H:i') }}
-                                </div>
-                                <div class="font-bold text-[10px]">{{ isset($workOrder) ? $workOrder->created_by : auth()->user()->name }}</div>
-                                <div class="text-[8px] text-slate-400">Staff MKT</div>
-                            </td>
-                            {{-- Dynamic approver signature cells --}}
-                            @forelse($approvalRules as $rule)
-                                @php
-                                    $levelApproval = $approvalsByLevel->get($rule->approval_level);
-                                    $isApproved    = $levelApproval && $levelApproval->status === 'Approved';
-                                    $isPending     = $levelApproval && $levelApproval->status === 'Pending';
-                                    $isRejected    = $levelApproval && $levelApproval->status === 'Rejected';
-                                @endphp
-                                <td class="p-2 border-b border-slate-900 align-bottom relative">
-                                    @if($isApproved)
-                                        <div class="absolute inset-x-0 top-2 text-center text-[9px] text-emerald-600 font-bold italic">APPROVED</div>
-                                        <div class="absolute inset-x-0 top-6 text-center text-[8px] text-slate-400">
-                                            {{ $levelApproval->approved_at ? $levelApproval->approved_at->format('d-M-Y H:i') : '' }}
-                                        </div>
-                                        <div class="font-bold text-[10px] text-slate-900">{{ $levelApproval->approver_name }}</div>
-                                        <div class="text-[8px] text-slate-400">{{ $rule->position_label }}</div>
-                                    @elseif($isRejected)
-                                        <div class="absolute inset-x-0 top-2 text-center text-[9px] text-rose-500 font-bold italic">REJECTED</div>
-                                        <div class="absolute inset-x-0 top-6 text-center text-[8px] text-slate-400">
-                                            {{ $levelApproval->approved_at ? $levelApproval->approved_at->format('d-M-Y H:i') : '' }}
-                                        </div>
-                                        <div class="font-bold text-[10px] text-slate-900">{{ $levelApproval->approver_name }}</div>
-                                        <div class="text-[8px] text-slate-400">{{ $rule->position_label }}</div>
-                                    @elseif($isPending)
-                                        <div class="absolute inset-x-0 top-2 text-center text-[9px] text-amber-500 font-bold italic">PENDING</div>
-                                        <div class="text-[9px] font-bold text-slate-700 uppercase block mb-1">{{ $rule->position_label }}</div>
-                                        <div class="text-[8px] text-slate-400">{{ $rule->department->name ?? '' }}</div>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-850">
+                        @foreach($processes as $p)
+                            <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/20">
+                                <td class="p-2.5 font-mono text-slate-750 dark:text-slate-300">{{ $p->process_code }}</td>
+                                <td class="p-2.5 font-bold text-slate-800 dark:text-slate-200">{{ $p->process_name }}</td>
+                                <td class="p-2.5 text-slate-500 dark:text-slate-400">
+                                    {{ $p->getDefaultAssignedDepartments()->pluck('code')->implode(', ') ?: '—' }}
+                                </td>
+                                <td class="p-2.5 text-center font-mono">{{ $p->sort_order }}</td>
+                                <td class="p-2.5 text-center">
+                                    @if($p->is_active)
+                                        <span class="px-1.5 py-0.5 text-[9px] font-bold bg-emerald-50 dark:bg-emerald-950/20 text-emerald-650 dark:text-emerald-450 border border-emerald-250 dark:border-emerald-900 rounded-xs">Active</span>
                                     @else
-                                        {{-- Waiting / not yet submitted --}}
-                                        <div class="text-[9px] font-bold text-slate-700 uppercase block mb-1">{{ $rule->position_label }}</div>
-                                        <div class="text-[8px] text-slate-400">{{ $rule->department->name ?? '' }}</div>
+                                        <span class="px-1.5 py-0.5 text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700 rounded-xs">Inactive</span>
                                     @endif
                                 </td>
-                            @empty
-                                {{-- Fallback placeholder cells --}}
-                                <td class="p-2 border-b border-slate-900 align-bottom">
-                                    <div class="text-[9px] font-bold text-slate-400 uppercase">— Belum dikonfigurasi —</div>
+                                <td class="p-2.5 text-right">
+                                    <div class="flex justify-end items-center gap-2">
+                                        <button type="button" onclick="openEditProcessModal({{ json_encode($p) }})" class="p-1.5 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-blue-400 text-slate-600 dark:text-slate-350 hover:text-blue-650 rounded-xs transition-colors flex items-center justify-center w-7 h-7" title="Edit">
+                                            <i class="fa-solid fa-pen-to-square text-[11px]"></i>
+                                        </button>
+                                        <form action="{{ route('management.process-checklist.destroy', $p->id) }}" method="POST" onsubmit="return confirm('Delete this process?')" class="inline-flex">
+                                            @csrf
+                                            <button type="submit" class="p-1.5 bg-rose-50 dark:bg-rose-950/20 border border-rose-250 dark:border-rose-900/50 text-rose-600 dark:text-rose-450 hover:border-rose-500 rounded-xs transition-colors flex items-center justify-center w-7 h-7" title="Delete">
+                                                <i class="fa-solid fa-trash-can text-[11px]"></i>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
-                                <td class="p-2 border-b border-slate-900 align-bottom">
-                                    <div class="text-[9px] font-bold text-slate-400 uppercase">— Belum dikonfigurasi —</div>
-                                </td>
-                            @endforelse
-                        </tr>
+                            </tr>
+                        @endforeach
                     </tbody>
                 </table>
             </div>
         </div>
- 
+        
+        <div class="p-4 border-t border-slate-100 dark:border-slate-700 flex justify-end flex-none">
+            <button onclick="document.getElementById('modal-master-process').classList.add('hidden')" class="px-4 py-2 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xs font-bold text-xs transition-colors cursor-pointer">Close</button>
+        </div>
     </div>
 </div>
+
+
+
+{{-- ── MODAL: ADD PROCESS CHECKLIST ───────────────────────────── --}}
+<div id="modal-add-process" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-xs shadow-2xl w-full max-w-md border border-slate-200 dark:border-slate-700">
+        <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+            <h3 class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">Add Master Process</h3>
+            <button onclick="document.getElementById('modal-add-process').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 text-lg leading-none cursor-pointer">&times;</button>
+        </div>
+        <form id="add-process-form" action="{{ route('management.process-checklist.store') }}" method="POST" class="p-5 space-y-4 text-xs">
+            @csrf
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Process Code <span class="text-rose-500">*</span></label>
+                <input type="text" name="process_code" required placeholder="e.g. CUTTING" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
+            </div>
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Process Name <span class="text-rose-500">*</span></label>
+                <input type="text" name="process_name" required placeholder="e.g. Cutting Process" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
+            </div>
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Sort Order <span class="text-rose-500">*</span></label>
+                <input type="number" name="sort_order" required value="0" min="0" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
+            </div>
+            <div x-data="approverSelect('add_proc_dept_select', {{ json_encode($departments->map(fn($d) => ['id' => $d->id, 'label' => $d->name . ' (' . $d->code . ')'])) }}, [])" class="relative">
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                    Default Department Owner <span class="text-rose-500">*</span>
+                </label>
+                {{-- Hidden native select --}}
+                <select name="default_assigned_departments[]" id="add_proc_dept_select" multiple class="hidden">
+                    @foreach($departments as $dept)
+                        <option value="{{ $dept->id }}">{{ $dept->name }}</option>
+                    @endforeach
+                </select>
+                {{-- Search input --}}
+                <div class="relative">
+                    <input type="text" x-model="search" @focus="open = true" @click.outside="open = false" @keydown.escape="open = false"
+                           placeholder="Search department..."
+                           class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 pr-8 rounded-xs focus:outline-none focus:border-blue-500">
+                    <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                        <i class="fa-solid fa-chevron-down text-[9px]"></i>
+                    </span>
+                    <div x-show="open" x-transition
+                         class="absolute z-40 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xs shadow-lg max-h-44 overflow-y-auto">
+                        <template x-for="item in filtered" :key="item.id">
+                            <div @click="toggle(item)"
+                                 :class="selectedIds.includes(item.id) ? 'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50'"
+                                 class="flex items-center justify-between px-3 py-1.5 text-xs cursor-pointer">
+                                <span x-text="item.label"></span>
+                                <i x-show="selectedIds.includes(item.id)" class="fa-solid fa-check text-[9px] text-blue-500"></i>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+                {{-- Tags list --}}
+                <div class="mt-1 flex flex-wrap gap-1 p-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xs min-h-[30px]">
+                    <template x-if="selectedIds.length === 0">
+                        <span class="text-[9px] text-slate-400 italic self-center">No department selected</span>
+                    </template>
+                    <template x-for="item in selectedItems" :key="item.id">
+                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 text-[9px] font-semibold rounded-full border border-blue-200 dark:border-blue-800">
+                            <span x-text="item.label"></span>
+                            <button type="button" @click="remove(item.id)" class="hover:text-blue-950 dark:hover:text-white">&times;</button>
+                        </span>
+                    </template>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-750">
+                <button type="button" onclick="document.getElementById('modal-add-process').classList.add('hidden')" class="px-3.5 py-2 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xs font-bold text-xs transition-colors cursor-pointer">Cancel</button>
+                <button type="submit" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xs text-xs transition-colors cursor-pointer">Save Process</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- ── MODAL: EDIT PROCESS CHECKLIST ──────────────────────────── --}}
+<div id="modal-edit-process" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-xs shadow-2xl w-full max-w-md border border-slate-200 dark:border-slate-700">
+        <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+            <h3 class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">Edit Master Process</h3>
+            <button onclick="document.getElementById('modal-edit-process').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 text-lg leading-none cursor-pointer">&times;</button>
+        </div>
+        <form id="edit-process-form" action="" method="POST" class="p-5 space-y-4 text-xs">
+            @csrf
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Process Code <span class="text-rose-500">*</span></label>
+                <input type="text" name="process_code" id="edit_proc_code" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
+            </div>
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Process Name <span class="text-rose-500">*</span></label>
+                <input type="text" name="process_name" id="edit_proc_name" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
+            </div>
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Sort Order <span class="text-rose-500">*</span></label>
+                <input type="number" name="sort_order" id="edit_proc_sort" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
+            </div>
+            <div x-data="approverSelect('edit_proc_dept_select', {{ json_encode($departments->map(fn($d) => ['id' => $d->id, 'label' => $d->name . ' (' . $d->code . ')'])) }}, [])" x-on:set-proc-depts.window="if ($event.detail.target === 'edit_proc_dept_select') setSelected($event.detail.ids)" class="relative">
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                    Default Department Owner <span class="text-rose-500">*</span>
+                </label>
+                {{-- Hidden native select --}}
+                <select name="default_assigned_departments[]" id="edit_proc_dept_select" multiple class="hidden">
+                    @foreach($departments as $dept)
+                        <option value="{{ $dept->id }}">{{ $dept->name }}</option>
+                    @endforeach
+                </select>
+                {{-- Search input --}}
+                <div class="relative">
+                    <input type="text" x-model="search" @focus="open = true" @click.outside="open = false" @keydown.escape="open = false"
+                           placeholder="Search department..."
+                           class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 pr-8 rounded-xs focus:outline-none focus:border-blue-500">
+                    <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                        <i class="fa-solid fa-chevron-down text-[9px]"></i>
+                    </span>
+                    <div x-show="open" x-transition
+                         class="absolute z-40 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xs shadow-lg max-h-44 overflow-y-auto">
+                        <template x-for="item in filtered" :key="item.id">
+                            <div @click="toggle(item)"
+                                 :class="selectedIds.includes(item.id) ? 'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50'"
+                                 class="flex items-center justify-between px-3 py-1.5 text-xs cursor-pointer">
+                                <span x-text="item.label"></span>
+                                <i x-show="selectedIds.includes(item.id)" class="fa-solid fa-check text-[9px] text-blue-500"></i>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+                {{-- Tags list --}}
+                <div class="mt-1 flex flex-wrap gap-1 p-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xs min-h-[30px]">
+                    <template x-if="selectedIds.length === 0">
+                        <span class="text-[9px] text-slate-400 italic self-center">No department selected</span>
+                    </template>
+                    <template x-for="item in selectedItems" :key="item.id">
+                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 text-[9px] font-semibold rounded-full border border-blue-200 dark:border-blue-800">
+                            <span x-text="item.label"></span>
+                            <button type="button" @click="remove(item.id)" class="hover:text-blue-950 dark:hover:text-white">&times;</button>
+                        </span>
+                    </template>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 py-1">
+                <input type="checkbox" name="is_active" id="edit_proc_active" value="1" class="rounded-xs text-blue-600">
+                <label for="edit_proc_active" class="font-semibold text-slate-700 dark:text-slate-350">Active</label>
+            </div>
+            <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-750">
+                <button type="button" onclick="document.getElementById('modal-edit-process').classList.add('hidden')" class="px-3.5 py-2 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xs font-bold text-xs transition-colors cursor-pointer">Cancel</button>
+                <button type="submit" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xs text-xs transition-colors cursor-pointer">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- ── MODAL: MASTER APPROVAL RULE ────────────────────────────── --}}
+<div id="modal-master-approval" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-xs shadow-2xl w-full max-w-4xl border border-slate-200 dark:border-slate-700 flex flex-col max-h-[85vh]">
+        <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center flex-none">
+            <h3 class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                <i class="fa-solid fa-user-shield text-blue-500"></i> Master Approval Rules (SPK Matrix)
+            </h3>
+            <button onclick="document.getElementById('modal-master-approval').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 text-lg leading-none cursor-pointer">&times;</button>
+        </div>
+        
+        <div class="p-5 overflow-y-auto flex-1 text-xs space-y-4">
+            <div class="flex justify-end">
+                <button type="button" onclick="openAddApprovalModal()" class="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] rounded-xs transition-colors flex items-center gap-1.5 shadow-sm">
+                    <i class="fa-solid fa-plus text-[9px]"></i> Add Rule
+                </button>
+            </div>
+            <div class="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-xs">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 text-[10px] font-bold text-slate-400 uppercase">
+                            <th class="p-2.5 w-16 text-center">Level</th>
+                            <th class="p-2.5">Position Label</th>
+                            <th class="p-2.5">Action Header</th>
+                            <th class="p-2.5">Department</th>
+                            <th class="p-2.5">Specific Approvers</th>
+                            <th class="p-2.5 w-16 text-center">Order</th>
+                            <th class="p-2.5 w-16 text-center">Status</th>
+                            <th class="p-2.5 w-24 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-850">
+                        @foreach($approvalRules as $rule)
+                            <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/20">
+                                <td class="p-2.5 text-center font-bold">{{ $rule->approval_level }}</td>
+                                <td class="p-2.5 font-bold text-slate-800 dark:text-slate-200">{{ $rule->position_label }}</td>
+                                <td class="p-2.5">
+                                    <span class="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 text-slate-650 dark:text-slate-300 font-semibold rounded-xs">{{ $rule->action_label ?? 'Checked' }}</span>
+                                </td>
+                                <td class="p-2.5 font-semibold text-slate-700 dark:text-slate-350">{{ $rule->department->code ?? '—' }}</td>
+                                <td class="p-2.5 text-slate-500 dark:text-slate-400 text-[10px]">
+                                    {{ $rule->approverUsers->pluck('name')->implode(', ') ?: 'Any in Department' }}
+                                </td>
+                                <td class="p-2.5 text-center font-mono">{{ $rule->sort_order }}</td>
+                                <td class="p-2.5 text-center">
+                                    @if($rule->is_active)
+                                        <span class="px-1.5 py-0.5 text-[9px] font-bold bg-emerald-50 dark:bg-emerald-950/20 text-emerald-650 dark:text-emerald-450 border border-emerald-250 dark:border-emerald-900 rounded-xs">Active</span>
+                                    @else
+                                        <span class="px-1.5 py-0.5 text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700 rounded-xs">Inactive</span>
+                                    @endif
+                                </td>
+                                <td class="p-2.5 text-right">
+                                    <div class="flex justify-end items-center gap-2">
+                                        <button type="button" onclick="openEditApprovalModal({{ json_encode($rule) }})" class="p-1.5 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-blue-400 text-slate-600 dark:text-slate-300 hover:text-blue-650 rounded-xs transition-colors flex items-center justify-center w-7 h-7" title="Edit">
+                                            <i class="fa-solid fa-pen-to-square text-[11px]"></i>
+                                        </button>
+                                        <form action="{{ route('management.approval-config.destroy', $rule->id) }}" method="POST" onsubmit="return confirm('Delete this approval rule?')" class="inline-flex">
+                                            @csrf
+                                            <button type="submit" class="p-1.5 bg-rose-50 dark:bg-rose-950/20 border border-rose-250 dark:border-rose-900/50 text-rose-600 dark:text-rose-450 hover:border-rose-500 rounded-xs transition-colors flex items-center justify-center w-7 h-7" title="Delete">
+                                                <i class="fa-solid fa-trash-can text-[11px]"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="p-4 border-t border-slate-100 dark:border-slate-700 flex justify-end flex-none">
+            <button onclick="document.getElementById('modal-master-approval').classList.add('hidden')" class="px-4 py-2 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xs font-bold text-xs transition-colors cursor-pointer">Close</button>
+        </div>
+    </div>
+</div>
+
+{{-- ── MODAL: EDIT APPROVAL RULE ──────────────────────────────── --}}
+<div id="modal-edit-approval" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-xs shadow-2xl w-full max-w-md border border-slate-200 dark:border-slate-700">
+        <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+            <h3 class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">Edit Master Approval Rule</h3>
+            <button onclick="document.getElementById('modal-edit-approval').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 text-lg leading-none cursor-pointer">&times;</button>
+        </div>
+        <form id="edit-approval-form" action="" method="POST" class="p-5 space-y-4 text-xs">
+            @csrf
+            <input type="hidden" name="document_type" value="SPK">
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Approval Level <span class="text-rose-500">*</span></label>
+                <input type="number" name="approval_level" id="edit_app_level" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
+            </div>
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Position Label <span class="text-rose-500">*</span></label>
+                <input type="text" name="position_label" id="edit_app_position" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
+            </div>
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Sign-off Header <span class="text-rose-500">*</span></label>
+                <select name="action_label" id="edit_app_action" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
+                    <option value="Checked">Checked</option>
+                    <option value="Approved">Approved</option>
+                    <option value="Reviewed">Reviewed</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Responsible Dept <span class="text-rose-500">*</span></label>
+                <select name="department_id" id="edit_app_dept" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
+                    @foreach($departments as $dept)
+                        <option value="{{ $dept->id }}">{{ $dept->name }} ({{ $dept->code }})</option>
+                    @endforeach
+                </select>
+            </div>
+            <div x-data="approverSelect('edit_master_approver_user_ids', {{ json_encode($users->map(fn($u) => ['id' => $u->id, 'label' => $u->name . ' (' . $u->nik . ')'])) }}, [])" x-on:set-master-approvers.window="if ($event.detail.target === 'edit_master_approver_user_ids') setSelected($event.detail.ids)" class="relative">
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                    Specific Approver(s)
+                    <span class="text-slate-300 text-[9px] normal-case font-normal ml-1">(searchable — select multiple)</span>
+                </label>
+                {{-- Hidden native select --}}
+                <select name="approver_user_ids[]" id="edit_master_approver_user_ids" multiple class="hidden">
+                    @foreach($users as $u)
+                        <option value="{{ $u->id }}">{{ $u->name }}</option>
+                    @endforeach
+                </select>
+                {{-- Search input --}}
+                <div class="relative">
+                    <input type="text" x-model="search" @focus="open = true" @click.outside="open = false" @keydown.escape="open = false"
+                           placeholder="Search approver..."
+                           class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 pr-8 rounded-xs focus:outline-none focus:border-blue-500">
+                    <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                        <i class="fa-solid fa-chevron-down text-[9px]"></i>
+                    </span>
+                    {{-- Dropdown --}}
+                    <div x-show="open" x-transition
+                         class="absolute z-40 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xs shadow-lg max-h-40 overflow-y-auto">
+                        <template x-for="item in filtered" :key="item.id">
+                            <div @click="toggle(item)"
+                                 :class="selectedIds.includes(item.id) ? 'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50'"
+                                 class="flex items-center justify-between px-3 py-1.5 text-xs cursor-pointer">
+                                <span x-text="item.label"></span>
+                                <i x-show="selectedIds.includes(item.id)" class="fa-solid fa-check text-[9px] text-blue-500"></i>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+                {{-- Tags list --}}
+                <div class="mt-1 flex flex-wrap gap-1 p-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xs min-h-[30px]">
+                    <template x-if="selectedIds.length === 0">
+                        <span class="text-[9px] text-slate-400 italic self-center">No approver selected</span>
+                    </template>
+                    <template x-for="item in selectedItems" :key="item.id">
+                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 text-[9px] font-semibold rounded-full border border-blue-200 dark:border-blue-800">
+                            <span x-text="item.label"></span>
+                            <button type="button" @click="remove(item.id)" class="hover:text-blue-950 dark:hover:text-white">&times;</button>
+                        </span>
+                    </template>
+                </div>
+            </div>
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Sort Order</label>
+                <input type="number" name="sort_order" id="edit_app_sort" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
+            </div>
+            <div class="flex items-center gap-2 py-1">
+                <input type="checkbox" name="is_active" id="edit_app_active" value="1" class="rounded-xs text-blue-600">
+                <label for="edit_app_active" class="font-semibold text-slate-700 dark:text-slate-350">Active status</label>
+            </div>
+            <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-750">
+                <button type="button" onclick="document.getElementById('modal-edit-approval').classList.add('hidden')" class="px-3.5 py-2 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xs font-bold text-xs transition-colors cursor-pointer">Cancel</button>
+                <button type="submit" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xs text-xs transition-colors cursor-pointer">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- ── MODAL: ADD APPROVAL RULE ────────────────────────────── --}}
+<div id="modal-add-approval" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-xs shadow-2xl w-full max-w-md border border-slate-200 dark:border-slate-700">
+        <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+            <h3 class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">Add Master Approval Rule</h3>
+            <button onclick="document.getElementById('modal-add-approval').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 text-lg leading-none cursor-pointer">&times;</button>
+        </div>
+        <form id="add-approval-form" action="{{ route('management.approval-config.store') }}" method="POST" class="p-5 space-y-4 text-xs">
+            @csrf
+            <input type="hidden" name="document_type" value="SPK">
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Approval Level <span class="text-rose-500">*</span></label>
+                <input type="number" name="approval_level" required value="1" min="1" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
+            </div>
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Position Label <span class="text-rose-500">*</span></label>
+                <input type="text" name="position_label" required placeholder="e.g. Marketing GM" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
+            </div>
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Sign-off Header <span class="text-rose-500">*</span></label>
+                <select name="action_label" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500 cursor-pointer">
+                    <option value="Checked">Checked</option>
+                    <option value="Approved">Approved</option>
+                    <option value="Reviewed">Reviewed</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Responsible Dept <span class="text-rose-500">*</span></label>
+                <select name="department_id" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500 cursor-pointer">
+                    @foreach($departments as $dept)
+                        <option value="{{ $dept->id }}">{{ $dept->name }} ({{ $dept->code }})</option>
+                    @endforeach
+                </select>
+            </div>
+            <div x-data="approverSelect('add_master_approver_user_ids', {{ json_encode($users->map(fn($u) => ['id' => $u->id, 'label' => $u->name . ' (' . $u->nik . ')'])) }}, [])" class="relative">
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                    Specific Approver(s)
+                    <span class="text-slate-300 text-[9px] normal-case font-normal ml-1">(searchable — select multiple)</span>
+                </label>
+                {{-- Hidden native select --}}
+                <select name="approver_user_ids[]" id="add_master_approver_user_ids" multiple class="hidden">
+                    @foreach($users as $u)
+                        <option value="{{ $u->id }}">{{ $u->name }}</option>
+                    @endforeach
+                </select>
+                {{-- Search input --}}
+                <div class="relative">
+                    <input type="text" x-model="search" @focus="open = true" @click.outside="open = false" @keydown.escape="open = false"
+                           placeholder="Search approver..."
+                           class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 pr-8 rounded-xs focus:outline-none focus:border-blue-500">
+                    <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                        <i class="fa-solid fa-chevron-down text-[9px]"></i>
+                    </span>
+                    <div x-show="open" x-transition
+                         class="absolute z-40 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xs shadow-lg max-h-40 overflow-y-auto">
+                        <template x-for="item in filtered" :key="item.id">
+                            <div @click="toggle(item)"
+                                 :class="selectedIds.includes(item.id) ? 'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50'"
+                                 class="flex items-center justify-between px-3 py-1.5 text-xs cursor-pointer">
+                                <span x-text="item.label"></span>
+                                <i x-show="selectedIds.includes(item.id)" class="fa-solid fa-check text-[9px] text-blue-500"></i>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+                {{-- Tags list --}}
+                <div class="mt-1 flex flex-wrap gap-1 p-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xs min-h-[30px]">
+                    <template x-if="selectedIds.length === 0">
+                        <span class="text-[9px] text-slate-400 italic self-center">No approver selected</span>
+                    </template>
+                    <template x-for="item in selectedItems" :key="item.id">
+                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 text-[9px] font-semibold rounded-full border border-blue-200 dark:border-blue-800">
+                            <span x-text="item.label"></span>
+                            <button type="button" @click="remove(item.id)" class="hover:text-blue-950 dark:hover:text-white">&times;</button>
+                        </span>
+                    </template>
+                </div>
+            </div>
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Sort Order</label>
+                <input type="number" name="sort_order" value="0" min="0" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
+            </div>
+            <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-750">
+                <button type="button" onclick="document.getElementById('modal-add-approval').classList.add('hidden')" class="px-3.5 py-2 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xs font-bold text-xs transition-colors cursor-pointer">Cancel</button>
+                <button type="submit" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xs text-xs transition-colors cursor-pointer">Save Rule</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openAddProcessModal() {
+    // Reset add process form
+    const form = document.getElementById('add-process-form');
+    if (form) {
+        form.reset();
+    }
+    // Clear select tag widgets inside add form
+    window.dispatchEvent(new CustomEvent('set-proc-depts', { detail: { target: 'add_proc_dept_select', ids: [] } }));
+    document.getElementById('modal-add-process').classList.remove('hidden');
+}
+
+function openAddApprovalModal() {
+    // Reset add approval form
+    const form = document.getElementById('add-approval-form');
+    if (form) {
+        form.reset();
+    }
+    // Clear select tag widgets inside add form
+    window.dispatchEvent(new CustomEvent('set-master-approvers', { detail: { target: 'add_master_approver_user_ids', ids: [] } }));
+    document.getElementById('modal-add-approval').classList.remove('hidden');
+}
+
+function openEditProcessModal(proc) {
+    document.getElementById('edit-process-form').action = '/management/process-checklist/' + proc.id + '/update';
+    document.getElementById('edit_proc_code').value = proc.process_code;
+    document.getElementById('edit_proc_name').value = proc.process_name;
+    document.getElementById('edit_proc_sort').value = proc.sort_order;
+    document.getElementById('edit_proc_active').checked = proc.is_active;
+
+    // Dispatch event to Alpine custom widget to set selected departments
+    let deptIds = [];
+    try {
+        deptIds = JSON.parse(proc.default_assigned_departments || '[]').map(Number);
+    } catch(e) {}
+    window.dispatchEvent(new CustomEvent('set-proc-depts', { detail: { target: 'edit_proc_dept_select', ids: deptIds } }));
+
+    document.getElementById('modal-edit-process').classList.remove('hidden');
+}
+
+function openEditApprovalModal(rule) {
+    document.getElementById('edit-approval-form').action = '/management/approval-config/' + rule.id + '/update';
+    document.getElementById('edit_app_level').value = rule.approval_level;
+    document.getElementById('edit_app_position').value = rule.position_label;
+    document.getElementById('edit_app_action').value = rule.action_label ?? 'Checked';
+    document.getElementById('edit_app_dept').value = rule.department_id;
+    document.getElementById('edit_app_sort').value = rule.sort_order;
+    document.getElementById('edit_app_active').checked = rule.is_active;
+
+    // Set multi-select approvers by dispatching custom event to Alpine component
+    let userIds = (rule.approver_user_ids || []).map(Number);
+    window.dispatchEvent(new CustomEvent('set-master-approvers', { detail: { target: 'edit_master_approver_user_ids', ids: userIds } }));
+
+    document.getElementById('modal-edit-approval').classList.remove('hidden');
+}
+</script>
+
 
 <script>
 document.addEventListener('alpine:init', () => {
@@ -893,15 +1224,36 @@ document.addEventListener('alpine:init', () => {
         work_order_no: @json(isset($workOrder) ? $workOrder->work_order_no : $defaultSpkNo),
         subject: @json(isset($workOrder) ? $workOrder->subject : "Pekerjaan New 5P45"),
         department_id: '{{ isset($workOrder) ? $workOrder->department_id : ($departments->first()->id ?? 1) }}',
-        priority: '{{ isset($workOrder) ? $workOrder->priority : "URGENT" }}',
-        selected_processes: @json(isset($workOrder) ? $workOrder->processes->pluck('process_id') : []),
-        support_departments: @json(isset($workOrder) ? $workOrder->supportDepartments->map(fn($d) => ['id' => $d->id, 'name' => "{$d->name} ({$d->code})"]) : []),
+        priority: '{{ isset($workOrder) ? ($workOrder->priority ?: "STANDARD") : "STANDARD" }}',
+        selected_processes: @json(isset($workOrder) ? $workOrder->processes->pluck('id') : []),
+        process_departments: {
+            @if(isset($workOrder))
+                @foreach($workOrder->processes as $proc)
+                    '{{ $proc->id }}': @json(json_decode($proc->pivot->assigned_departments ?? '[]')),
+                @endforeach
+            @else
+                @foreach($processes as $proc)
+                    '{{ $proc->id }}': @json(json_decode($proc->default_assigned_departments ?? '[]')),
+                @endforeach
+            @endif
+        },
+        support_departments: @json(isset($workOrder) ? $workOrder->supportDepartments->map(fn($d) => ['id' => $d->id, 'name' => $d->name . ($d->code ? " ({$d->code})" : "")]) : []),
         remarks: @json(isset($workOrder) ? $workOrder->remarks : ""),
-        document_no: @json(isset($workOrder) ? $workOrder->document_no : 'FO-13-02'),
-        doc_department: 'Sales',
+        document_no: @json(isset($workOrder) ? $workOrder->document_no : ($woHeader->document_no ?? 'FO-13-02')),
+        doc_department: @json(isset($workOrder) ? $workOrder->doc_department : ($woHeader->doc_department ?? 'Sales')),
         publish_date: @json(isset($workOrder) ? ($workOrder->publish_date ? $workOrder->publish_date->format('Y-m-d') : ($workOrder->created_at ? $workOrder->created_at->format('Y-m-d') : now()->format('Y-m-d'))) : now()->format('Y-m-d')),
-        page_hal: @json(isset($workOrder) ? $workOrder->page_hal : '1'),
+        page_hal: @json(isset($workOrder) ? $workOrder->page_hal : ($woHeader->page_hal ?? '1')),
+        revision_no: {{ isset($workOrder) ? $workOrder->revision_no : 0 }},
+        doc_revision_no: @json($woHeader->revision_no ?? 0),
+        first_sample_date: @json(isset($workOrder) ? ($workOrder->first_sample_date ? (is_string($workOrder->first_sample_date) ? substr($workOrder->first_sample_date, 0, 10) : $workOrder->first_sample_date->format('Y-m-d')) : '') : ''),
+        due_date_approval: @json(isset($workOrder) ? ($workOrder->due_date_approval ? (is_string($workOrder->due_date_approval) ? substr($workOrder->due_date_approval, 0, 10) : $workOrder->due_date_approval->format('Y-m-d')) : '') : ''),
+        due_date_closed: @json(isset($workOrder) ? ($workOrder->due_date_closed ? (is_string($workOrder->due_date_closed) ? substr($workOrder->due_date_closed, 0, 10) : $workOrder->due_date_closed->format('Y-m-d')) : '') : ''),
         showPreview: true,
+        holidays: [],
+        selected_approval_rules: @json(isset($workOrder) ? ($workOrder->selected_approval_rule_ids ?: $approvalRules->filter(fn($r) => is_array($r->approver_user_ids) && count($r->approver_user_ids) > 0)->pluck('id')) : $approvalRules->filter(fn($r) => is_array($r->approver_user_ids) && count($r->approver_user_ids) > 0)->pluck('id')),
+        
+        // All approval rules with their department_id for filtering
+        approvalRulesList: @json($approvalRules->filter(fn($r) => is_array($r->approver_user_ids) && count($r->approver_user_ids) > 0)->map(fn($r) => ['id' => $r->id, 'department_id' => $r->department_id])->values()),
         
         // Departments list lookup
         departmentsList: @json($departments),
@@ -909,88 +1261,208 @@ document.addEventListener('alpine:init', () => {
         
         // Pre-populated selected products
         products: @json(isset($workOrder) ? $workOrder->products : $inquiry->products).map(p => ({
-            inquiry_product_id: p.inquiry_product_id,
-            customer_name: '{{ $inquiry->customer_name }}',
-            model_name: p.model_name,
-            customer_part_no: p.customer_part_no,
-            customer_part_name: p.customer_part_name,
-            destination: p.destination,
+            work_order_product_id: p.id ?? null, // WO product PK (null for new WO)
+            inquiry_product_id: p.inquiry_product_id ?? p.id, // FK to mng_inquiry_products
+            customer_code: '{{ isset($workOrder) ? ($workOrder->inquiry->customer->code ?? "") : ($inquiry->customer->code ?? "") }}',
+            model_name: p.model_name ?? '',
+            customer_part_no: p.customer_part_no ?? '',
+            customer_part_name: p.customer_part_name ?? '',
+            destination: p.destination ?? '',
             sop_date: p.sop_date ? (typeof p.sop_date === 'string' ? p.sop_date.substring(0, 10) : p.sop_date) : '',
             eol_date: p.eol_date ? (typeof p.eol_date === 'string' ? p.eol_date.substring(0, 10) : p.eol_date) : '',
-            model_life: p.model_life,
-            annual_volume: p.annual_volume,
-            first_sample_date: p.first_sample_date ? (typeof p.first_sample_date === 'string' ? p.first_sample_date.substring(0, 10) : p.first_sample_date) : '',
-            due_date_approval: p.due_date_approval ? (typeof p.due_date_approval === 'string' ? p.due_date_approval.substring(0, 10) : p.due_date_approval) : '',
-            due_date_closed: p.due_date_closed ? (typeof p.due_date_closed === 'string' ? p.due_date_closed.substring(0, 10) : p.due_date_closed) : '',
-            remarks: p.remarks || ''
+            model_life: p.model_life ?? '',
+            annual_volume: p.annual_volume ?? '',
+            eo: p.eo ?? '-',
+            class_id: p.class_id ?? 'FG',
+            uom: p.uom ?? 'Kg',
+            variant: p.variant ?? '',
+            remarks: p.remarks ?? ''
         })),
 
-        // Keyed by inquiry_product_id
-        parts: {
-            @if(isset($workOrder))
-                @foreach($workOrder->products as $woProd)
-                    '{{ $woProd->inquiry_product_id }}': [
-                        @foreach($woProd->parts as $part)
-                            {
-                                eo: @json($part->eo),
-                                part_no: @json($part->part_no),
-                                part_name: @json($part->part_name),
-                                class_id: @json($part->class_id),
-                                uom: @json($part->uom),
-                                remarks: @json($part->remarks)
-                            },
-                        @endforeach
-                    ],
-                @endforeach
-            @else
-                @foreach($inquiry->products as $prod)
-                    '{{ $prod->inquiry_product_id }}': [
-                        {
-                            eo: '-',
-                            part_no: @json($prod->customer_part_no),
-                            part_name: @json($prod->customer_part_name),
-                            class_id: 'FG',
-                            uom: 'Pcs',
-                            remarks: 'Main Finished Good'
-                        }
-                    ],
-                @endforeach
-            @endif
-        },
-
         computedRevisionNo() {
-            if (!this.work_order_no) return '00';
-            let parts = this.work_order_no.split('/');
-            let firstPart = parts[0] || '';
-            let num = parseInt(firstPart, 10);
-            if (isNaN(num)) return '00';
-            return String(num).padStart(2, '0');
+            return String(this.revision_no).padStart(2, '0');
+        },
+        computedDocRevisionNo() {
+            return String(this.doc_revision_no).padStart(2, '0');
         },
 
-        init() {
+        async init() {
             this.updateDepartmentIdFromProcesses();
+            this.syncGlobalSupportDepartments(); // also triggers updateApprovalSuggestions
+            try {
+                let response = await fetch('{{ route('management.calendar.holidays') }}');
+                if (response.ok) {
+                    this.holidays = await response.json();
+                }
+            } catch (e) {
+                console.error('Failed to load holidays list', e);
+            }
+            this.checkPrioritySuggestions();
+        },
+
+        checkPrioritySuggestions() {
+            if (!this.isEditable) return;
+            if (!this.due_date_approval) {
+                this.priority = 'STANDARD';
+                return;
+            }
+
+            let targetDate = new Date(this.due_date_approval);
+            if (isNaN(targetDate.getTime())) {
+                this.priority = 'STANDARD';
+                return;
+            }
+
+            let today = new Date();
+            today.setHours(0,0,0,0);
+            targetDate.setHours(0,0,0,0);
+
+            // Calculate working days between today (exclusive) and targetDate (inclusive)
+            let workingDays = 0;
+            let current = new Date(today);
+            current.setDate(current.getDate() + 1);
+
+            while (current <= targetDate) {
+                let dayOfWeek = current.getDay(); // 0 = Sunday, 6 = Saturday
+                if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+                    let y = current.getFullYear();
+                    let m = String(current.getMonth() + 1).padStart(2, '0');
+                    let d = String(current.getDate()).padStart(2, '0');
+                    let dateStr = `${y}-${m}-${d}`;
+                    
+                    if (!this.holidays.includes(dateStr)) {
+                        workingDays++;
+                    }
+                }
+                current.setDate(current.getDate() + 1);
+            }
+
+            if (workingDays < 10) {
+                this.priority = 'URGENT';
+            } else if (workingDays <= 14) {
+                this.priority = 'STANDARD';
+            } else {
+                this.priority = 'LOW';
+            }
         },
 
         getDepartmentName(id) {
             let dept = this.departmentsList.find(d => d.id == id);
-            return dept ? `${dept.name} (${dept.code})` : '';
+            return dept ? (dept.name + (dept.code ? ` (${dept.code})` : '')) : '';
+        },
+
+        isProcessSelected(id) {
+            return this.selected_processes.map(Number).includes(Number(id));
         },
 
         toggleProcess(id) {
             if (!this.isEditable) return;
-            if (this.selected_processes.includes(id)) {
-                this.selected_processes = this.selected_processes.filter(v => v !== id);
+            const numId = Number(id);
+            if (this.isProcessSelected(numId)) {
+                this.selected_processes = this.selected_processes.filter(v => Number(v) !== numId);
             } else {
-                this.selected_processes.push(id);
+                this.selected_processes = [...this.selected_processes, numId];
+                // Set default owner department if not already set
+                if (!this.process_departments[numId] || this.process_departments[numId].length === 0) {
+                    let proc = this.processesList.find(p => p.id == numId);
+                    if (proc && proc.default_assigned_departments) {
+                        try {
+                            this.process_departments[numId] = JSON.parse(proc.default_assigned_departments).map(Number);
+                        } catch (e) {
+                            console.error(e);
+                        }
+                    }
+                }
             }
             this.updateDepartmentIdFromProcesses();
+            this.syncGlobalSupportDepartments();
+        },
+
+        syncGlobalSupportDepartments() {
+            let allIds = [];
+            this.selected_processes.forEach(procId => {
+                let depts = this.process_departments[procId] || [];
+                depts.forEach(id => {
+                    let parsed = parseInt(id);
+                    if (!isNaN(parsed) && !allIds.includes(parsed) && parsed != this.department_id) {
+                        allIds.push(parsed);
+                    }
+                });
+            });
+
+            // Map IDs to departments list objects
+            let list = allIds.map(id => {
+                let dept = this.departmentsList.find(d => d.id == id);
+                return dept ? { id: dept.id, name: dept.name + (dept.code ? ` (${dept.code})` : '') } : null;
+            }).filter(Boolean);
+
+            this.support_departments = list;
+            this.updateApprovalSuggestions();
+        },
+
+        /**
+         * Returns all department IDs currently selected across all process checklists.
+         */
+        getSelectedDepartmentIds() {
+            let ids = [];
+            this.selected_processes.forEach(procId => {
+                let depts = this.process_departments[procId] || [];
+                depts.forEach(id => {
+                    let parsed = parseInt(id);
+                    if (!isNaN(parsed) && !ids.includes(parsed)) {
+                        ids.push(parsed);
+                    }
+                });
+            });
+            return ids;
+        },
+
+        /**
+         * Returns true if the given department_id is among the departments
+         * selected in the Process Checklist.
+         */
+        isSuggestedRule(deptId) {
+            return this.getSelectedDepartmentIds().includes(parseInt(deptId));
+        },
+
+        /**
+         * Auto-select approval rules whose department matches selected process departments,
+         * and deselect rules whose department no longer matches (only if editable).
+         */
+        updateApprovalSuggestions() {
+            if (!this.isEditable) return;
+            let selectedDeptIds = this.getSelectedDepartmentIds();
+            let newSelection = [];
+            this.approvalRulesList.forEach(rule => {
+                if (selectedDeptIds.includes(parseInt(rule.department_id))) {
+                    newSelection.push(rule.id);
+                }
+            });
+            // Keep manually added rules (those not in approvalRulesList dept scope) intact
+            // Only auto-manage: add suggested ones, remove non-suggested ones that were auto-added
+            this.approvalRulesList.forEach(rule => {
+                let isNowSuggested = selectedDeptIds.includes(parseInt(rule.department_id));
+                let currentlySelected = this.selected_approval_rules.map(Number).includes(rule.id);
+                if (isNowSuggested && !currentlySelected) {
+                    this.selected_approval_rules.push(rule.id);
+                } else if (!isNowSuggested && currentlySelected) {
+                    this.selected_approval_rules = this.selected_approval_rules.filter(id => Number(id) !== rule.id);
+                }
+            });
         },
 
         updateDepartmentIdFromProcesses() {
             if (this.selected_processes.length > 0) {
-                let firstProc = this.processesList.find(p => p.process_id == this.selected_processes[0]);
-                if (firstProc) {
-                    this.department_id = firstProc.owner_department_id;
+                let firstProc = this.processesList.find(p => p.id == this.selected_processes[0]);
+                if (firstProc && firstProc.default_assigned_departments) {
+                    try {
+                        let ids = JSON.parse(firstProc.default_assigned_departments);
+                        if (ids.length > 0) {
+                            this.department_id = ids[0];
+                        }
+                    } catch (e) {
+                        console.error(e);
+                    }
                 }
             } else {
                 this.department_id = '{{ isset($workOrder) ? $workOrder->department_id : ($departments->first()->id ?? 1) }}';
@@ -1023,44 +1495,21 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
-        addPartRow(prodId) {
-            if (!this.isEditable) return;
-            if (!this.parts[prodId]) {
-                this.parts[prodId] = [];
-            }
-            this.parts[prodId].push({
-                eo: '-',
-                part_no: '',
-                part_name: '',
-                class_id: 'RM',
-                uom: 'Kg',
-                remarks: ''
-            });
-        },
-
-        removePartRow(prodId, index) {
-            if (!this.isEditable) return;
-            this.parts[prodId].splice(index, 1);
-        },
-
-        getAllParts() {
-            let all = [];
+        getUniqueSchedules() {
+            let uniqueMap = {};
             this.products.forEach(p => {
-                let partList = this.parts[p.inquiry_product_id] || [];
-                partList.forEach(part => {
-                    all.push({
-                        customer_name: p.customer_name,
-                        model_name: p.model_name,
-                        eo: part.eo,
-                        part_no: part.part_no,
-                        part_name: part.part_name,
-                        class_id: part.class_id,
-                        uom: part.uom,
-                        remarks: part.remarks
-                    });
-                });
+                let label = p.variant || p.destination || '';
+                let key = `${label}-${p.sop_date}`;
+                if (!uniqueMap[key]) {
+                    uniqueMap[key] = {
+                        variant: label,
+                        sop_date: p.sop_date,
+                        annual_volume: p.annual_volume,
+                        remarks: p.remarks || ''
+                    };
+                }
             });
-            return all;
+            return Object.values(uniqueMap);
         },
 
         formatDateStr(dateStr) {
@@ -1078,86 +1527,110 @@ document.addEventListener('alpine:init', () => {
 </script>
 @endsection
 
+
 @push('styles')
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <style>
-    /* Modern styling overrides for Select2 to match premium UI */
-    .select2-container--default .select2-selection--multiple {
-        background-color: #f8fafc !important;
-        border: 1px solid #cbd5e1 !important;
-        border-radius: 4px !important;
-        min-height: 40px !important;
-        padding: 4px 8px !important;
-        box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+    /* Compact override for process-dept multi-select inside BOM rows */
+    .select2-container--default .select2-selection--multiple.select2-process-select {
+        min-height: 28px !important;
+        padding: 1px 4px !important;
     }
-    .dark .select2-container--default .select2-selection--multiple {
-        background-color: #0f172a !important;
-        border-color: #475569 !important;
+    .select2-container--default .select2-selection--multiple.select2-process-select .select2-selection__choice {
+        font-size: 10px !important;
+        font-weight: 700 !important;
+        padding: 1px 6px !important;
+        margin: 2px 3px 2px 0 !important;
     }
-    .select2-container--default.select2-container--focus .select2-selection--multiple {
-        border-color: #3b82f6 !important;
-        box-shadow: 0 0 0 1px #3b82f6 !important;
-    }
-    .select2-container--default .select2-selection--multiple .select2-selection__choice {
-        background-color: #3b82f6 !important;
-        border: none !important;
-        color: #ffffff !important;
-        border-radius: 4px !important;
-        font-size: 11px !important;
-        font-weight: 600;
-        padding: 4px 8px !important;
-        margin-top: 3px !important;
-        display: inline-flex;
-        align-items: center;
-    }
-    .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
-        color: #ffffff !important;
-        margin-right: 6px !important;
-        border-right: 1px solid rgba(255,255,255,0.2);
-        padding-right: 6px;
-        font-weight: bold;
-    }
-    .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
-        background-color: transparent !important;
-        color: #ef4444 !important;
-    }
-    .select2-dropdown {
-        background-color: #ffffff !important;
-        border: 1px solid #cbd5e1 !important;
-        font-size: 12px;
-        z-index: 10000;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    }
-    .dark .select2-dropdown {
-        background-color: #1e293b !important;
-        border-color: #334155 !important;
-        color: #f1f5f9 !important;
-    }
-    .select2-container--default .select2-results__option--highlighted[aria-selected] {
-        background-color: #3b82f6 !important;
+    .select2-container--default .select2-selection--multiple.select2-process-select .select2-search__field {
+        margin-top: 2px !important;
+        font-size: 10px !important;
+        height: 20px !important;
+        line-height: 20px !important;
     }
 </style>
 @endpush
 
 @push('scripts')
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
     $(document).ready(function() {
-        $('.select2-support-depts').select2({
-            placeholder: "Select Support Departments..."
+        // Initialize select2 for each process department selection
+        $('.select2-process-depts').select2({
+            placeholder: "Assign Departments...",
+            containerCssClass: "select2-process-select-container",
+            selectionCssClass: "select2-process-select"
         }).on('change', function() {
+            let procId = $(this).data('process-id');
             let selectedValues = $(this).val() || [];
-            let list = selectedValues.map(id => {
-                let optionText = $('.select2-support-depts option[value="'+id+'"]').text();
-                return { id: parseInt(id), name: optionText.trim() };
-            });
+            
             let formEl = document.getElementById('spkFormContainer');
             if (formEl) {
-                Alpine.$data(formEl).support_departments = list;
+                let alpineData = Alpine.$data(formEl);
+                alpineData.process_departments[procId] = selectedValues.map(id => parseInt(id));
+                alpineData.syncGlobalSupportDepartments();
             }
         });
+
+        // Initialize state mapping on load (especially for edit/revision screen)
+        setTimeout(() => {
+            let formEl = document.getElementById('spkFormContainer');
+            if (formEl) {
+                let alpineData = Alpine.$data(formEl);
+                $('.select2-process-depts').each(function() {
+                    let procId = $(this).data('process-id');
+                    let selectedValues = $(this).val() || [];
+                    alpineData.process_departments[procId] = selectedValues.map(id => parseInt(id));
+                });
+                alpineData.syncGlobalSupportDepartments();
+            }
+        }, 300);
     });
+
+    // Alpine.js component: custom multi-select with searchable dropdown + tag list
+    function approverSelect(nativeId, allItems, initialIds) {
+        return {
+            allItems,
+            selectedIds: initialIds.map(Number),
+            search: '',
+            open: false,
+
+            get filtered() {
+                const q = this.search.toLowerCase();
+                return this.allItems.filter(i => i.label.toLowerCase().includes(q));
+            },
+
+            get selectedItems() {
+                return this.allItems.filter(i => this.selectedIds.includes(i.id));
+            },
+
+            toggle(item) {
+                const idx = this.selectedIds.indexOf(item.id);
+                if (idx === -1) {
+                    this.selectedIds.push(item.id);
+                } else {
+                    this.selectedIds.splice(idx, 1);
+                }
+                this.syncNativeSelect();
+            },
+
+            remove(id) {
+                this.selectedIds = this.selectedIds.filter(x => x !== id);
+                this.syncNativeSelect();
+            },
+
+            setSelected(ids) {
+                this.selectedIds = ids.map(Number);
+                this.syncNativeSelect();
+            },
+
+            syncNativeSelect() {
+                const sel = document.getElementById(nativeId);
+                if (!sel) return;
+                Array.from(sel.options).forEach(opt => {
+                    opt.selected = this.selectedIds.includes(Number(opt.value));
+                });
+            }
+        };
+    }
 </script>
 @endpush
 

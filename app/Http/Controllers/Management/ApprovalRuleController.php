@@ -12,7 +12,7 @@ class ApprovalRuleController extends Controller
 {
     public function index()
     {
-        $rules = ApprovalRule::with(['department', 'approverUser'])
+        $rules = ApprovalRule::with(['department'])
             ->orderBy('approval_level', 'asc')
             ->orderBy('sort_order', 'asc')
             ->get();
@@ -26,14 +26,17 @@ class ApprovalRuleController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'document_type'    => 'required|string|max:50',
-            'approval_level'   => 'required|integer|min:1',
-            'department_id'    => 'required|exists:departments,id',
-            'approver_user_id' => 'nullable|exists:users,id',
-            'position_label'   => 'required|string|max:100',
-            'sort_order'       => 'required|integer',
+            'document_type'      => 'required|string|max:50',
+            'approval_level'     => 'required|integer|min:1',
+            'department_id'      => 'required|exists:departments,id',
+            'approver_user_ids'  => 'nullable|array',
+            'approver_user_ids.*'=> 'exists:users,id',
+            'position_label'     => 'required|string|max:100',
+            'action_label'       => 'nullable|string|max:50',
+            'sort_order'         => 'required|integer',
         ]);
         $validated['is_active'] = $request->has('is_active');
+        $validated['action_label'] = $request->input('action_label') ?: 'Checked';
 
         ApprovalRule::create($validated);
 
@@ -45,14 +48,22 @@ class ApprovalRuleController extends Controller
         $rule = ApprovalRule::findOrFail($id);
 
         $validated = $request->validate([
-            'document_type'    => 'required|string|max:50',
-            'approval_level'   => 'required|integer|min:1',
-            'department_id'    => 'required|exists:departments,id',
-            'approver_user_id' => 'nullable|exists:users,id',
-            'position_label'   => 'required|string|max:100',
-            'sort_order'       => 'required|integer',
+            'document_type'      => 'required|string|max:50',
+            'approval_level'     => 'required|integer|min:1',
+            'department_id'      => 'required|exists:departments,id',
+            'approver_user_ids'  => 'nullable|array',
+            'approver_user_ids.*'=> 'exists:users,id',
+            'position_label'     => 'required|string|max:100',
+            'action_label'       => 'nullable|string|max:50',
+            'sort_order'         => 'required|integer',
         ]);
         $validated['is_active'] = $request->has('is_active');
+        $validated['action_label'] = $request->input('action_label') ?: 'Checked';
+
+        // Ensure empty array is saved properly if no users are selected
+        if (!isset($validated['approver_user_ids'])) {
+            $validated['approver_user_ids'] = null;
+        }
 
         $rule->update($validated);
 

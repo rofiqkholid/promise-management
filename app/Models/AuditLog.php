@@ -8,13 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class AuditLog extends Model
 {
     use HasFactory;
-
     protected $table = 'mng_audit_logs';
-    protected $primaryKey = 'audit_log_id';
-
-    const CREATED_AT = 'created_at';
-    const UPDATED_AT = null;
-
     protected $fillable = [
         'user_id',
         'module_name',

@@ -9,11 +9,7 @@ class AssessmentRanking extends Model
 {
     use HasFactory;
 
-    protected $table = 'mng_assessment_rankings';
-    protected $primaryKey = 'ranking_id';
-
-    const CREATED_AT = 'created_at';
-    const UPDATED_AT = null;
+    protected $table = 'mng_inq_rankings';
 
     protected $fillable = [
         'rank_code',

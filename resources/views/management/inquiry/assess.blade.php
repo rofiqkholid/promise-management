@@ -53,7 +53,7 @@
              }
 
              this.loading = true;
-             fetch(`/management/inquiry-product/{{ $product->inquiry_product_id }}/assess`, {
+             fetch(`/management/inquiry-product/{{ $product->id }}/assess`, {
                  method: 'POST',
                  headers: {
                      'Content-Type': 'application/json',
@@ -69,7 +69,7 @@
              .then(data => {
                  this.loading = false;
                  if (data.success) {
-                     window.location.href = '{{ route('management.inquiry.show', $inquiry->inquiry_id) }}';
+                     window.location.href = '{{ route('management.inquiry.show', $inquiry->id) }}';
                  } else {
                      alert('Error: ' + data.message);
                  }
@@ -91,7 +91,7 @@
     <!-- Header & Back Button -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-            <a href="{{ route('management.inquiry.show', $inquiry->inquiry_id) }}" class="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline mb-2">
+            <a href="{{ route('management.inquiry.show', $inquiry->id) }}" class="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline mb-2">
                 <i class="fa-solid fa-arrow-left"></i> Back to Inquiry Details
             </a>
             <h1 class="text-2xl font-bold tracking-tight text-slate-800 dark:text-white">Product Feasibility Assessment</h1>
@@ -175,7 +175,7 @@
                             class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold uppercase tracking-wider transition-colors">
                         Save Assessment
                     </button>
-                    <a href="{{ route('management.inquiry.show', $inquiry->inquiry_id) }}"
+                    <a href="{{ route('management.inquiry.show', $inquiry->id) }}"
                        class="w-full py-2.5 text-center border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold uppercase tracking-wider hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                         Cancel
                     </a>

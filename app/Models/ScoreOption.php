@@ -9,11 +9,7 @@ class ScoreOption extends Model
 {
     use HasFactory;
 
-    protected $table = 'mng_score_options';
-    protected $primaryKey = 'option_id';
-
-    const CREATED_AT = 'created_at';
-    const UPDATED_AT = null;
+    protected $table = 'mng_inq_score_options';
 
     protected $fillable = [
         'category_id',
@@ -25,6 +21,6 @@ class ScoreOption extends Model
 
     public function category()
     {
-        return $this->belongsTo(ScoreCategory::class, 'category_id', 'category_id');
+        return $this->belongsTo(ScoreCategory::class, 'category_id', 'id');
     }
 }

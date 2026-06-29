@@ -4,164 +4,7 @@
 
 @section('content')
 <div class="flex-1 overflow-y-auto p-4 pt-17.5 space-y-4 transition-colors duration-200"
-     x-data="{
-         showWizard: false,
-         step: 1,
-         loading: false,
-         inquiryId: null,
-         inquiryNo: null,
-         customer_name: '',
-         project_name: '',
-         inquiry_date: '{{ date('Y-m-d') }}',
-         remarks: '',
-         excelError: '',
-         validationErrors: [],
-         importedCount: 0,
-         products: [],
-         
-         showEditModal: false,
-         editForm: { id: '', customer_name: '', project_name: '', inquiry_date: '', remarks: '' },
-
-         submitHeader() {
-             if (!this.customer_name || !this.project_name || !this.inquiry_date) {
-                 alert('Please fill out all required fields.');
-                 return;
-             }
-             this.loading = true;
-             fetch('/management/inquiry', {
-                 method: 'POST',
-                 headers: {
-                     'Content-Type': 'application/json',
-                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                     'Accept': 'application/json'
-                 },
-                 body: JSON.stringify({
-                     customer_name: this.customer_name,
-                     project_name: this.project_name,
-                     inquiry_date: this.inquiry_date,
-                     remarks: this.remarks
-                 })
-             })
-             .then(res => res.json())
-             .then(data => {
-                 this.loading = false;
-                 if (data.success) {
-                     this.inquiryId = data.inquiry.inquiry_id;
-                     this.inquiryNo = data.inquiry.inquiry_no;
-                     this.step = 2;
-                 } else {
-                     alert('Error: ' + (data.message || 'Failed to create inquiry header'));
-                 }
-             })
-             .catch(err => {
-                 this.loading = false;
-                 console.error(err);
-                 alert('An error occurred while saving the header.');
-             });
-         },
-
-         uploadExcel() {
-             const fileInput = document.getElementById('excel_file');
-             if (!fileInput.files.length) {
-                 alert('Please choose an Excel file to upload.');
-                 return;
-             }
-             this.loading = true;
-             this.excelError = '';
-             this.validationErrors = [];
-
-             const formData = new FormData();
-             formData.append('excel_file', fileInput.files[0]);
-
-             fetch(`/management/inquiry/${this.inquiryId}/parse-excel`, {
-                 method: 'POST',
-                 headers: {
-                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                     'Accept': 'application/json'
-                 },
-                 body: formData
-             })
-             .then(res => res.json())
-             .then(data => {
-                 this.loading = false;
-                 if (data.success) {
-                     this.importedCount = data.imported_count;
-                     this.validationErrors = data.errors || [];
-                     this.products = data.products || [];
-                     this.step = 3;
-                 } else {
-                     this.excelError = data.message || 'Failed to parse Excel file.';
-                 }
-             })
-             .catch(err => {
-                 this.loading = false;
-                 console.error(err);
-                 this.excelError = 'An error occurred during Excel upload.';
-             });
-         },
-
-         finalizeInquiry() {
-             this.loading = true;
-             fetch(`/management/inquiry/${this.inquiryId}/finalize`, {
-                 method: 'POST',
-                 headers: {
-                     'Content-Type': 'application/json',
-                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                     'Accept': 'application/json'
-                 }
-             })
-             .then(res => res.json())
-             .then(data => {
-                 this.loading = false;
-                 if (data.success) {
-                     window.location.href = data.redirect_url;
-                 } else {
-                     alert('Error finalizing inquiry: ' + data.message);
-                 }
-             })
-             .catch(err => {
-                 this.loading = false;
-                 console.error(err);
-                 alert('An error occurred during finalization.');
-             });
-         },
-
-         submitEdit() {
-             if (!this.editForm.customer_name || !this.editForm.project_name || !this.editForm.inquiry_date) {
-                 alert('Please fill out all required fields.');
-                 return;
-             }
-             this.loading = true;
-             fetch(`/management/inquiry/${this.editForm.id}`, {
-                 method: 'PATCH',
-                 headers: {
-                     'Content-Type': 'application/json',
-                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                     'Accept': 'application/json'
-                 },
-                 body: JSON.stringify({
-                     customer_name: this.editForm.customer_name,
-                     project_name: this.editForm.project_name,
-                     inquiry_date: this.editForm.inquiry_date,
-                     remarks: this.editForm.remarks
-                 })
-             })
-             .then(res => res.json())
-             .then(data => {
-                 this.loading = false;
-                 if (data.success) {
-                     window.location.reload();
-                 } else {
-                     alert('Error: ' + data.message);
-                 }
-             })
-             .catch(err => {
-                 this.loading = false;
-                 console.error(err);
-                 alert('An error occurred while updating the inquiry.');
-             });
-         }
-     }">
+     x-data="inquiryIndex">
     
     <!-- Title & Action -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -169,7 +12,7 @@
             <h1 class="text-2xl font-bold tracking-tight text-slate-800 dark:text-white">Project Inquiries</h1>
             <p class="text-sm text-slate-500 dark:text-slate-400">Manage customer RFQs, product lists, and feasibility studies</p>
         </div>
-        <button @click="showWizard = true; step = 1; inquiryId = null; inquiryNo = null; customer_name = ''; project_name = ''; inquiry_date = '{{ date('Y-m-d') }}'; remarks = ''; products = []; validationErrors = []; excelError = ''; document.getElementById('excel_file').value = '';"
+        <button @click="showWizard = true; step = 1; inquiryId = null; inquiryNo = null; customer_id = ''; project_id = ''; project_name = ''; inquiry_date = '{{ date('Y-m-d') }}'; remarks = ''; products = []; validationErrors = []; excelError = ''; document.getElementById('excel_file').value = '';"
            class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium rounded-none shadow-sm transition-colors text-sm">
             <i class="fa-solid fa-plus text-xs"></i>
             Create New Inquiry
@@ -235,7 +78,8 @@
         <thead>
             <tr class="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400">
                 <th class="p-3 text-xs font-semibold uppercase tracking-wider">Inquiry No</th>
-                <th class="p-3 text-xs font-semibold uppercase tracking-wider">Customer Name</th>
+                <th class="p-3 text-xs font-semibold uppercase tracking-wider">Customer</th>
+                <th class="p-3 text-xs font-semibold uppercase tracking-wider">Model</th>
                 <th class="p-3 text-xs font-semibold uppercase tracking-wider">Project Name</th>
                 <th class="p-3 text-xs font-semibold uppercase tracking-wider">Inquiry Date</th>
                 <th class="p-3 text-xs font-semibold uppercase tracking-wider text-center">Products</th>
@@ -247,11 +91,12 @@
             @foreach($inquiries as $inquiry)
                 <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 text-slate-800 dark:text-slate-100 transition-colors duration-150">
                     <td class="p-3 font-semibold text-blue-600 dark:text-blue-400">
-                        <a href="{{ route('management.inquiry.show', $inquiry->inquiry_id) }}" class="hover:underline">
+                        <a href="{{ route('management.inquiry.show', $inquiry->id) }}" class="hover:underline">
                             {{ $inquiry->inquiry_no }}
                         </a>
                     </td>
-                    <td class="p-3">{{ $inquiry->customer_name }}</td>
+                    <td class="p-3 font-mono text-xs">{{ $inquiry->customer->code ?? '—' }}</td>
+                    <td class="p-3 text-xs">{{ $inquiry->model_name ?? '—' }}</td>
                     <td class="p-3">{{ $inquiry->project_name }}</td>
                     <td class="p-3">{{ $inquiry->inquiry_date->format('d M Y') }}</td>
                     <td class="p-3 text-center">
@@ -284,15 +129,16 @@
                     </td>
                     <td class="p-3 text-right">
                         <div class="flex items-center justify-end gap-2">
-                            <a href="{{ route('management.inquiry.show', $inquiry->inquiry_id) }}" 
+                            <a href="{{ route('management.inquiry.show', $inquiry->id) }}" 
                                class="px-2.5 py-1 text-xs font-semibold bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 transition-colors">
                                 View Detail
                             </a>
                             @if($inquiry->status === 'Draft')
                                 <button @click="
                                     editForm = {
-                                        id: '{{ $inquiry->inquiry_id }}',
-                                        customer_name: '{{ addslashes($inquiry->customer_name) }}',
+                                        id: '{{ $inquiry->id }}',
+                                        customer_id: '{{ $inquiry->customer_id }}',
+                                        project_id: '{{ $inquiry->model_id }}',
                                         project_name: '{{ addslashes($inquiry->project_name) }}',
                                         inquiry_date: '{{ $inquiry->inquiry_date->format('Y-m-d') }}',
                                         remarks: '{{ addslashes($inquiry->remarks) }}'
@@ -302,7 +148,7 @@
                                     Edit
                                 </button>
                             @endif
-                            <form action="{{ route('management.inquiry.destroy', $inquiry->inquiry_id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this Project Inquiry and all related data? This action cannot be undone.');" class="inline">
+                            <form action="{{ route('management.inquiry.destroy', $inquiry->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this Project Inquiry and all related data? This action cannot be undone.');" class="inline">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="px-2.5 py-1 text-xs font-semibold bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-400 transition-colors">
@@ -357,14 +203,29 @@
                 <div x-show="step === 1" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="space-y-4">
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Customer Name <span class="text-rose-500">*</span></label>
-                            <input type="text" x-model="customer_name" required placeholder="e.g. Toyota, Honda, etc."
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Project Name <span class="text-rose-500">*</span></label>
+                            <input type="text" x-model="project_name" required placeholder="e.g. Project 5P45"
                                    class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-3 py-2 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Project Name <span class="text-rose-500">*</span></label>
-                            <input type="text" x-model="project_name" required placeholder="e.g. Innova Door Trim, Fortuner Bonnet"
-                                   class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-3 py-2 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500">
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Customer <span class="text-rose-500">*</span></label>
+                            <select x-model="customer_id" required @change="project_id = ''"
+                                    class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-3 py-2 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500">
+                                <option value="">Select Customer</option>
+                                @foreach($customers as $c)
+                                    <option value="{{ $c->id }}">{{ $c->code }} - {{ $c->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Model <span class="text-rose-500">*</span></label>
+                            <select x-model="project_id" required :disabled="!customer_id"
+                                    class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-3 py-2 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500 disabled:opacity-50">
+                                <option value="">Select Model</option>
+                                <template x-for="m in getFilteredModels(customer_id)" :key="m.id">
+                                    <option :value="m.id" x-text="m.name" :selected="m.id == project_id"></option>
+                                </template>
+                            </select>
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Inquiry Date <span class="text-rose-500">*</span></label>
@@ -443,7 +304,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <template x-for="p in products" :key="p.inquiry_product_id">
+                                    <template x-for="p in products" :key="p.id">
                                         <tr class="border-b border-slate-100 dark:border-slate-800/60 hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
                                             <td class="p-2" x-text="p.model_name"></td>
                                             <td class="p-2 font-semibold" x-text="p.customer_part_no"></td>
@@ -508,14 +369,29 @@
             
             <form @submit.prevent="submitEdit" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Customer Name</label>
-                    <input type="text" x-model="editForm.customer_name" required
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Project Name</label>
+                    <input type="text" x-model="editForm.project_name" required placeholder="Project Name"
                            class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-3 py-2 text-sm text-slate-800 dark:text-slate-100 focus:outline-none">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Project Name</label>
-                    <input type="text" x-model="editForm.project_name" required
-                           class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-3 py-2 text-sm text-slate-800 dark:text-slate-100 focus:outline-none">
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Customer</label>
+                    <select x-model="editForm.customer_id" required @change="editForm.project_id = ''"
+                            class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-3 py-2 text-sm text-slate-800 dark:text-slate-100 focus:outline-none">
+                        <option value="">Select Customer</option>
+                        @foreach($customers as $c)
+                            <option value="{{ $c->id }}">{{ $c->code }} - {{ $c->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Model</label>
+                    <select x-model="editForm.project_id" required :disabled="!editForm.customer_id"
+                            class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-3 py-2 text-sm text-slate-800 dark:text-slate-100 focus:outline-none disabled:opacity-50">
+                        <option value="">Select Model</option>
+                        <template x-for="m in getFilteredModels(editForm.customer_id)" :key="m.id">
+                            <option :value="m.id" x-text="m.name" :selected="m.id == editForm.project_id"></option>
+                        </template>
+                    </select>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Inquiry Date</label>
@@ -539,6 +415,175 @@
 
 @push('scripts')
 <script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('inquiryIndex', () => ({
+            showWizard: false,
+            step: 1,
+            loading: false,
+            inquiryId: null,
+            inquiryNo: null,
+            customer_id: '',
+            project_id: '',
+            project_name: '',
+            inquiry_date: '{{ date("Y-m-d") }}',
+            remarks: '',
+            excelError: '',
+            validationErrors: [],
+            importedCount: 0,
+            products: [],
+            
+            showEditModal: false,
+            editForm: { id: '', customer_id: '', project_id: '', project_name: '', inquiry_date: '', remarks: '' },
+
+            getFilteredModels(customerId) {
+                const allModels = @json($models);
+                return allModels.filter(m => m.customer_id == customerId);
+            },
+
+            submitHeader() {
+                if (!this.customer_id || !this.project_id || !this.project_name || !this.inquiry_date) {
+                    alert('Please fill out all required fields.');
+                    return;
+                }
+                this.loading = true;
+                fetch('/management/inquiry', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        customer_id: this.customer_id,
+                        project_id: this.project_id,
+                        project_name: this.project_name,
+                        inquiry_date: this.inquiry_date,
+                        remarks: this.remarks
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    this.loading = false;
+                    if (data.success) {
+                        this.inquiryId = data.inquiry.id;
+                        this.inquiryNo = data.inquiry.inquiry_no;
+                        this.step = 2;
+                    } else {
+                        alert('Error: ' + (data.message || 'Failed to create inquiry header'));
+                    }
+                })
+                .catch(err => {
+                    this.loading = false;
+                    console.error(err);
+                    alert('An error occurred while saving the header.');
+                });
+            },
+
+            uploadExcel() {
+                const fileInput = document.getElementById('excel_file');
+                if (!fileInput.files.length) {
+                    alert('Please choose an Excel file to upload.');
+                    return;
+                }
+                this.loading = true;
+                this.excelError = '';
+                this.validationErrors = [];
+
+                const formData = new FormData();
+                formData.append('excel_file', fileInput.files[0]);
+
+                fetch(`/management/inquiry/${this.inquiryId}/parse-excel`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    this.loading = false;
+                    if (data.success) {
+                        this.importedCount = data.imported_count;
+                        this.validationErrors = data.errors || [];
+                        this.products = data.products || [];
+                        this.step = 3;
+                    } else {
+                        this.excelError = data.message || 'Failed to parse Excel file.';
+                    }
+                })
+                .catch(err => {
+                    this.loading = false;
+                    console.error(err);
+                    this.excelError = 'An error occurred during Excel upload.';
+                });
+            },
+
+            finalizeInquiry() {
+                this.loading = true;
+                fetch(`/management/inquiry/${this.inquiryId}/finalize`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    this.loading = false;
+                    if (data.success) {
+                        window.location.href = data.redirect_url;
+                    } else {
+                        alert('Error finalizing inquiry: ' + data.message);
+                    }
+                })
+                .catch(err => {
+                    this.loading = false;
+                    console.error(err);
+                    alert('An error occurred during finalization.');
+                });
+            },
+
+            submitEdit() {
+                if (!this.editForm.customer_id || !this.editForm.project_id || !this.editForm.project_name || !this.editForm.inquiry_date) {
+                    alert('Please fill out all required fields.');
+                    return;
+                }
+                this.loading = true;
+                fetch(`/management/inquiry/${this.editForm.id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        customer_id: this.editForm.customer_id,
+                        project_id: this.editForm.project_id,
+                        project_name: this.editForm.project_name,
+                        inquiry_date: this.editForm.inquiry_date,
+                        remarks: this.editForm.remarks
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    this.loading = false;
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(err => {
+                    this.loading = false;
+                    console.error(err);
+                    alert('An error occurred while updating the inquiry.');
+                });
+            }
+        }));
+    });
+
     $(function() {
         defaultDataTable('#inquiries-table', {
             order: [[0, 'desc']],

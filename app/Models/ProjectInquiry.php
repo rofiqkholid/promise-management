@@ -10,13 +10,13 @@ class ProjectInquiry extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $table = 'mng_project_inquiries';
-    protected $primaryKey = 'inquiry_id';
+    protected $table = 'mng_inquiries';
 
     protected $fillable = [
         'inquiry_no',
-        'customer_name',
+        'customer_id',
         'project_name',
+        'model_id',
         'inquiry_date',
         'status',
         'remarks',
@@ -28,6 +28,24 @@ class ProjectInquiry extends Model
 
     public function products()
     {
-        return $this->hasMany(InquiryProduct::class, 'inquiry_id', 'inquiry_id');
+        return $this->hasMany(InquiryProduct::class, 'inquiry_id', 'id');
+    }
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class, 'customer_id');
+    }
+
+    public function projectModel()
+    {
+        return $this->belongsTo(ProjectModel::class, 'model_id');
+    }
+
+    /**
+     * Accessor: nama model dari relasi.
+     */
+    public function getModelNameAttribute(): ?string
+    {
+        return $this->projectModel->name ?? null;
     }
 }

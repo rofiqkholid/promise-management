@@ -22,8 +22,10 @@ class InquiryController extends Controller
     {
         $filters = $request->only(['search', 'status', 'date_from', 'date_to']);
         $inquiries = $this->inquiryService->paginateInquiries(1000, $filters);
+        $customers = \App\Models\Customer::where('is_active', 1)->orderBy('name', 'asc')->get();
+        $models = \App\Models\ProjectModel::orderBy('name', 'asc')->get();
         
-        return view('management.inquiry.index', compact('inquiries', 'filters'));
+        return view('management.inquiry.index', compact('inquiries', 'filters', 'customers', 'models'));
     }
 
     public function create()
@@ -34,13 +36,18 @@ class InquiryController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'customer_name' => 'required|string|max:255',
+            'customer_id' => 'required|exists:customers,id',
+            'project_id'  => 'required|exists:models,id',
             'project_name' => 'required|string|max:255',
             'inquiry_date' => 'required|date',
             'remarks' => 'nullable|string',
         ]);
 
         try {
+            // Map form field 'project_id' → DB column 'model_id'
+            $validated['model_id'] = $validated['project_id'];
+            unset($validated['project_id']);
+
             $inquiry = $this->inquiryService->createInquiry($validated);
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
@@ -49,7 +56,7 @@ class InquiryController extends Controller
                 ]);
             }
             return redirect()
-                ->route('management.inquiry.show', $inquiry->inquiry_id)
+                ->route('management.inquiry.show', $inquiry->id)
                 ->with('success', 'Project Inquiry successfully created! You can now import products.');
         } catch (\Exception $e) {
             Log::error('Failed to create inquiry', ['error' => $e->getMessage()]);
@@ -67,7 +74,9 @@ class InquiryController extends Controller
     {
         $inquiry = $this->inquiryService->getInquiryDetails($id);
         $scoreCategories = \App\Models\ScoreCategory::with('options')->where('is_active', true)->orderBy('sort_order', 'asc')->get();
-        return view('management.inquiry.show', compact('inquiry', 'scoreCategories'));
+        $customers = \App\Models\Customer::where('is_active', 1)->orderBy('name', 'asc')->get();
+        $models = \App\Models\ProjectModel::orderBy('name', 'asc')->get();
+        return view('management.inquiry.show', compact('inquiry', 'scoreCategories', 'customers', 'models'));
     }
 
     public function edit($id)
@@ -78,13 +87,18 @@ class InquiryController extends Controller
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'customer_name' => 'required|string|max:255',
+            'customer_id'  => 'required|exists:customers,id',
+            'project_id'   => 'required|exists:models,id',
             'project_name' => 'required|string|max:255',
             'inquiry_date' => 'required|date',
-            'remarks' => 'nullable|string',
+            'remarks'      => 'nullable|string',
         ]);
 
         try {
+            // Map form field 'project_id' → DB column 'model_id'
+            $validated['model_id'] = $validated['project_id'];
+            unset($validated['project_id']);
+
             $this->inquiryService->updateInquiry($id, $validated);
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
@@ -117,11 +131,11 @@ class InquiryController extends Controller
             $file = $request->file('excel_file');
             $append = $request->input('append') === 'true' || $request->input('append') === true;
             
-            if (!$append) {
+            if ($append) {
                 // Truncate existing products and assessments for this inquiry to allow clean re-imports
-                $productIds = \App\Models\InquiryProduct::withTrashed()->where('inquiry_id', $id)->pluck('inquiry_product_id')->all();
+                $productIds = \App\Models\InquiryProduct::withTrashed()->where('inquiry_id', $id)->pluck('id')->all();
                 if (!empty($productIds)) {
-                    $assessmentIds = \App\Models\PriorityAssessment::whereIn('inquiry_product_id', $productIds)->pluck('assessment_id')->all();
+                    $assessmentIds = \App\Models\PriorityAssessment::whereIn('inquiry_product_id', $productIds)->pluck('id')->all();
                     if (!empty($assessmentIds)) {
                         \App\Models\PriorityAssessmentDetail::whereIn('assessment_id', $assessmentIds)->delete();
                         \App\Models\PriorityAssessment::whereIn('inquiry_product_id', $productIds)->delete();
@@ -132,7 +146,7 @@ class InquiryController extends Controller
             
             $result = $this->inquiryService->importProducts($id, $file);
             
-            $products = \App\Models\InquiryProduct::where('inquiry_id', $id)->get();
+            $products = \App\Models\InquiryProduct::with('inquiry.projectModel')->where('inquiry_id', $id)->get();
 
             return response()->json([
                 'success' => true,
@@ -201,11 +215,11 @@ class InquiryController extends Controller
             $file = $request->file('excel_file');
             $append = $request->input('append') === 'true' || $request->input('append') === true;
 
-            if (!$append) {
+            if ($append) {
                 // Truncate existing products and assessments for this inquiry to allow clean re-imports
-                $productIds = \App\Models\InquiryProduct::withTrashed()->where('inquiry_id', $id)->pluck('inquiry_product_id')->all();
+                $productIds = \App\Models\InquiryProduct::withTrashed()->where('inquiry_id', $id)->pluck('id')->all();
                 if (!empty($productIds)) {
-                    $assessmentIds = \App\Models\PriorityAssessment::whereIn('inquiry_product_id', $productIds)->pluck('assessment_id')->all();
+                    $assessmentIds = \App\Models\PriorityAssessment::whereIn('inquiry_product_id', $productIds)->pluck('id')->all();
                     if (!empty($assessmentIds)) {
                         \App\Models\PriorityAssessmentDetail::whereIn('assessment_id', $assessmentIds)->delete();
                         \App\Models\PriorityAssessment::whereIn('inquiry_product_id', $productIds)->delete();
@@ -236,18 +250,30 @@ class InquiryController extends Controller
     {
         $request->validate([
             'selections' => 'required|array',
-            'selections.*' => 'required|exists:score_options,option_id',
+            'selections.*' => 'required|exists:mng_inq_score_options,id',
             'remarks' => 'nullable|string',
             'action' => 'nullable|string',
             'action_override' => 'nullable|string',
         ]);
 
         try {
+            $hasActiveWo = \App\Models\WorkOrderProduct::where('inquiry_product_id', $id)
+                ->whereHas('workOrder', function($q) {
+                    $q->whereNull('deleted_at')->where('status', '!=', 'Rejected');
+                })
+                ->exists();
+            if ($hasActiveWo) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Product is locked because it belongs to an active Work Order (SPK).'
+                ], 422);
+            }
+
             $product = \App\Models\InquiryProduct::findOrFail($id);
             
             // Calculate total score
             $scoreValueSum = 0;
-            $options = \App\Models\ScoreOption::whereIn('option_id', $request->input('selections'))->get();
+            $options = \App\Models\ScoreOption::whereIn('id', $request->input('selections'))->get();
             foreach ($options as $option) {
                 $scoreValueSum += $option->score_value;
             }
@@ -263,7 +289,7 @@ class InquiryController extends Controller
                 ['inquiry_product_id' => $id],
                 [
                     'total_score' => $scoreValueSum,
-                    'ranking_id' => $ranking ? $ranking->ranking_id : null,
+                    'ranking_id' => $ranking ? $ranking->id : null,
                     'action' => $request->input('action', 'Accept'),
                     'action_override' => $request->input('action_override'),
                     'remarks' => $request->input('remarks'),
@@ -273,12 +299,12 @@ class InquiryController extends Controller
             );
 
             // Save details
-            \App\Models\PriorityAssessmentDetail::where('assessment_id', $assessment->assessment_id)->delete();
+            \App\Models\PriorityAssessmentDetail::where('assessment_id', $assessment->id)->delete();
             foreach ($options as $option) {
                 \App\Models\PriorityAssessmentDetail::create([
-                    'assessment_id' => $assessment->assessment_id,
+                    'assessment_id' => $assessment->id,
                     'category_id' => $option->category_id,
-                    'option_id' => $option->option_id,
+                    'option_id' => $option->id,
                     'score_snapshot' => $option->score_value,
                 ]);
             }
@@ -314,10 +340,23 @@ class InquiryController extends Controller
             'has_2d_data' => 'nullable|boolean',
             'has_3d_data' => 'nullable|boolean',
             'has_tech_doc' => 'nullable|boolean',
+            'variant' => 'nullable|string|max:100',
             'remarks' => 'nullable|string',
         ]);
 
         try {
+            $hasActiveWo = \App\Models\WorkOrderProduct::where('inquiry_product_id', $id)
+                ->whereHas('workOrder', function($q) {
+                    $q->whereNull('deleted_at')->where('status', '!=', 'Rejected');
+                })
+                ->exists();
+            if ($hasActiveWo) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Product is locked because it belongs to an active Work Order (SPK).'
+                ], 422);
+            }
+
             $product = \App\Models\InquiryProduct::findOrFail($id);
             
             // Map boolean fields explicitly in case they are sent as 1/0 or true/false
@@ -344,6 +383,19 @@ class InquiryController extends Controller
                 'success' => false,
                 'message' => $e->getMessage()
             ], 422);
+        }
+    }
+
+    public function showProduct($id)
+    {
+        try {
+            $product = \App\Models\InquiryProduct::with(['assessment.details', 'assessment.ranking'])->findOrFail($id);
+            return response()->json([
+                'success' => true,
+                'product' => $product,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 404);
         }
     }
 
@@ -376,6 +428,7 @@ class InquiryController extends Controller
             'has_2d_data' => 'nullable|boolean',
             'has_3d_data' => 'nullable|boolean',
             'has_tech_doc' => 'nullable|boolean',
+            'variant' => 'nullable|string|max:100',
             'remarks' => 'nullable|string',
         ]);
 
@@ -408,6 +461,31 @@ class InquiryController extends Controller
         }
     }
 
+    public function reorderAll(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:mng_inquiry_products,id',
+        ]);
+
+        try {
+            $ids = $request->input('ids');
+            foreach ($ids as $index => $id) {
+                \App\Models\InquiryProduct::where('id', $id)
+                    ->update(['sort_order' => $index * 10]);
+            }
+            return response()->json([
+                'success' => true,
+                'message' => 'Products reordered successfully.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 422);
+        }
+    }
+
     public function reorderProduct(Request $request, $id)
     {
         $request->validate([
@@ -423,7 +501,7 @@ class InquiryController extends Controller
             
             $currentIndex = null;
             foreach ($products as $index => $p) {
-                if ($p->inquiry_product_id == $id) {
+                if ($p->id == $id) {
                     $currentIndex = $index;
                     break;
                 }
@@ -442,16 +520,6 @@ class InquiryController extends Controller
 
             $targetProduct = $products[$targetIndex];
 
-            $scoreCurrent = $product->assessment ? $product->assessment->total_score : 0;
-            $scoreTarget = $targetProduct->assessment ? $targetProduct->assessment->total_score : 0;
-
-            if ($scoreCurrent !== $scoreTarget) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Manual ordering is only allowed for products with the same score.'
-                ], 422);
-            }
-
             $currentSort = $product->sort_order;
             $targetSort = $targetProduct->sort_order;
 
@@ -461,7 +529,7 @@ class InquiryController extends Controller
                     $p->save();
                 }
                 $product = \App\Models\InquiryProduct::find($id);
-                $targetProduct = \App\Models\InquiryProduct::find($targetProduct->inquiry_product_id);
+                $targetProduct = \App\Models\InquiryProduct::find($targetProduct->id);
                 $currentSort = $product->sort_order;
                 $targetSort = $targetProduct->sort_order;
             }
@@ -484,6 +552,45 @@ class InquiryController extends Controller
         }
     }
 
+    public function deleteProduct($id)
+    {
+        try {
+            $product = \App\Models\InquiryProduct::findOrFail($id);
+            
+            // Check if product is used in SPK (Work Order)
+            $spkCount = \Illuminate\Support\Facades\DB::table('work_order_products')
+                ->where('inquiry_product_id', $id)
+                ->count();
+            if ($spkCount > 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Product is locked because it belongs to an active Work Order (SPK).'
+                ], 422);
+            }
+
+            \Illuminate\Support\Facades\DB::transaction(function() use ($product, $id) {
+                // Delete assessment details & assessments
+                $assessment = \App\Models\PriorityAssessment::where('inquiry_product_id', $id)->first();
+                if ($assessment) {
+                    \App\Models\PriorityAssessmentDetail::where('assessment_id', $assessment->id)->delete();
+                    $assessment->delete();
+                }
+                // Force delete the product
+                $product->forceDelete();
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Product successfully deleted.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 422);
+        }
+    }
+
     public function downloadTemplate()
     {
         return Excel::download(new InquiryTemplateExport, 'inquiry_products_template.xlsx');
@@ -496,11 +603,11 @@ class InquiryController extends Controller
                 $inquiry = \App\Models\ProjectInquiry::withTrashed()->findOrFail($id);
                 
                 // Get related product IDs (including soft-deleted ones)
-                $productIds = $inquiry->products()->withTrashed()->pluck('inquiry_product_id')->all();
+                $productIds = $inquiry->products()->withTrashed()->pluck('id')->all();
 
                 if (!empty($productIds)) {
                     // Delete related assessment details & assessments
-                    $assessmentIds = \App\Models\PriorityAssessment::whereIn('inquiry_product_id', $productIds)->pluck('assessment_id')->all();
+                    $assessmentIds = \App\Models\PriorityAssessment::whereIn('inquiry_product_id', $productIds)->pluck('id')->all();
                     if (!empty($assessmentIds)) {
                         \App\Models\PriorityAssessmentDetail::whereIn('assessment_id', $assessmentIds)->delete();
                         \App\Models\PriorityAssessment::whereIn('inquiry_product_id', $productIds)->delete();

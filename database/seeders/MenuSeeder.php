@@ -9,79 +9,184 @@ class MenuSeeder extends Seeder
 {
     public function run(): void
     {
-        // Delete obsolete menus
-        DB::table('mng_menus')->where('route', 'management.ranking.index')->delete();
-
-        // 1. Project Inquiry Menu
-        DB::table('mng_menus')->updateOrInsert(
-            ['route' => 'management.inquiry.index'],
+        // Ensure the app_management scope exists in the scopes table
+        DB::table('scopes')->updateOrInsert(
+            ['id' => 'app_management'],
             [
-                'title' => 'Project Inquiry',
-                'icon' => 'fa-solid fa-folder-open',
+                'scope_name' => 'Management App',
+                'is_active'  => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        );
+
+        // Ensure permission 'view' exists
+        DB::table('permissions')->updateOrInsert(['id' => 1], ['permission_name' => 'view']);
+
+        // ----------------------------------------------------------------
+        // Sync all menus into the global `menus` table (source of truth)
+        // managed from promise-admin.
+        //
+        // Structure:
+        //   1. Dashboard         (level 1, no parent)
+        //   2. Project Inquiry   (level 1, no parent)
+        //   3. Work Order (SPK)  (level 1, no parent) <-- parent group
+        //      3a. SPK List      (level 2, parent = Work Order)
+        //      3b. Approval Inbox(level 2, parent = Work Order)
+        //   4. Assessment Config (level 1, no parent)
+        //   5. Approval Config   (level 1, no parent)
+        //   6. Calendar & Holiday(level 1, no parent)
+        // ----------------------------------------------------------------
+
+        // 1. Dashboard
+        DB::table('menus')->updateOrInsert(
+            ['route' => 'dashboard', 'scope_id' => 'app_management'],
+            [
+                'title'      => 'Dashboard',
+                'icon'       => 'fa-solid fa-chart-line',
+                'sort_order' => 1,
+                'level'      => 1,
+                'parent_id'  => null,
+                'is_active'  => true,
+                'is_visible' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        );
+
+        // 2. Project Inquiry
+        DB::table('menus')->updateOrInsert(
+            ['route' => 'management.inquiry.index', 'scope_id' => 'app_management'],
+            [
+                'title'      => 'Project Inquiry',
+                'icon'       => 'fa-solid fa-folder-open',
                 'sort_order' => 2,
-                'level' => 1,
-                'is_active' => 1,
-                'is_visible' => 1,
+                'level'      => 1,
+                'parent_id'  => null,
+                'is_active'  => true,
+                'is_visible' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
             ]
         );
 
-        $inq = DB::table('mng_menus')->where('route', 'management.inquiry.index')->first();
-        if ($inq) {
-            DB::table('mng_menus')->where('id', $inq->id)->update(['parent_id' => $inq->id]);
-        }
-
-        // 2. Work Order (SPK) Menu
-        DB::table('mng_menus')->updateOrInsert(
-            ['route' => 'management.work-order.index'],
+        // 3. Work Order (SPK) — parent group (no route, used as dropdown header)
+        DB::table('menus')->updateOrInsert(
+            ['route' => 'management.work-order.parent', 'scope_id' => 'app_management'],
             [
-                'title' => 'Work Order (SPK)',
-                'icon' => 'fa-solid fa-file-signature',
+                'title'      => 'Work Order (SPK)',
+                'icon'       => 'fa-solid fa-file-signature',
                 'sort_order' => 3,
-                'level' => 1,
-                'is_active' => 1,
-                'is_visible' => 1,
+                'level'      => 1,
+                'parent_id'  => null,
+                'is_active'  => true,
+                'is_visible' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
             ]
         );
+        $woParentId = DB::table('menus')
+            ->where('route', 'management.work-order.parent')
+            ->where('scope_id', 'app_management')
+            ->value('id');
 
-        $wo = DB::table('mng_menus')->where('route', 'management.work-order.index')->first();
-        if ($wo) {
-            DB::table('mng_menus')->where('id', $wo->id)->update(['parent_id' => $wo->id]);
+        // 3a. SPK List (submenu)
+        if ($woParentId) {
+            DB::table('menus')->updateOrInsert(
+                ['route' => 'management.work-order.index', 'scope_id' => 'app_management'],
+                [
+                    'title'      => 'SPK List',
+                    'icon'       => 'fa-solid fa-list',
+                    'sort_order' => 1,
+                    'level'      => 2,
+                    'parent_id'  => $woParentId,
+                    'is_active'  => true,
+                    'is_visible' => true,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            );
+
+            // 3b. Approval Inbox (submenu)
+            DB::table('menus')->updateOrInsert(
+                ['route' => 'management.work-order.approval-inbox', 'scope_id' => 'app_management'],
+                [
+                    'title'      => 'Approval Inbox',
+                    'icon'       => 'fa-solid fa-envelope-open-text',
+                    'sort_order' => 2,
+                    'level'      => 2,
+                    'parent_id'  => $woParentId,
+                    'is_active'  => true,
+                    'is_visible' => true,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            );
         }
 
-        // 3. Assessment Configuration Menu
-        DB::table('mng_menus')->updateOrInsert(
-            ['route' => 'management.assessment-config.index'],
+        // 4. Assessment Config
+        DB::table('menus')->updateOrInsert(
+            ['route' => 'management.assessment-config.index', 'scope_id' => 'app_management'],
             [
-                'title' => 'Assessment Config',
-                'icon' => 'fa-solid fa-gears',
+                'title'      => 'Assessment Config',
+                'icon'       => 'fa-solid fa-gears',
                 'sort_order' => 4,
-                'level' => 1,
-                'is_active' => 1,
-                'is_visible' => 1,
+                'level'      => 1,
+                'parent_id'  => null,
+                'is_active'  => true,
+                'is_visible' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
             ]
         );
 
-        $config = DB::table('mng_menus')->where('route', 'management.assessment-config.index')->first();
-        if ($config) {
-            DB::table('mng_menus')->where('id', $config->id)->update(['parent_id' => $config->id]);
-        }
-
-        // 4. Approval Config Menu
-        DB::table('mng_menus')->updateOrInsert(
-            ['route' => 'management.approval-config.index'],
+        // 5. Approval Config
+        DB::table('menus')->updateOrInsert(
+            ['route' => 'management.approval-config.index', 'scope_id' => 'app_management'],
             [
-                'title' => 'Approval Config',
-                'icon' => 'fa-solid fa-user-check',
+                'title'      => 'Approval Config',
+                'icon'       => 'fa-solid fa-user-check',
                 'sort_order' => 5,
-                'level' => 1,
-                'is_active' => 1,
-                'is_visible' => 1,
+                'level'      => 1,
+                'parent_id'  => null,
+                'is_active'  => true,
+                'is_visible' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
             ]
         );
 
-        $approval = DB::table('mng_menus')->where('route', 'management.approval-config.index')->first();
-        if ($approval) {
-            DB::table('mng_menus')->where('id', $approval->id)->update(['parent_id' => $approval->id]);
+        // 6. Calendar & Holiday
+        DB::table('menus')->updateOrInsert(
+            ['route' => 'management.calendar.index', 'scope_id' => 'app_management'],
+            [
+                'title'      => 'Calendar & Holiday',
+                'icon'       => 'fa-solid fa-calendar-days',
+                'sort_order' => 7,
+                'level'      => 1,
+                'parent_id'  => null,
+                'is_active'  => true,
+                'is_visible' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        );
+
+        // ----------------------------------------------------------------
+        // Grant "Mng User" role (ID 34) access to all management menus
+        // ----------------------------------------------------------------
+        $allMngMenuIds = DB::table('menus')
+            ->where('scope_id', 'app_management')
+            ->pluck('id')
+            ->toArray();
+
+        foreach ($allMngMenuIds as $menuId) {
+            DB::table('role_scope_permissions')->updateOrInsert([
+                'role_id'       => 34,
+                'scope_id'      => 'app_management',
+                'menu_id'       => $menuId,
+                'permission_id' => 1,
+            ]);
         }
     }
 }

@@ -79,7 +79,7 @@ class InquiryService
      */
     public function importProducts($inquiryId, $file)
     {
-        $import = new InquiryProductImport($inquiryId);
+        $import = new InquiryProductImport($inquiryId, $file);
         Excel::import($import, $file);
         
         return [

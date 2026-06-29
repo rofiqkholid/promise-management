@@ -14,20 +14,54 @@ class InquiryProductImport implements ToCollection, WithHeadingRow
     protected $inquiryId;
     protected $importedCount = 0;
     protected $errors = [];
+    protected $headingRow = 5;
 
-    public function __construct($inquiryId)
+    public function __construct($inquiryId, $file = null)
     {
         $this->inquiryId = $inquiryId;
+        if ($file) {
+            $this->headingRow = $this->detectHeadingRow($file);
+        }
+    }
+
+    private function detectHeadingRow($file)
+    {
+        try {
+            $path = is_string($file) ? $file : $file->getRealPath();
+            $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($path);
+            $reader->setReadDataOnly(true);
+            $spreadsheet = $reader->load($path);
+            $worksheet = $spreadsheet->getActiveSheet();
+            
+            // Check first 10 rows
+            for ($row = 1; $row <= 10; $row++) {
+                $cols = [];
+                for ($col = 1; $col <= 15; $col++) {
+                    $val = $worksheet->getCell([$col, $row])->getValue();
+                    if ($val !== null && $val !== '') {
+                        $cols[] = strtolower(trim($val));
+                    }
+                }
+                
+                // Check if this row looks like the header row
+                if (in_array('part num', $cols) || in_array('part no', $cols) || in_array('part name', $cols)) {
+                    return $row;
+                }
+            }
+        } catch (\Exception $e) {
+            // Fallback to default
+        }
+        return 5;
     }
 
     public function headingRow(): int
     {
-        return 5;
+        return $this->headingRow;
     }
 
     public function collection(Collection $rows)
     {
-        $rowIndex = 5; // Heading row is 5, data starts at 6
+        $rowIndex = $this->headingRow;
         
         foreach ($rows as $row) {
             $rowIndex++;
@@ -38,13 +72,11 @@ class InquiryProductImport implements ToCollection, WithHeadingRow
             }
 
             // Normalization
-            $modelName = $row['model'] ?? null;
-            $partNo = $row['part_num'] ?? null;
+            $partNo   = $row['part_num'] ?? null;
             $partName = $row['part_name'] ?? null;
             
             $validator = Validator::make($row->toArray(), [
-                'model' => 'required',
-                'part_num' => 'required',
+                'part_num'  => 'required',
                 'part_name' => 'required',
             ]);
 
@@ -65,15 +97,17 @@ class InquiryProductImport implements ToCollection, WithHeadingRow
             $has3d = $this->parseBoolean($row['3d_data'] ?? null);
             $hasTech = $this->parseBoolean($row['tech_doc'] ?? null);
 
-            // Duplicate Check in the same Inquiry
+            // Duplicate Check in the same Inquiry (Part Number and Variant)
+            $variant = isset($row['variant']) ? trim($row['variant']) : null;
             $duplicate = InquiryProduct::where('inquiry_id', $this->inquiryId)
                 ->where('customer_part_no', $partNo)
+                ->where('variant', $variant)
                 ->exists();
 
             if ($duplicate) {
                 $this->errors[] = [
                     'row' => $rowIndex,
-                    'errors' => ["Duplicate Part Number '{$partNo}' found in this Inquiry."]
+                    'errors' => ["Duplicate Part Number '{$partNo}' with Variant '{$variant}' found in this Inquiry."]
                 ];
                 continue;
             }
@@ -81,7 +115,6 @@ class InquiryProductImport implements ToCollection, WithHeadingRow
             // Save Product
             $product = InquiryProduct::create([
                 'inquiry_id' => $this->inquiryId,
-                'model_name' => $modelName,
                 'customer_part_no' => $partNo,
                 'customer_part_name' => $partName,
                 'part_category' => $row['part_category'] ?? null,
@@ -93,6 +126,7 @@ class InquiryProductImport implements ToCollection, WithHeadingRow
                 'has_2d_data' => $has2d,
                 'has_3d_data' => $has3d,
                 'has_tech_doc' => $hasTech,
+                'variant' => $variant,
                 'remarks' => $row['remarks'] ?? null,
             ]);
 
@@ -127,7 +161,7 @@ class InquiryProductImport implements ToCollection, WithHeadingRow
             if (!$category) continue;
 
             // Look up corresponding option
-            $option = \App\Models\ScoreOption::where('category_id', $category->category_id)
+            $option = \App\Models\ScoreOption::where('category_id', $category->id)
                 ->where(function($query) use ($optionValue) {
                     $query->where('option_name', 'like', $optionValue)
                           ->orWhere('description', 'like', $optionValue);
@@ -152,9 +186,9 @@ class InquiryProductImport implements ToCollection, WithHeadingRow
 
         // Create the assessment
         $assessment = \App\Models\PriorityAssessment::create([
-            'inquiry_product_id' => $product->inquiry_product_id,
+            'inquiry_product_id' => $product->id,
             'total_score' => $totalScore,
-            'ranking_id' => $ranking ? $ranking->ranking_id : null,
+            'ranking_id' => $ranking ? $ranking->id : null,
             'action' => $row['action'] ?? 'Accept',
             'assessed_by' => 'Excel Import',
             'assessed_at' => now(),
@@ -162,9 +196,9 @@ class InquiryProductImport implements ToCollection, WithHeadingRow
 
         foreach ($optionIds as $option) {
             \App\Models\PriorityAssessmentDetail::create([
-                'assessment_id' => $assessment->assessment_id,
+                'assessment_id' => $assessment->id,
                 'category_id' => $option->category_id,
-                'option_id' => $option->option_id,
+                'option_id' => $option->id,
                 'score_snapshot' => $option->score_value,
             ]);
         }

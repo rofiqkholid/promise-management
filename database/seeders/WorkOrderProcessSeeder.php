@@ -10,98 +10,117 @@ class WorkOrderProcessSeeder extends Seeder
 {
     public function run(): void
     {
-        // Fetch or create default departments to map as owners
-        $engineering = Department::where('code', 'ENG')
-            ->orWhere('name', 'like', '%Engineering%')
-            ->first();
+        $hasCode = \Illuminate\Support\Facades\Schema::hasColumn('departments', 'code');
+
+        $engQuery = Department::query();
+        if ($hasCode) {
+            $engQuery->where('code', 'ENG');
+        }
+        $engineering = $engQuery->orWhere('name', 'like', '%Engineering%')->first();
         if (!$engineering) {
-            $engineering = Department::first() ?: Department::create(['name' => 'Engineering', 'code' => 'ENG']);
+            $data = ['name' => 'Engineering'];
+            if ($hasCode) $data['code'] = 'ENG';
+            $engineering = Department::first() ?: Department::create($data);
         }
 
-        $purchasing = Department::where('code', 'PUR')
-            ->orWhere('name', 'like', '%Purchasing%')
-            ->first();
+        $purQuery = Department::query();
+        if ($hasCode) {
+            $purQuery->where('code', 'PUR');
+        }
+        $purchasing = $purQuery->orWhere('name', 'like', '%Purchasing%')->first();
         if (!$purchasing) {
-            $purchasing = Department::first() ?: Department::create(['name' => 'Purchasing', 'code' => 'PUR']);
+            $data = ['name' => 'Purchasing'];
+            if ($hasCode) $data['code'] = 'PUR';
+            $purchasing = Department::first() ?: Department::create($data);
         }
 
-        $tooling = Department::where('code', 'TOL')
-            ->orWhere('name', 'like', '%Tooling%')
+        $tolQuery = Department::query();
+        if ($hasCode) {
+            $tolQuery->where('code', 'TOL');
+        }
+        $tooling = $tolQuery->orWhere('name', 'like', '%Tooling%')
             ->orWhere('name', 'like', '%Production%')
             ->first();
         if (!$tooling) {
-            $tooling = Department::first() ?: Department::create(['name' => 'Tooling', 'code' => 'TOL']);
+            $data = ['name' => 'Tooling'];
+            if ($hasCode) $data['code'] = 'TOL';
+            $tooling = Department::first() ?: Department::create($data);
         }
 
-        $qa = Department::where('code', 'QA')
-            ->orWhere('name', 'like', '%QA%')
+        $qaQuery = Department::query();
+        if ($hasCode) {
+            $qaQuery->where('code', 'QA');
+        }
+        $qa = $qaQuery->orWhere('name', 'like', '%QA%')
             ->orWhere('name', 'like', '%Quality%')
             ->first();
         if (!$qa) {
-            $qa = Department::first() ?: Department::create(['name' => 'Quality Assurance', 'code' => 'QA']);
+            $data = ['name' => 'Quality Assurance'];
+            if ($hasCode) $data['code'] = 'QA';
+            $qa = Department::first() ?: Department::create($data);
         }
 
         $processes = [
             [
                 'process_code' => 'mpp',
-                'process_name' => 'MPP (Manufacturing Planing Proses)',
-                'owner_department_id' => $engineering->id,
+                'process_name' => 'MPP (Manufacturing Planning Process)',
+                'default_assigned_departments' => json_encode([$engineering->id]),
                 'sort_order' => 1,
                 'is_active' => true,
             ],
             [
                 'process_code' => 'kalkulasi_dies',
-                'process_name' => 'Kalkulasi Dies',
-                'owner_department_id' => $tooling->id,
+                'process_name' => 'Dies Calculation',
+                'default_assigned_departments' => json_encode([$tooling->id]),
                 'sort_order' => 2,
                 'is_active' => true,
             ],
             [
                 'process_code' => 'lifetime_tooling',
-                'process_name' => 'Life Time Manufacturing Tooling',
-                'owner_department_id' => $tooling->id,
+                'process_name' => 'Manufacturing Tooling Lifetime',
+                'default_assigned_departments' => json_encode([$tooling->id]),
                 'sort_order' => 3,
                 'is_active' => true,
             ],
             [
                 'process_code' => 'kalkulasi_cf',
-                'process_name' => 'Kalkulasi CF',
-                'owner_department_id' => $engineering->id,
+                'process_name' => 'CF Calculation',
+                'default_assigned_departments' => json_encode([$engineering->id]),
                 'sort_order' => 4,
                 'is_active' => true,
             ],
             [
                 'process_code' => 'modifikasi_tools',
-                'process_name' => 'Modifikasi Tools',
-                'owner_department_id' => $tooling->id,
+                'process_name' => 'Tools Modification',
+                'default_assigned_departments' => json_encode([$tooling->id]),
                 'sort_order' => 5,
                 'is_active' => true,
             ],
             [
                 'process_code' => 'sample_part',
                 'process_name' => 'Sample Part',
-                'owner_department_id' => $qa->id,
+                'default_assigned_departments' => json_encode([$qa->id]),
                 'sort_order' => 6,
                 'is_active' => true,
             ],
             [
                 'process_code' => 'design',
                 'process_name' => 'Design',
-                'owner_department_id' => $engineering->id,
+                'default_assigned_departments' => json_encode([$engineering->id]),
                 'sort_order' => 7,
                 'is_active' => true,
             ],
             [
                 'process_code' => 'start_dev_tooling',
-                'process_name' => 'Start development tooling',
-                'owner_department_id' => $tooling->id,
+                'process_name' => 'Start Tooling Development',
+                'default_assigned_departments' => json_encode([$tooling->id]),
                 'sort_order' => 8,
                 'is_active' => true,
             ],
             [
                 'process_code' => 'other_sourcing',
                 'process_name' => 'Other (Sourcing Supplier)',
-                'owner_department_id' => $purchasing->id,
+                'default_assigned_departments' => json_encode([$purchasing->id]),
                 'sort_order' => 9,
                 'is_active' => true,
             ],

@@ -10,15 +10,13 @@ class PriorityAssessment extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $table = 'mng_priority_assessments';
-    protected $primaryKey = 'assessment_id';
+    protected $table = 'mng_inq_assessments';
 
     protected $fillable = [
         'inquiry_product_id',
         'total_score',
         'ranking_id',
         'action',
-        'action_override',
         'remarks',
         'assessed_by',
         'assessed_at',
@@ -30,16 +28,16 @@ class PriorityAssessment extends Model
 
     public function product()
     {
-        return $this->belongsTo(InquiryProduct::class, 'inquiry_product_id', 'inquiry_product_id');
+        return $this->belongsTo(InquiryProduct::class, 'inquiry_product_id', 'id');
     }
 
     public function ranking()
     {
-        return $this->belongsTo(AssessmentRanking::class, 'ranking_id', 'ranking_id');
+        return $this->belongsTo(AssessmentRanking::class, 'ranking_id', 'id');
     }
 
     public function details()
     {
-        return $this->hasMany(PriorityAssessmentDetail::class, 'assessment_id', 'assessment_id');
+        return $this->hasMany(PriorityAssessmentDetail::class, 'assessment_id', 'id');
     }
 }

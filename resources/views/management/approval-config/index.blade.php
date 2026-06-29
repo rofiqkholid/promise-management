@@ -3,6 +3,7 @@
 @section('title', 'SPK Approval Matrix · Promise Management')
 
 @section('content')
+<x-sweetalert />
 <div class="flex-1 overflow-y-auto p-4 pt-17.5 space-y-5 transition-colors duration-200">
 
     {{-- Page Header --}}
@@ -56,6 +57,7 @@
                     <tr class="border-b-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/30 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                         <th class="px-4 py-2.5 w-16 text-center">Level</th>
                         <th class="px-4 py-2.5">Position Label</th>
+                        <th class="px-4 py-2.5">Action Header</th>
                         <th class="px-4 py-2.5">Department</th>
                         <th class="px-4 py-2.5">Specific Approver</th>
                         <th class="px-4 py-2.5 w-20 text-center">Order</th>
@@ -78,16 +80,25 @@
                                 {{ $rule->position_label }}
                             </td>
                             <td class="px-4 py-3 text-slate-600 dark:text-slate-300">
+                                <span class="px-2 py-0.5 text-[10px] font-bold bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xs border border-slate-200 dark:border-slate-600">
+                                    {{ $rule->action_label ?? 'Checked' }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-slate-600 dark:text-slate-300">
                                 <span class="font-medium">{{ $rule->department->name ?? '—' }}</span>
                                 <span class="text-slate-400 text-[10px] ml-1">({{ $rule->department->code ?? '' }})</span>
                             </td>
                             <td class="px-4 py-3 text-slate-600 dark:text-slate-300">
-                                @if($rule->approverUser)
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-[9px] font-bold flex-shrink-0">
-                                            {{ strtoupper(substr($rule->approverUser->name, 0, 1)) }}
-                                        </div>
-                                        <span class="text-xs">{{ $rule->approverUser->name }}</span>
+                                @if($rule->approverUsers->isNotEmpty())
+                                    <div class="flex flex-col gap-1">
+                                        @foreach($rule->approverUsers as $u)
+                                            <div class="flex items-center gap-2">
+                                                <div class="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-[8px] font-bold flex-shrink-0">
+                                                    {{ strtoupper(substr($u->name, 0, 1)) }}
+                                                </div>
+                                                <span class="text-xs">{{ $u->name }}</span>
+                                            </div>
+                                        @endforeach
                                     </div>
                                 @else
                                     <span class="text-[10px] italic text-slate-400">Any user in department</span>
@@ -100,19 +111,17 @@
                                 @else
                                     <span class="inline-block px-2 py-0.5 text-[10px] font-bold bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-600 rounded-xs">Inactive</span>
                                 @endif
-                            </td>
-                            <td class="px-4 py-3 text-right">
-                                <div class="flex justify-end gap-1.5">
-                                    <button onclick="openEditModal({{ $rule }})"
-                                            class="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-bold bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-blue-400 text-slate-600 dark:text-slate-300 hover:text-blue-700 rounded-xs transition-colors">
-                                        <i class="fa-solid fa-pen text-[9px]"></i> Edit
+                                                   <td class="px-4 py-3 text-right">
+                                <div class="flex justify-end gap-1.5 align-middle">
+                                    <button onclick="openEditModal({{ $rule }})" title="Edit"
+                                            class="w-6 h-6 flex items-center justify-center bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 hover:border-blue-400 hover:text-blue-700 text-slate-600 dark:text-slate-300 transition-colors">
+                                        <i class="fa-solid fa-pen text-[10px]"></i>
                                     </button>
-                                    <form action="{{ route('management.approval-config.destroy', $rule->rule_id) }}" method="POST"
-                                          onsubmit="return confirm('Delete this approval rule?')">
+                                    <form action="{{ route('management.approval-config.destroy', $rule->rule_id) }}" method="POST">
                                         @csrf
-                                        <button type="submit"
-                                                class="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-bold bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900 hover:border-rose-500 text-rose-600 dark:text-rose-400 rounded-xs transition-colors">
-                                            <i class="fa-solid fa-trash-can text-[9px]"></i>
+                                        <button type="button" onclick="confirmDeleteRule(this.form)" title="Delete"
+                                                class="w-6 h-6 flex items-center justify-center bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900 hover:border-rose-500 text-rose-600 dark:text-rose-400 transition-colors">
+                                            <i class="fa-solid fa-trash-can text-[10px]"></i>
                                         </button>
                                     </form>
                                 </div>
@@ -180,23 +189,73 @@
                        class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-3 py-2 rounded-xs focus:outline-none focus:border-blue-500">
             </div>
             <div>
+                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Action Sign-off Header <span class="text-rose-400">*</span></label>
+                <select name="action_label" id="edit_action_label" required
+                        class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-3 py-2 rounded-xs focus:outline-none focus:border-blue-500 cursor-pointer">
+                    <option value="Checked">Checked</option>
+                    <option value="Approved">Approved</option>
+                    <option value="Reviewed">Reviewed</option>
+                </select>
+                <p class="text-[10px] text-slate-400 mt-1">Header printed at the top of the signature column on the document.</p>
+            </div>
+            <div>
                 <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Responsible Department <span class="text-rose-400">*</span></label>
                 <select name="department_id" id="edit_department_id" required
-                        class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-3 py-2 rounded-xs focus:outline-none focus:border-blue-500 cursor-pointer">
+                        class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-3 py-2 rounded-xs focus:outline-none focus:border-blue-500 cursor-pointer select2-department">
                     @foreach($departments as $d)
                         <option value="{{ $d->id }}">{{ $d->name }} ({{ $d->code }})</option>
                     @endforeach
                 </select>
             </div>
-            <div>
-                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Specific Approver <span class="text-slate-300 text-[9px] normal-case">(leave blank = any user in dept)</span></label>
-                <select name="approver_user_id" id="edit_approver_user_id"
-                        class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-3 py-2 rounded-xs focus:outline-none focus:border-blue-500 cursor-pointer">
-                    <option value="">— Any user in department —</option>
+            <div x-data="approverSelect('edit_approver_user_ids', {{ json_encode($users->map(fn($u) => ['id' => $u->id, 'label' => $u->name . ' (' . $u->nik . ')'])) }}, [])" x-on:set-approvers.window="if ($event.detail.target === 'edit_approver_user_ids') setSelected($event.detail.ids)" class="relative">
+                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                    Specific Approver(s)
+                    <span class="text-slate-300 text-[9px] normal-case font-normal ml-1">(searchable — select multiple)</span>
+                </label>
+
+                {{-- Hidden native select for form submission --}}
+                <select name="approver_user_ids[]" id="edit_approver_user_ids" multiple class="hidden">
                     @foreach($users as $u)
-                        <option value="{{ $u->id }}">{{ $u->name }} ({{ $u->nik }})</option>
+                        <option value="{{ $u->id }}">{{ $u->name }}</option>
                     @endforeach
                 </select>
+
+                {{-- Search input --}}
+                <div class="relative">
+                    <input type="text" x-model="search" @focus="open = true" @click.outside="open = false" @keydown.escape="open = false"
+                           placeholder="Search approver..."
+                           class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-3 py-2 pr-8 rounded-xs focus:outline-none focus:border-blue-500">
+                    <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                        <i class="fa-solid fa-chevron-down text-[9px]"></i>
+                    </span>
+
+                    {{-- Dropdown list --}}
+                    <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                         class="absolute z-40 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xs shadow-lg max-h-44 overflow-y-auto">
+                        <template x-for="item in filtered" :key="item.id">
+                            <div @click="toggle(item)"
+                                 :class="selectedIds.includes(item.id) ? 'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50'"
+                                 class="flex items-center justify-between px-3 py-2 text-xs cursor-pointer">
+                                <span x-text="item.label"></span>
+                                <i x-show="selectedIds.includes(item.id)" class="fa-solid fa-check text-[9px] text-blue-500 flex-shrink-0 ml-2"></i>
+                            </div>
+                        </template>
+                        <div x-show="filtered.length === 0" class="px-3 py-3 text-xs text-slate-400 italic text-center">No results found</div>
+                    </div>
+                </div>
+
+                {{-- Selected tags --}}
+                <div class="mt-1.5 min-h-[32px] flex flex-wrap gap-1.5 p-2 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xs">
+                    <template x-if="selectedIds.length === 0">
+                        <span class="text-[10px] text-slate-400 italic self-center">No approver selected — any user in department may approve</span>
+                    </template>
+                    <template x-for="item in selectedItems" :key="item.id">
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 text-[10px] font-semibold rounded-full border border-blue-200 dark:border-blue-800">
+                            <span x-text="item.label"></span>
+                            <button type="button" @click="remove(item.id)" class="hover:text-blue-900 dark:hover:text-white leading-none cursor-pointer">&times;</button>
+                        </span>
+                    </template>
+                </div>
             </div>
             <div class="grid grid-cols-2 gap-3">
                 <div>
@@ -230,11 +289,92 @@ function openEditModal(rule) {
     document.getElementById('edit-form').action = '/management/approval-config/' + rule.rule_id + '/update';
     document.getElementById('edit_approval_level').value = rule.approval_level;
     document.getElementById('edit_position_label').value = rule.position_label;
-    document.getElementById('edit_department_id').value = rule.department_id;
-    document.getElementById('edit_approver_user_id').value = rule.approver_user_id ?? '';
+    document.getElementById('edit_action_label').value = rule.action_label ?? 'Checked';
     document.getElementById('edit_sort_order').value = rule.sort_order;
     document.getElementById('edit_is_active').checked = rule.is_active;
+
+    // Set department via Select2
+    $('#edit_department_id').val(rule.department_id).trigger('change');
+
+    // Dispatch custom event to Alpine.js approverSelect component for edit modal
+    let userIds = (rule.approver_user_ids || []).map(Number);
+    window.dispatchEvent(new CustomEvent('set-approvers', { detail: { target: 'edit_approver_user_ids', ids: userIds } }));
+
     document.getElementById('modal-edit').classList.remove('hidden');
 }
 </script>
+
+
+@push('scripts')
+<script>
+$(document).ready(function () {
+    // Department selects (single, searchable via Select2)
+    $('.select2-department').select2({
+        placeholder: 'Select department...',
+        allowClear: true,
+        width: '100%',
+    });
+});
+
+// Alpine.js component: custom multi-select with searchable dropdown + tag list
+function approverSelect(nativeId, allItems, initialIds) {
+    return {
+        allItems,
+        selectedIds: initialIds.map(Number),
+        search: '',
+        open: false,
+
+        get filtered() {
+            const q = this.search.toLowerCase();
+            return this.allItems.filter(i => i.label.toLowerCase().includes(q));
+        },
+
+        get selectedItems() {
+            return this.allItems.filter(i => this.selectedIds.includes(i.id));
+        },
+
+        toggle(item) {
+            const idx = this.selectedIds.indexOf(item.id);
+            if (idx === -1) {
+                this.selectedIds.push(item.id);
+            } else {
+                this.selectedIds.splice(idx, 1);
+            }
+            this.syncNativeSelect();
+            // Keep dropdown open after selection
+        },
+
+        remove(id) {
+            this.selectedIds = this.selectedIds.filter(x => x !== id);
+            this.syncNativeSelect();
+        },
+
+        setSelected(ids) {
+            this.selectedIds = ids.map(Number);
+            this.syncNativeSelect();
+        },
+
+        syncNativeSelect() {
+            const sel = document.getElementById(nativeId);
+            if (!sel) return;
+            Array.from(sel.options).forEach(opt => {
+                opt.selected = this.selectedIds.includes(Number(opt.value));
+            });
+        }
+    };
+}
+
+function confirmDeleteRule(form) {
+    window.confirmDialog({
+        title: 'Delete Rule?',
+        text: 'Are you sure you want to delete this approval rule?',
+        icon: 'warning',
+        confirmButtonColor: '#dc2626', // Rose 600
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'No',
+        onConfirm: () => form.submit()
+    });
+}
+</script>
+@endpush
 @endsection

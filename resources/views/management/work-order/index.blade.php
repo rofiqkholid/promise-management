@@ -54,7 +54,7 @@
                 @endphp
                 <tr class="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors">
                     <td class="px-3 py-2.5 text-center text-slate-400 font-mono text-[10px]">{{ $index + 1 }}</td>
-                    <td class="px-3 py-2.5 font-bold text-slate-800 dark:text-slate-100">{{ $wo->work_order_no }}</td>
+                    <td class="px-3 py-2.5 font-bold text-slate-800 dark:text-slate-100">{{ $wo->wo_number }}</td>
                     <td class="px-3 py-2.5 font-mono text-slate-600 dark:text-slate-300">Rev. {{ $wo->revision_no }}</td>
                     <td class="px-3 py-2.5 text-slate-600 dark:text-slate-300 font-medium">{{ $wo->subject }}</td>
                     <td class="px-3 py-2.5">
@@ -73,14 +73,14 @@
                             {{ $wo->status }}
                         </span>
                     </td>
-                    <td class="px-3 py-2.5 text-right flex justify-end gap-1.5">
-                        <a href="{{ route('management.work-order.show', $wo->work_order_id) }}"
-                           class="inline-flex items-center gap-1 px-2 py-1 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-blue-300 text-slate-600 dark:text-slate-300 hover:text-blue-700 dark:hover:text-blue-400 font-semibold text-[10px] rounded-xs transition-colors">
-                            <i class="fa-solid fa-eye text-[9px]"></i> View
+                    <td class="px-3 py-2.5 text-right flex justify-end gap-1.5 align-middle">
+                        <a href="{{ route('management.work-order.show', $wo->id) }}" title="View Details"
+                           class="w-6 h-6 flex items-center justify-center bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 hover:border-blue-400 hover:text-blue-700 text-slate-600 dark:text-slate-300 transition-colors">
+                            <i class="fa-solid fa-eye text-[10px]"></i>
                         </a>
-                        <a href="{{ route('management.work-order.show', $wo->work_order_id) }}" target="_blank" onclick="const w = window.open(this.href, '_blank'); w.onload = function() { setTimeout(() => { w.print(); }, 500); }; return false;"
-                           class="inline-flex items-center gap-1 px-2 py-1 bg-blue-600 hover:bg-blue-700 border border-blue-700 text-white font-semibold text-[10px] rounded-xs transition-colors">
-                            <i class="fa-solid fa-print text-[9px]"></i> Print
+                        <a href="{{ route('management.work-order.show', $wo->id) }}" target="_blank" onclick="const w = window.open(this.href, '_blank'); w.onload = function() { setTimeout(() => { w.print(); }, 500); }; return false;" title="Print"
+                           class="w-6 h-6 flex items-center justify-center bg-blue-600 hover:bg-blue-750 text-white transition-colors">
+                            <i class="fa-solid fa-print text-[10px]"></i>
                         </a>
                     </td>
                 </tr>

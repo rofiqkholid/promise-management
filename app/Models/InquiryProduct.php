@@ -11,11 +11,11 @@ class InquiryProduct extends Model
     use HasFactory, SoftDeletes;
 
     protected $table = 'mng_inquiry_products';
-    protected $primaryKey = 'inquiry_product_id';
+
+    protected $appends = ['model_name'];
 
     protected $fillable = [
         'inquiry_id',
-        'model_name',
         'customer_part_no',
         'customer_part_name',
         'part_category',
@@ -27,6 +27,7 @@ class InquiryProduct extends Model
         'has_2d_data',
         'has_3d_data',
         'has_tech_doc',
+        'variant',
         'remarks',
     ];
 
@@ -40,11 +41,21 @@ class InquiryProduct extends Model
 
     public function inquiry()
     {
-        return $this->belongsTo(ProjectInquiry::class, 'inquiry_id', 'inquiry_id');
+        return $this->belongsTo(ProjectInquiry::class, 'inquiry_id', 'id');
+    }
+
+    public function getModelNameAttribute(): ?string
+    {
+        return $this->inquiry->model_name ?? null;
     }
 
     public function assessment()
     {
-        return $this->hasOne(PriorityAssessment::class, 'inquiry_product_id', 'inquiry_product_id');
+        return $this->hasOne(PriorityAssessment::class, 'inquiry_product_id', 'id');
+    }
+
+    public function workOrderProducts()
+    {
+        return $this->hasMany(WorkOrderProduct::class, 'inquiry_product_id', 'id');
     }
 }
