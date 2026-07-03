@@ -365,36 +365,15 @@
                                                 <span class="text-xs font-bold text-slate-700 dark:text-slate-350" x-text="getDeptCodeById(deptId)"></span>
                                                 <div class="flex items-center gap-2">
                                                     <label class="text-xs text-slate-700 dark:text-slate-350">PIC:</label>
-                                                    {{-- Searchable Single-Select (Select2-like in Alpine) --}}
-                                                    <div x-data="{ open: false, search: '' }" class="relative w-48 inline-block text-left align-middle">
-                                                        <button type="button" @click="if (isEditable) open = !open" 
-                                                                :disabled="!isEditable"
-                                                                class="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs px-2.5 py-1 rounded-xs flex justify-between items-center focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed">
-                                                            <span x-text="process_pics[{{ $proc->id }} + '_' + deptId] ? (getUsersByDept(deptId).find(u => u.id == process_pics[{{ $proc->id }} + '_' + deptId])?.name || '-- Choose PIC --') : '-- Choose PIC --'"></span>
-                                                            <i class="fa-solid fa-chevron-down text-[10px] text-slate-500"></i>
-                                                        </button>
-                                                        <input type="hidden" :name="'process_pics[' + {{ $proc->id }} + '][' + deptId + ']'" :value="process_pics[{{ $proc->id }} + '_' + deptId]" required>
-                                                        
-                                                        <div x-show="open" @click.outside="open = false" 
-                                                             class="absolute right-0 z-50 w-56 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xs shadow-lg max-h-40 overflow-y-auto p-1 space-y-1">
-                                                            <input type="text" x-model="search" placeholder="Search user..."
-                                                                   class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-[10px] px-2 py-1 rounded-xs focus:outline-none focus:border-blue-500 mb-1">
-                                                            <div class="space-y-0.5">
-                                                                <div @click="process_pics[{{ $proc->id }} + '_' + deptId] = ''; open = false" 
-                                                                     class="px-2 py-1 text-[10px] text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">
-                                                                    -- Choose PIC --
-                                                                </div>
-                                                                <template x-for="u in getUsersByDept(deptId).filter(u => u.name.toLowerCase().includes(search.toLowerCase()))" :key="u.id">
-                                                                    <div @click="process_pics[{{ $proc->id }} + '_' + deptId] = u.id; open = false"
-                                                                         :class="process_pics[{{ $proc->id }} + '_' + deptId] == u.id ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 font-bold' : 'text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800'"
-                                                                         class="px-2 py-1 text-[10px] cursor-pointer rounded-xs flex items-center justify-between">
-                                                                        <span x-text="u.name"></span>
-                                                                        <i x-show="process_pics[{{ $proc->id }} + '_' + deptId] == u.id" class="fa-solid fa-check text-[8px]"></i>
-                                                                    </div>
-                                                                </template>
-                                                            </div>
-                                                        </div>
-                                                    </div>
+                                                     <select :name="'process_pics[' + {{ $proc->id }} + '][' + deptId + ']'"
+                                                            x-model="process_pics[{{ $proc->id }} + '_' + deptId]"
+                                                            :disabled="!isEditable"
+                                                            class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs px-2.5 py-1 rounded-xs focus:outline-none focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed w-48">
+                                                        <option value="">-- Choose PIC --</option>
+                                                        <template x-for="u in getUsersByDept(deptId)" :key="u.id">
+                                                            <option :value="u.id" x-text="u.name" :selected="process_pics[{{ $proc->id }} + '_' + deptId] == u.id"></option>
+                                                        </template>
+                                                    </select>
                                                 </div>
                                             </div>
                                         </template>
@@ -725,35 +704,14 @@
                     <template x-for="deptId in selectedIds" :key="deptId">
                         <div class="flex items-center justify-between gap-2 p-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xs">
                             <span class="text-[10px] font-bold text-slate-700 dark:text-slate-300" x-text="itemLabel(deptId)"></span>
-                            {{-- Searchable Single-Select (Select2-like in Alpine) --}}
-                            <div x-data="{ open: false, search: '' }" class="relative w-48">
-                                <button type="button" @click="open = !open" 
-                                        class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-[10px] px-2 py-1 rounded-xs flex justify-between items-center focus:outline-none">
-                                    <span x-text="defaultPics[deptId] ? (getUsersByDept(deptId).find(u => u.id == defaultPics[deptId])?.name || '-- Choose PIC --') : '-- Choose PIC --'"></span>
-                                    <i class="fa-solid fa-chevron-down text-[8px] text-slate-400"></i>
-                                </button>
-                                <input type="hidden" :name="'default_pics[' + deptId + ']'" :value="defaultPics[deptId]">
-                                
-                                <div x-show="open" @click.outside="open = false" 
-                                     class="absolute right-0 z-50 w-56 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xs shadow-lg max-h-40 overflow-y-auto p-1 space-y-1">
-                                    <input type="text" x-model="search" placeholder="Search user..."
-                                           class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-[10px] px-2 py-1 rounded-xs focus:outline-none focus:border-blue-500 mb-1">
-                                    <div class="space-y-0.5">
-                                        <div @click="defaultPics[deptId] = ''; open = false" 
-                                             class="px-2 py-1 text-[10px] text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">
-                                            -- Choose PIC --
-                                        </div>
-                                        <template x-for="u in getUsersByDept(deptId).filter(u => u.name.toLowerCase().includes(search.toLowerCase()))" :key="u.id">
-                                            <div @click="defaultPics[deptId] = u.id; open = false"
-                                                 :class="defaultPics[deptId] == u.id ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 font-bold' : 'text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800'"
-                                                 class="px-2 py-1 text-[10px] cursor-pointer rounded-xs flex items-center justify-between">
-                                                <span x-text="u.name"></span>
-                                                <i x-show="defaultPics[deptId] == u.id" class="fa-solid fa-check text-[8px]"></i>
-                                            </div>
-                                        </template>
-                                    </div>
-                                </div>
-                            </div>
+                            <select :name="'default_pics[' + deptId + ']'"
+                                    x-model="defaultPics[deptId]"
+                                    class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-[10px] px-2 py-1 rounded-xs focus:outline-none focus:border-blue-500 w-48">
+                                <option value="">-- Choose PIC --</option>
+                                <template x-for="u in window.allUsersList.filter(u => u.id_dept == deptId)" :key="u.id">
+                                    <option :value="u.id" x-text="u.name" :selected="defaultPics[deptId] == u.id"></option>
+                                </template>
+                            </select>
                         </div>
                     </template>
                 </div>
@@ -831,36 +789,15 @@
                     <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Default PIC per Department:</label>
                     <template x-for="deptId in selectedIds" :key="deptId">
                         <div class="flex items-center justify-between gap-2 p-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xs">
-                            <span class="text-[10px] font-bold text-slate-700 dark:text-slate-300" x-text="itemLabel(deptId)"></span>
-                            {{-- Searchable Single-Select (Select2-like in Alpine) --}}
-                            <div x-data="{ open: false, search: '' }" class="relative w-48">
-                                <button type="button" @click="open = !open" 
-                                        class="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-[10px] px-2 py-1 rounded-xs flex justify-between items-center focus:outline-none">
-                                    <span x-text="defaultPics[deptId] ? (getUsersByDept(deptId).find(u => u.id == defaultPics[deptId])?.name || '-- Choose PIC --') : '-- Choose PIC --'"></span>
-                                    <i class="fa-solid fa-chevron-down text-[8px] text-slate-400"></i>
-                                </button>
-                                <input type="hidden" :name="'default_pics[' + deptId + ']'" :value="defaultPics[deptId]">
-                                
-                                <div x-show="open" @click.outside="open = false" 
-                                     class="absolute right-0 z-50 w-56 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xs shadow-lg max-h-40 overflow-y-auto p-1 space-y-1">
-                                    <input type="text" x-model="search" placeholder="Search user..."
-                                           class="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-[10px] px-2 py-1 rounded-xs focus:outline-none focus:border-blue-500 mb-1">
-                                    <div class="space-y-0.5">
-                                        <div @click="defaultPics[deptId] = ''; open = false" 
-                                             class="px-2 py-1 text-[10px] text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">
-                                            -- Choose PIC --
-                                        </div>
-                                        <template x-for="u in getUsersByDept(deptId).filter(u => u.name.toLowerCase().includes(search.toLowerCase()))" :key="u.id">
-                                            <div @click="defaultPics[deptId] = u.id; open = false"
-                                                 :class="defaultPics[deptId] == u.id ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 font-bold' : 'text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800'"
-                                                 class="px-2 py-1 text-[10px] cursor-pointer rounded-xs flex items-center justify-between">
-                                                <span x-text="u.name"></span>
-                                                <i x-show="defaultPics[deptId] == u.id" class="fa-solid fa-check text-[8px]"></i>
-                                            </div>
-                                        </template>
-                                    </div>
-                                </div>
-                            </div>
+                            <span class="text-[10px] font-bold text-slate-700 dark:text-slate-350" x-text="itemLabel(deptId)"></span>
+                            <select :name="'default_pics[' + deptId + ']'"
+                                    x-model="defaultPics[deptId]"
+                                    class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-[10px] px-2 py-1 rounded-xs focus:outline-none focus:border-blue-500 w-48">
+                                <option value="">-- Choose PIC --</option>
+                                <template x-for="u in window.allUsersList.filter(u => u.id_dept == deptId)" :key="u.id">
+                                    <option :value="u.id" x-text="u.name" :selected="defaultPics[deptId] == u.id"></option>
+                                </template>
+                            </select>
                         </div>
                     </template>
                 </div>
@@ -1264,6 +1201,7 @@ function openEditApprovalModal(rule) {
 @endphp
 
 <script>
+window.allUsersList = @json($users);
 document.addEventListener('alpine:init', () => {
     Alpine.data('spkForm', () => ({
         isEditable: {{ $isEditable ? 'true' : 'false' }},

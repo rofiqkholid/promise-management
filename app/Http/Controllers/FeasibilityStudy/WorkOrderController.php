@@ -525,4 +525,77 @@ class WorkOrderController extends Controller
             ], 422);
         }
     }
+
+    public function storeProcess(Request $request)
+    {
+        $validated = $request->validate([
+            'process_code' => 'required|string|unique:mng_wo_processes,process_code',
+            'process_name' => 'required|string',
+            'default_assigned_departments' => 'required|array',
+            'default_pics' => 'nullable|array',
+        ]);
+
+        $depts = $request->input('default_assigned_departments', []);
+        $pics = $request->input('default_pics', []);
+
+        $assignedData = [];
+        foreach ($depts as $deptId) {
+            $assignedData[] = [
+                'department_id' => (int)$deptId,
+                'default_pic_user_id' => isset($pics[$deptId]) && $pics[$deptId] !== '' ? (int)$pics[$deptId] : null
+            ];
+        }
+
+        \App\Models\WorkOrderProcess::create([
+            'process_code' => $validated['process_code'],
+            'process_name' => $validated['process_name'],
+            'default_assigned_departments' => json_encode($assignedData),
+            'is_active' => $request->has('is_active') ? true : true,
+        ]);
+
+        return redirect()->back()->with('success', 'Master Process successfully created.');
+    }
+
+    public function updateProcess(Request $request, $id)
+    {
+        $process = \App\Models\WorkOrderProcess::findOrFail($id);
+
+        $validated = $request->validate([
+            'process_code' => 'required|string|unique:mng_wo_processes,process_code,' . $id,
+            'process_name' => 'required|string',
+            'default_assigned_departments' => 'required|array',
+            'default_pics' => 'nullable|array',
+        ]);
+
+        $depts = $request->input('default_assigned_departments', []);
+        $pics = $request->input('default_pics', []);
+
+        $assignedData = [];
+        foreach ($depts as $deptId) {
+            $assignedData[] = [
+                'department_id' => (int)$deptId,
+                'default_pic_user_id' => isset($pics[$deptId]) && $pics[$deptId] !== '' ? (int)$pics[$deptId] : null
+            ];
+        }
+
+        $process->update([
+            'process_code' => $validated['process_code'],
+            'process_name' => $validated['process_name'],
+            'default_assigned_departments' => json_encode($assignedData),
+            'is_active' => $request->has('is_active'),
+        ]);
+
+        return redirect()->back()->with('success', 'Master Process successfully updated.');
+    }
+
+    public function destroyProcess($id)
+    {
+        try {
+            $process = \App\Models\WorkOrderProcess::findOrFail($id);
+            $process->delete();
+            return redirect()->back()->with('success', 'Master Process successfully deleted.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to delete process: ' . $e->getMessage());
+        }
+    }
 }
