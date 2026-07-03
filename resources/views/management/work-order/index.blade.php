@@ -13,6 +13,10 @@
                 Surat Perintah Kerja (SPK) List
             </h1>
         </div>
+        <button type="button" onclick="window.dispatchEvent(new CustomEvent('open-wo-progress'))"
+                class="px-3.5 py-2 bg-indigo-650 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-wider rounded-lg shadow-sm hover:shadow transition-all cursor-pointer flex items-center gap-2">
+            <i class="fa-solid fa-globe text-[10px]"></i> Progress Global
+        </button>
     </div>
 
     @if(session('success'))
@@ -28,8 +32,9 @@
                 <th class="px-3 py-2.5 w-8 text-center">#</th>
                 <th class="px-3 py-2.5">SPK No</th>
                 <th class="px-3 py-2.5">Revision</th>
-                <th class="px-3 py-2.5">Subject</th>
                 <th class="px-3 py-2.5">Inquiry No</th>
+                <th class="px-3 py-2.5">Customer</th>
+                <th class="px-3 py-2.5">Model</th>
                 <th class="px-3 py-2.5">Owner Dept</th>
                 <th class="px-3 py-2.5 text-center">Priority</th>
                 <th class="px-3 py-2.5 text-center">Status</th>
@@ -56,12 +61,13 @@
                     <td class="px-3 py-2.5 text-center text-slate-400 font-mono text-[10px]">{{ $index + 1 }}</td>
                     <td class="px-3 py-2.5 font-bold text-slate-800 dark:text-slate-100">{{ $wo->wo_number }}</td>
                     <td class="px-3 py-2.5 font-mono text-slate-600 dark:text-slate-300">Rev. {{ $wo->revision_no }}</td>
-                    <td class="px-3 py-2.5 text-slate-600 dark:text-slate-300 font-medium">{{ $wo->subject }}</td>
                     <td class="px-3 py-2.5">
                         <a href="{{ route('management.inquiry.show', $wo->inquiry_id) }}" class="text-blue-600 hover:underline font-semibold">
                             {{ $wo->inquiry->inquiry_no }}
                         </a>
                     </td>
+                    <td class="px-3 py-2.5 text-slate-700 dark:text-slate-200 font-semibold">{{ $wo->inquiry->customer->code ?? '—' }}</td>
+                    <td class="px-3 py-2.5 text-slate-600 dark:text-slate-350">{{ $wo->inquiry->projectModel->name ?? '—' }}</td>
                     <td class="px-3 py-2.5 text-slate-600 dark:text-slate-300">{{ $wo->ownerDepartment->name ?? '—' }}</td>
                     <td class="px-3 py-2.5 text-center">
                         <span class="inline-block px-2 py-0.5 text-[10px] font-bold border rounded-xs {{ $priorityCls }}">
@@ -74,20 +80,27 @@
                         </span>
                     </td>
                     <td class="px-3 py-2.5 text-right flex justify-end gap-1.5 align-middle">
-                        <a href="{{ route('management.work-order.show', $wo->id) }}" title="View Details"
+                        <a href="{{ route('management.work-order.show', $wo->hashed_id) }}" title="View Details"
                            class="w-6 h-6 flex items-center justify-center bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 hover:border-blue-400 hover:text-blue-700 text-slate-600 dark:text-slate-300 transition-colors">
                             <i class="fa-solid fa-eye text-[10px]"></i>
                         </a>
-                        <a href="{{ route('management.work-order.show', $wo->id) }}" target="_blank" onclick="const w = window.open(this.href, '_blank'); w.onload = function() { setTimeout(() => { w.print(); }, 500); }; return false;" title="Print"
+                        <a href="{{ route('management.work-order.show', $wo->hashed_id) }}" target="_blank" onclick="const w = window.open(this.href, '_blank'); w.onload = function() { setTimeout(() => { w.print(); }, 500); }; return false;" title="Print"
                            class="w-6 h-6 flex items-center justify-center bg-blue-600 hover:bg-blue-750 text-white transition-colors">
                             <i class="fa-solid fa-print text-[10px]"></i>
                         </a>
+                        <button type="button" title="Track Progress & Checklist"
+                                onclick="window.dispatchEvent(new CustomEvent('open-wo-progress', { detail: { hashedId: '{{ $wo->hashed_id }}' } }))"
+                                class="w-6 h-6 flex items-center justify-center bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 hover:border-indigo-400 text-indigo-600 transition-colors cursor-pointer">
+                            <i class="fa-solid fa-list-check text-[10px]"></i>
+                        </button>
                     </td>
                 </tr>
             @endforeach
         </tbody>
     </x-table>
 </div>
+
+@include('management.work-order.modal-wo-progress')
 
 @push('scripts')
 <script>

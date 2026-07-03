@@ -7,7 +7,7 @@
     
     <!-- Breadcrumb & Back -->
     <div>
-        <a href="{{ route('management.inquiry.show', $inquiry->id) }}" class="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline mb-2">
+        <a href="{{ route('management.inquiry.show', $inquiry->hashed_id) }}" class="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline mb-2">
             <i class="fa-solid fa-arrow-left"></i> Back to Detail
         </a>
         <h1 class="text-2xl font-bold tracking-tight text-slate-800 dark:text-white">Edit Inquiry: {{ $inquiry->inquiry_no }}</h1>
@@ -23,25 +23,16 @@
 
     <!-- Form Card -->
     <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 p-6 transition-colors duration-200 max-w-2xl">
-        <form method="POST" action="{{ route('management.inquiry.update', $inquiry->id) }}" class="space-y-4">
+        <form method="POST" action="{{ route('management.inquiry.update', $inquiry->hashed_id) }}" class="space-y-4">
             @csrf
             @method('PUT')
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 gap-4">
                 <div>
                     <label for="customer_name" class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Customer Name <span class="text-rose-500">*</span></label>
                     <input type="text" id="customer_name" name="customer_name" value="{{ old('customer_name', $inquiry->customer_name) }}" required 
                            class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-none px-3 py-2 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500 transition-colors @error('customer_name') border-rose-500 @enderror">
                     @error('customer_name')
-                        <p class="text-xs text-rose-500 mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <div>
-                    <label for="project_name" class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Project Name <span class="text-rose-500">*</span></label>
-                    <input type="text" id="project_name" name="project_name" value="{{ old('project_name', $inquiry->project_name) }}" required 
-                           class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-none px-3 py-2 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500 transition-colors @error('project_name') border-rose-500 @enderror">
-                    @error('project_name')
                         <p class="text-xs text-rose-500 mt-1">{{ $message }}</p>
                     @enderror
                 </div>
@@ -63,7 +54,7 @@
             </div>
 
             <div class="pt-2 flex justify-end gap-3 border-t border-slate-200 dark:border-slate-700">
-                <a href="{{ route('management.inquiry.show', $inquiry->id) }}" 
+                <a href="{{ route('management.inquiry.show', $inquiry->hashed_id) }}" 
                    class="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-medium py-2 px-4 rounded-none text-sm transition-colors">
                     Cancel
                 </a>

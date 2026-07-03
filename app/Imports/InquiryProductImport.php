@@ -33,47 +33,10 @@ class InquiryProductImport
             return;
         }
 
-        // Find header row (1-indexed)
-        $headerRowIndex = 0;
-        $headers = [];
-        foreach ($rows as $index => $row) {
-            $cols = array_map('strtolower', array_map('trim', $row));
-            if (in_array('part num', $cols) || in_array('part no', $cols) || in_array('part name', $cols)) {
-                $headerRowIndex = $index;
-                $headers = $row;
-                break;
-            }
-        }
+        // Bulk starts from row 6 (0-indexed index 5)
+        $startRowIndex = 5;
 
-        if ($headerRowIndex === 0) {
-            // Fallback to row 5 if not found
-            $headerRowIndex = min(5, count($rows));
-            $headers = $rows[$headerRowIndex - 1] ?? [];
-        }
-
-        // Clean headers: convert to slug-like keys
-        $cleanHeaders = [];
-        foreach ($headers as $colIdx => $h) {
-            $hClean = strtolower(trim($h));
-            // Replace non-alphanumeric with underscores
-            $hClean = preg_replace('/[^a-z0-9]/', '_', $hClean);
-            $hClean = preg_replace('/_+/', '_', $hClean);
-            $hClean = trim($hClean, '_');
-
-            // Alias mapping
-            if ($hClean === 'part_num' || $hClean === 'part_no') {
-                $hClean = 'part_num';
-            } elseif ($hClean === 'sop_date' || $hClean === 'sop') {
-                $hClean = 'sop';
-            } elseif ($hClean === 'eol_date' || $hClean === 'eol') {
-                $hClean = 'eol';
-            } elseif ($hClean === 'volume_y' || $hClean === 'volumey' || $hClean === 'volume' || $hClean === 'annual_volume') {
-                $hClean = 'volumey';
-            }
-            $cleanHeaders[$colIdx] = $hClean;
-        }
-
-        for ($i = $headerRowIndex + 1; $i < count($rows); $i++) {
+        for ($i = $startRowIndex; $i < count($rows); $i++) {
             $rowIndex = $i + 1;
             $rawRow = $rows[$i];
             
@@ -82,27 +45,32 @@ class InquiryProductImport
                 continue;
             }
 
-            // Map row to headers
-            $row = [];
-            foreach ($cleanHeaders as $colIdx => $headerKey) {
-                if ($headerKey !== '') {
-                    $row[$headerKey] = $rawRow[$colIdx] ?? null;
-                }
-            }
+            // Map row to keys based on the user's specific columns (B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8, J=9, K=10, L=11, M=12, N=13, O=14, P=15, Q=16, R=17)
+            $row = [
+                'part_no'              => isset($rawRow[1]) ? trim($rawRow[1]) : null,
+                'part_name'            => isset($rawRow[2]) ? trim($rawRow[2]) : null,
+                'part_category'        => isset($rawRow[3]) ? trim($rawRow[3]) : null,
+                'variant'              => isset($rawRow[4]) ? trim($rawRow[4]) : null,
+                'destination'          => isset($rawRow[5]) ? trim($rawRow[5]) : null,
+                'sop'                  => isset($rawRow[6]) ? trim($rawRow[6]) : null,
+                'eol'                  => isset($rawRow[7]) ? trim($rawRow[7]) : null,
+                'model_life'           => isset($rawRow[8]) ? trim($rawRow[8]) : null,
+                'volumey'              => isset($rawRow[9]) ? trim($rawRow[9]) : null,
+                '2d_data'              => isset($rawRow[10]) ? trim($rawRow[10]) : null,
+                '3d_data'              => isset($rawRow[11]) ? trim($rawRow[11]) : null,
+                'tech_doc'             => isset($rawRow[12]) ? trim($rawRow[12]) : null,
+                'customer_priority'    => isset($rawRow[13]) ? trim($rawRow[13]) : null,
+                'volume_potential'     => isset($rawRow[14]) ? trim($rawRow[14]) : null,
+                'type_product'         => isset($rawRow[15]) ? trim($rawRow[15]) : null,
+                'technical_capability' => isset($rawRow[16]) ? trim($rawRow[16]) : null,
+                'investment'           => isset($rawRow[17]) ? trim($rawRow[17]) : null,
+            ];
 
-            $partNo   = $row['part_num'] ?? null;
-            $partName = $row['part_name'] ?? null;
+            $partNo   = isset($row['part_no']) ? trim($row['part_no']) : '';
+            $partName = isset($row['part_name']) ? trim($row['part_name']) : '';
             
-            $validator = Validator::make($row, [
-                'part_num'  => 'required',
-                'part_name' => 'required',
-            ]);
-
-            if ($validator->fails()) {
-                $this->errors[] = [
-                    'row' => $rowIndex,
-                    'errors' => $validator->errors()->all()
-                ];
+            // Skip row silently if either Part Number or Part Name is empty
+            if ($partNo === '' || $partName === '') {
                 continue;
             }
 
@@ -335,8 +303,13 @@ class InquiryProductImport
 
     private function parseBoolean($value)
     {
-        if (empty($value)) return false;
-        $val = strtolower(trim($value));
+        if ($value === null) return false;
+        if (is_bool($value)) return $value;
+        
+        $val = strtolower(trim((string)$value));
+        if ($val === '0' || $val === 'false' || $val === 'no' || $val === 'tidak' || $val === '') {
+            return false;
+        }
         return in_array($val, ['yes', 'y', '1', 'true', 'ya']);
     }
 

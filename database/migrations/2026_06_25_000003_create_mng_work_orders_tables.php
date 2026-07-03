@@ -45,15 +45,15 @@ return new class extends Migration
                 ->onDelete('cascade');
             $table->integer('department_id'); // Owner department from departments table
             $table->string('priority', 50)->nullable();
-            $table->string('subject', 255);
+            $table->string('subject', 255)->nullable();
             $table->text('request_types')->nullable();
             $table->string('status', 50);
             $table->text('remarks')->nullable();
             $table->string('created_by', 100);
             $table->datetime('released_at')->nullable();
             $table->date('first_sample_date')->nullable();
-            $table->date('due_date_approval')->nullable();
-            $table->date('due_date_closed')->nullable();
+            $table->date('due_date_plan')->nullable();
+            $table->text('due_dates_closed')->nullable();
             $table->text('selected_approval_rule_ids')->nullable();
             $table->timestamps();
             $table->softDeletes();
@@ -76,7 +76,6 @@ return new class extends Migration
             $table->string('process_code', 100)->unique();
             $table->string('process_name', 255);
             $table->text('default_assigned_departments')->nullable(); // JSON Array of Department IDs
-            $table->integer('sort_order')->default(0);
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
@@ -115,24 +114,12 @@ return new class extends Migration
             $table->date('eol_date')->nullable();
             $table->integer('model_life')->nullable();
             $table->integer('annual_volume')->nullable();
-            $table->date('first_sample_date')->nullable();
-            $table->date('due_date_approval')->nullable();
-            $table->date('due_date_closed')->nullable();
+            $table->boolean('has_2d_data')->default(false);
+            $table->boolean('has_3d_data')->default(false);
+            $table->boolean('has_tech_doc')->default(false);
             $table->text('remarks')->nullable();
             $table->timestamps();
             $table->softDeletes();
-        });
-
-        Schema::create('mng_wo_attachments', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('work_order_id')
-                ->constrained('mng_work_orders')
-                ->onDelete('cascade');
-            $table->string('file_name', 255);
-            $table->string('file_path', 255);
-            $table->string('uploaded_by', 100);
-            $table->datetime('uploaded_at');
-            $table->timestamps();
         });
 
         Schema::create('mng_wo_approvals', function (Blueprint $table) {
@@ -147,6 +134,7 @@ return new class extends Migration
             $table->string('status', 50);
             $table->datetime('approved_at')->nullable();
             $table->text('remarks')->nullable();
+            $table->date('due_date_closed')->nullable();
             $table->timestamps();
 
             $table->foreign('department_id')
@@ -158,8 +146,12 @@ return new class extends Migration
 
     public function down(): void
     {
+        Schema::table('mng_work_orders', function (Blueprint $table) {
+            // Drop self-referential foreign key first to avoid SQL Server block
+            $table->dropForeign(['revised_from_id']);
+        });
+
         Schema::dropIfExists('mng_wo_approvals');
-        Schema::dropIfExists('mng_wo_attachments');
         Schema::dropIfExists('mng_wo_products');
         Schema::dropIfExists('mng_wo_process_details');
         Schema::dropIfExists('mng_wo_processes');

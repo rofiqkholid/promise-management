@@ -5,10 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ApprovalRule extends Model
+class ApprovalConfig extends Model
 {
     use HasFactory;
-    protected $table = 'mng_approval_rules';
+    protected $table = 'mng_approval_config';
     protected $fillable = [
         'document_type',
         'approval_level',
@@ -68,7 +68,7 @@ class ApprovalRule extends Model
     /**
      * Scope: active rules for a document type, ordered by level.
      */
-    public function scopeActiveFor($query, string $type = 'SPK')
+    public function scopeActiveFor($query, string $type = 'WO')
     {
         return $query->where('document_type', $type)
                      ->where('is_active', true)

@@ -3,16 +3,16 @@
 namespace App\Http\Controllers\Management;
 
 use App\Http\Controllers\Controller;
-use App\Models\ApprovalRule;
+use App\Models\ApprovalConfig;
 use App\Models\Department;
 use App\Models\User;
 use Illuminate\Http\Request;
 
-class ApprovalRuleController extends Controller
+class ApprovalConfigController extends Controller
 {
     public function index()
     {
-        $rules = ApprovalRule::with(['department'])
+        $rules = ApprovalConfig::with(['department'])
             ->orderBy('approval_level', 'asc')
             ->orderBy('sort_order', 'asc')
             ->get();
@@ -38,14 +38,14 @@ class ApprovalRuleController extends Controller
         $validated['is_active'] = $request->boolean('is_active');
         $validated['action_label'] = $request->input('action_label') ?: 'Checked';
 
-        ApprovalRule::create($validated);
+        ApprovalConfig::create($validated);
 
-        return redirect()->back()->with('success', 'Approval rule created successfully.');
+        return redirect()->back()->with('success', 'Approval configuration created successfully.');
     }
 
     public function update(Request $request, $id)
     {
-        $rule = ApprovalRule::findOrFail($id);
+        $rule = ApprovalConfig::findOrFail($id);
 
         $validated = $request->validate([
             'document_type'      => 'required|string|max:50',
@@ -67,14 +67,14 @@ class ApprovalRuleController extends Controller
 
         $rule->update($validated);
 
-        return redirect()->back()->with('success', 'Approval rule updated successfully.');
+        return redirect()->back()->with('success', 'Approval configuration updated successfully.');
     }
 
     public function destroy($id)
     {
-        $rule = ApprovalRule::findOrFail($id);
+        $rule = ApprovalConfig::findOrFail($id);
         $rule->delete();
 
-        return redirect()->back()->with('success', 'Approval rule deleted.');
+        return redirect()->back()->with('success', 'Approval configuration deleted.');
     }
 }

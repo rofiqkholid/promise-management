@@ -107,11 +107,11 @@ class MenuSeeder extends Seeder
                 ]
             );
 
-            // 3b. Approval Inbox (submenu)
+            // 3b. WO Inbox (submenu)
             DB::table('menus')->updateOrInsert(
                 ['route' => 'management.work-order.approval-inbox', 'scope_id' => 'app_management'],
                 [
-                    'title'      => 'Approval Inbox',
+                    'title'      => 'WO Inbox',
                     'icon'       => 'fa-solid fa-envelope-open-text',
                     'sort_order' => 2,
                     'level'      => 2,

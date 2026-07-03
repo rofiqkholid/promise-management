@@ -12,9 +12,7 @@ class AssessmentConfigController extends Controller
 {
     public function index()
     {
-        $categories = ScoreCategory::with('options')->orderBy('sort_order', 'asc')->get();
-        $rankings = AssessmentRanking::orderBy('sort_order', 'asc')->get();
-        return view('management.assessment-config.index', compact('categories', 'rankings'));
+        return redirect()->route('management.inquiry.index', ['open_config' => 1]);
     }
 
     public function storeCategory(Request $request)

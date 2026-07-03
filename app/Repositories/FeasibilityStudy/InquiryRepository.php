@@ -1,11 +1,13 @@
 <?php
 
-namespace App\Repositories\Management;
+namespace App\Repositories\FeasibilityStudy;
 
 use App\Models\ProjectInquiry;
 use App\Models\InquiryProduct;
+use App\Models\PriorityAssessment;
+use App\Models\PriorityAssessmentDetail;
 
-class InquiryRepository implements InquiryRepositoryInterface
+class InquiryRepository
 {
     public function paginate($perPage = 10, array $filters = [])
     {
@@ -99,6 +101,41 @@ class InquiryRepository implements InquiryRepositoryInterface
 
     public function findProductById($productId)
     {
-        return InquiryProduct::with('inquiry')->findOrFail($productId);
+        return InquiryProduct::with('assessment.details')->findOrFail($productId);
+    }
+
+    public function updateProduct($productId, array $productData)
+    {
+        $product = InquiryProduct::findOrFail($productId);
+        $product->update($productData);
+        return $product;
+    }
+
+    public function savePriorityAssessment($productId, array $data, array $selections)
+    {
+        $assessment = PriorityAssessment::updateOrCreate(
+            ['inquiry_product_id' => $productId],
+            $data
+        );
+
+        $assessment->details()->delete();
+        foreach ($selections as $sel) {
+            PriorityAssessmentDetail::create([
+                'assessment_id' => $assessment->id,
+                'category_id'   => $sel['category_id'],
+                'option_id'     => $sel['option_id'],
+                'score_value'   => $sel['score_value'],
+            ]);
+        }
+
+        return $assessment;
+    }
+
+    public function updateProductsOrder($orderedIds)
+    {
+        foreach ($orderedIds as $index => $prodId) {
+            InquiryProduct::where('id', $prodId)->update(['sort_order' => $index + 1]);
+        }
+        return true;
     }
 }

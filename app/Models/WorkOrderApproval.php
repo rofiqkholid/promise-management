@@ -21,11 +21,13 @@ class WorkOrderApproval extends Model
         'status',
         'approved_at',
         'remarks',
+        'due_date_closed',
     ];
 
     protected $casts = [
         'approved_at' => 'datetime',
         'approval_level' => 'integer',
+        'due_date_closed' => 'date',
     ];
 
     public function workOrder()

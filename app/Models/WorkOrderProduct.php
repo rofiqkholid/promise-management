@@ -27,19 +27,19 @@ class WorkOrderProduct extends Model
         'eol_date',
         'model_life',
         'annual_volume',
-        'first_sample_date',
-        'due_date_approval',
-        'due_date_closed',
         'variant',
+        'has_2d_data',
+        'has_3d_data',
+        'has_tech_doc',
         'remarks',
     ];
 
     protected $casts = [
         'sop_date' => 'date',
         'eol_date' => 'date',
-        'first_sample_date' => 'date',
-        'due_date_approval' => 'date',
-        'due_date_closed' => 'date',
+        'has_2d_data' => 'boolean',
+        'has_3d_data' => 'boolean',
+        'has_tech_doc' => 'boolean',
     ];
 
     public function workOrder()

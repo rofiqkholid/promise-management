@@ -13,8 +13,12 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(
-            \App\Repositories\Management\InquiryRepositoryInterface::class,
-            \App\Repositories\Management\InquiryRepository::class
+            \App\Repositories\FeasibilityStudy\InquiryRepositoryInterface::class,
+            \App\Repositories\FeasibilityStudy\InquiryRepository::class
+        );
+        $this->app->bind(
+            \App\Repositories\FeasibilityStudy\WorkOrderRepositoryInterface::class,
+            \App\Repositories\FeasibilityStudy\WorkOrderRepository::class
         );
     }
 

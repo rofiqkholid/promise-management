@@ -26,21 +26,12 @@
         <form method="POST" action="{{ route('management.inquiry.store') }}" class="space-y-4">
             @csrf
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 gap-4">
                 <div>
                     <label for="customer_name" class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Customer Name <span class="text-rose-500">*</span></label>
                     <input type="text" id="customer_name" name="customer_name" value="{{ old('customer_name') }}" required placeholder="e.g. Toyota, Honda" 
                            class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-none px-3 py-2 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500 transition-colors @error('customer_name') border-rose-500 @enderror">
                     @error('customer_name')
-                        <p class="text-xs text-rose-500 mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <div>
-                    <label for="project_name" class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Project Name <span class="text-rose-500">*</span></label>
-                    <input type="text" id="project_name" name="project_name" value="{{ old('project_name') }}" required placeholder="e.g. Underbody Shield, Pillar A" 
-                           class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-none px-3 py-2 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500 transition-colors @error('project_name') border-rose-500 @enderror">
-                    @error('project_name')
                         <p class="text-xs text-rose-500 mt-1">{{ $message }}</p>
                     @enderror
                 </div>

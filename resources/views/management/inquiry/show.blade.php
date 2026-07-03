@@ -140,7 +140,7 @@
             {{-- Actions Toolbar --}}
             <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto justify-start lg:justify-end">
                 <template x-if="selectedSpkProducts.length > 0">
-                    <a :href="`{{ Route::has('management.work-order.create') ? route('management.work-order.create') : '#' }}?inquiry_id={{ $inquiry->id }}&products=${selectedSpkProducts.join(',')}`"
+                    <a :href="`{{ Route::has('management.work-order.create') ? route('management.work-order.create') : '#' }}?inquiry_id={{ $inquiry->hashed_id }}&products=${selectedSpkProducts.map(id => products.find(p => p.id === id)?.hashed_id || id).join(',')}`"
                        class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-sm transition-colors cursor-pointer">
                         <i class="fa-solid fa-file-signature text-[10px]"></i> Create SPK (<span x-text="selectedSpkProducts.length"></span>)
                     </a>
@@ -154,6 +154,10 @@
                             class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-semibold shadow-sm transition-colors cursor-pointer">
                         <i class="fa-solid fa-file-excel text-emerald-600 dark:text-emerald-500 text-[10px]"></i> Import Excel
                     </button>
+                    <button @click="showAssessmentConfigModal = true"
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-semibold shadow-sm transition-colors cursor-pointer">
+                        <i class="fa-solid fa-gears text-[10px]"></i> Scoring Config
+                    </button>
                 @endif
 
                 @if($inquiry->status === 'Draft')
@@ -164,7 +168,7 @@
                             class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-semibold shadow-sm transition-colors cursor-pointer">
                         <i class="fa-solid fa-pen-to-square text-[10px]"></i> Edit Info
                     </button>
-                    <form id="close-inquiry-form" method="POST" action="{{ route('management.inquiry.close', $inquiry->id) }}"
+                    <form id="close-inquiry-form" method="POST" action="{{ route('management.inquiry.close', $inquiry->hashed_id) }}"
                           class="inline">
                         @csrf
                         <button type="button" onclick="confirmCloseInquiry()"
@@ -172,7 +176,7 @@
                             <i class="fa-solid fa-lock text-[10px]"></i> Close Inquiry
                         </button>
                     </form>
-                    <form id="cancel-inquiry-form" method="POST" action="{{ route('management.inquiry.cancel', $inquiry->id) }}"
+                    <form id="cancel-inquiry-form" method="POST" action="{{ route('management.inquiry.cancel', $inquiry->hashed_id) }}"
                           class="inline">
                         @csrf
                         <button type="button" onclick="confirmCancelInquiry()"
@@ -193,10 +197,6 @@
             <div class="px-4 py-3">
                 <span class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5">Model</span>
                 <span class="text-xs font-bold text-slate-800 dark:text-slate-100">{{ $inquiry->model_name ?? '—' }}</span>
-            </div>
-            <div class="px-4 py-3">
-                <span class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5">Project</span>
-                <span class="text-xs font-bold text-slate-800 dark:text-slate-100">{{ $inquiry->project_name }}</span>
             </div>
             <div class="px-4 py-3">
                 <span class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5">Products</span>
@@ -252,6 +252,7 @@
             })->toArray();
             return [
                 'id'                 => $p->id,
+                'hashed_id'          => $p->hashed_id,
                 'model_name'         => $p->model_name,
                 'customer_part_no'   => $p->customer_part_no,
                 'customer_part_name' => $p->customer_part_name,
@@ -449,8 +450,8 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Model Name <span class="text-rose-500">*</span></label>
-                                <input type="text" x-model="productForm.model_name" required
-                                       class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-3 py-1.5 text-xs focus:outline-none focus:border-blue-500 text-slate-800 dark:text-slate-100">
+                                <input type="text" x-model="productForm.model_name" required readonly
+                                       class="w-full bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-3 py-1.5 text-xs text-slate-500 dark:text-slate-400 cursor-not-allowed focus:outline-none">
                             </div>
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Part Number <span class="text-rose-500">*</span></label>
@@ -622,7 +623,7 @@
                 <button @click="showImportModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg leading-none">&times;</button>
             </div>
             {{-- Modal Body --}}
-            <form action="{{ route('management.inquiry.import', $inquiry->id) }}" method="POST" enctype="multipart/form-data" class="p-5 space-y-4">
+            <form action="{{ route('management.inquiry.import', $inquiry->hashed_id) }}" method="POST" enctype="multipart/form-data" class="p-5 space-y-4">
                 @csrf
                 <div class="space-y-3">
                     <p class="text-xs text-slate-600 dark:text-slate-400">
@@ -663,6 +664,9 @@
         </div>
     </div>
 
+    <!-- Assessment Configuration Modal -->
+    @include('management.inquiry.assessment-config-modal')
+
 </div>{{-- end x-data --}}
 
 {{-- ═══════════════════ SCRIPTS ════════════════════════════════════════════ --}}
@@ -699,6 +703,7 @@ document.addEventListener('alpine:init', () => {
             const allModels = @json($models);
             return allModels.filter(m => m.customer_id == customerId);
         },
+        showAssessmentConfigModal: false,
         showProductModal: false,
         productModalMode: 'add',
         productId: null,
@@ -907,7 +912,8 @@ document.addEventListener('alpine:init', () => {
             this.productModalMode = 'add';
             this.productId = null;
             this.productForm = {
-                model_name: '', customer_part_no: '', customer_part_name: '',
+                model_name: '{{ $inquiry->projectModel->name ?? "" }}',
+                customer_part_no: '', customer_part_name: '',
                 part_category: '', destination: '', sop_date: '', eol_date: '',
                 model_life: '', annual_volume: '',
                 has_2d_data: false, has_3d_data: false, has_tech_doc: false, variant: '', remarks: ''
@@ -930,7 +936,7 @@ document.addEventListener('alpine:init', () => {
                 this.productModalMode = 'edit';
                 this.productId = prod.id;
                 this.productForm = {
-                    model_name:          prod.model_name || '',
+                    model_name:          prod.model_name || '{{ $inquiry->projectModel->name ?? "" }}',
                     customer_part_no:    prod.customer_part_no || '',
                     customer_part_name:  prod.customer_part_name || '',
                     part_category:       prod.part_category || '',
@@ -959,7 +965,7 @@ document.addEventListener('alpine:init', () => {
         submitProductForm() {
             this.loading = true;
             let url    = this.productModalMode === 'add'
-                ? '{{ url('management/inquiry') }}/{{ $inquiry->id }}/product'
+                ? '{{ url('management/inquiry') }}/{{ $inquiry->hashed_id }}/product'
                 : '{{ url('management/inquiry-product') }}/' + this.productId;
             
             let bodyData = { ...this.productForm };

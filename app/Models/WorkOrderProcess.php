@@ -15,7 +15,6 @@ class WorkOrderProcess extends Model
         'process_code',
         'process_name',
         'default_assigned_departments',
-        'sort_order',
         'is_active',
     ];
 
@@ -25,7 +24,10 @@ class WorkOrderProcess extends Model
 
     public function getDefaultAssignedDepartments()
     {
-        $ids = json_decode($this->default_assigned_departments ?? '[]', true);
+        $data = json_decode($this->default_assigned_departments ?? '[]', true) ?: [];
+        $ids = array_map(function($d) {
+            return is_array($d) ? ($d['department_id'] ?? $d) : $d;
+        }, $data);
         if (empty($ids)) {
             return collect();
         }

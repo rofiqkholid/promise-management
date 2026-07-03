@@ -12,23 +12,35 @@
             <h1 class="text-2xl font-bold tracking-tight text-slate-800 dark:text-white">Project Inquiries</h1>
             <p class="text-sm text-slate-500 dark:text-slate-400">Manage customer RFQs, product lists, and feasibility studies</p>
         </div>
-        <button @click="showWizard = true; step = 1; inquiryId = null; inquiryNo = null; customer_id = ''; project_id = ''; project_name = ''; inquiry_date = '{{ date('Y-m-d') }}'; remarks = ''; products = []; validationErrors = []; excelError = ''; document.getElementById('excel_file').value = '';"
-           class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium rounded-none shadow-sm transition-colors text-sm">
-            <i class="fa-solid fa-plus text-xs"></i>
-            Create New Inquiry
-        </button>
+        <div class="flex items-center gap-2">
+            <button @click="showAssessmentConfigModal = true"
+               class="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 font-medium rounded-none shadow-sm transition-colors text-sm">
+                <i class="fa-solid fa-gears text-xs"></i>
+                Scoring Config
+            </button>
+            <button @click="openWizard()"
+               class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium rounded-none shadow-sm transition-colors text-sm">
+                <i class="fa-solid fa-plus text-xs"></i>
+                Create New Inquiry
+            </button>
+        </div>
     </div>
 
-    <!-- Sessions Alert -->
+    <!-- SweetAlert & Session Toast Notifications -->
+    <x-sweetalert />
     @if(session('success'))
-        <div class="p-4 bg-emerald-50 dark:bg-emerald-950/30 border-l-4 border-emerald-500 text-emerald-800 dark:text-emerald-400 text-sm">
-            {{ session('success') }}
-        </div>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                showToast("{{ session('success') }}", 'success');
+            });
+        </script>
     @endif
     @if(session('error'))
-        <div class="p-4 bg-rose-50 dark:bg-rose-950/30 border-l-4 border-rose-500 text-rose-800 dark:text-rose-400 text-sm">
-            {{ session('error') }}
-        </div>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                showToast("{{ session('error') }}", 'error');
+            });
+        </script>
     @endif
 
     <!-- Filters Card -->
@@ -80,7 +92,6 @@
                 <th class="p-3 text-xs font-semibold uppercase tracking-wider">Inquiry No</th>
                 <th class="p-3 text-xs font-semibold uppercase tracking-wider">Customer</th>
                 <th class="p-3 text-xs font-semibold uppercase tracking-wider">Model</th>
-                <th class="p-3 text-xs font-semibold uppercase tracking-wider">Project Name</th>
                 <th class="p-3 text-xs font-semibold uppercase tracking-wider">Inquiry Date</th>
                 <th class="p-3 text-xs font-semibold uppercase tracking-wider text-center">Products</th>
                 <th class="p-3 text-xs font-semibold uppercase tracking-wider">Status</th>
@@ -91,13 +102,12 @@
             @foreach($inquiries as $inquiry)
                 <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 text-slate-800 dark:text-slate-100 transition-colors duration-150">
                     <td class="p-3 font-semibold text-blue-600 dark:text-blue-400">
-                        <a href="{{ route('management.inquiry.show', $inquiry->id) }}" class="hover:underline">
+                        <a href="{{ route('management.inquiry.show', $inquiry->hashed_id) }}" class="hover:underline">
                             {{ $inquiry->inquiry_no }}
                         </a>
                     </td>
                     <td class="p-3 font-mono text-xs">{{ $inquiry->customer->code ?? '—' }}</td>
                     <td class="p-3 text-xs">{{ $inquiry->model_name ?? '—' }}</td>
-                    <td class="p-3">{{ $inquiry->project_name }}</td>
                     <td class="p-3">{{ $inquiry->inquiry_date->format('d M Y') }}</td>
                     <td class="p-3 text-center">
                         <span class="px-2 py-0.5 bg-slate-100 dark:bg-slate-900 font-semibold text-xs rounded-none">
@@ -129,9 +139,10 @@
                     </td>
                     <td class="p-3 text-right">
                         <div class="flex items-center justify-end gap-2">
-                            <a href="{{ route('management.inquiry.show', $inquiry->id) }}" 
-                               class="px-2.5 py-1 text-xs font-semibold bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 transition-colors">
-                                View Detail
+                            <a href="{{ route('management.inquiry.show', $inquiry->hashed_id) }}" 
+                               title="View Details"
+                               class="w-7 h-7 flex items-center justify-center bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 transition-colors">
+                                <i class="fa-solid fa-eye text-xs"></i>
                             </a>
                             @if($inquiry->status === 'Draft')
                                 <button @click="
@@ -144,15 +155,18 @@
                                         remarks: '{{ addslashes($inquiry->remarks) }}'
                                     };
                                     showEditModal = true;"
-                                    class="px-2.5 py-1 text-xs font-semibold bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-blue-600 dark:text-blue-400 transition-colors">
-                                    Edit
+                                    title="Edit Header"
+                                    class="w-7 h-7 flex items-center justify-center bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-blue-600 dark:text-blue-400 transition-colors">
+                                    <i class="fa-solid fa-pen-to-square text-xs"></i>
                                 </button>
                             @endif
-                            <form action="{{ route('management.inquiry.destroy', $inquiry->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this Project Inquiry and all related data? This action cannot be undone.');" class="inline">
+                            <form id="delete-form-{{ $inquiry->id }}" action="{{ route('management.inquiry.destroy', $inquiry->id) }}" method="POST" class="inline">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="px-2.5 py-1 text-xs font-semibold bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-400 transition-colors">
-                                    Delete
+                                <button type="button" @click="confirmDeleteInquiry('{{ $inquiry->id }}')"
+                                    title="Delete Inquiry"
+                                    class="w-7 h-7 flex items-center justify-center bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-400 transition-colors">
+                                    <i class="fa-solid fa-trash-can text-xs"></i>
                                 </button>
                             </form>
                         </div>
@@ -191,7 +205,7 @@
             <!-- Loader Overlay -->
             <div x-show="loading" class="absolute inset-0 bg-white/70 dark:bg-slate-800/70 z-10 flex items-center justify-center">
                 <div class="flex flex-col items-center gap-2">
-                    <i class="fa-solid fa-circle-notch fa-spin text-blue-600 text-3xl"></i>
+                    <i class="fa-solid fa-spinner fa-spin text-blue-600 text-3xl"></i>
                     <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Processing... Please wait</span>
                 </div>
             </div>
@@ -199,17 +213,11 @@
             <!-- Wizard Content Wrapper (Scrollable if data is large) -->
             <div class="flex-grow overflow-y-auto space-y-4 pr-1">
                 
-                <!-- STEP 1: Inquiry Header -->
                 <div x-show="step === 1" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="space-y-4">
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Project Name <span class="text-rose-500">*</span></label>
-                            <input type="text" x-model="project_name" required placeholder="e.g. Project 5P45"
-                                   class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-3 py-2 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500">
-                        </div>
-                        <div>
                             <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Customer <span class="text-rose-500">*</span></label>
-                            <select x-model="customer_id" required @change="project_id = ''"
+                            <select id="wizard_customer_select" x-model="customer_id" required
                                     class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-3 py-2 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500">
                                 <option value="">Select Customer</option>
                                 @foreach($customers as $c)
@@ -219,7 +227,7 @@
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Model <span class="text-rose-500">*</span></label>
-                            <select x-model="project_id" required :disabled="!customer_id"
+                            <select id="wizard_model_select" x-model="project_id" required :disabled="!customer_id"
                                     class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-3 py-2 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500 disabled:opacity-50">
                                 <option value="">Select Model</option>
                                 <template x-for="m in getFilteredModels(customer_id)" :key="m.id">
@@ -255,10 +263,24 @@
                             </div>
                         </div>
                         <div class="inline-block">
-                            <input type="file" id="excel_file" class="hidden" accept=".xlsx,.xls" @change="excelError = ''">
+                            <input type="file" id="excel_file" class="hidden" accept=".xlsx,.xls" @change="handleFileChange($event)">
                             <button type="button" @click="document.getElementById('excel_file').click()" 
                                     class="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold uppercase tracking-wider">
                                 Select File
+                            </button>
+                        </div>
+
+                        <!-- Visual Attachment Info -->
+                        <div x-show="attachedFileName" class="mt-4 p-3 bg-blue-50 dark:bg-blue-950/20 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800/40 rounded-xs flex items-center justify-between max-w-md mx-auto" style="display: none;">
+                            <div class="flex items-center gap-2 text-left">
+                                <i class="fa-solid fa-file-excel text-lg text-emerald-600"></i>
+                                <div>
+                                    <p class="text-xs font-bold truncate max-w-[200px]" x-text="attachedFileName"></p>
+                                    <p class="text-[10px] text-slate-450" x-text="attachedFileSize"></p>
+                                </div>
+                            </div>
+                            <button type="button" @click="clearAttachedFile" class="text-slate-400 hover:text-rose-500">
+                                <i class="fa-solid fa-trash-can"></i>
                             </button>
                         </div>
                     </div>
@@ -369,11 +391,6 @@
             
             <form @submit.prevent="submitEdit" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Project Name</label>
-                    <input type="text" x-model="editForm.project_name" required placeholder="Project Name"
-                           class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-3 py-2 text-sm text-slate-800 dark:text-slate-100 focus:outline-none">
-                </div>
-                <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Customer</label>
                     <select x-model="editForm.customer_id" required @change="editForm.project_id = ''"
                             class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-3 py-2 text-sm text-slate-800 dark:text-slate-100 focus:outline-none">
@@ -411,12 +428,16 @@
         </div>
     </div>
 
+    <!-- Assessment Configuration Modal -->
+    @include('management.inquiry.assessment-config-modal')
+
 </div>
 
 @push('scripts')
 <script>
     document.addEventListener('alpine:init', () => {
         Alpine.data('inquiryIndex', () => ({
+            showAssessmentConfigModal: false,
             showWizard: false,
             step: 1,
             loading: false,
@@ -431,17 +452,122 @@
             validationErrors: [],
             importedCount: 0,
             products: [],
+            attachedFileName: '',
+            attachedFileSize: '',
             
             showEditModal: false,
             editForm: { id: '', customer_id: '', project_id: '', project_name: '', inquiry_date: '', remarks: '' },
 
+            init() {
+                // Open config modal if URL query param exists
+                if ({{ request()->query('open_config') ? 'true' : 'false' }}) {
+                    this.showAssessmentConfigModal = true;
+                }
+
+                // Watch customer_id changes to re-init select2 for models list dynamically
+                this.$watch('customer_id', (newVal) => {
+                    this.$nextTick(() => {
+                        $('#wizard_model_select').select2({
+                            dropdownParent: $('#wizard_model_select').parent()
+                        });
+                    });
+                });
+            },
+
+            openWizard() {
+                this.showWizard = true;
+                this.step = 1;
+                this.inquiryId = null;
+                this.inquiryNo = null;
+                this.customer_id = '';
+                this.project_id = '';
+                this.project_name = '';
+                this.inquiry_date = '{{ date("Y-m-d") }}';
+                this.remarks = '';
+                this.products = [];
+                this.validationErrors = [];
+                this.excelError = '';
+                this.attachedFileName = '';
+                this.attachedFileSize = '';
+                if (document.getElementById('excel_file')) {
+                    document.getElementById('excel_file').value = '';
+                }
+
+                // Initialize select2 on modal open
+                this.$nextTick(() => {
+                    const self = this;
+                    
+                    $('#wizard_customer_select').select2({
+                        dropdownParent: $('#wizard_customer_select').parent()
+                    }).on('change', function() {
+                        self.customer_id = $(this).val();
+                        self.project_id = '';
+                        self.$nextTick(() => {
+                            $('#wizard_model_select').val('').trigger('change');
+                        });
+                    }).val('').trigger('change');
+                    
+                    $('#wizard_model_select').select2({
+                        dropdownParent: $('#wizard_model_select').parent()
+                    }).on('change', function() {
+                        self.project_id = $(this).val();
+                        const selectedText = $(this).find('option:selected').text();
+                        self.project_name = (selectedText && selectedText !== 'Select Model') ? selectedText : '';
+                    }).val('').trigger('change');
+                });
+            },
+
+            handleFileChange(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    this.attachedFileName = file.name;
+                    this.attachedFileSize = (file.size / 1024).toFixed(1) + ' KB';
+                } else {
+                    this.attachedFileName = '';
+                    this.attachedFileSize = '';
+                }
+                this.excelError = '';
+            },
+
+            clearAttachedFile() {
+                this.attachedFileName = '';
+                this.attachedFileSize = '';
+                if (document.getElementById('excel_file')) {
+                    document.getElementById('excel_file').value = '';
+                }
+            },
+
             getFilteredModels(customerId) {
                 const allModels = @json($models);
-                return allModels.filter(m => m.customer_id == customerId);
+                const filtered = allModels.filter(m => m.customer_id == customerId);
+                
+                // Show only one unique model option (filter duplicate model names)
+                const seen = new Set();
+                return filtered.filter(m => {
+                    const key = String(m.name).trim().toUpperCase();
+                    if (seen.has(key)) {
+                        return false;
+                    }
+                    seen.add(key);
+                    return true;
+                });
+            },
+            confirmDeleteInquiry(id) {
+                window.confirmDialog({
+                    title: 'Delete Project Inquiry?',
+                    text: 'Are you sure you want to delete this Project Inquiry and all related products? This action cannot be undone.',
+                    icon: 'warning',
+                    confirmButtonColor: '#dc2626',
+                    confirmButtonText: 'Yes, delete it!',
+                    cancelButtonText: 'No',
+                    onConfirm: () => {
+                        document.getElementById('delete-form-' + id).submit();
+                    }
+                });
             },
 
             submitHeader() {
-                if (!this.customer_id || !this.project_id || !this.project_name || !this.inquiry_date) {
+                if (!this.customer_id || !this.project_id || !this.inquiry_date) {
                     alert('Please fill out all required fields.');
                     return;
                 }
@@ -546,7 +672,7 @@
             },
 
             submitEdit() {
-                if (!this.editForm.customer_id || !this.editForm.project_id || !this.editForm.project_name || !this.editForm.inquiry_date) {
+                if (!this.editForm.customer_id || !this.editForm.project_id || !this.editForm.inquiry_date) {
                     alert('Please fill out all required fields.');
                     return;
                 }

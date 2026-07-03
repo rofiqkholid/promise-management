@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\HasEncryptedId;
 
 class WorkOrder extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, HasEncryptedId;
 
     protected $table = 'mng_work_orders';
 
@@ -27,9 +28,10 @@ class WorkOrder extends Model
         'remarks',
         'created_by',
         'first_sample_date',
-        'due_date_approval',
-        'due_date_closed',
+        'due_date_plan',
+        'due_dates_closed',
         'selected_approval_rule_ids',
+        'released_at',
     ];
 
     protected $casts = [
@@ -37,9 +39,10 @@ class WorkOrder extends Model
         'revision_no' => 'integer',
         'request_types' => 'array',
         'first_sample_date' => 'date',
-        'due_date_approval' => 'date',
-        'due_date_closed' => 'date',
+        'due_date_plan' => 'date',
+        'due_dates_closed' => 'array',
         'selected_approval_rule_ids' => 'array',
+        'released_at' => 'datetime',
     ];
 
     public function inquiry()
@@ -101,9 +104,10 @@ class WorkOrder extends Model
         $deptIds = collect();
         foreach ($this->processes as $process) {
             $depts = json_decode($process->pivot->assigned_departments ?? '[]', true) ?: [];
-            foreach ($depts as $deptId) {
-                if ($deptId != $this->department_id) {
-                    $deptIds->push($deptId);
+            foreach ($depts as $dept) {
+                $deptId = is_array($dept) ? ($dept['department_id'] ?? null) : $dept;
+                if ($deptId && $deptId != $this->department_id) {
+                    $deptIds->push((int)$deptId);
                 }
             }
         }
@@ -117,7 +121,7 @@ class WorkOrder extends Model
         }
         $pending = $this->approvals()->where('status', 'Pending')->get();
         foreach ($pending as $approval) {
-            $rule = ApprovalRule::activeFor('SPK')
+            $rule = ApprovalConfig::activeFor('WO')
                 ->where('approval_level', $approval->approval_level)
                 ->where('department_id', $approval->department_id)
                 ->first();

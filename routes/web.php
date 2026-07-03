@@ -2,10 +2,10 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\Management\InquiryController;
+use App\Http\Controllers\FeasibilityStudy\InquiryController;
 use App\Http\Controllers\Management\AssessmentConfigController;
-use App\Http\Controllers\Management\WorkOrderController;
-use App\Http\Controllers\Management\ApprovalRuleController;
+use App\Http\Controllers\FeasibilityStudy\WorkOrderController;
+use App\Http\Controllers\Management\ApprovalConfigController;
 use App\Http\Controllers\Management\CalendarController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -72,6 +72,9 @@ Route::middleware('auth')->prefix('management')->name('management.')->group(func
         Route::post('work-order/{id}/approve', [WorkOrderController::class, 'approve'])->name('work-order.approve');
         Route::post('work-order/{id}/reject', [WorkOrderController::class, 'reject'])->name('work-order.reject');
         Route::post('work-order/{id}/revise', [WorkOrderController::class, 'revise'])->name('work-order.revise');
+        Route::post('work-order/{id}/progress', [WorkOrderController::class, 'updateProgress'])->name('work-order.update-progress');
+        Route::get('work-order/{id}/api-details', [WorkOrderController::class, 'apiGetDetails'])->name('work-order.api-details');
+        Route::get('work-order-global-progress', [WorkOrderController::class, 'apiGetGlobalProgress'])->name('work-order.api-global-progress');
         Route::post('process-checklist', [WorkOrderController::class, 'storeProcess'])->name('process-checklist.store');
         Route::post('process-checklist/{id}/update', [WorkOrderController::class, 'updateProcess'])->name('process-checklist.update');
         Route::post('process-checklist/{id}/delete', [WorkOrderController::class, 'destroyProcess'])->name('process-checklist.destroy');
@@ -91,10 +94,10 @@ Route::middleware('auth')->prefix('management')->name('management.')->group(func
 
     // Approval Rules Configuration Routes
     Route::middleware('check.menu:management.approval-config.index')->group(function () {
-        Route::get('approval-config', [ApprovalRuleController::class, 'index'])->name('approval-config.index');
-        Route::post('approval-config', [ApprovalRuleController::class, 'store'])->name('approval-config.store');
-        Route::post('approval-config/{id}/update', [ApprovalRuleController::class, 'update'])->name('approval-config.update');
-        Route::post('approval-config/{id}/delete', [ApprovalRuleController::class, 'destroy'])->name('approval-config.destroy');
+        Route::get('approval-config', [ApprovalConfigController::class, 'index'])->name('approval-config.index');
+        Route::post('approval-config', [ApprovalConfigController::class, 'store'])->name('approval-config.store');
+        Route::post('approval-config/{id}/update', [ApprovalConfigController::class, 'update'])->name('approval-config.update');
+        Route::post('approval-config/{id}/delete', [ApprovalConfigController::class, 'destroy'])->name('approval-config.destroy');
     });
 
     // Calendar & Holiday Routes
