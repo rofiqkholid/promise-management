@@ -1283,6 +1283,7 @@ document.addEventListener('alpine:init', () => {
         page_hal: @json(isset($workOrder) ? ($workOrder->docFormat->page_hal ?? '1') : ($woHeader->page_hal ?? '1')),
         revision_no: {{ isset($workOrder) ? $workOrder->revision_no : 0 }},
         doc_revision_no: @json(isset($workOrder) ? ($workOrder->docFormat->revision_no ?? 0) : ($woHeader->revision_no ?? 0)),
+        publish_date: @json(isset($workOrder) ? ($workOrder->publish_date ? (is_string($workOrder->publish_date) ? substr($workOrder->publish_date, 0, 10) : $workOrder->publish_date->format('Y-m-d')) : now()->format('Y-m-d')) : now()->format('Y-m-d')),
         first_sample_date: @json(isset($workOrder) ? ($workOrder->first_sample_date ? (is_string($workOrder->first_sample_date) ? substr($workOrder->first_sample_date, 0, 10) : $workOrder->first_sample_date->format('Y-m-d')) : '') : ''),
         due_date_plan: @json(isset($workOrder) ? ($workOrder->due_date_plan ? (is_string($workOrder->due_date_plan) ? substr($workOrder->due_date_plan, 0, 10) : $workOrder->due_date_plan->format('Y-m-d')) : '') : ''),
         due_dates_closed: @json((object)$dueDatesClosedData),
