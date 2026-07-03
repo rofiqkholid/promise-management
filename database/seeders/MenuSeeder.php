@@ -28,14 +28,15 @@ class MenuSeeder extends Seeder
         // managed from promise-admin.
         //
         // Structure:
-        //   1. Dashboard         (level 1, no parent)
-        //   2. Project Inquiry   (level 1, no parent)
-        //   3. Work Order (SPK)  (level 1, no parent) <-- parent group
-        //      3a. SPK List      (level 2, parent = Work Order)
-        //      3b. Approval Inbox(level 2, parent = Work Order)
-        //   4. Assessment Config (level 1, no parent)
-        //   5. Approval Config   (level 1, no parent)
-        //   6. Calendar & Holiday(level 1, no parent)
+        //   1. Dashboard            (level 1, no parent)
+        //   2. Project Inquiry      (level 1, no parent)
+        //   3. Work Order (SPK)     (level 1, no parent) <-- parent group
+        //      3a. SPK List         (level 2, parent = Work Order)
+        //      3b. Approval Inbox   (level 2, parent = Work Order)
+        //   4. EBD                  (level 1, no parent) <-- parent group
+        //      4a. EBD List         (level 2, parent = EBD)
+        //   5. Approval Config      (level 1, no parent)
+        //   6. Calendar & Holiday   (level 1, no parent)
         // ----------------------------------------------------------------
 
         // 1. Dashboard
@@ -124,12 +125,18 @@ class MenuSeeder extends Seeder
             );
         }
 
-        // 4. Assessment Config
+        // Remove Assessment Config — now embedded as a modal in the inquiry page
+        DB::table('menus')
+            ->where('route', 'management.assessment-config.index')
+            ->where('scope_id', 'app_management')
+            ->delete();
+
+        // 4. EBD — parent group (dropdown header)
         DB::table('menus')->updateOrInsert(
-            ['route' => 'management.assessment-config.index', 'scope_id' => 'app_management'],
+            ['route' => 'management.ebd.parent', 'scope_id' => 'app_management'],
             [
-                'title'      => 'Assessment Config',
-                'icon'       => 'fa-solid fa-gears',
+                'title'      => 'EBD',
+                'icon'       => 'fa-solid fa-cubes',
                 'sort_order' => 4,
                 'level'      => 1,
                 'parent_id'  => null,
@@ -139,6 +146,28 @@ class MenuSeeder extends Seeder
                 'updated_at' => now(),
             ]
         );
+        $ebdParentId = DB::table('menus')
+            ->where('route', 'management.ebd.parent')
+            ->where('scope_id', 'app_management')
+            ->value('id');
+
+        // 4a. EBD List (submenu)
+        if ($ebdParentId) {
+            DB::table('menus')->updateOrInsert(
+                ['route' => 'management.ebd.index', 'scope_id' => 'app_management'],
+                [
+                    'title'      => 'EBD List',
+                    'icon'       => 'fa-solid fa-table-list',
+                    'sort_order' => 1,
+                    'level'      => 2,
+                    'parent_id'  => $ebdParentId,
+                    'is_active'  => true,
+                    'is_visible' => true,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            );
+        }
 
         // 5. Approval Config
         DB::table('menus')->updateOrInsert(
@@ -162,7 +191,7 @@ class MenuSeeder extends Seeder
             [
                 'title'      => 'Calendar & Holiday',
                 'icon'       => 'fa-solid fa-calendar-days',
-                'sort_order' => 7,
+                'sort_order' => 6,
                 'level'      => 1,
                 'parent_id'  => null,
                 'is_active'  => true,

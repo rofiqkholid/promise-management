@@ -7,6 +7,7 @@ use App\Http\Controllers\Management\AssessmentConfigController;
 use App\Http\Controllers\FeasibilityStudy\WorkOrderController;
 use App\Http\Controllers\Management\ApprovalConfigController;
 use App\Http\Controllers\Management\CalendarController;
+use App\Http\Controllers\FeasibilityStudy\EbdController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
@@ -99,6 +100,12 @@ Route::middleware('auth')->prefix('management')->name('management.')->group(func
         Route::post('approval-config/{id}/update', [ApprovalConfigController::class, 'update'])->name('approval-config.update');
         Route::post('approval-config/{id}/delete', [ApprovalConfigController::class, 'destroy'])->name('approval-config.destroy');
     });
+
+    // EBD (Engineering Breakdown) Routes
+    Route::get('ebd', [EbdController::class, 'index'])->name('ebd.index');
+    Route::get('ebd/{id}', [EbdController::class, 'show'])->name('ebd.show');
+    Route::post('ebd/import', [EbdController::class, 'import'])->name('ebd.import');
+    Route::post('ebd/{id}/delete', [EbdController::class, 'destroy'])->name('ebd.destroy');
 
     // Calendar & Holiday Routes
     Route::get('calendar', [CalendarController::class, 'index'])->name('calendar.index');
