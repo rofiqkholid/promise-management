@@ -102,7 +102,7 @@ class WorkOrderController extends Controller
             ];
 
             $processes = $validated['processes'];
-            $assignedPics = $request->input('process_pics') ?? [];
+            $assignedPics = $this->parseAssignedPics($request);
 
             $workOrder = $this->workOrderService->createWorkOrder($data, $processes, $assignedPics);
 
@@ -155,7 +155,7 @@ class WorkOrderController extends Controller
             ];
 
             $processes = $validated['processes'];
-            $assignedPics = $request->input('process_pics') ?? [];
+            $assignedPics = $this->parseAssignedPics($request);
 
             $workOrder = $this->workOrderService->updateWorkOrder($decryptedId, $data, $processes, $assignedPics);
 
@@ -596,6 +596,21 @@ class WorkOrderController extends Controller
             return redirect()->back()->with('success', 'Master Process successfully deleted.');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Failed to delete process: ' . $e->getMessage());
+    }
+
+    private function parseAssignedPics(Request $request)
+    {
+        $assignedPics = $request->input('process_pics') ?? [];
+        if ($request->has('process_pics_json')) {
+            $flatPics = json_decode($request->input('process_pics_json'), true) ?: [];
+            $assignedPics = [];
+            foreach ($flatPics as $key => $picUserId) {
+                if (strpos($key, '_') !== false) {
+                    [$procId, $deptId] = explode('_', $key);
+                    $assignedPics[$procId][$deptId] = $picUserId;
+                }
+            }
         }
+        return $assignedPics;
     }
 }

@@ -345,7 +345,6 @@
                                                         ? 'bg-blue-50 border-blue-300 text-blue-700 dark:bg-blue-950/20 dark:border-blue-800 dark:text-blue-400 font-bold' 
                                                         : 'text-slate-600 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800/50'">
                                                 <input type="checkbox" 
-                                                       name="process_depts[{{ $proc->id }}][]"
                                                        value="{{ $dept->id }}" 
                                                        x-model.number="process_departments[{{ $proc->id }}]"
                                                        @change="syncGlobalSupportDepartments()"
@@ -365,8 +364,7 @@
                                                 <span class="text-xs font-bold text-slate-700 dark:text-slate-350" x-text="getDeptCodeById(deptId)"></span>
                                                 <div class="flex items-center gap-2">
                                                     <label class="text-xs text-slate-700 dark:text-slate-350">PIC:</label>
-                                                     <select :name="'process_pics[' + {{ $proc->id }} + '][' + deptId + ']'"
-                                                            x-model="process_pics[{{ $proc->id }} + '_' + deptId]"
+                                                     <select x-model="process_pics[{{ $proc->id }} + '_' + deptId]"
                                                             :disabled="!isEditable"
                                                             class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs px-2.5 py-1 rounded-xs focus:outline-none focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed w-48">
                                                         <option value="">-- Choose PIC --</option>
@@ -500,18 +498,8 @@
         </x-form-card>
 
         {{-- Hidden inputs for products mapping (for submission) --}}
-        <template x-for="(prod, index) in products" :key="index">
-            <div>
-                <template x-if="prod.work_order_product_id">
-                    <input type="hidden" :name="`products[${index}][work_order_product_id]`" :value="prod.work_order_product_id">
-                </template>
-                <input type="hidden" :name="`products[${index}][inquiry_product_id]`" :value="prod.inquiry_product_id">
-                <input type="hidden" :name="`products[${index}][eo]`" :value="prod.eo">
-                <input type="hidden" :name="`products[${index}][class_id]`" :value="prod.class_id">
-                <input type="hidden" :name="`products[${index}][uom]`" :value="prod.uom">
-                <input type="hidden" :name="`products[${index}][remarks]`" :value="prod.remarks">
-            </div>
-        </template>
+        <input type="hidden" name="products_json" :value="JSON.stringify(products)">
+        <input type="hidden" name="process_pics_json" :value="JSON.stringify(process_pics)">
 
         {{-- Hidden inputs for selected approval rules to ensure they submit via AJAX --}}
         <template x-for="ruleId in selected_approval_rules" :key="ruleId">

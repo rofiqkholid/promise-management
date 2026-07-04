@@ -55,7 +55,9 @@ class WorkOrderService
             $this->workOrderRepo->attachProcessesAndPics($workOrder->id, $processes, $assignedPics);
 
             // Sync work order products
-            $productsParam = request()->input('products');
+            $productsParam = request()->has('products_json')
+                ? (json_decode(request()->input('products_json'), true) ?: [])
+                : request()->input('products');
             if ($productsParam) {
                 $productIds = is_array($productsParam) ? $productsParam : array_filter(explode(',', $productsParam));
                 // Decrypt product IDs
