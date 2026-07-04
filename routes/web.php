@@ -46,25 +46,7 @@ Route::get('/dashboard', function () {
 })->middleware('auth')->name('dashboard');
 
 Route::middleware('auth')->prefix('management')->name('management.')->group(function () {
-    Route::get('api/users', function(\Illuminate\Http\Request $request) {
-        $query = \App\Models\User::query();
-        if ($request->filled('q')) {
-            $query->where('name', 'like', '%' . $request->input('q') . '%');
-        }
-        if ($request->filled('id_dept')) {
-            $query->where('id_dept', $request->input('id_dept'));
-        }
-        $users = $query->orderBy('name')->limit(30)->get(['id', 'name', 'id_dept']);
-        if ($request->has('select2')) {
-            return response()->json([
-                'results' => $users->map(fn($u) => [
-                    'id' => $u->id,
-                    'text' => $u->name
-                ])
-            ]);
-        }
-        return response()->json($users);
-    })->name('api.users');
+    Route::get('api/users', [WorkOrderController::class, 'apiGetUsers'])->name('api.users');
 
     // Inquiry Routes
     Route::middleware('check.menu:management.inquiry.index')->group(function () {
