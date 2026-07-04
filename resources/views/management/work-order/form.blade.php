@@ -816,50 +816,14 @@
                     @endforeach
                 </select>
             </div>
-            <div x-data="approverSelect('master_approver_user_ids', {{ json_encode($users->map(fn($u) => ['id' => $u->id, 'label' => $u->name . ' (' . $u->nik . ')'])) }}, [])" x-on:set-master-approvers.window="if ($event.detail.target === 'master_approver_user_ids') setSelected($event.detail.ids)" class="relative">
+            <div>
                 <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
                     Specific Approver(s)
                     <span class="text-slate-300 text-[9px] normal-case font-normal ml-1">(searchable — select multiple)</span>
                 </label>
-                {{-- Hidden native select --}}
-                <select name="approver_user_ids[]" id="master_approver_user_ids" multiple class="hidden">
-                    @foreach($users as $u)
-                        <option value="{{ $u->id }}">{{ $u->name }}</option>
-                    @endforeach
+                <select name="approver_user_ids[]" id="master_approver_user_ids" multiple class="w-full select2-users">
+                    {{-- Selected items will be populated dynamically --}}
                 </select>
-                {{-- Search input --}}
-                <div class="relative">
-                    <input type="text" x-model="search" @focus="open = true" @click.outside="open = false" @keydown.escape="open = false"
-                           placeholder="Search approver..."
-                           class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 pr-8 rounded-xs focus:outline-none focus:border-blue-500">
-                    <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                        <i class="fa-solid fa-chevron-down text-[9px]"></i>
-                    </span>
-                    {{-- Dropdown --}}
-                    <div x-show="open" x-transition
-                         class="absolute z-40 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xs shadow-lg max-h-40 overflow-y-auto">
-                        <template x-for="item in filtered" :key="item.id">
-                            <div @click="toggle(item)"
-                                 :class="selectedIds.includes(item.id) ? 'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50'"
-                                 class="flex items-center justify-between px-3 py-1.5 text-xs cursor-pointer">
-                                <span x-text="item.label"></span>
-                                <i x-show="selectedIds.includes(item.id)" class="fa-solid fa-check text-[9px] text-blue-500"></i>
-                            </div>
-                        </template>
-                    </div>
-                </div>
-                {{-- Tags list --}}
-                <div class="mt-1 flex flex-wrap gap-1 p-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xs min-h-[30px]">
-                    <template x-if="selectedIds.length === 0">
-                        <span class="text-[9px] text-slate-400 italic self-center">No approver selected</span>
-                    </template>
-                    <template x-for="item in selectedItems" :key="item.id">
-                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 text-[9px] font-semibold rounded-full border border-blue-200 dark:border-blue-800">
-                            <span x-text="item.label"></span>
-                            <button type="button" @click="remove(item.id)" class="hover:text-blue-950 dark:hover:text-white">&times;</button>
-                        </span>
-                    </template>
-                </div>
             </div>
             <div>
                 <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Sort Order</label>
@@ -928,7 +892,7 @@ function openAddApprovalModal() {
     document.getElementById('app_active').checked = true;
     document.getElementById('app_active_wrapper').classList.add('hidden'); // hide active check on add
 
-    window.dispatchEvent(new CustomEvent('set-master-approvers', { detail: { target: 'master_approver_user_ids', ids: [] } }));
+    $('#master_approver_user_ids').val(null).trigger('change');
     document.getElementById('modal-approval-config').classList.remove('hidden');
 }
 
@@ -943,9 +907,20 @@ function openEditApprovalModal(rule) {
     document.getElementById('app_active').checked = rule.is_active;
     document.getElementById('app_active_wrapper').classList.remove('hidden'); // show active check on edit
 
-    // Set multi-select approvers by dispatching custom event to Alpine component
+    // Set multi-select approvers by populating Select2 options dynamically
     let userIds = (rule.approver_user_ids || []).map(Number);
-    window.dispatchEvent(new CustomEvent('set-master-approvers', { detail: { target: 'master_approver_user_ids', ids: userIds } }));
+    let $select = $('#master_approver_user_ids');
+    $select.val(null).trigger('change');
+    
+    userIds.forEach(id => {
+        let u = window.allUsersList.find(user => user.id == id);
+        let name = u ? u.name : 'User ID ' + id;
+        if ($select.find("option[value='" + id + "']").length === 0) {
+            let newOption = new Option(name, id, true, true);
+            $select.append(newOption).trigger('change');
+        }
+    });
+    $select.val(userIds).trigger('change');
 
     document.getElementById('modal-approval-config').classList.remove('hidden');
 }
@@ -1417,6 +1392,31 @@ document.addEventListener('alpine:init', () => {
         $('.select2-department').select2({
             placeholder: "-- Choose Department --",
             width: '100%'
+        });
+
+        // Initialize Select2 with AJAX for Master Approvers list
+        $('#master_approver_user_ids').select2({
+            placeholder: "Search & select approver(s)...",
+            width: '100%',
+            minimumInputLength: 0,
+            ajax: {
+                url: '{{ route("management.api.users") }}',
+                dataType: 'json',
+                delay: 250,
+                data: function(params) {
+                    return {
+                        select2: 1,
+                        q: params.term,
+                        id_dept: $('#app_dept').val()
+                    };
+                },
+                processResults: function(data) {
+                    return {
+                        results: data.results
+                    };
+                },
+                cache: true
+            }
         });
 
         // Initialize select2 for each process department selection
