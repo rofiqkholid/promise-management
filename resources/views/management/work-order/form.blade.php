@@ -616,31 +616,29 @@
     </div>
 </div>
 
-
-
-{{-- ── MODAL: ADD PROCESS CHECKLIST ───────────────────────────── --}}
-<div id="modal-add-process" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
+{{-- ── MODAL: PROCESS CHECKLIST CONFIGURATION (ADD/EDIT) ─────────────── --}}
+<div id="modal-process-config" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
     <div class="bg-white dark:bg-slate-800 rounded-xs shadow-2xl w-full max-w-md border border-slate-200 dark:border-slate-700">
         <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
-            <h3 class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">Add Master Process</h3>
-            <button onclick="document.getElementById('modal-add-process').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 text-lg leading-none cursor-pointer">&times;</button>
+            <h3 id="modal-process-title" class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">Add Master Process</h3>
+            <button onclick="document.getElementById('modal-process-config').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 text-lg leading-none cursor-pointer">&times;</button>
         </div>
-        <form id="add-process-form" action="{{ route('management.process-checklist.store') }}" method="POST" class="p-5 space-y-4 text-xs">
+        <form id="process-config-form" action="" method="POST" class="p-5 space-y-4 text-xs">
             @csrf
             <div>
                 <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Process Code <span class="text-rose-500">*</span></label>
-                <input type="text" name="process_code" required placeholder="e.g. CUTTING" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
+                <input type="text" name="process_code" id="proc_code" required placeholder="e.g. CUTTING" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
             </div>
             <div>
                 <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Process Name <span class="text-rose-500">*</span></label>
-                <input type="text" name="process_name" required placeholder="e.g. Cutting Process" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
+                <input type="text" name="process_name" id="proc_name" required placeholder="e.g. Cutting Process" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
             </div>
-            <div x-data="approverSelect('add_proc_dept_select', {{ json_encode($departments->map(fn($d) => ['id' => $d->id, 'label' => $d->name . ' (' . $d->code . ')'])) }}, [])" class="relative">
+            <div x-data="approverSelect('proc_dept_select', {{ json_encode($departments->map(fn($d) => ['id' => $d->id, 'label' => $d->name . ' (' . $d->code . ')'])) }}, [])" x-on:set-proc-depts.window="if ($event.detail.target === 'proc_dept_select') setSelected($event.detail.ids)" class="relative">
                 <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
                     Default Department Owner <span class="text-rose-500">*</span>
                 </label>
                 {{-- Hidden native select --}}
-                <select name="default_assigned_departments[]" id="add_proc_dept_select" multiple class="hidden">
+                <select name="default_assigned_departments[]" id="proc_dept_select" multiple class="hidden">
                     @foreach($departments as $dept)
                         <option value="{{ $dept->id }}">{{ $dept->name }}</option>
                     @endforeach
@@ -696,98 +694,12 @@
                     </template>
                 </div>
             </div>
-            <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-750">
-                <button type="button" onclick="document.getElementById('modal-add-process').classList.add('hidden')" class="px-3.5 py-2 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xs font-bold text-xs transition-colors cursor-pointer">Cancel</button>
-                <button type="submit" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xs text-xs transition-colors cursor-pointer">Save Process</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-{{-- ── MODAL: EDIT PROCESS CHECKLIST ──────────────────────────── --}}
-<div id="modal-edit-process" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
-    <div class="bg-white dark:bg-slate-800 rounded-xs shadow-2xl w-full max-w-md border border-slate-200 dark:border-slate-700">
-        <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
-            <h3 class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">Edit Master Process</h3>
-            <button onclick="document.getElementById('modal-edit-process').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 text-lg leading-none cursor-pointer">&times;</button>
-        </div>
-        <form id="edit-process-form" action="" method="POST" class="p-5 space-y-4 text-xs">
-            @csrf
-            <div>
-                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Process Code <span class="text-rose-500">*</span></label>
-                <input type="text" name="process_code" id="edit_proc_code" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
-            </div>
-            <div>
-                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Process Name <span class="text-rose-500">*</span></label>
-                <input type="text" name="process_name" id="edit_proc_name" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
-            </div>
-            <div x-data="approverSelect('edit_proc_dept_select', {{ json_encode($departments->map(fn($d) => ['id' => $d->id, 'label' => $d->name . ' (' . $d->code . ')'])) }}, [])" x-on:set-proc-depts.window="if ($event.detail.target === 'edit_proc_dept_select') setSelected($event.detail.ids)" class="relative">
-                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                    Default Department Owner <span class="text-rose-500">*</span>
-                </label>
-                {{-- Hidden native select --}}
-                <select name="default_assigned_departments[]" id="edit_proc_dept_select" multiple class="hidden">
-                    @foreach($departments as $dept)
-                        <option value="{{ $dept->id }}">{{ $dept->name }}</option>
-                    @endforeach
-                </select>
-                {{-- Search input --}}
-                <div class="relative">
-                    <input type="text" x-model="search" @focus="open = true" @click.outside="open = false" @keydown.escape="open = false"
-                           placeholder="Search department..."
-                           class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 pr-8 rounded-xs focus:outline-none focus:border-blue-500">
-                    <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                        <i class="fa-solid fa-chevron-down text-[9px]"></i>
-                    </span>
-                    <div x-show="open" x-transition
-                         class="absolute z-40 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xs shadow-lg max-h-44 overflow-y-auto">
-                        <template x-for="item in filtered" :key="item.id">
-                            <div @click="toggle(item)"
-                                 :class="selectedIds.includes(item.id) ? 'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50'"
-                                 class="flex items-center justify-between px-3 py-1.5 text-xs cursor-pointer">
-                                <span x-text="item.label"></span>
-                                <i x-show="selectedIds.includes(item.id)" class="fa-solid fa-check text-[9px] text-blue-500"></i>
-                            </div>
-                        </template>
-                    </div>
-                </div>
-                {{-- Tags list --}}
-                <div class="mt-1 flex flex-wrap gap-1 p-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xs min-h-[30px]">
-                    <template x-if="selectedIds.length === 0">
-                        <span class="text-[9px] text-slate-400 italic self-center">No department selected</span>
-                    </template>
-                    <template x-for="item in selectedItems" :key="item.id">
-                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 text-[9px] font-semibold rounded-full border border-blue-200 dark:border-blue-800">
-                            <span x-text="item.label"></span>
-                            <button type="button" @click="remove(item.id)" class="hover:text-blue-950 dark:hover:text-white">&times;</button>
-                        </span>
-                    </template>
-                </div>
-                
-                {{-- PIC Selection list for default departments --}}
-                <div class="mt-3 space-y-2 border-t border-slate-100 dark:border-slate-800/60 pt-2" x-show="selectedIds.length > 0">
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Default PIC per Department:</label>
-                    <template x-for="deptId in selectedIds" :key="deptId">
-                        <div class="flex items-center justify-between gap-2 p-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xs">
-                            <span class="text-[10px] font-bold text-slate-700 dark:text-slate-350" x-text="itemLabel(deptId)"></span>
-                            <select :name="'default_pics[' + deptId + ']'"
-                                    x-model="defaultPics[deptId]"
-                                    class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-[10px] px-2 py-1 rounded-xs focus:outline-none focus:border-blue-500 w-48">
-                                <option value="">-- Choose PIC --</option>
-                                <template x-for="u in window.allUsersList.filter(u => u.id_dept == deptId)" :key="u.id">
-                                    <option :value="u.id" x-text="u.name" :selected="defaultPics[deptId] == u.id"></option>
-                                </template>
-                            </select>
-                        </div>
-                    </template>
-                </div>
-            </div>
-            <div class="flex items-center gap-2 py-1">
-                <input type="checkbox" name="is_active" id="edit_proc_active" value="1" class="rounded-xs text-blue-600">
-                <label for="edit_proc_active" class="font-semibold text-slate-700 dark:text-slate-350">Active</label>
+            <div id="proc_active_wrapper" class="flex items-center gap-2 py-1">
+                <input type="checkbox" name="is_active" id="proc_active" value="1" checked class="rounded-xs text-blue-600">
+                <label for="proc_active" class="font-semibold text-slate-700 dark:text-slate-350">Active</label>
             </div>
             <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-750">
-                <button type="button" onclick="document.getElementById('modal-edit-process').classList.add('hidden')" class="px-3.5 py-2 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xs font-bold text-xs transition-colors cursor-pointer">Cancel</button>
+                <button type="button" onclick="document.getElementById('modal-process-config').classList.add('hidden')" class="px-3.5 py-2 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xs font-bold text-xs transition-colors cursor-pointer">Cancel</button>
                 <button type="submit" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xs text-xs transition-colors cursor-pointer">Save Changes</button>
             </div>
         </form>
@@ -870,27 +782,27 @@
     </div>
 </div>
 
-{{-- ── MODAL: EDIT APPROVAL RULE ──────────────────────────────── --}}
-<div id="modal-edit-approval" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
+{{-- ── MODAL: APPROVAL RULE CONFIGURATION (ADD/EDIT) ────────────────── --}}
+<div id="modal-approval-config" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
     <div class="bg-white dark:bg-slate-800 rounded-xs shadow-2xl w-full max-w-md border border-slate-200 dark:border-slate-700">
         <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
-            <h3 class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">Edit Master Approval Rule</h3>
-            <button onclick="document.getElementById('modal-edit-approval').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 text-lg leading-none cursor-pointer">&times;</button>
+            <h3 id="modal-approval-title" class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">Add Master Approval Rule</h3>
+            <button onclick="document.getElementById('modal-approval-config').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 text-lg leading-none cursor-pointer">&times;</button>
         </div>
-        <form id="edit-approval-form" action="" method="POST" class="p-5 space-y-4 text-xs">
+        <form id="approval-config-form" action="" method="POST" class="p-5 space-y-4 text-xs">
             @csrf
             <input type="hidden" name="document_type" value="WO">
             <div>
                 <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Approval Level <span class="text-rose-500">*</span></label>
-                <input type="number" name="approval_level" id="edit_app_level" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
+                <input type="number" name="approval_level" id="app_level" required min="1" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
             </div>
             <div>
                 <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Position Label <span class="text-rose-500">*</span></label>
-                <input type="text" name="position_label" id="edit_app_position" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
+                <input type="text" name="position_label" id="app_position" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
             </div>
             <div>
                 <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Sign-off Header <span class="text-rose-500">*</span></label>
-                <select name="action_label" id="edit_app_action" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
+                <select name="action_label" id="app_action" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500 cursor-pointer">
                     <option value="Checked">Checked</option>
                     <option value="Approved">Approved</option>
                     <option value="Reviewed">Reviewed</option>
@@ -898,19 +810,19 @@
             </div>
             <div>
                 <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Responsible Dept <span class="text-rose-500">*</span></label>
-                <select name="department_id" id="edit_app_dept" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500 select2-department">
+                <select name="department_id" id="app_dept" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500 cursor-pointer select2-department">
                     @foreach($departments as $dept)
                         <option value="{{ $dept->id }}">{{ $dept->name }} ({{ $dept->code }})</option>
                     @endforeach
                 </select>
             </div>
-            <div x-data="approverSelect('edit_master_approver_user_ids', {{ json_encode($users->map(fn($u) => ['id' => $u->id, 'label' => $u->name . ' (' . $u->nik . ')'])) }}, [])" x-on:set-master-approvers.window="if ($event.detail.target === 'edit_master_approver_user_ids') setSelected($event.detail.ids)" class="relative">
+            <div x-data="approverSelect('master_approver_user_ids', {{ json_encode($users->map(fn($u) => ['id' => $u->id, 'label' => $u->name . ' (' . $u->nik . ')'])) }}, [])" x-on:set-master-approvers.window="if ($event.detail.target === 'master_approver_user_ids') setSelected($event.detail.ids)" class="relative">
                 <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
                     Specific Approver(s)
                     <span class="text-slate-300 text-[9px] normal-case font-normal ml-1">(searchable — select multiple)</span>
                 </label>
                 {{-- Hidden native select --}}
-                <select name="approver_user_ids[]" id="edit_master_approver_user_ids" multiple class="hidden">
+                <select name="approver_user_ids[]" id="master_approver_user_ids" multiple class="hidden">
                     @foreach($users as $u)
                         <option value="{{ $u->id }}">{{ $u->name }}</option>
                     @endforeach
@@ -951,144 +863,41 @@
             </div>
             <div>
                 <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Sort Order</label>
-                <input type="number" name="sort_order" id="edit_app_sort" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
+                <input type="number" name="sort_order" id="app_sort" value="0" min="0" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
             </div>
-            <div class="flex items-center gap-2 py-1">
-                <input type="checkbox" name="is_active" id="edit_app_active" value="1" class="rounded-xs text-blue-600">
-                <label for="edit_app_active" class="font-semibold text-slate-700 dark:text-slate-350">Active status</label>
+            <div id="app_active_wrapper" class="flex items-center gap-2 py-1">
+                <input type="checkbox" name="is_active" id="app_active" value="1" checked class="rounded-xs text-blue-600">
+                <label for="app_active" class="font-semibold text-slate-700 dark:text-slate-350">Active status</label>
             </div>
             <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-750">
-                <button type="button" onclick="document.getElementById('modal-edit-approval').classList.add('hidden')" class="px-3.5 py-2 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xs font-bold text-xs transition-colors cursor-pointer">Cancel</button>
+                <button type="button" onclick="document.getElementById('modal-approval-config').classList.add('hidden')" class="px-3.5 py-2 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xs font-bold text-xs transition-colors cursor-pointer">Cancel</button>
                 <button type="submit" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xs text-xs transition-colors cursor-pointer">Save Changes</button>
             </div>
         </form>
     </div>
 </div>
 
-{{-- ── MODAL: ADD APPROVAL RULE ────────────────────────────── --}}
-<div id="modal-add-approval" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
-    <div class="bg-white dark:bg-slate-800 rounded-xs shadow-2xl w-full max-w-md border border-slate-200 dark:border-slate-700">
-        <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
-            <h3 class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">Add Master Approval Rule</h3>
-            <button onclick="document.getElementById('modal-add-approval').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 text-lg leading-none cursor-pointer">&times;</button>
-        </div>
-        <form id="add-approval-form" action="{{ route('management.approval-config.store') }}" method="POST" class="p-5 space-y-4 text-xs">
-            @csrf
-            <input type="hidden" name="document_type" value="WO">
-            <div>
-                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Approval Level <span class="text-rose-500">*</span></label>
-                <input type="number" name="approval_level" required value="1" min="1" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
-            </div>
-            <div>
-                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Position Label <span class="text-rose-500">*</span></label>
-                <input type="text" name="position_label" required placeholder="e.g. Marketing GM" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
-            </div>
-            <div>
-                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Sign-off Header <span class="text-rose-500">*</span></label>
-                <select name="action_label" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500 cursor-pointer">
-                    <option value="Checked">Checked</option>
-                    <option value="Approved">Approved</option>
-                    <option value="Reviewed">Reviewed</option>
-                </select>
-            </div>
-            <div>
-                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Responsible Dept <span class="text-rose-500">*</span></label>
-                <select name="department_id" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500 cursor-pointer select2-department">
-                    @foreach($departments as $dept)
-                        <option value="{{ $dept->id }}">{{ $dept->name }} ({{ $dept->code }})</option>
-                    @endforeach
-                </select>
-            </div>
-            <div x-data="approverSelect('add_master_approver_user_ids', {{ json_encode($users->map(fn($u) => ['id' => $u->id, 'label' => $u->name . ' (' . $u->nik . ')'])) }}, [])" class="relative">
-                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                    Specific Approver(s)
-                    <span class="text-slate-300 text-[9px] normal-case font-normal ml-1">(searchable — select multiple)</span>
-                </label>
-                {{-- Hidden native select --}}
-                <select name="approver_user_ids[]" id="add_master_approver_user_ids" multiple class="hidden">
-                    @foreach($users as $u)
-                        <option value="{{ $u->id }}">{{ $u->name }}</option>
-                    @endforeach
-                </select>
-                {{-- Search input --}}
-                <div class="relative">
-                    <input type="text" x-model="search" @focus="open = true" @click.outside="open = false" @keydown.escape="open = false"
-                           placeholder="Search approver..."
-                           class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 pr-8 rounded-xs focus:outline-none focus:border-blue-500">
-                    <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                        <i class="fa-solid fa-chevron-down text-[9px]"></i>
-                    </span>
-                    <div x-show="open" x-transition
-                         class="absolute z-40 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xs shadow-lg max-h-40 overflow-y-auto">
-                        <template x-for="item in filtered" :key="item.id">
-                            <div @click="toggle(item)"
-                                 :class="selectedIds.includes(item.id) ? 'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50'"
-                                 class="flex items-center justify-between px-3 py-1.5 text-xs cursor-pointer">
-                                <span x-text="item.label"></span>
-                                <i x-show="selectedIds.includes(item.id)" class="fa-solid fa-check text-[9px] text-blue-500"></i>
-                            </div>
-                        </template>
-                    </div>
-                </div>
-                {{-- Tags list --}}
-                <div class="mt-1 flex flex-wrap gap-1 p-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xs min-h-[30px]">
-                    <template x-if="selectedIds.length === 0">
-                        <span class="text-[9px] text-slate-400 italic self-center">No approver selected</span>
-                    </template>
-                    <template x-for="item in selectedItems" :key="item.id">
-                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 text-[9px] font-semibold rounded-full border border-blue-200 dark:border-blue-800">
-                            <span x-text="item.label"></span>
-                            <button type="button" @click="remove(item.id)" class="hover:text-blue-950 dark:hover:text-white">&times;</button>
-                        </span>
-                    </template>
-                </div>
-            </div>
-            <div>
-                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Sort Order</label>
-                <input type="number" name="sort_order" value="0" min="0" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
-            </div>
-            <div class="flex items-center gap-2 py-1">
-                <input type="checkbox" name="is_active" id="add_app_active" value="1" checked class="rounded-xs text-blue-600">
-                <label for="add_app_active" class="font-semibold text-slate-700 dark:text-slate-350">Active status</label>
-            </div>
-            <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-750">
-                <button type="button" onclick="document.getElementById('modal-add-approval').classList.add('hidden')" class="px-3.5 py-2 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xs font-bold text-xs transition-colors cursor-pointer">Cancel</button>
-                <button type="submit" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xs text-xs transition-colors cursor-pointer">Save Rule</button>
-            </div>
-        </form>
-    </div>
-</div>
-</div>
-
 <script>
 function openAddProcessModal() {
-    // Reset add process form
-    const form = document.getElementById('add-process-form');
-    if (form) {
-        form.reset();
-    }
-    // Clear select tag widgets inside add form
-    window.dispatchEvent(new CustomEvent('set-proc-depts', { detail: { target: 'add_proc_dept_select', ids: [] } }));
-    window.dispatchEvent(new CustomEvent('set-proc-pics', { detail: { target: 'add_proc_dept_select', pics: {} } }));
-    document.getElementById('modal-add-process').classList.remove('hidden');
-}
+    document.getElementById('modal-process-title').innerText = 'Add Master Process';
+    document.getElementById('process-config-form').action = '{{ route('management.process-checklist.store') }}';
+    document.getElementById('proc_code').value = '';
+    document.getElementById('proc_name').value = '';
+    document.getElementById('proc_active').checked = true;
+    document.getElementById('proc_active_wrapper').classList.add('hidden'); // hide on add
 
-function openAddApprovalModal() {
-    // Reset add approval form
-    const form = document.getElementById('add-approval-form');
-    if (form) {
-        form.reset();
-    }
-    // Clear select tag widgets inside add form
-    window.dispatchEvent(new CustomEvent('set-master-approvers', { detail: { target: 'add_master_approver_user_ids', ids: [] } }));
-    document.getElementById('modal-add-approval').classList.remove('hidden');
+    window.dispatchEvent(new CustomEvent('set-proc-depts', { detail: { target: 'proc_dept_select', ids: [] } }));
+    window.dispatchEvent(new CustomEvent('set-proc-pics', { detail: { target: 'proc_dept_select', pics: {} } }));
+    document.getElementById('modal-process-config').classList.remove('hidden');
 }
 
 function openEditProcessModal(proc) {
-    document.getElementById('edit-process-form').action = '{{ url('management/process-checklist') }}/' + proc.id + '/update';
-    document.getElementById('edit_proc_code').value = proc.process_code;
-    document.getElementById('edit_proc_name').value = proc.process_name;
-    document.getElementById('edit_proc_active').checked = proc.is_active;
+    document.getElementById('modal-process-title').innerText = 'Edit Master Process';
+    document.getElementById('process-config-form').action = '{{ url('management/process-checklist') }}/' + proc.id + '/update';
+    document.getElementById('proc_code').value = proc.process_code;
+    document.getElementById('proc_name').value = proc.process_name;
+    document.getElementById('proc_active').checked = proc.is_active;
+    document.getElementById('proc_active_wrapper').classList.remove('hidden'); // show on edit
 
     // Dispatch event to Alpine custom widget to set selected departments
     let deptIds = [];
@@ -1102,26 +911,43 @@ function openEditProcessModal(proc) {
             }
         });
     } catch(e) {}
-    window.dispatchEvent(new CustomEvent('set-proc-depts', { detail: { target: 'edit_proc_dept_select', ids: deptIds } }));
-    window.dispatchEvent(new CustomEvent('set-proc-pics', { detail: { target: 'edit_proc_dept_select', pics: defaultPics } }));
+    window.dispatchEvent(new CustomEvent('set-proc-depts', { detail: { target: 'proc_dept_select', ids: deptIds } }));
+    window.dispatchEvent(new CustomEvent('set-proc-pics', { detail: { target: 'proc_dept_select', pics: defaultPics } }));
 
-    document.getElementById('modal-edit-process').classList.remove('hidden');
+    document.getElementById('modal-process-config').classList.remove('hidden');
+}
+
+function openAddApprovalModal() {
+    document.getElementById('modal-approval-title').innerText = 'Add Master Approval Rule';
+    document.getElementById('approval-config-form').action = '{{ route('management.approval-config.store') }}';
+    document.getElementById('app_level').value = '1';
+    document.getElementById('app_position').value = '';
+    document.getElementById('app_action').value = 'Checked';
+    document.getElementById('app_dept').value = document.getElementById('app_dept').options[0]?.value || '';
+    document.getElementById('app_sort').value = '0';
+    document.getElementById('app_active').checked = true;
+    document.getElementById('app_active_wrapper').classList.add('hidden'); // hide active check on add
+
+    window.dispatchEvent(new CustomEvent('set-master-approvers', { detail: { target: 'master_approver_user_ids', ids: [] } }));
+    document.getElementById('modal-approval-config').classList.remove('hidden');
 }
 
 function openEditApprovalModal(rule) {
-    document.getElementById('edit-approval-form').action = '{{ url('management/approval-config') }}/' + rule.id + '/update';
-    document.getElementById('edit_app_level').value = rule.approval_level;
-    document.getElementById('edit_app_position').value = rule.position_label;
-    document.getElementById('edit_app_action').value = rule.action_label ?? 'Checked';
-    document.getElementById('edit_app_dept').value = rule.department_id;
-    document.getElementById('edit_app_sort').value = rule.sort_order;
-    document.getElementById('edit_app_active').checked = rule.is_active;
+    document.getElementById('modal-approval-title').innerText = 'Edit Master Approval Rule';
+    document.getElementById('approval-config-form').action = '{{ url('management/approval-config') }}/' + rule.id + '/update';
+    document.getElementById('app_level').value = rule.approval_level;
+    document.getElementById('app_position').value = rule.position_label;
+    document.getElementById('app_action').value = rule.action_label ?? 'Checked';
+    document.getElementById('app_dept').value = rule.department_id;
+    document.getElementById('app_sort').value = rule.sort_order;
+    document.getElementById('app_active').checked = rule.is_active;
+    document.getElementById('app_active_wrapper').classList.remove('hidden'); // show active check on edit
 
     // Set multi-select approvers by dispatching custom event to Alpine component
     let userIds = (rule.approver_user_ids || []).map(Number);
-    window.dispatchEvent(new CustomEvent('set-master-approvers', { detail: { target: 'edit_master_approver_user_ids', ids: userIds } }));
+    window.dispatchEvent(new CustomEvent('set-master-approvers', { detail: { target: 'master_approver_user_ids', ids: userIds } }));
 
-    document.getElementById('modal-edit-approval').classList.remove('hidden');
+    document.getElementById('modal-approval-config').classList.remove('hidden');
 }
 </script>
 @php
@@ -1181,7 +1007,7 @@ function openEditApprovalModal(rule) {
 @endphp
 
 <script>
-window.allUsersList = @json($users);
+window.allUsersList = [];
 document.addEventListener('alpine:init', () => {
     Alpine.data('spkForm', () => ({
         isEditable: {{ $isEditable ? 'true' : 'false' }},
@@ -1243,7 +1069,7 @@ document.addEventListener('alpine:init', () => {
         // Departments list lookup
         departmentsList: @json($departments),
         processesList: @json($processes),
-        usersList: @json($users),
+        usersList: [],
         
         // Pre-populated selected products
         products: @json(isset($workOrder) ? $workOrder->products : $inquiry->products).map(p => ({
@@ -1278,6 +1104,27 @@ document.addEventListener('alpine:init', () => {
         async init() {
             this.updateDepartmentIdFromProcesses();
             this.syncGlobalSupportDepartments(); // also triggers updateApprovalSuggestions
+            
+            // Load users list dynamically
+            try {
+                let r = await fetch('{{ route('management.api.users') }}');
+                if (r.ok) {
+                    let data = await r.json();
+                    window.allUsersList = data;
+                    this.usersList = data;
+                    
+                    // Dispatch to master approver custom select list
+                    window.dispatchEvent(new CustomEvent('update-all-items', {
+                        detail: {
+                            target: 'master_approver_user_ids',
+                            items: data.map(u => ({ id: u.id, label: u.name }))
+                        }
+                    }));
+                }
+            } catch (e) {
+                console.error('Failed to load users list dynamically', e);
+            }
+
             try {
                 let response = await fetch('{{ route('management.calendar.holidays') }}');
                 if (response.ok) {
@@ -1695,6 +1542,12 @@ document.addEventListener('alpine:init', () => {
                         this.defaultPics = e.detail.pics || {};
                     }
                 });
+                window.addEventListener('update-all-items', (e) => {
+                    if (e.detail.target === nativeId) {
+                        this.allItems = e.detail.items || [];
+                        this.syncNativeSelect();
+                    }
+                });
             },
 
             get filtered() {
@@ -1736,8 +1589,12 @@ document.addEventListener('alpine:init', () => {
             syncNativeSelect() {
                 const sel = document.getElementById(nativeId);
                 if (!sel) return;
-                Array.from(sel.options).forEach(opt => {
-                    opt.selected = this.selectedIds.includes(Number(opt.value));
+                sel.innerHTML = '';
+                this.selectedIds.forEach(id => {
+                    let opt = document.createElement('option');
+                    opt.value = id;
+                    opt.selected = true;
+                    sel.appendChild(opt);
                 });
             }
         };

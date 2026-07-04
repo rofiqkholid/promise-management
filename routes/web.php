@@ -46,6 +46,10 @@ Route::get('/dashboard', function () {
 })->middleware('auth')->name('dashboard');
 
 Route::middleware('auth')->prefix('management')->name('management.')->group(function () {
+    Route::get('api/users', function() {
+        return response()->json(\App\Models\User::orderBy('name')->get(['id', 'name', 'id_dept']));
+    })->name('api.users');
+
     // Inquiry Routes
     Route::middleware('check.menu:management.inquiry.index')->group(function () {
         Route::post('inquiry/{inquiry}/import', [InquiryController::class, 'import'])->name('inquiry.import');
