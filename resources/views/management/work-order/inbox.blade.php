@@ -294,31 +294,31 @@
                     {{-- Sticky Footer Actions --}}
                     <div class="p-4 border-t border-slate-200 bg-slate-50 flex-none select-none">
                         <template x-if="detailData.can_approve">
-                            <div class="flex flex-col gap-3 w-full border border-slate-200 bg-white p-3 rounded-xs">
-                                <div class="flex flex-wrap items-center gap-4 text-xs">
-                                    <div class="flex items-center gap-1.5 flex-1 min-w-[200px]">
-                                        <span class="font-bold text-slate-500">Remarks:</span>
+                            <div class="flex items-end gap-2 w-full">
+                                    {{-- Remarks --}}
+                                    <div class="flex flex-col gap-1 flex-1">
+                                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Remarks</span>
                                         <input type="text" x-model="approvalRemarks" placeholder="Add approval comments/remarks here..."
                                                class="w-full px-2.5 py-1.5 text-xs border border-slate-300 bg-white text-slate-800 rounded-xs focus:outline-none focus:border-[#0c4da2]">
                                     </div>
-                                    <div class="flex items-center gap-1.5">
-                                        <span class="font-bold text-slate-500">Due Date Closed:</span>
+                                    {{-- Due Date Closed --}}
+                                    <div class="flex flex-col gap-1 shrink-0">
+                                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Due Date Closed</span>
                                         <input type="date" x-model="dueDateClosed"
                                                class="px-2.5 py-1.5 text-xs border border-slate-300 bg-white text-slate-800 rounded-xs focus:outline-none focus:border-[#0c4da2]">
                                     </div>
+                                    {{-- Action Buttons --}}
+                                    <div class="flex items-center gap-1.5 shrink-0">
+                                        <button type="button" @click="submitApproval('approve')"
+                                                class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xs cursor-pointer flex items-center gap-1.5 transition-colors">
+                                            <i class="fa-solid fa-check"></i> Approve
+                                        </button>
+                                        <button type="button" @click="submitApproval('reject')"
+                                                class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xs cursor-pointer flex items-center gap-1.5 transition-colors">
+                                            <i class="fa-solid fa-xmark"></i> Reject
+                                        </button>
+                                    </div>
                                 </div>
-                                
-                                <div class="flex justify-end gap-2 border-t border-slate-100 pt-2">
-                                    <button type="button" @click="submitApproval('approve')"
-                                            class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xs cursor-pointer flex items-center gap-1.5 transition-colors">
-                                        <i class="fa-solid fa-check"></i> Approve
-                                    </button>
-                                    <button type="button" @click="submitApproval('reject')"
-                                            class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xs cursor-pointer flex items-center gap-1.5 transition-colors">
-                                        <i class="fa-solid fa-xmark"></i> Reject
-                                    </button>
-                                </div>
-                            </div>
                         </template>
                         
                         <template x-if="!detailData.can_approve">
