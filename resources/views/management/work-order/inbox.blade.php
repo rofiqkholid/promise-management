@@ -207,9 +207,18 @@
                              }">
                             @include('management.work-order.preview')
                         </div>
-                        
-                        {{-- Tab 2: PIC Checklist --}}
+                                    {{-- Tab 2: PIC Checklist --}}
                         <div x-show="activeRightTab === 'checklist'" class="w-full max-w-[760px] space-y-4">
+                            {{-- Checklist Product Search --}}
+                            <div class="bg-white border border-slate-300 rounded-xs p-2.5 shadow-2xs flex items-center gap-2">
+                                <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs ml-1"></i>
+                                <input type="text" x-model="checklistSearchQuery" placeholder="Search product by part no or name..."
+                                       class="w-full text-xs text-slate-800 bg-transparent focus:outline-none border-none p-0">
+                                <button x-show="checklistSearchQuery" @click="checklistSearchQuery = ''" class="text-slate-400 hover:text-slate-655 cursor-pointer">
+                                    <i class="fa-solid fa-circle-xmark text-xs"></i>
+                                </button>
+                            </div>
+
                             <template x-for="(proc, pIdx) in detailData.processes" :key="pIdx">
                                 <div class="bg-white border border-slate-300 rounded-xs overflow-hidden shadow-2xs">
                                     <div class="bg-slate-50 px-4 py-2 border-b border-slate-200 flex items-center justify-between">
@@ -236,51 +245,44 @@
                                                 
                                                 {{-- Progress Bar (always visible) --}}
                                                 <div class="w-full bg-slate-200 h-1.5 rounded-none overflow-hidden">
-                                                    <div class="bg-[#0c4da2] h-full" :style="'width: ' + (detailData.products.length > 0 ? (dept.checked_product_ids.length / detailData.products.length * 100) : 0) + '%'"></div>
+                                                    <div class="bg-[#0c4da2] h-full transition-all duration-300" :style="'width: ' + (detailData.products.length > 0 ? (dept.checked_product_ids.length / detailData.products.length * 100) : 0) + '%'"></div>
                                                 </div>
                                                 
                                                 {{-- Accordion Body (Checkbox checklist) --}}
                                                 <div x-show="isDeptExpanded(proc.process_id, dept.department_id)" class="p-3 space-y-2.5 bg-white border-t border-slate-100">
                                                     <div class="bg-slate-50 p-2.5 border border-slate-200 rounded-xs">
-                                                        <form @submit.prevent="submitProgressUpdate(proc.process_id, dept.department_id, $el)" class="space-y-3">
-                                                            @csrf
-                                                            <div class="grid grid-cols-2 gap-2">
-                                                                <template x-for="p in detailData.products" :key="p.id">
-                                                                    <div class="flex items-center justify-between p-2 border border-slate-200 bg-white rounded-xs text-xs">
-                                                                        <template x-if="dept.is_my_pic_task === true || dept.is_my_pic_task === 1">
-                                                                            <label class="flex items-center gap-2.5 cursor-pointer w-full select-none text-slate-700">
-                                                                                <input type="checkbox" name="checked_product_ids[]" :value="p.id"
-                                                                                       :checked="dept.checked_product_ids.includes(Number(p.id))"
-                                                                                       class="h-3.5 w-3.5 rounded-xs border-slate-300 text-[#0c4da2] focus:ring-0">
-                                                                                <div class="min-w-0 flex-1">
-                                                                                    <span class="font-bold text-slate-800 block" x-text="p.customer_part_no"></span>
-                                                                                    <span class="text-[10px] text-slate-455 truncate block" x-text="p.customer_part_name"></span>
-                                                                                </div>
-                                                                            </label>
-                                                                        </template>
-                                                                        <template x-if="!(dept.is_my_pic_task === true || dept.is_my_pic_task === 1)">
-                                                                            <div class="flex items-center gap-2.5 w-full">
-                                                                                <span class="text-xs w-4 text-center font-bold"
-                                                                                      :class="dept.checked_product_ids.includes(Number(p.id)) ? 'text-emerald-500' : 'text-slate-300'"
-                                                                                      x-text="dept.checked_product_ids.includes(Number(p.id)) ? '✓' : '✗'"></span>
-                                                                                <div class="min-w-0 flex-1">
-                                                                                    <span class="font-semibold text-slate-600 block" x-text="p.customer_part_no"></span>
-                                                                                    <span class="text-[10px] text-slate-455 truncate block" x-text="p.customer_part_name"></span>
-                                                                                </div>
+                                                        <div class="grid grid-cols-2 gap-2">
+                                                            <template x-for="p in detailData.products.filter(p => !checklistSearchQuery || p.customer_part_no.toLowerCase().includes(checklistSearchQuery.toLowerCase()) || p.customer_part_name.toLowerCase().includes(checklistSearchQuery.toLowerCase()))" :key="p.id">
+                                                                <div class="flex items-center justify-between p-2 border rounded-xs text-xs transition-colors duration-200"
+                                                                     :class="dept.checked_product_ids.includes(Number(p.id)) ? 'border-emerald-250 bg-emerald-50/20' : 'border-slate-200 bg-white'">
+                                                                    
+                                                                    <template x-if="dept.is_my_pic_task === true || dept.is_my_pic_task === 1">
+                                                                        <label class="flex items-center gap-2.5 cursor-pointer w-full select-none text-slate-700">
+                                                                            <input type="checkbox" name="checked_product_ids[]" :value="p.id"
+                                                                                   :checked="dept.checked_product_ids.includes(Number(p.id))"
+                                                                                   @change="toggleProductChecked(proc.process_id, dept.department_id, p.id, $event.target.checked)"
+                                                                                   class="h-3.5 w-3.5 rounded-xs border-slate-300 text-[#0c4da2] focus:ring-0 cursor-pointer">
+                                                                            <div class="min-w-0 flex-1">
+                                                                                <span class="font-bold text-slate-800 block" :class="dept.checked_product_ids.includes(Number(p.id)) ? 'text-emerald-800' : 'text-slate-800'" x-text="p.customer_part_no"></span>
+                                                                                <span class="text-[10px] text-slate-455 truncate block" x-text="p.customer_part_name"></span>
                                                                             </div>
-                                                                        </template>
-                                                                    </div>
-                                                                </template>
-                                                            </div>
-                                                            
-                                                            <template x-if="dept.is_my_pic_task === true || dept.is_my_pic_task === 1">
-                                                                <div class="flex justify-end pt-1">
-                                                                    <button type="submit" class="px-3 py-1.5 bg-[#0c4da2] hover:bg-[#083c80] text-white font-bold text-[10px] uppercase tracking-wider rounded-xs cursor-pointer flex items-center gap-1.5 transition-colors">
-                                                                        <i class="fa-solid fa-floppy-disk text-[9px]"></i> Save Progress
-                                                                    </button>
+                                                                        </label>
+                                                                    </template>
+                                                                    
+                                                                    <template x-if="!(dept.is_my_pic_task === true || dept.is_my_pic_task === 1)">
+                                                                        <div class="flex items-center gap-2.5 w-full">
+                                                                            <span class="text-xs w-4 text-center font-bold"
+                                                                                  :class="dept.checked_product_ids.includes(Number(p.id)) ? 'text-emerald-500' : 'text-slate-300'"
+                                                                                  x-text="dept.checked_product_ids.includes(Number(p.id)) ? '✓' : '✗'"></span>
+                                                                            <div class="min-w-0 flex-1">
+                                                                                <span class="font-semibold block" :class="dept.checked_product_ids.includes(Number(p.id)) ? 'text-emerald-800 font-bold' : 'text-slate-600'" x-text="p.customer_part_no"></span>
+                                                                                <span class="text-[10px] text-slate-455 truncate block" x-text="p.customer_part_name"></span>
+                                                                            </div>
+                                                                        </div>
+                                                                    </template>
                                                                 </div>
                                                             </template>
-                                                        </form>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -347,6 +349,7 @@ function outlookInbox() {
         approvalRemarks: '',
         dueDateClosed: '',
         expandedDepts: {},
+        checklistSearchQuery: '',
         
         detailData: {
             id: null,
@@ -581,11 +584,28 @@ function outlookInbox() {
             });
         },
         
-        submitProgressUpdate(processId, deptId, formEl) {
-            const fd = new FormData(formEl);
+        toggleProductChecked(processId, departmentId, productId, isChecked) {
+            const proc = this.detailData.processes.find(p => p.process_id === processId);
+            if (!proc) return;
+            const dept = proc.assigned_departments.find(d => d.department_id === departmentId);
+            if (!dept) return;
+
+            productId = Number(productId);
+            if (isChecked) {
+                if (!dept.checked_product_ids.includes(productId)) {
+                    dept.checked_product_ids.push(productId);
+                }
+            } else {
+                dept.checked_product_ids = dept.checked_product_ids.filter(id => id !== productId);
+            }
+
+            const fd = new FormData();
             fd.append('process_id', processId);
-            fd.append('department_id', deptId);
-            
+            fd.append('department_id', departmentId);
+            dept.checked_product_ids.forEach(id => {
+                fd.append('checked_product_ids[]', id);
+            });
+
             fetch(`${WO_BASE_URL}/work-order/${this.selectedHashedId}/progress`, {
                 method: 'POST',
                 body: fd,
@@ -596,14 +616,14 @@ function outlookInbox() {
             })
             .then(res => {
                 if (res.ok) {
-                    this.showToast('Progress updated successfully!');
-                    this.selectWo(this.selectedHashedId);
+                    this.showToast('Progress updated!');
                 } else {
-                    this.showToast('Failed to update progress.');
+                    this.showToast('Failed to save progress.');
                 }
             })
             .catch(err => {
                 console.error(err);
+                this.showToast('Network error while saving progress.');
             });
         },
         
