@@ -683,12 +683,44 @@
                         <div class="flex items-center justify-between gap-2 p-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xs">
                             <span class="text-[10px] font-bold text-slate-700 dark:text-slate-300" x-text="itemLabel(deptId)"></span>
                             <select :name="'default_pics[' + deptId + ']'"
-                                    x-model="defaultPics[deptId]"
-                                    class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-[10px] px-2 py-1 rounded-xs focus:outline-none focus:border-blue-500 w-48">
-                                <option value="">-- Choose PIC --</option>
-                                <template x-for="u in window.allUsersList.filter(u => u.id_dept == deptId)" :key="u.id">
-                                    <option :value="u.id" x-text="u.name" :selected="defaultPics[deptId] == u.id"></option>
-                                </template>
+                                    x-init="
+                                        setTimeout(() => {
+                                            $($el).select2({
+                                                placeholder: '-- Choose PIC --',
+                                                width: '192px',
+                                                ajax: {
+                                                    url: '{{ route('management.api.users') }}',
+                                                    dataType: 'json',
+                                                    delay: 250,
+                                                    data: function(params) {
+                                                        return {
+                                                            select2: 1,
+                                                            q: params.term,
+                                                            id_dept: deptId
+                                                        };
+                                                    },
+                                                    processResults: function(data) {
+                                                        return {
+                                                            results: data.results
+                                                        };
+                                                    },
+                                                    cache: true
+                                                }
+                                            }).on('change', function() {
+                                                defaultPics[deptId] = $(this).val();
+                                            });
+
+                                            // Set initial value
+                                            if (defaultPics[deptId]) {
+                                                let initialVal = defaultPics[deptId];
+                                                let u = window.allUsersList.find(user => user.id == initialVal);
+                                                let name = u ? u.name : 'User ID ' + initialVal;
+                                                let option = new Option(name, initialVal, true, true);
+                                                $($el).append(option).trigger('change.select2');
+                                            }
+                                        }, 50);
+                                    "
+                                    class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-[10px] w-48">
                             </select>
                         </div>
                     </template>
