@@ -303,6 +303,7 @@
 </div>
 
 <script>
+const WO_BASE_URL = window.WO_BASE_URL || '{{ url('management') }}';
 function woProgressModal() {
     return {
         isOpen: false,
@@ -396,7 +397,7 @@ function woProgressModal() {
             modal.classList.remove('hidden');
             
             // Fetch Details via AJAX
-            fetch(`/management/work-order/${hashedId}/api-details`)
+            fetch(`${WO_BASE_URL}/work-order/${hashedId}/api-details`)
                 .then(res => res.json())
                 .then(json => {
                     if (json.success) {
@@ -461,7 +462,7 @@ function woProgressModal() {
             fd.append('process_id', processId);
             fd.append('department_id', deptId);
             
-            fetch(`/management/work-order/${this.hashedId}/progress`, {
+            fetch(`${WO_BASE_URL}/work-order/${this.hashedId}/progress`, {
                 method: 'POST',
                 body: fd,
                 headers: {

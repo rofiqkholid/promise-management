@@ -335,6 +335,7 @@
 
 @push('scripts')
 <script>
+const WO_BASE_URL = '{{ url('management') }}';
 function outlookInbox() {
     return {
         approvalRulesList: @json($approvalRules->map(fn($r) => ['id' => $r->id, 'dept_code' => $r->department->code ?? $r->department->name ?? ''])->values()),
@@ -475,7 +476,7 @@ function outlookInbox() {
             this.approvalRemarks = '';
             this.dueDateClosed = '';
             
-            fetch(`/management/work-order/${hashedId}/api-details`)
+            fetch(`${WO_BASE_URL}/work-order/${hashedId}/api-details`)
                 .then(res => res.json())
                 .then(json => {
                     this.loadingDetail = false;
@@ -585,7 +586,7 @@ function outlookInbox() {
             fd.append('process_id', processId);
             fd.append('department_id', deptId);
             
-            fetch(`/management/work-order/${this.selectedHashedId}/progress`, {
+            fetch(`${WO_BASE_URL}/work-order/${this.selectedHashedId}/progress`, {
                 method: 'POST',
                 body: fd,
                 headers: {
