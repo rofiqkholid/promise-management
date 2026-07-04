@@ -821,8 +821,19 @@
                     Specific Approver(s)
                     <span class="text-slate-300 text-[9px] normal-case font-normal ml-1">(searchable — select multiple)</span>
                 </label>
-                <select name="approver_user_ids[]" id="master_approver_user_ids" multiple class="w-full select2-users">
-                    {{-- Selected items will be populated dynamically --}}
+                {{-- Select2 Search input (single selection, resets on select) --}}
+                <select id="select2_approver_search" class="w-full">
+                    {{-- Dynamically populated --}}
+                </select>
+                
+                {{-- Box below to show selected approvers as pills --}}
+                <div id="approver_pills_container" class="mt-2 flex flex-wrap gap-1 p-2 bg-slate-50 dark:bg-slate-900 border border-slate-250 dark:border-slate-750 rounded-xs min-h-[38px] text-xs">
+                    <span class="text-[10px] text-slate-400 italic self-center no-pills-placeholder">No approver selected</span>
+                </div>
+
+                {{-- Hidden select that actually submits the array of IDs --}}
+                <select name="approver_user_ids[]" id="master_approver_user_ids" multiple class="hidden">
+                    {{-- Populated dynamically --}}
                 </select>
             </div>
             <div>
@@ -892,7 +903,14 @@ function openAddApprovalModal() {
     document.getElementById('app_active').checked = true;
     document.getElementById('app_active_wrapper').classList.add('hidden'); // hide active check on add
 
-    $('#master_approver_user_ids').val(null).trigger('change');
+    // Reset selected approvers pills
+    window.selectedApprovers = [];
+    if (typeof window.renderApproverPills === 'function') {
+        window.renderApproverPills();
+    }
+    
+    // Clear Select2 search value
+    $('#select2_approver_search').val(null).trigger('change');
     document.getElementById('modal-approval-config').classList.remove('hidden');
 }
 
@@ -907,20 +925,24 @@ function openEditApprovalModal(rule) {
     document.getElementById('app_active').checked = rule.is_active;
     document.getElementById('app_active_wrapper').classList.remove('hidden'); // show active check on edit
 
-    // Set multi-select approvers by populating Select2 options dynamically
+    // Clear Select2 search value
+    $('#select2_approver_search').val(null).trigger('change');
+
+    // Populate selected approvers pills dynamically
+    window.selectedApprovers = [];
     let userIds = (rule.approver_user_ids || []).map(Number);
-    let $select = $('#master_approver_user_ids');
-    $select.val(null).trigger('change');
-    
     userIds.forEach(id => {
         let u = window.allUsersList.find(user => user.id == id);
         let name = u ? u.name : 'User ID ' + id;
-        if ($select.find("option[value='" + id + "']").length === 0) {
-            let newOption = new Option(name, id, true, true);
-            $select.append(newOption).trigger('change');
-        }
+        window.selectedApprovers.push({
+            id: id,
+            name: name
+        });
     });
-    $select.val(userIds).trigger('change');
+
+    if (typeof window.renderApproverPills === 'function') {
+        window.renderApproverPills();
+    }
 
     document.getElementById('modal-approval-config').classList.remove('hidden');
 }
@@ -1394,9 +1416,46 @@ document.addEventListener('alpine:init', () => {
             width: '100%'
         });
 
-        // Initialize Select2 with AJAX for Master Approvers list
-        $('#master_approver_user_ids').select2({
-            placeholder: "Search & select approver(s)...",
+        // Specific Approver(s) Pills and Search Select2 Setup
+        window.selectedApprovers = [];
+
+        window.renderApproverPills = function() {
+            let container = $('#approver_pills_container');
+            container.empty();
+            
+            let hiddenSelect = $('#master_approver_user_ids');
+            hiddenSelect.empty();
+
+            if (window.selectedApprovers.length === 0) {
+                container.append('<span class="text-[10px] text-slate-400 italic self-center no-pills-placeholder">No approver selected</span>');
+                return;
+            }
+
+            window.selectedApprovers.forEach(user => {
+                let pill = $(`
+                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 text-[11px] font-semibold rounded-sm border border-blue-200 dark:border-blue-800">
+                        <span>${user.name}</span>
+                        <button type="button" class="remove-approver-pill font-bold hover:text-blue-900 dark:hover:text-white" data-id="${user.id}">&times;</button>
+                    </span>
+                `);
+                container.append(pill);
+
+                // Add option to hidden multiple select
+                let opt = $('<option selected></option>').val(user.id).text(user.name);
+                hiddenSelect.append(opt);
+            });
+        };
+
+        // Handle pill removal
+        $(document).on('click', '.remove-approver-pill', function() {
+            let id = $(this).data('id');
+            window.selectedApprovers = window.selectedApprovers.filter(u => u.id != id);
+            window.renderApproverPills();
+        });
+
+        // Initialize Select2 with AJAX for searching and selecting approvers
+        $('#select2_approver_search').select2({
+            placeholder: "Search & select approver...",
             width: '100%',
             minimumInputLength: 0,
             ajax: {
@@ -1416,6 +1475,19 @@ document.addEventListener('alpine:init', () => {
                     };
                 },
                 cache: true
+            }
+        }).on('select2:select', function(e) {
+            let data = e.params.data;
+            if (data.id) {
+                if (!window.selectedApprovers.some(u => u.id == data.id)) {
+                    window.selectedApprovers.push({
+                        id: parseInt(data.id),
+                        name: data.text
+                    });
+                    window.renderApproverPills();
+                }
+                // Reset select2 value
+                $(this).val(null).trigger('change');
             }
         });
 
