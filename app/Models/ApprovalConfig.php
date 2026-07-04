@@ -27,7 +27,7 @@ class ApprovalConfig extends Model
         'approver_user_ids' => 'array',
     ];
 
-    protected $appends = ['rule_id'];
+    protected $appends = ['rule_id', 'approver_users'];
 
     protected $with = ['department'];
 

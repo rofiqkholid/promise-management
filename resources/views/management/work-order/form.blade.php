@@ -930,15 +930,24 @@ function openEditApprovalModal(rule) {
 
     // Populate selected approvers pills dynamically
     window.selectedApprovers = [];
-    let userIds = (rule.approver_user_ids || []).map(Number);
-    userIds.forEach(id => {
-        let u = window.allUsersList.find(user => user.id == id);
-        let name = u ? u.name : 'User ID ' + id;
-        window.selectedApprovers.push({
-            id: id,
-            name: name
+    if (rule.approver_users && rule.approver_users.length > 0) {
+        rule.approver_users.forEach(u => {
+            window.selectedApprovers.push({
+                id: u.id,
+                name: u.name
+            });
         });
-    });
+    } else {
+        let userIds = (rule.approver_user_ids || []).map(Number);
+        userIds.forEach(id => {
+            let u = window.allUsersList.find(user => user.id == id);
+            let name = u ? u.name : 'User ID ' + id;
+            window.selectedApprovers.push({
+                id: id,
+                name: name
+            });
+        });
+    }
 
     if (typeof window.renderApproverPills === 'function') {
         window.renderApproverPills();
