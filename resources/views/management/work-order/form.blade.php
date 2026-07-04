@@ -971,6 +971,10 @@ function openEditApprovalModal(rule) {
         $procDeptsData[$proc->id] = $deptIds;
     }
 
+    // Query only the names of the user IDs present in $procPicsData (assigned PICs)
+    $assignedUserIds = array_unique(array_filter(array_values($procPicsData)));
+    $assignedUsersMap = \App\Models\User::whereIn('id', $assignedUserIds)->get()->pluck('name', 'id');
+
     $dueDatesClosedData = [];
     if (isset($workOrder)) {
         $merged = is_array($workOrder->due_dates_closed) ? $workOrder->due_dates_closed : [];
@@ -1005,6 +1009,7 @@ function openEditApprovalModal(rule) {
 
 <script>
 window.allUsersList = [];
+window.assignedUsersMap = @json($assignedUsersMap);
 document.addEventListener('alpine:init', () => {
     Alpine.data('spkForm', () => ({
         isEditable: {{ $isEditable ? 'true' : 'false' }},
@@ -1526,8 +1531,13 @@ document.addEventListener('alpine:init', () => {
 
         // Set initial value
         if (initialValue) {
-            let u = window.allUsersList.find(user => user.id == initialValue);
-            let name = u ? u.name : 'User ID ' + initialValue;
+            let name = 'User ID ' + initialValue;
+            if (window.assignedUsersMap && window.assignedUsersMap[initialValue]) {
+                name = window.assignedUsersMap[initialValue];
+            } else if (window.allUsersList && window.allUsersList.length > 0) {
+                let u = window.allUsersList.find(user => user.id == initialValue);
+                if (u) name = u.name;
+            }
             let option = new Option(name, initialValue, true, true);
             $(el).append(option).trigger('change.select2');
         }
