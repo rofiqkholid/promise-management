@@ -64,10 +64,9 @@
             @if(isset($workOrder))
                 @method('PUT')
             @else
-                <input type="hidden" name="inquiry_id" value="{{ $inquiry->id }}">
+                <input type="hidden" name="inquiry_id" value="{{ $inquiry->hashed_id }}">
             @endif
             <input type="hidden" name="department_id" :value="department_id">
-            <input type="hidden" name="products" :value="products.map(p => p.inquiry_product_id).join(',')">
     @else
         <div class="w-1/2 h-full flex flex-col overflow-hidden border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 transition-[width] duration-200 ease-in-out" :style="showPreview ? 'width: 50%' : 'width: 100%'">
             <input type="hidden" name="department_id" :value="department_id">
@@ -497,9 +496,7 @@
             </div>
         </x-form-card>
 
-        {{-- Hidden inputs for products mapping (for submission) --}}
-        <input type="hidden" name="products_json" :value="JSON.stringify(products)">
-        <input type="hidden" name="process_pics_json" :value="JSON.stringify(process_pics)">
+        {{-- Data for submission is sent via JSON AJAX, not hidden fields --}}
 
         {{-- Hidden inputs for selected approval rules to ensure they submit via AJAX --}}
         <template x-for="ruleId in selected_approval_rules" :key="ruleId">
@@ -1611,18 +1608,54 @@ document.addEventListener('alpine:init', () => {
             }
         }, 300);
 
-        // Intercept form submission to post via AJAX since controller returns JSON redirect_url
+        // Intercept form submission: collect all data from Alpine state and post as JSON
+        // This avoids sending nested [] arrays in the body which can trigger Nginx/WAF blocks
         $('#spkForm').on('submit', function(e) {
             e.preventDefault();
             let $form = $(this);
             let url = $form.attr('action');
-            let data = $form.serialize();
+            let formEl = document.getElementById('spkFormContainer');
+            let alpine = formEl ? Alpine.$data(formEl) : {};
 
-            // Append Alpine data array fields that serialize doesn't capture easily if needed
+            // Collect selected processes from checked checkboxes
+            let selectedProcesses = [];
+            $form.find('input[name="processes[]"]:checked').each(function() {
+                selectedProcesses.push($(this).val());
+            });
+
+            // Build payload as a plain JSON object
+            let payload = {
+                _token: $('meta[name="csrf-token"]').attr('content'),
+                _method: $form.find('input[name="_method"]').val() || 'POST',
+                inquiry_id: $form.find('input[name="inquiry_id"]').val() || null,
+                department_id: alpine.department_id || '',
+                wo_number: alpine.work_order_no || '',
+                publish_date: alpine.publish_date || '',
+                first_sample_date: alpine.first_sample_date || '',
+                due_date_plan: alpine.due_date_plan || '',
+                priority: alpine.priority || 'STANDARD',
+                remarks: alpine.remarks || '',
+                processes: selectedProcesses,
+                selected_approval_rules: alpine.selected_approval_rules || [],
+                due_dates_closed: alpine.due_dates_closed || {},
+                products: (alpine.products || []).map(function(p) {
+                    return {
+                        work_order_product_id: p.work_order_product_id || null,
+                        inquiry_product_id: p.inquiry_product_id,
+                        eo: p.eo || '',
+                        class_id: p.class_id || '',
+                        uom: p.uom || '',
+                        remarks: p.remarks || ''
+                    };
+                }),
+                process_pics: alpine.process_pics || {}
+            };
+
             $.ajax({
                 url: url,
                 type: 'POST',
-                data: data,
+                contentType: 'application/json',
+                data: JSON.stringify(payload),
                 success: function(response) {
                     if (response.success && response.redirect_url) {
                         window.location.href = response.redirect_url;

@@ -11,6 +11,17 @@ class WorkOrderRequest extends FormRequest
         return true;
     }
 
+    /**
+     * Merge JSON body into request input so FormRequest validation works
+     * whether the request is sent as application/json or form-data.
+     */
+    protected function prepareForValidation(): void
+    {
+        if ($this->isJson()) {
+            $this->merge($this->json()->all());
+        }
+    }
+
     public function rules(): array
     {
         $rules = [
@@ -23,7 +34,7 @@ class WorkOrderRequest extends FormRequest
             'selected_approval_rules' => 'nullable|array',
             'selected_approval_rules.*' => 'nullable|integer',
             'remarks'            => 'nullable|string',
-            'process_pics'       => 'nullable|array',
+            'process_pics'       => 'nullable',
         ];
 
         if ($this->isMethod('post')) {

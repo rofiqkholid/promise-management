@@ -104,6 +104,7 @@ class WorkOrderController extends Controller
             $processes = $validated['processes'];
             $assignedPics = $this->parseAssignedPics($request);
 
+            // Pass products from JSON body directly to service
             $workOrder = $this->workOrderService->createWorkOrder($data, $processes, $assignedPics);
 
             return response()->json([
@@ -601,17 +602,25 @@ class WorkOrderController extends Controller
 
     private function parseAssignedPics(Request $request)
     {
-        $assignedPics = $request->input('process_pics') ?? [];
-        if ($request->has('process_pics_json')) {
-            $flatPics = json_decode($request->input('process_pics_json'), true) ?: [];
-            $assignedPics = [];
-            foreach ($flatPics as $key => $picUserId) {
-                if (strpos($key, '_') !== false) {
-                    [$procId, $deptId] = explode('_', $key);
-                    $assignedPics[$procId][$deptId] = $picUserId;
-                }
-            }
+        // When sent as JSON payload, process_pics is a flat object {"procId_deptId": userId}
+        $raw = $request->json('process_pics') ?? $request->input('process_pics_json');
+        if (is_string($raw)) {
+            $raw = json_decode($raw, true) ?: [];
         }
-        return $assignedPics;
+        if (is_array($raw)) {
+            // Check if it's already nested (from form) or flat (from JSON AJAX)
+            $firstKey = array_key_first($raw);
+            if ($firstKey !== null && strpos((string)$firstKey, '_') !== false) {
+                // Flat format: {"procId_deptId": userId} -> convert to nested
+                $nested = [];
+                foreach ($raw as $key => $picUserId) {
+                    [$procId, $deptId] = explode('_', (string)$key, 2);
+                    $nested[$procId][$deptId] = $picUserId;
+                }
+                return $nested;
+            }
+            return $raw;
+        }
+        return $request->input('process_pics') ?? [];
     }
 }

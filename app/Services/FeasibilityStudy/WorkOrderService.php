@@ -54,12 +54,18 @@ class WorkOrderService
             
             $this->workOrderRepo->attachProcessesAndPics($workOrder->id, $processes, $assignedPics);
 
-            // Sync work order products
-            $productsParam = request()->has('products_json')
-                ? (json_decode(request()->input('products_json'), true) ?: [])
-                : request()->input('products');
+            // Sync work order products - read from JSON body (sent by AJAX with Content-Type: application/json)
+            $jsonProducts = request()->json('products');
+            $productsParam = (!empty($jsonProducts) && is_array($jsonProducts))
+                ? $jsonProducts
+                : (request()->has('products_json')
+                    ? (json_decode(request()->input('products_json'), true) ?: [])
+                    : request()->input('products'));
             if ($productsParam) {
-                $productIds = is_array($productsParam) ? $productsParam : array_filter(explode(',', $productsParam));
+                // When sent as JSON from Alpine, inquiry_product_id is already the raw integer ID
+                $productIds = is_array($productsParam)
+                    ? array_map(fn($p) => is_array($p) ? (int)($p['inquiry_product_id'] ?? 0) : (int)$p, $productsParam)
+                    : array_filter(explode(',', $productsParam));
                 // Decrypt product IDs
                 $decryptedIds = array_map(function($pid) {
                     // Try decrypting or return as is if numeric
