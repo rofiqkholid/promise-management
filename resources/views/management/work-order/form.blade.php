@@ -363,13 +363,8 @@
                                                 <span class="text-xs font-bold text-slate-700 dark:text-slate-350" x-text="getDeptCodeById(deptId)"></span>
                                                 <div class="flex items-center gap-2">
                                                     <label class="text-xs text-slate-700 dark:text-slate-350">PIC:</label>
-                                                     <select x-model="process_pics[{{ $proc->id }} + '_' + deptId]"
-                                                            :disabled="!isEditable"
-                                                            class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs px-2.5 py-1 rounded-xs focus:outline-none focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed w-48">
-                                                        <option value="">-- Choose PIC --</option>
-                                                        <template x-for="u in getUsersByDept(deptId)" :key="u.id">
-                                                            <option :value="u.id" x-text="u.name" :selected="process_pics[{{ $proc->id }} + '_' + deptId] == u.id"></option>
-                                                        </template>
+                                                    <select x-init="setTimeout(() => window.initPicSelect2($el, deptId, process_pics[{{ $proc->id }} + '_' + deptId], val => { process_pics[{{ $proc->id }} + '_' + deptId] = val; }, !isEditable), 50)"
+                                                            class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs w-48">
                                                     </select>
                                                 </div>
                                             </div>
@@ -683,43 +678,7 @@
                         <div class="flex items-center justify-between gap-2 p-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xs">
                             <span class="text-[10px] font-bold text-slate-700 dark:text-slate-300" x-text="itemLabel(deptId)"></span>
                             <select :name="'default_pics[' + deptId + ']'"
-                                    x-init="
-                                        setTimeout(() => {
-                                            $($el).select2({
-                                                placeholder: '-- Choose PIC --',
-                                                width: '192px',
-                                                ajax: {
-                                                    url: '{{ route('management.api.users') }}',
-                                                    dataType: 'json',
-                                                    delay: 250,
-                                                    data: function(params) {
-                                                        return {
-                                                            select2: 1,
-                                                            q: params.term,
-                                                            id_dept: deptId
-                                                        };
-                                                    },
-                                                    processResults: function(data) {
-                                                        return {
-                                                            results: data.results
-                                                        };
-                                                    },
-                                                    cache: true
-                                                }
-                                            }).on('change', function() {
-                                                defaultPics[deptId] = $(this).val();
-                                            });
-
-                                            // Set initial value
-                                            if (defaultPics[deptId]) {
-                                                let initialVal = defaultPics[deptId];
-                                                let u = window.allUsersList.find(user => user.id == initialVal);
-                                                let name = u ? u.name : 'User ID ' + initialVal;
-                                                let option = new Option(name, initialVal, true, true);
-                                                $($el).append(option).trigger('change.select2');
-                                            }
-                                        }, 50);
-                                    "
+                                    x-init="setTimeout(() => window.initPicSelect2($el, deptId, defaultPics[deptId], val => { defaultPics[deptId] = val; }), 50)"
                                     class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-[10px] w-48">
                             </select>
                         </div>
@@ -1451,6 +1410,42 @@ document.addEventListener('alpine:init', () => {
 
 @push('scripts')
 <script>
+    window.initPicSelect2 = function(el, deptId, initialValue, onChangeCallback, isDisabled = false) {
+        $(el).select2({
+            placeholder: '-- Choose PIC --',
+            width: '192px',
+            disabled: isDisabled,
+            ajax: {
+                url: '{{ route("management.api.users") }}',
+                dataType: 'json',
+                delay: 250,
+                data: function(params) {
+                    return {
+                        select2: 1,
+                        q: params.term,
+                        id_dept: deptId
+                    };
+                },
+                processResults: function(data) {
+                    return {
+                        results: data.results
+                    };
+                },
+                cache: true
+            }
+        }).on('change', function() {
+            onChangeCallback($(this).val());
+        });
+
+        // Set initial value
+        if (initialValue) {
+            let u = window.allUsersList.find(user => user.id == initialValue);
+            let name = u ? u.name : 'User ID ' + initialValue;
+            let option = new Option(name, initialValue, true, true);
+            $(el).append(option).trigger('change.select2');
+        }
+    };
+
     $(document).ready(function() {
         $('.select2-department').select2({
             placeholder: "-- Choose Department --",
