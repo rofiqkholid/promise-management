@@ -67,7 +67,13 @@ class EbdController extends Controller
             'wo_id'    => 'nullable|integer',
             'date'     => 'required|date',
             'revision' => 'nullable|string|max:20',
+            'ebd_id'   => 'nullable|integer',
         ]);
+
+        $ebdId = $request->input('ebd_id');
+        $isOverwrite = !empty($ebdId);
+        
+        \DB::beginTransaction();
 
         try {
             // 2. Store file to a temporary local path for ZipArchive access
@@ -75,16 +81,30 @@ class EbdController extends Controller
             $tempPath = $file->storeAs('temp/ebd', uniqid() . '_' . $file->getClientOriginalName(), 'local');
             $fullPath = Storage::disk('local')->path($tempPath);
 
-            // 3. Create EBD Header record
-            $ebdHeader = MngEbdHeader::create([
-                'wo_id'      => $request->input('wo_id') ?: null,
-                'customer_id'=> $request->input('customer_id') ?: null,
-                'model_id'   => $request->input('model_id') ?: null,
-                'date'       => $request->input('date'),
-                'revision'   => $request->input('revision', '0'),
-                'status'     => 'Draft',
-                'created_by' => Auth::user()->name ?? Auth::user()->username ?? 'System',
-            ]);
+            // 3. Create or Update EBD Header record
+            if ($isOverwrite) {
+                $ebdHeader = MngEbdHeader::findOrFail($ebdId);
+                $ebdHeader->update([
+                    'wo_id'      => $request->input('wo_id') ?: null,
+                    'customer_id'=> $request->input('customer_id') ?: null,
+                    'model_id'   => $request->input('model_id') ?: null,
+                    'date'       => $request->input('date'),
+                    'revision'   => $request->input('revision', '0'),
+                    'status'     => 'Draft',
+                ]);
+                // Delete existing BOM items, cascades to tooling and add processes
+                MngEbdItem::where('ebd_header_id', $ebdHeader->id)->delete();
+            } else {
+                $ebdHeader = MngEbdHeader::create([
+                    'wo_id'      => $request->input('wo_id') ?: null,
+                    'customer_id'=> $request->input('customer_id') ?: null,
+                    'model_id'   => $request->input('model_id') ?: null,
+                    'date'       => $request->input('date'),
+                    'revision'   => $request->input('revision', '0'),
+                    'status'     => 'Draft',
+                    'created_by' => Auth::user()->name ?? Auth::user()->username ?? 'System',
+                ]);
+            }
 
             // 4. Instantiate importer and run (sheet auto-detected inside importer)
             $importer  = new EbdItemImport($ebdHeader->id);
@@ -95,15 +115,17 @@ class EbdController extends Controller
                 Storage::disk('local')->delete($tempPath);
             }
 
-            // 6. Handle failures — rollback header if import failed
+            // 6. Handle failures — rollback transaction
             if (!$isSuccess || !empty($importer->getErrors())) {
-                $ebdHeader->delete(); // remove orphan header
+                \DB::rollBack();
                 return response()->json([
                     'status'  => 'error',
                     'message' => 'Import completed with errors. Please check the file format.',
                     'errors'  => $importer->getErrors()
                 ], 422);
             }
+
+            \DB::commit();
 
             return response()->json([
                 'status'  => 'success',
@@ -112,13 +134,10 @@ class EbdController extends Controller
             ], 200);
 
         } catch (\Exception $e) {
-            // Cleanup on crash
+            \DB::rollBack();
+            // Cleanup temporary file on crash
             if (isset($fullPath) && file_exists($fullPath)) {
                 Storage::disk('local')->delete($tempPath ?? '');
-            }
-            // Cleanup orphan header on crash
-            if (isset($ebdHeader) && $ebdHeader->exists) {
-                $ebdHeader->forceDelete();
             }
 
             Log::error('EBD Import Controller crashed: ' . $e->getMessage());
