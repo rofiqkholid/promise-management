@@ -498,11 +498,6 @@
 
         {{-- Data for submission is sent via JSON AJAX, not hidden fields --}}
 
-        {{-- Hidden inputs for selected approval rules to ensure they submit via AJAX --}}
-        <template x-for="ruleId in selected_approval_rules" :key="ruleId">
-            <input type="hidden" name="selected_approval_rules[]" :value="ruleId">
-        </template>
-
         </div> {{-- End Scrollable Container --}}
 
         {{-- Fixed Footer --}}
