@@ -1654,6 +1654,9 @@ document.addEventListener('alpine:init', () => {
             $.ajax({
                 url: url,
                 type: 'POST',
+                headers: {
+                    'X-HTTP-Method-Override': payload._method
+                },
                 contentType: 'application/json',
                 data: JSON.stringify(payload),
                 success: function(response) {
@@ -1665,8 +1668,13 @@ document.addEventListener('alpine:init', () => {
                 },
                 error: function(xhr) {
                     let msg = 'Failed to save SPK';
-                    if (xhr.responseJSON && xhr.responseJSON.message) {
-                        msg += ': ' + xhr.responseJSON.message;
+                    if (xhr.responseJSON) {
+                        if (xhr.responseJSON.errors) {
+                            let errorDetails = Object.values(xhr.responseJSON.errors).flat().join('\n- ');
+                            msg += ':\n- ' + errorDetails;
+                        } else if (xhr.responseJSON.message) {
+                            msg += ': ' + xhr.responseJSON.message;
+                        }
                     }
                     alert(msg);
                 }
