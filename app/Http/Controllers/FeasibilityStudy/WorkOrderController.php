@@ -596,6 +596,7 @@ class WorkOrderController extends Controller
             return redirect()->back()->with('success', 'Master Process successfully deleted.');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Failed to delete process: ' . $e->getMessage());
+        }
     }
 
     private function parseAssignedPics(Request $request)
