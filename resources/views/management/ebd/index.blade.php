@@ -5,7 +5,7 @@
 @section('header-title', 'Feasibility Study')
 
 @section('content')
-<div class="flex-1 overflow-y-auto p-4 pt-17.5 space-y-4 text-gray-900 dark:text-gray-100">
+<div class="p-4 pt-17.5 text-gray-900 dark:text-gray-100 space-y-4">
 
     {{-- ===== HEADER ACTIONS ===== --}}
     <div class="sm:flex sm:items-center sm:justify-between mb-6">
@@ -14,11 +14,6 @@
             <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 font-normal">Manage engineering breakdown specifications and BOM lists.</p>
         </div>
         <div class="mt-4 sm:mt-0 flex gap-2">
-            <button type="button" id="btn-open-create-modal"
-                    class="inline-flex items-center justify-center gap-2 px-4 h-9 bg-emerald-600 hover:bg-emerald-700 border border-transparent rounded-xs text-xs font-medium text-white active:scale-[0.98] transition-all shadow-sm cursor-pointer">
-                <i class="fa-solid fa-plus"></i>
-                Add New EBD
-            </button>
             <button type="button" id="btn-open-import-modal"
                     class="inline-flex items-center justify-center gap-2 px-4 h-9 bg-indigo-600 hover:bg-indigo-700 border border-transparent rounded-xs text-xs font-medium text-white active:scale-[0.98] transition-all shadow-sm cursor-pointer">
                 <i class="fa-solid fa-file-import"></i>
@@ -230,104 +225,6 @@
     </div>
 </div>
 
-            </div>
-        </form>
-    </div>
-</div>
-
-{{-- ===== CREATE EBD MODAL (MANUAL) ===== --}}
-<div id="create-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm">
-    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl w-full max-w-lg mx-4 animate-fade-in">
-        {{-- Modal Header --}}
-        <div class="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-700">
-            <div>
-                <h2 class="text-sm font-bold text-slate-800 dark:text-white">Create New EBD</h2>
-                <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">Add a new Engineering Breakdown header manually</p>
-            </div>
-            <button type="button" id="btn-close-create-modal"
-                    class="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
-                <i class="fa-solid fa-xmark text-sm"></i>
-            </button>
-        </div>
-
-        {{-- Modal Body --}}
-        <form id="form-create-ebd" action="{{ route('management.ebd.store') }}" method="POST">
-            @csrf
-            <div class="px-5 py-4 space-y-4">
-                {{-- WO Selection --}}
-                <div>
-                    <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
-                        Work Order (SPK) <span class="text-slate-400 font-normal normal-case">(Optional)</span>
-                    </label>
-                    <select name="wo_id" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
-                        <option value="">— No Work Order —</option>
-                        @foreach($workOrders as $wo)
-                            <option value="{{ $wo->id }}">{{ $wo->wo_number }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                {{-- Customer --}}
-                <div>
-                    <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
-                        Customer <span class="text-slate-400 font-normal normal-case">(Optional)</span>
-                    </label>
-                    <select name="customer_id" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
-                        <option value="">— Select Customer —</option>
-                        @foreach($customers as $customer)
-                            <option value="{{ $customer->id }}">{{ $customer->code }} — {{ $customer->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                {{-- Model --}}
-                <div>
-                    <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
-                        Model <span class="text-slate-400 font-normal normal-case">(Optional)</span>
-                    </label>
-                    <select name="model_id" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
-                        <option value="">— Select Model —</option>
-                        @foreach($models as $model)
-                            <option value="{{ $model->id }}">{{ $model->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                {{-- Date & Revision --}}
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
-                            EBD Date <span class="text-rose-500">*</span>
-                        </label>
-                        <input type="date" name="date" required value="{{ date('Y-m-d') }}"
-                               class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
-                            Revision
-                        </label>
-                        <input type="text" name="revision" value="0" placeholder="e.g. 0, 1, A"
-                               class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
-                    </div>
-                </div>
-            </div>
-
-            {{-- Modal Footer --}}
-            <div class="px-5 py-3.5 bg-slate-50 dark:bg-slate-900/30 border-t border-slate-200 dark:border-slate-700 flex items-center justify-end gap-2 rounded-b-xl">
-                <button type="button" id="btn-cancel-create"
-                        class="px-4 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
-                    Cancel
-                </button>
-                <button type="submit"
-                        class="px-4 py-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm hover:shadow transition-all flex items-center gap-2 cursor-pointer">
-                    <i class="fa-solid fa-floppy-disk text-[10px]"></i>
-                    <span>Save EBD</span>
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
 <x-sweetalert />
 
 @push('scripts')
@@ -347,7 +244,7 @@ $(function () {
                     </div>
                     <h4 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-widest mb-2">No EBD Records Found</h4>
                     <p class="text-xs text-gray-400 dark:text-gray-500 max-w-xs mx-auto font-medium leading-relaxed">
-                        Click "Add New EBD" or "Import EBD File" to create your first Engineering Breakdown document.
+                        Click "Import EBD File" to upload your first Engineering Breakdown document.
                     </p>
                 </div>
             `
@@ -355,7 +252,7 @@ $(function () {
     });
 
     // =========================================================================
-    // MODALS — Open / Close
+    // MODAL — Open / Close
     // =========================================================================
     function openImportModal() {
         $('#import-modal').removeClass('hidden').addClass('flex');
@@ -370,27 +267,12 @@ $(function () {
         $('#importResult').addClass('hidden').removeClass('bg-rose-50 text-rose-900 border-rose-100 p-4').html('');
     }
 
-    function openCreateModal() {
-        $('#create-modal').removeClass('hidden').addClass('flex');
-    }
-
-    function closeCreateModal() {
-        $('#create-modal').addClass('hidden').removeClass('flex');
-        $('#form-create-ebd')[0].reset();
-    }
-
     $('#btn-open-import-modal').on('click', openImportModal);
     $('#btn-close-import-modal, #btn-cancel-import').on('click', closeImportModal);
-
-    $('#btn-open-create-modal').on('click', openCreateModal);
-    $('#btn-close-create-modal, #btn-cancel-create').on('click', closeCreateModal);
 
     // Close on backdrop click
     $('#import-modal').on('click', function (e) {
         if ($(e.target).is('#import-modal')) closeImportModal();
-    });
-    $('#create-modal').on('click', function (e) {
-        if ($(e.target).is('#create-modal')) closeCreateModal();
     });
 
     // =========================================================================
