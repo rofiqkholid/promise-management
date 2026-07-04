@@ -898,7 +898,7 @@ function openAddApprovalModal() {
     document.getElementById('app_level').value = '1';
     document.getElementById('app_position').value = '';
     document.getElementById('app_action').value = 'Checked';
-    document.getElementById('app_dept').value = document.getElementById('app_dept').options[0]?.value || '';
+    $('#app_dept').val($('#app_dept option:first').val()).trigger('change');
     document.getElementById('app_sort').value = '0';
     document.getElementById('app_active').checked = true;
     document.getElementById('app_active_wrapper').classList.add('hidden'); // hide active check on add
@@ -920,7 +920,7 @@ function openEditApprovalModal(rule) {
     document.getElementById('app_level').value = rule.approval_level;
     document.getElementById('app_position').value = rule.position_label;
     document.getElementById('app_action').value = rule.action_label ?? 'Checked';
-    document.getElementById('app_dept').value = rule.department_id;
+    $('#app_dept').val(rule.department_id).trigger('change');
     document.getElementById('app_sort').value = rule.sort_order;
     document.getElementById('app_active').checked = rule.is_active;
     document.getElementById('app_active_wrapper').classList.remove('hidden'); // show active check on edit
