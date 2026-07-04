@@ -1154,6 +1154,29 @@ document.addEventListener('alpine:init', () => {
                     window.allUsersList = data;
                     this.usersList = data;
                     
+                    // Update names for any placeholder select2 options that were rendered before user list loaded
+                    $('select').each(function() {
+                        let selectEl = $(this);
+                        let val = selectEl.val();
+                        if (val) {
+                            let values = Array.isArray(val) ? val : [val];
+                            let updated = false;
+                            values.forEach(v => {
+                                let option = selectEl.find('option[value="' + v + '"]');
+                                if (option.length > 0 && option.text().startsWith('User ID ')) {
+                                    let u = data.find(user => user.id == v);
+                                    if (u) {
+                                        option.text(u.name);
+                                        updated = true;
+                                    }
+                                }
+                            });
+                            if (updated) {
+                                selectEl.trigger('change.select2');
+                            }
+                        }
+                    });
+
                     // Dispatch to master approver custom select list
                     window.dispatchEvent(new CustomEvent('update-all-items', {
                         detail: {
