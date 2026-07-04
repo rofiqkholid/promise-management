@@ -68,6 +68,7 @@
         });
     </script>
 
+    @include('components.sweetalert')
     @stack('scripts')
 </body>
 </html>

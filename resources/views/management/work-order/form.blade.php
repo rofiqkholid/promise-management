@@ -3,7 +3,6 @@
 @section('title', isset($workOrder) ? 'Work Order Document · Promise Management' : 'Create Work Order (SPK) · Promise Management')
 
 @section('content')
-<x-sweetalert />
 @php
     $isEditable = !isset($workOrder) || ($workOrder->status === 'Draft' && ($workOrder->is_latest ?? true));
 @endphp
@@ -1656,23 +1655,21 @@ document.addEventListener('alpine:init', () => {
                 contentType: 'application/json',
                 data: JSON.stringify(payload),
                 success: function(response) {
-                    if (response.success) {
+                    if (response.success && response.redirect_url) {
                         showToast(response.message || 'Successfully saved SPK!', 'success');
-                        if (response.redirect_url) {
-                            setTimeout(function() {
-                                window.location.href = response.redirect_url;
-                            }, 1500);
-                        }
+                        setTimeout(function() {
+                            window.location.href = response.redirect_url;
+                        }, 1500);
                     } else {
-                        showToast(response.message || 'Successfully saved SPK!', 'warning');
+                        showToast(response.message || 'Successfully saved SPK!', 'success');
                     }
                 },
                 error: function(xhr) {
                     let msg = 'Failed to save SPK';
                     if (xhr.responseJSON) {
                         if (xhr.responseJSON.errors) {
-                            let errorDetails = Object.values(xhr.responseJSON.errors).flat().join(', ');
-                            msg += ': ' + errorDetails;
+                            let errorDetails = Object.values(xhr.responseJSON.errors).flat().join('\n- ');
+                            msg += ':\n- ' + errorDetails;
                         } else if (xhr.responseJSON.message) {
                             msg += ': ' + xhr.responseJSON.message;
                         }
