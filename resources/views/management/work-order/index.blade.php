@@ -20,9 +20,27 @@
     </div>
 
     @if(session('success'))
-        <div class="p-3 bg-emerald-50 dark:bg-emerald-950/30 border-l-4 border-emerald-500 text-emerald-800 dark:text-emerald-400 text-xs">
-            {{ session('success') }}
-        </div>
+        @push('scripts')
+        <script>
+            $(document).ready(function() {
+                if (typeof showToast === 'function') {
+                    showToast('{{ session('success') }}', 'success');
+                }
+            });
+        </script>
+        @endpush
+    @endif
+
+    @if(session('error'))
+        @push('scripts')
+        <script>
+            $(document).ready(function() {
+                if (typeof showToast === 'function') {
+                    showToast('{{ session('error') }}', 'error');
+                }
+            });
+        </script>
+        @endpush
     @endif
 
     {{-- SPK List Card --}}
