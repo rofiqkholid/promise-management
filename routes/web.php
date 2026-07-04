@@ -68,16 +68,23 @@ Route::middleware('auth')->prefix('management')->name('management.')->group(func
     });
 
     // Work Order Routes
-    Route::middleware('check.menu:management.work-order.index')->group(function () {
+    // Work Order Public API Routes (accessible by any authenticated user on work order screen)
+    Route::get('work-order/{id}/api-details', [WorkOrderController::class, 'apiGetDetails'])->name('work-order.api-details');
+    Route::get('work-order-global-progress', [WorkOrderController::class, 'apiGetGlobalProgress'])->name('work-order.api-global-progress');
+
+    // Work Order Approval Inbox (accessible by users with approval menu permission)
+    Route::middleware('check.menu:management.work-order.approval-inbox')->group(function () {
         Route::get('work-order-approval', [WorkOrderController::class, 'approvalInbox'])->name('work-order.approval-inbox');
         Route::get('work-order/{id}/review', [WorkOrderController::class, 'reviewPage'])->name('work-order.review');
-        Route::post('work-order/{id}/submit', [WorkOrderController::class, 'submit'])->name('work-order.submit');
         Route::post('work-order/{id}/approve', [WorkOrderController::class, 'approve'])->name('work-order.approve');
         Route::post('work-order/{id}/reject', [WorkOrderController::class, 'reject'])->name('work-order.reject');
+    });
+
+    // Work Order Management (accessible by users with list/management menu permission)
+    Route::middleware('check.menu:management.work-order.index')->group(function () {
+        Route::post('work-order/{id}/submit', [WorkOrderController::class, 'submit'])->name('work-order.submit');
         Route::post('work-order/{id}/revise', [WorkOrderController::class, 'revise'])->name('work-order.revise');
         Route::post('work-order/{id}/progress', [WorkOrderController::class, 'updateProgress'])->name('work-order.update-progress');
-        Route::get('work-order/{id}/api-details', [WorkOrderController::class, 'apiGetDetails'])->name('work-order.api-details');
-        Route::get('work-order-global-progress', [WorkOrderController::class, 'apiGetGlobalProgress'])->name('work-order.api-global-progress');
         Route::post('process-checklist', [WorkOrderController::class, 'storeProcess'])->name('process-checklist.store');
         Route::post('process-checklist/{id}/update', [WorkOrderController::class, 'updateProcess'])->name('process-checklist.update');
         Route::post('process-checklist/{id}/delete', [WorkOrderController::class, 'destroyProcess'])->name('process-checklist.destroy');
