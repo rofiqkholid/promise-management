@@ -113,9 +113,15 @@ Route::middleware('auth')->prefix('management')->name('management.')->group(func
 
     // EBD (Engineering Breakdown) Routes
     Route::get('ebd', [EbdController::class, 'index'])->name('ebd.index');
+    Route::post('ebd', [EbdController::class, 'store'])->name('ebd.store');
     Route::get('ebd/{id}', [EbdController::class, 'show'])->name('ebd.show');
+    Route::post('ebd/{id}/update', [EbdController::class, 'update'])->name('ebd.update');
     Route::post('ebd/import', [EbdController::class, 'import'])->name('ebd.import');
+    Route::post('ebd/{id}/import-items', [EbdController::class, 'importItems'])->name('ebd.import-items');
     Route::post('ebd/{id}/delete', [EbdController::class, 'destroy'])->name('ebd.destroy');
+    Route::post('ebd/{id}/item', [EbdController::class, 'storeItem'])->name('ebd.store-item');
+    Route::post('ebd-item/{itemId}/update', [EbdController::class, 'updateItem'])->name('ebd.update-item');
+    Route::post('ebd-item/{itemId}/delete', [EbdController::class, 'destroyItem'])->name('ebd.destroy-item');
 
     // Calendar & Holiday Routes
     Route::get('calendar', [CalendarController::class, 'index'])->name('calendar.index');
