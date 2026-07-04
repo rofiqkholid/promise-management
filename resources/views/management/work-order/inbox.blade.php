@@ -550,7 +550,7 @@ function outlookInbox() {
         },
         
         submitApproval(action) {
-            const url = `/management/work-order/${this.detailData.id}/${action}`;
+            const url = `${WO_BASE_URL}/work-order/${this.selectedHashedId}/${action}`;
             const fd = new FormData();
             fd.append('remarks', this.approvalRemarks);
             if (action === 'approve') {
