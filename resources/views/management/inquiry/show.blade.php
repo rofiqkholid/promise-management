@@ -140,10 +140,17 @@
             {{-- Actions Toolbar --}}
             <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto justify-start lg:justify-end">
                 <template x-if="selectedSpkProducts.length > 0">
-                    <a :href="`{{ Route::has('management.work-order.create') ? route('management.work-order.create') : '#' }}?inquiry_id={{ $inquiry->hashed_id }}&` + selectedSpkProducts.map(id => `products[]=${products.find(p => p.id === id)?.hashed_id || id}`).join('&')"
-                       class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-sm transition-colors cursor-pointer">
-                        <i class="fa-solid fa-file-signature text-[10px]"></i> Create SPK (<span x-text="selectedSpkProducts.length"></span>)
-                    </a>
+                    <form action="{{ route('management.work-order.create') }}" method="POST" class="inline">
+                        @csrf
+                        <input type="hidden" name="inquiry_id" value="{{ $inquiry->hashed_id }}">
+                        <template x-for="id in selectedSpkProducts" :key="id">
+                            <input type="hidden" name="products[]" :value="products.find(p => p.id === id)?.hashed_id || id">
+                        </template>
+                        <button type="submit"
+                           class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-sm transition-colors cursor-pointer border-0">
+                            <i class="fa-solid fa-file-signature text-[10px]"></i> Create SPK (<span x-text="selectedSpkProducts.length"></span>)
+                        </button>
+                    </form>
                 </template>
                 @if(!$isLocked)
                     <button @click="openAddProduct()"

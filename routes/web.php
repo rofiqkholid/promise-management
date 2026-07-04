@@ -79,7 +79,8 @@ Route::middleware('auth')->prefix('management')->name('management.')->group(func
         Route::post('process-checklist', [WorkOrderController::class, 'storeProcess'])->name('process-checklist.store');
         Route::post('process-checklist/{id}/update', [WorkOrderController::class, 'updateProcess'])->name('process-checklist.update');
         Route::post('process-checklist/{id}/delete', [WorkOrderController::class, 'destroyProcess'])->name('process-checklist.destroy');
-        Route::resource('work-order', WorkOrderController::class)->parameters(['work-order' => 'id']);
+        Route::match(['get', 'post'], 'work-order/create', [WorkOrderController::class, 'create'])->name('work-order.create');
+        Route::resource('work-order', WorkOrderController::class)->parameters(['work-order' => 'id'])->except(['create']);
     });
 
     // Assessment Configuration Routes
