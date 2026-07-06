@@ -41,7 +41,7 @@ return new class extends Migration
             // Self-reference for dynamic BOM hierarchy
             $table->unsignedBigInteger('parent_id')->nullable()
                 ->comment('Self-reference for dynamic BOM hierarchy');
-            $table->integer('level_aktif')->nullable()
+            $table->integer('active_level')->nullable()
                 ->comment('Stores the level number when imported (1, 2, 3, etc.)');
 
             // Part Identification
@@ -73,6 +73,8 @@ return new class extends Migration
                 ->comment('Part No for standard/buy-out components');
             $table->integer('std_qty')->nullable()
                 ->comment('Required quantity for standard components');
+            $table->string('std_uom', 50)->nullable()
+                ->comment('Standard Part Unit of Measure');
 
             // Packing Cost
             $table->string('packing_type', 50)->nullable();

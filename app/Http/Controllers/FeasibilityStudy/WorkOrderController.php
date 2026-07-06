@@ -26,9 +26,143 @@ class WorkOrderController extends Controller
 
     public function index(Request $request)
     {
-        $filters = $request->only(['search', 'status', 'department_id']);
-        $workOrders = $this->workOrderService->paginateWorkOrders(1000, $filters);
-        return view('management.work-order.index', compact('workOrders'));
+        if ($request->ajax() || $request->wantsJson()) {
+            $draw = $request->input('draw');
+            $start = $request->input('start', 0);
+            $length = $request->input('length', 10);
+            
+            // Custom filters & Search
+            $priority = $request->input('priority');
+            $status = $request->input('status');
+            $search = $request->input('search.value');
+            
+            $query = WorkOrder::with(['inquiry.customer', 'inquiry.projectModel', 'ownerDepartment', 'processes', 'products', 'approvals']);
+            
+            // Apply priority filter
+            if ($priority) {
+                $query->where('priority', $priority);
+            }
+            
+            // Apply status filter
+            if ($status) {
+                if ($status === 'Finish') {
+                    $query->whereIn('status', ['Approved', 'Released']);
+                } elseif ($status === 'In Progress') {
+                    $query->where('status', 'Pending Approval');
+                } else {
+                    $query->where('status', $status);
+                }
+            }
+            
+            // Apply search filter (search by wo_number, inquiry_no, project_name, customer_part_no, customer_part_name)
+            if ($search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('wo_number', 'like', "%{$search}%")
+                      ->orWhereHas('inquiry', fn($iq) => $iq->where('inquiry_no', 'like', "%{$search}%")
+                                                            ->orWhere('project_name', 'like', "%{$search}%"))
+                      ->orWhereHas('products', fn($p) => $p->where('customer_part_no', 'like', "%{$search}%")
+                                                           ->orWhere('customer_part_name', 'like', "%{$search}%"));
+                });
+            }
+            
+            // Get total records
+            $totalRecords = WorkOrder::count();
+            $filteredRecords = $query->count();
+            
+            // Apply sorting
+            $orderColumnIndex = $request->input('order.0.column');
+            $orderDir = $request->input('order.0.dir', 'desc');
+            
+            $sortableColumns = [
+                1 => 'wo_number',
+                2 => 'revision_no',
+                5 => 'priority',
+                7 => 'status'
+            ];
+            
+            if (isset($sortableColumns[$orderColumnIndex])) {
+                $query->orderBy($sortableColumns[$orderColumnIndex], $orderDir);
+            } else {
+                $query->orderBy('created_at', 'desc');
+            }
+            
+            // Paginate
+            $workOrders = $query->skip($start)->take($length)->get();
+            
+            $data = [];
+            foreach ($workOrders as $wo) {
+                // Calculate display status
+                $displayStatus = match($wo->status) {
+                    'Draft'             => 'Draft',
+                    'Pending Approval'  => 'In Progress',
+                    'Approved', 'Released' => 'Finish',
+                    default             => $wo->status,
+                };
+                
+                // Calculate approval progress
+                $totalApprovals = $wo->approvals->count();
+                $approvedApprovals = $wo->approvals->where('status', 'Approved')->count();
+                $approvalPercent = $totalApprovals > 0 ? round(($approvedApprovals / $totalApprovals) * 100) : 0;
+                
+                // Task Progress Data
+                $deptProgress = [];
+                foreach ($wo->getDepartmentProgress() as $dp) {
+                    $deptProgress[] = [
+                        'code' => $dp['code'],
+                        'completed' => $dp['completed'],
+                        'total' => $dp['total'],
+                        'percent' => $dp['percent']
+                    ];
+                }
+                
+                // Construct products string for hidden search data
+                $hiddenProducts = '';
+                foreach ($wo->products as $p) {
+                    $hiddenProducts .= $p->customer_part_no . ' ' . $p->customer_part_name . ' ';
+                }
+                
+                $data[] = [
+                    'index_num' => $start + count($data) + 1,
+                    'wo_number' => $wo->wo_number,
+                    'revision_no' => 'Rev. ' . $wo->revision_no,
+                    'inquiry_no' => $wo->inquiry->inquiry_no ?? '—',
+                    'inquiry_id' => $wo->inquiry_id,
+                    'inquiry_show_url' => route('management.inquiry.show', $wo->inquiry_id),
+                    'customer_code' => $wo->inquiry->customer->code ?? '—',
+                    'model_name' => $wo->inquiry->projectModel->name ?? '—',
+                    'hidden_products' => $hiddenProducts,
+                    'priority' => $wo->priority,
+                    'dept_progress' => $deptProgress,
+                    'display_status' => $displayStatus,
+                    'status' => $wo->status,
+                    'approved_approvals' => $approvedApprovals,
+                    'total_approvals' => $totalApprovals,
+                    'approval_percent' => $approvalPercent,
+                    'hashed_id' => $wo->hashed_id,
+                    'show_url' => route('management.work-order.show', $wo->hashed_id)
+                ];
+            }
+            
+            return response()->json([
+                'draw' => intval($draw),
+                'recordsTotal' => $totalRecords,
+                'recordsFiltered' => $filteredRecords,
+                'data' => $data
+            ]);
+        }
+        
+        // Non-ajax view needs stats for KPI
+        $allWorkOrders = WorkOrder::all();
+        $totalWo = $allWorkOrders->count();
+        $urgentWo = $allWorkOrders->filter(fn($w) => $w->priority === 'URGENT')->count();
+        $standardWo = $allWorkOrders->filter(fn($w) => $w->priority === 'STANDARD')->count();
+        $lowWo = $allWorkOrders->filter(fn($w) => $w->priority === 'LOW')->count();
+        $finishedCount = $allWorkOrders->filter(fn($w) => in_array($w->status, ['Approved', 'Released']))->count();
+        $completionRate = $totalWo > 0 ? round(($finishedCount / $totalWo) * 100) : 0;
+        
+        return view('management.work-order.index', compact(
+            'totalWo', 'urgentWo', 'standardWo', 'lowWo', 'completionRate'
+        ));
     }
 
     public function create(Request $request)

@@ -32,6 +32,11 @@ class ProjectInquiry extends Model
         return $this->hasMany(InquiryProduct::class, 'inquiry_id', 'id');
     }
 
+    public function workOrders()
+    {
+        return $this->hasMany(WorkOrder::class, 'inquiry_id', 'id');
+    }
+
     public function customer()
     {
         return $this->belongsTo(Customer::class, 'customer_id');

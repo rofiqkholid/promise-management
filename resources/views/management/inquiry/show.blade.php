@@ -92,114 +92,101 @@
         </div>
     </div>
 
-    {{-- ── Unified Inquiry Header Card ────────────────────────────────────── --}}
-    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 mb-3 shadow-sm">
+    {{-- ── Page Header (Title & Actions Toolbar) ─────────────────────────── --}}
+    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 border-b border-slate-200 dark:border-slate-800 pb-4 mb-4 select-none">
         
-        {{-- Card Header: Title and Actions --}}
-        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 p-4 border-b border-slate-100 dark:border-slate-700/60 bg-slate-50/50 dark:bg-slate-900/20">
-            <div class="flex items-center gap-3">
-                <a href="{{ route('management.inquiry.index') }}"
-                   class="flex items-center justify-center w-7 h-7 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-500 hover:text-blue-600 hover:border-blue-500 transition-colors text-xs"
-                   title="Back to list">
-                    <i class="fa-solid fa-arrow-left"></i>
-                </a>
-                <div>
-                    <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none mb-1">
-                        Project Inquiry
-                        <template x-if="selectedSpkProducts.length > 0">
-                            <span class="text-blue-600 dark:text-blue-400 normal-case font-bold ml-1">
-                                (<span x-text="selectedSpkProducts.length"></span> items selected for SPK)
-                            </span>
-                        </template>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <h1 class="text-base font-extrabold tracking-tight text-slate-800 dark:text-white leading-none">
-                            {{ $inquiry->inquiry_no }}
-                        </h1>
-                        {{-- Status Badge --}}
-                        @php
-                            $statusMap = [
-                                'Draft'     => ['dot' => 'bg-blue-500',    'cls' => 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-900/30'],
-                                'Active'    => ['dot' => 'bg-sky-500',     'cls' => 'bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-400 border-sky-200 dark:border-sky-900/30'],
-                                'Closed'    => ['dot' => 'bg-emerald-500', 'cls' => 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/30'],
-                                'Cancelled' => ['dot' => 'bg-rose-500',    'cls' => 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-900/30'],
-                            ];
-                            $st = $statusMap[$inquiry->status] ?? ['dot' => 'bg-slate-400', 'cls' => 'bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'];
-                        @endphp
-                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-bold border {{ $st['cls'] }}">
-                            <span class="w-1 h-1 rounded-full {{ $st['dot'] }}"></span>
-                            {{ $inquiry->status }}
-                        </span>
-                        <span class="text-[10px] text-slate-400 dark:text-slate-500 font-medium ml-1">
-                            {{ $inquiry->inquiry_date->format('d M Y') }}
-                        </span>
-                    </div>
+        {{-- Left Side: Back Arrow, Title, Status & Date --}}
+        <div class="flex items-center gap-3.5">
+            <a href="{{ route('management.inquiry.index') }}"
+               class="flex items-center justify-center w-9 h-9 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-500 hover:text-blue-600 hover:border-blue-500 transition-colors text-sm rounded-xs"
+               title="Back to list">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <div>
+                <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none mb-1.5 flex items-center gap-1.5">
+                    <span>Project Inquiry</span>
                 </div>
-            </div>
-
-            {{-- Actions Toolbar --}}
-            <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto justify-start lg:justify-end">
-                <template x-if="selectedSpkProducts.length > 0">
-                    <form action="{{ route('management.work-order.create') }}" method="POST" class="inline">
-                        @csrf
-                        <input type="hidden" name="inquiry_id" value="{{ $inquiry->hashed_id }}">
-                        <template x-for="id in selectedSpkProducts" :key="id">
-                            <input type="hidden" name="products[]" :value="products.find(p => p.id === id)?.hashed_id || id">
-                        </template>
-                        <button type="submit"
-                           class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-sm transition-colors cursor-pointer border-0">
-                            <i class="fa-solid fa-file-signature text-[10px]"></i> Create SPK (<span x-text="selectedSpkProducts.length"></span>)
-                        </button>
-                    </form>
-                </template>
-                @if(!$isLocked)
-                    <button @click="openAddProduct()"
-                            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm transition-colors cursor-pointer">
-                        <i class="fa-solid fa-plus text-[10px]"></i> Add Product
-                    </button>
-                    <button @click="showImportModal = true"
-                            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-semibold shadow-sm transition-colors cursor-pointer">
-                        <i class="fa-solid fa-file-excel text-emerald-600 dark:text-emerald-500 text-[10px]"></i> Import Excel
-                    </button>
-                    <button @click="showAssessmentConfigModal = true"
-                            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-semibold shadow-sm transition-colors cursor-pointer">
-                        <i class="fa-solid fa-gears text-[10px]"></i> Scoring Config
-                    </button>
-                @endif
-
-                @if($inquiry->status === 'Draft')
-                    @if(!$isLocked)
-                        <div class="h-5 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1"></div>
-                    @endif
-                    <button @click="showEditModal = true"
-                            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-semibold shadow-sm transition-colors cursor-pointer">
-                        <i class="fa-solid fa-pen-to-square text-[10px]"></i> Edit Info
-                    </button>
-                    <form id="close-inquiry-form" method="POST" action="{{ route('management.inquiry.close', $inquiry->hashed_id) }}"
-                          class="inline">
-                        @csrf
-                        <button type="button" onclick="confirmCloseInquiry()"
-                                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm transition-colors cursor-pointer">
-                            <i class="fa-solid fa-lock text-[10px]"></i> Close Inquiry
-                        </button>
-                    </form>
-                    <form id="cancel-inquiry-form" method="POST" action="{{ route('management.inquiry.cancel', $inquiry->hashed_id) }}"
-                          class="inline">
-                        @csrf
-                        <button type="button" onclick="confirmCancelInquiry()"
-                                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold shadow-sm transition-colors cursor-pointer">
-                            <i class="fa-solid fa-ban text-[10px]"></i> Cancel
-                        </button>
-                    </form>
-                @endif
+                <div class="flex flex-wrap items-center gap-2.5">
+                    <h1 class="text-xl font-extrabold tracking-tight text-slate-800 dark:text-white leading-none">
+                        {{ $inquiry->inquiry_no }}
+                    </h1>
+                    {{-- Status Badge --}}
+                    @php
+                        $statusMap = [
+                            'Draft'     => ['dot' => 'bg-blue-500',    'cls' => 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-900/30'],
+                            'Active'    => ['dot' => 'bg-sky-500',     'cls' => 'bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-400 border-sky-200 dark:border-sky-900/30'],
+                            'Closed'    => ['dot' => 'bg-emerald-500', 'cls' => 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/30'],
+                            'Cancelled' => ['dot' => 'bg-rose-500',    'cls' => 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-900/30'],
+                        ];
+                        $st = $statusMap[$inquiry->status] ?? ['dot' => 'bg-slate-400', 'cls' => 'bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'];
+                    @endphp
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[10px] font-bold border rounded-xs {{ $st['cls'] }}">
+                        <span class="w-1 h-1 rounded-full {{ $st['dot'] }}"></span>
+                        {{ $inquiry->status }}
+                    </span>
+                    <span class="text-xs text-slate-400 dark:text-slate-500 font-medium ml-1">
+                        {{ $inquiry->inquiry_date->format('d M Y') }}
+                    </span>
+                </div>
             </div>
         </div>
 
-        {{-- Card Body: Inquiry Details Grid --}}
-        <div class="grid grid-cols-2 lg:grid-cols-5 divide-x divide-y lg:divide-y-0 divide-slate-100 dark:divide-slate-700/60">
+        {{-- Right Side: Actions Toolbar --}}
+        <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto justify-start lg:justify-end">
+            @if(!$isLocked)
+                <button @click="openAddProduct()"
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-colors cursor-pointer rounded-xs">
+                    <i class="fa-solid fa-plus text-xs"></i> Add Product
+                </button>
+                <button @click="showImportModal = true"
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold transition-colors cursor-pointer rounded-xs">
+                    <i class="fa-solid fa-file-excel text-emerald-600 dark:text-emerald-500 text-xs"></i> Import Excel
+                </button>
+                <button @click="showAssessmentConfigModal = true"
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold transition-colors cursor-pointer rounded-xs">
+                    <i class="fa-solid fa-gears text-xs"></i> Scoring Config
+                </button>
+            @endif
+
+            @if($inquiry->status === 'Draft')
+                @if(!$isLocked)
+                    <div class="h-6 w-[1px] bg-slate-300 dark:bg-slate-700 mx-1"></div>
+                @endif
+                <button @click="showEditModal = true"
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-350 dark:border-slate-705 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold transition-colors cursor-pointer rounded-xs">
+                    <i class="fa-solid fa-pen-to-square text-xs"></i> Edit Info
+                </button>
+                <form id="close-inquiry-form" method="POST" action="{{ route('management.inquiry.close', $inquiry->hashed_id) }}"
+                      class="inline">
+                    @csrf
+                    <button type="button" onclick="confirmCloseInquiry()"
+                            class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors cursor-pointer rounded-xs">
+                        <i class="fa-solid fa-lock text-xs"></i> Close Inquiry
+                    </button>
+                </form>
+                <form id="cancel-inquiry-form" method="POST" action="{{ route('management.inquiry.cancel', $inquiry->hashed_id) }}"
+                      class="inline">
+                    @csrf
+                    <button type="button" onclick="confirmCancelInquiry()"
+                            class="inline-flex items-center gap-2 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-colors cursor-pointer rounded-xs">
+                        <i class="fa-solid fa-ban text-xs"></i> Cancel
+                    </button>
+                </form>
+            @endif
+        </div>
+    </div>
+
+    {{-- ── Inquiry Metadata Card ────────────────────────────────────────── --}}
+    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 mb-4 rounded-xs">
+        <div class="grid grid-cols-2 lg:grid-cols-5 divide-x divide-y lg:divide-y-0 divide-slate-200 dark:divide-slate-700">
             <div class="px-4 py-3">
                 <span class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5">Customer</span>
-                <span class="text-xs font-bold text-slate-800 dark:text-slate-100">{{ $inquiry->customer->name ?? '—' }}</span>
+                <span class="text-xs font-bold text-slate-800 dark:text-slate-100">
+                    {{ $inquiry->customer->name ?? '—' }}
+                    @if($inquiry->customer && $inquiry->customer->code)
+                        <span class="text-slate-400 dark:text-slate-500 font-normal">({{ $inquiry->customer->code }})</span>
+                    @endif
+                </span>
             </div>
             <div class="px-4 py-3">
                 <span class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5">Model</span>
@@ -215,31 +202,17 @@
                     {{ $inquiry->remarks ?: '—' }}
                 </span>
             </div>
-        </div>
     </div>
 
-    {{-- ── Flash & Import Alerts ─────────────────────────────────────────── --}}
+    {{-- ── Flash & Page Alerts ─────────────────────────────────────────── --}}
     @if(session('success'))
-        <div class="mb-3 flex items-start gap-2 p-3 bg-emerald-50 dark:bg-emerald-950/30 border-l-4 border-emerald-500 text-emerald-800 dark:text-emerald-400 text-xs">
+        <div class="mb-3 flex items-start gap-2 p-3 bg-emerald-50 dark:bg-emerald-950/30 border-l-4 border-emerald-500 text-emerald-850 dark:text-emerald-400 text-xs">
             <i class="fa-solid fa-circle-check mt-0.5"></i>{{ session('success') }}
         </div>
     @endif
     @if(session('error'))
-        <div class="mb-3 flex items-start gap-2 p-3 bg-rose-50 dark:bg-rose-950/30 border-l-4 border-rose-500 text-rose-800 dark:text-rose-400 text-xs">
+        <div class="mb-3 flex items-start gap-2 p-3 bg-rose-50 dark:bg-rose-950/30 border-l-4 border-rose-500 text-rose-850 dark:text-rose-400 text-xs">
             <i class="fa-solid fa-circle-xmark mt-0.5"></i>{{ session('error') }}
-        </div>
-    @endif
-    @if(session('import_errors') && is_array(session('import_errors')) && count(session('import_errors')) > 0)
-        <div class="mb-3 space-y-2 p-3 bg-amber-50 dark:bg-amber-950/20 border-l-4 border-amber-500 text-amber-800 dark:text-amber-400 text-xs">
-            <p class="font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Excel Import Warnings/Errors:</p>
-            <div class="max-h-[150px] overflow-y-auto space-y-1 divide-y divide-amber-100 dark:divide-amber-900/20">
-                @foreach(session('import_errors') as $err)
-                    <div class="pt-1 text-[11px]">
-                        <strong>Row {{ $err['row'] ?? '?' }}:</strong>
-                        <span>{{ is_array($err['errors']) ? implode(', ', $err['errors']) : $err['errors'] }}</span>
-                    </div>
-                @endforeach
-            </div>
         </div>
     @endif
 
@@ -286,7 +259,7 @@
                       x-text="`${products.length} items`">{{ $inquiry->products->count() }} items</span>
                 {{-- Unsaved indicator --}}
                 <span x-show="orderDirty" x-cloak
-                      class="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 text-[9px] font-bold border border-amber-200 dark:border-amber-900/40 animate-pulse">
+                      class="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-50 dark:bg-amber-955/30 text-amber-600 dark:text-amber-400 text-[9px] font-bold border border-amber-200 dark:border-amber-900/40 animate-pulse">
                     <i class="fa-solid fa-circle-exclamation"></i> Unsaved order changes
                 </span>
             </div>
@@ -348,27 +321,6 @@
                     <span class="inline-flex items-center gap-1.5 text-[10px] font-semibold text-amber-600 dark:text-amber-400">
                         <i class="fa-solid fa-lock text-[9px]"></i> Inquiry {{ strtolower($inquiry->status) }} — read-only
                     </span>
-                @else
-                    <button x-show="orderDirty" x-cloak
-                            @click="saveOrder()"
-                            :disabled="savingOrder"
-                            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white text-[10px] font-bold transition-colors shadow-sm cursor-pointer">
-                        <template x-if="!savingOrder">
-                            <span class="flex items-center gap-1.5">
-                                <i class="fa-solid fa-floppy-disk"></i> Save Order
-                            </span>
-                        </template>
-                        <template x-if="savingOrder">
-                            <span class="flex items-center gap-1.5">
-                                <i class="fa-solid fa-circle-notch fa-spin"></i> Saving…
-                            </span>
-                        </template>
-                    </button>
-                    <button x-show="orderDirty" x-cloak
-                            @click="discardOrder()"
-                            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-[10px] font-semibold transition-colors cursor-pointer">
-                        <i class="fa-solid fa-rotate-left text-[9px]"></i> Reset
-                    </button>
                 @endif
             </div>
         </div>
@@ -632,6 +584,32 @@
             {{-- Modal Body --}}
             <form action="{{ route('management.inquiry.import', $inquiry->hashed_id) }}" method="POST" enctype="multipart/form-data" class="p-5 space-y-4">
                 @csrf
+
+                {{-- Import Specific Flash Messages --}}
+                @if(session('import_success'))
+                    <div class="flex items-start gap-2 p-3 bg-emerald-50 dark:bg-emerald-950/30 border-l-4 border-emerald-500 text-emerald-800 dark:text-emerald-400 text-xs">
+                        <i class="fa-solid fa-circle-check mt-0.5"></i>{{ session('import_success') }}
+                    </div>
+                @endif
+                @if(session('import_error'))
+                    <div class="flex items-start gap-2 p-3 bg-rose-50 dark:bg-rose-950/30 border-l-4 border-rose-500 text-rose-800 dark:text-rose-400 text-xs">
+                        <i class="fa-solid fa-circle-xmark mt-0.5"></i>{{ session('import_error') }}
+                    </div>
+                @endif
+                @if(session('import_errors') && is_array(session('import_errors')) && count(session('import_errors')) > 0)
+                    <div class="space-y-2 p-3 bg-amber-50 dark:bg-amber-955/20 border-l-4 border-amber-500 text-amber-800 dark:text-amber-400 text-xs">
+                        <p class="font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Excel Import Warnings/Errors:</p>
+                        <div class="max-h-[150px] overflow-y-auto space-y-1 divide-y divide-amber-100 dark:divide-amber-900/20">
+                            @foreach(session('import_errors') as $err)
+                                <div class="pt-1 text-[11px]">
+                                    <strong>Row {{ $err['row'] ?? '?' }}:</strong>
+                                    <span>{{ is_array($err['errors']) ? implode(', ', $err['errors']) : $err['errors'] }}</span>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
                 <div class="space-y-3">
                     <p class="text-xs text-slate-600 dark:text-slate-400">
                         Upload your spreadsheet (.xlsx, .xls) containing product information to import them directly into this inquiry.
@@ -674,6 +652,100 @@
     <!-- Assessment Configuration Modal -->
     @include('management.inquiry.assessment-config-modal')
 
+    {{-- ── Floating Actions & Save Order Bar ──────────────────────────────── --}}
+    <div x-show="selectedSpkProducts.length > 0 || orderDirty" x-cloak
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="translate-y-20 opacity-0"
+         x-transition:enter-end="translate-y-0 opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="translate-y-0 opacity-100"
+         x-transition:leave-end="translate-y-20 opacity-0"
+         class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[5000] bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 px-5 py-2.5 rounded-md shadow-2xl flex items-center gap-5 w-max max-w-[95vw] select-none">
+         
+         {{-- PART 1: Selected Items Left Controls (Select Info & Reorder) --}}
+         <template x-if="selectedSpkProducts.length > 0">
+             <div class="flex items-center gap-4">
+                 <div class="flex items-center gap-2 text-xs font-bold whitespace-nowrap text-slate-500 dark:text-slate-400">
+                     <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+                     <span x-text="selectedSpkProducts.length"></span> selected
+                 </div>
+                 
+                 <div class="h-4 w-[1px] bg-slate-200 dark:bg-slate-700"></div>
+                 
+                 {{-- Action: Move to Target Position --}}
+                 <div class="flex items-center gap-1 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 px-2 py-0.5 rounded-xs">
+                     <span class="text-[10px] text-slate-500 dark:text-slate-400 font-bold whitespace-nowrap">Move to Row:</span>
+                     <input type="number" x-model="targetOrderInput" min="1" :max="products.length"
+                            class="w-12 h-5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-center text-slate-800 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
+                            placeholder="Pos">
+                     <button type="button" @click="moveSelectedToTarget()"
+                             class="px-2 py-0.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-extrabold text-[9px] uppercase tracking-wider rounded-xs flex items-center justify-center transition-colors cursor-pointer border border-slate-300 dark:border-slate-600">
+                         Go
+                     </button>
+                 </div>
+                 
+                 {{-- Deselect Button --}}
+                 <button type="button" @click="selectedSpkProducts = []; renderRows()"
+                         class="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors font-bold cursor-pointer bg-transparent border-0">
+                     Clear
+                 </button>
+             </div>
+         </template>
+
+         {{-- Divider if both are active --}}
+         <template x-if="selectedSpkProducts.length > 0 && orderDirty">
+             <div class="h-5 w-[1px] bg-slate-200 dark:bg-slate-700"></div>
+         </template>
+
+         {{-- PART 2: Unsaved Order Actions --}}
+         <template x-if="orderDirty">
+             <div class="flex items-center gap-3">
+                 <div class="flex items-center gap-1.5 text-xs font-bold text-amber-600 dark:text-amber-400 whitespace-nowrap">
+                     <i class="fa-solid fa-circle-exclamation"></i>
+                     <span>Unsaved Order</span>
+                 </div>
+                 <button @click="saveOrder()"
+                         :disabled="savingOrder"
+                         class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white text-xs font-bold transition-colors cursor-pointer rounded-xs border-0 whitespace-nowrap">
+                     <template x-if="!savingOrder">
+                         <span class="flex items-center gap-1.5">
+                             <i class="fa-solid fa-floppy-disk"></i> Save Order
+                         </span>
+                     </template>
+                     <template x-if="savingOrder">
+                         <span class="flex items-center gap-1.5">
+                             <i class="fa-solid fa-circle-notch fa-spin"></i> Saving…
+                         </span>
+                     </template>
+                 </button>
+                 <button @click="discardOrder()"
+                         class="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-semibold transition-colors cursor-pointer rounded-xs whitespace-nowrap">
+                     <i class="fa-solid fa-rotate-left"></i> Reset
+                 </button>
+             </div>
+         </template>
+
+         {{-- Divider if items are selected --}}
+         <template x-if="selectedSpkProducts.length > 0">
+             <div class="h-5 w-[1px] bg-slate-200 dark:bg-slate-700"></div>
+         </template>
+
+         {{-- PART 3: Create WO Action (Paling Kanan) --}}
+         <template x-if="selectedSpkProducts.length > 0">
+             <form action="{{ route('management.work-order.create') }}" method="POST" class="inline flex-shrink-0">
+                 @csrf
+                 <input type="hidden" name="inquiry_id" value="{{ $inquiry->hashed_id }}">
+                 <template x-for="id in selectedSpkProducts" :key="id">
+                     <input type="hidden" name="products[]" :value="products.find(p => p.id === id)?.hashed_id || id">
+                 </template>
+                 <button type="submit"
+                         class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 rounded-xs border-0 whitespace-nowrap">
+                     <i class="fa-solid fa-file-signature"></i> Create WO
+                 </button>
+             </form>
+         </template>
+    </div>
+
 </div>{{-- end x-data --}}
 
 {{-- ═══════════════════ SCRIPTS ════════════════════════════════════════════ --}}
@@ -698,7 +770,7 @@
 document.addEventListener('alpine:init', () => {
     Alpine.data('inquiryManagement', () => ({
         showEditModal: false,
-        showImportModal: false,
+        showImportModal: {{ (session('import_errors') || session('import_success') || session('import_error')) ? 'true' : 'false' }},
         editForm: {
             id: '{{ $inquiry->id }}',
             customer_id: '{{ $inquiry->customer_id }}',
@@ -740,6 +812,41 @@ document.addEventListener('alpine:init', () => {
         optionScores: @json($optionScores),
         rankings: @json($rankings),
         selectedOptions: @json($selectedOptionsByProduct),
+
+        targetOrderInput: '',
+        
+        moveSelectedToTarget() {
+            const targetPos = parseInt(this.targetOrderInput);
+            if (isNaN(targetPos) || targetPos < 1 || targetPos > this.products.length) {
+                showToast('Please enter a valid target position (1 to ' + this.products.length + ').', 'warning');
+                return;
+            }
+
+            const targetIndex = targetPos - 1;
+            const selectedIds = this.selectedSpkProducts.map(id => Number(id));
+            const selectedItems = [];
+            const remainingItems = [];
+
+            // Separate selected products and remaining products preserving order
+            this.products.forEach(p => {
+                if (selectedIds.includes(Number(p.id))) {
+                    selectedItems.push(p);
+                } else {
+                    remainingItems.push(p);
+                }
+            });
+
+            if (selectedItems.length === 0) return;
+
+            // Insert selected items at targetIndex of remaining items
+            remainingItems.splice(targetIndex, 0, ...selectedItems);
+
+            this.products = remainingItems;
+            this.orderDirty = true;
+            this.targetOrderInput = '';
+            this.renderRows();
+            showToast('Moved selected items. Click "Save Order" in the footer to apply changes.', 'success');
+        },
 
         init() {
             // Bootstrap products from server-injected global variable
@@ -799,15 +906,17 @@ document.addEventListener('alpine:init', () => {
                 const vol = prod.annual_volume ? prod.annual_volume.toLocaleString() : '—';
                 
                 const hasSpk = prod.spkList && prod.spkList.length > 0;
-                const spkTooltip = hasSpk ? 'Associated SPKs:\n' + prod.spkList.map(s => `• ${s.number} (${s.status})`).join('\n') : '';
-                const spkIcon = hasSpk 
-                    ? `<i class="fa-solid fa-file-signature text-emerald-650 dark:text-emerald-450 text-xs ml-1 cursor-pointer" title="${spkTooltip}"></i>`
+                const spkTooltip = hasSpk ? 'Associated WOs:\n' + prod.spkList.map(s => `• ${s.number} (${s.status})`).join('\n') : '';
+                const spkBadge = hasSpk 
+                    ? `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-xs bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-450 border border-emerald-200 dark:border-emerald-800 text-[9px] font-bold cursor-pointer whitespace-nowrap ml-1.5" title="${spkTooltip}">
+                         <i class="fa-solid fa-file-signature text-[8px]"></i> ${prod.spkList.length} WO
+                       </span>`
                     : '';
 
                 const upBtn = (index > 0 && !isLocked)
-                    ? `<button onclick="event.stopPropagation();window._alpine_reorder(${prod.id},'up')" title="Move Up" class="w-6 h-6 flex items-center justify-center bg-slate-100 hover:bg-slate-250 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-350 transition-colors"><i class="fa-solid fa-arrow-up text-[9px]"></i></button>` : '';
+                    ? `<button onclick="event.stopPropagation();window._alpine_reorder(${prod.id},'up')" title="Move Up" class="w-6 h-6 flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-350 transition-colors"><i class="fa-solid fa-arrow-up text-[9px]"></i></button>` : '';
                 const downBtn = (index < total - 1 && !isLocked)
-                    ? `<button onclick="event.stopPropagation();window._alpine_reorder(${prod.id},'down')" title="Move Down" class="w-6 h-6 flex items-center justify-center bg-slate-100 hover:bg-slate-250 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-350 transition-colors"><i class="fa-solid fa-arrow-down text-[9px]"></i></button>` : '';
+                    ? `<button onclick="event.stopPropagation();window._alpine_reorder(${prod.id},'down')" title="Move Down" class="w-6 h-6 flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-350 transition-colors"><i class="fa-solid fa-arrow-down text-[9px]"></i></button>` : '';
                 const editBtn = !isLocked
                     ? `<button onclick="event.stopPropagation();window._alpine_editProduct(${prod.id})" title="Edit" class="w-6 h-6 flex items-center justify-center bg-slate-100 hover:bg-blue-50 dark:bg-slate-800 dark:hover:bg-blue-950/30 border border-slate-300 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-800 text-slate-600 dark:text-slate-350 hover:text-blue-700 dark:hover:text-blue-400 transition-colors"><i class="fa-solid fa-pen text-[9px]"></i></button>`
                     : `<span class="text-[10px] text-slate-400 italic">Locked</span>`;
@@ -820,21 +929,21 @@ document.addEventListener('alpine:init', () => {
                     ? 'bg-blue-50/70 dark:bg-blue-950/20 text-blue-900 dark:text-blue-100'
                     : (index % 2 === 0 ? 'bg-white dark:bg-slate-800' : 'bg-slate-100/40 dark:bg-slate-900/30');
 
-                const trClass = `border-b border-slate-200 dark:border-slate-700/80 ${rowBg} hover:bg-blue-50/30 dark:hover:bg-slate-750 transition-colors duration-150 ${!isLocked ? 'cursor-move' : ''}`;
+                const trClass = `border-b border-slate-200 dark:border-slate-700 ${rowBg} hover:bg-blue-50/30 dark:hover:bg-slate-750 transition-colors duration-150 ${!isLocked ? 'cursor-move' : ''}`;
 
                 return `<tr id="row-${prod.id}" class="${trClass}" draggable="${draggable}"
                     data-id="${prod.id}"
                     onclick="if(!event.defaultPrevented && !${isLocked})window._alpine_editProduct(${prod.id})">
-                  <td class="p-3 text-center text-slate-450 dark:text-slate-500 font-mono text-[10px]" onclick="event.stopPropagation()">
+                  <td class="p-3 text-center text-slate-400 dark:text-slate-500 font-mono text-[10px]" onclick="event.stopPropagation()">
                     <span>${index + 1}</span>
                   </td>
                   <td class="p-3 text-center" onclick="event.stopPropagation()">
                     <div class="flex items-center justify-center gap-2">
-                      <i class="fa-solid fa-grip-vertical text-slate-400 dark:text-slate-550 cursor-grab active:cursor-grabbing hover:text-slate-650 dark:hover:text-slate-350 text-xs ${!isLocked?'':'opacity-25'}" title="${!isLocked?'Drag to reorder':''}"></i>
+                      <i class="fa-solid fa-grip-vertical text-slate-400 dark:text-slate-500 cursor-grab active:cursor-grabbing hover:text-slate-600 dark:hover:text-slate-300 text-xs ${!isLocked?'':'opacity-25'}" title="${!isLocked?'Drag to reorder':''}"></i>
                       <input type="checkbox" ${checkedAttr}
                         onchange="event.stopPropagation();window._alpine_toggleSpk(${prod.id}, this.checked)"
                         class="w-3.5 h-3.5 text-blue-600 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-blue-500 cursor-pointer rounded-xs">
-                      ${spkIcon}
+                      ${spkBadge}
                     </div>
                   </td>
                   <td class="p-3 font-medium text-slate-600 dark:text-slate-100">

@@ -149,7 +149,7 @@ class EbdItemImport
                     $partData = [
                         'ebd_header_id'   => $this->ebdHeaderId,
                         'parent_id'       => $parentId,
-                        'level_aktif'     => $activeLevel,
+                        'active_level'    => $activeLevel,
                         'part_no'         => $this->val($rawRow, $map, 'part_no'),
                         'part_name'       => $this->val($rawRow, $map, 'part_name'),
                         'pcs_month'       => (int) ($this->val($rawRow, $map, 'pcs_month') ?? 0),
@@ -176,6 +176,7 @@ class EbdItemImport
                         // Standard Part
                         'std_part_no'     => $this->val($rawRow, $map, 'std_part_no'),
                         'std_qty'         => (int) ($this->val($rawRow, $map, 'std_qty') ?? 0),
+                        'std_uom'         => $this->val($rawRow, $map, 'std_uom'),
 
                         // Packing & Transport
                         'packing_type'    => $this->val($rawRow, $map, 'packing_type'),
@@ -199,6 +200,33 @@ class EbdItemImport
                     // CONDITION B: MERGED / CONTINUATION ROW
                     // =============================================================
                     $activePartId = !empty($activeIds) ? end($activeIds) : null;
+
+                    // If this continuation row has part-level data that was not on the
+                    // first row (e.g. std_part_no, sketch, dimensions on a later line),
+                    // merge it into the already-created active item.
+                    if ($activePartId) {
+                        $updateData = [];
+
+                        // Standard Part — may appear on a separate sub-row
+                        $stdPartNo = $this->val($rawRow, $map, 'std_part_no');
+                        $stdQty    = $this->val($rawRow, $map, 'std_qty');
+                        $stdUom    = $this->val($rawRow, $map, 'std_uom');
+                        if ($stdPartNo !== null && $stdPartNo !== '') $updateData['std_part_no'] = $stdPartNo;
+                        if ($stdQty    !== null && $stdQty    !== '') $updateData['std_qty']     = (int) $stdQty;
+                        if ($stdUom    !== null && $stdUom    !== '') $updateData['std_uom']     = $stdUom;
+
+                        // Sketch — may appear on a continuation row
+                        $sketch = $this->val($rawRow, $map, 'sketch');
+                        if ($sketch !== null && $sketch !== '') $updateData['sketch'] = $sketch;
+
+                        // Part dimensions / material if on continuation row
+                        $partNo = $this->val($rawRow, $map, 'part_no');
+                        if ($partNo !== null && $partNo !== '') $updateData['part_no'] = $partNo;
+
+                        if (!empty($updateData)) {
+                            MngEbdItem::where('id', $activePartId)->update($updateData);
+                        }
+                    }
                 }
 
                 if (!$activePartId) continue;

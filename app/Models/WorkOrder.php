@@ -99,8 +99,14 @@ class WorkOrder extends Model
         return $this->wo_number;
     }
 
+    protected static $departmentsCache = null;
+
     public function getSupportDepartmentsAttribute()
     {
+        if (self::$departmentsCache === null) {
+            self::$departmentsCache = Department::all()->keyBy('id');
+        }
+
         $deptIds = collect();
         foreach ($this->processes as $process) {
             $depts = json_decode($process->pivot->assigned_departments ?? '[]', true) ?: [];
@@ -111,8 +117,79 @@ class WorkOrder extends Model
                 }
             }
         }
-        return Department::whereIn('id', $deptIds->unique())->get();
+        return self::$departmentsCache->only($deptIds->unique()->toArray())->values();
     }
+
+    public function getDepartmentProgress()
+    {
+        $progress = [];
+        $productsCount = $this->products->count();
+
+        $departments = collect();
+        if ($this->ownerDepartment) {
+            $departments->push($this->ownerDepartment);
+        }
+        foreach ($this->supportDepartments as $sd) {
+            $departments->push($sd);
+        }
+        $departments = $departments->unique('id');
+
+        foreach ($departments as $dept) {
+            $progress[$dept->id] = [
+                'code' => $dept->code,
+                'completed' => 0,
+                'total' => 0
+            ];
+        }
+
+        foreach ($this->processes as $process) {
+            $deptsData = json_decode($process->pivot->assigned_departments ?? '[]', true) ?: [];
+            foreach ($deptsData as $d) {
+                $deptId = is_array($d) ? ($d['department_id'] ?? null) : $d;
+                $checkedProductIds = is_array($d) ? ($d['checked_product_ids'] ?? []) : [];
+                if ($deptId && isset($progress[$deptId])) {
+                    $progress[$deptId]['total'] += $productsCount;
+                    $progress[$deptId]['completed'] += count($checkedProductIds);
+                }
+            }
+        }
+
+        foreach ($progress as $deptId => &$data) {
+            $data['percent'] = $data['total'] > 0 ? round(($data['completed'] / $data['total']) * 100) : 0;
+        }
+
+        return $progress;
+    }
+
+    public function getTargetDepartmentsFullAttribute(): string
+    {
+        $deptNames = collect();
+        if ($this->ownerDepartment) {
+            $deptNames->push($this->ownerDepartment->name);
+        }
+        foreach ($this->supportDepartments as $sd) {
+            if ($sd->name) {
+                $deptNames->push($sd->name);
+            }
+        }
+        return $deptNames->unique()->filter()->implode(' / ') ?: '—';
+    }
+
+    public function getTargetDepartmentsAttribute(): string
+    {
+        $deptCodes = collect();
+        if ($this->ownerDepartment && $this->ownerDepartment->code) {
+            $deptCodes->push($this->ownerDepartment->code);
+        }
+        foreach ($this->supportDepartments as $sd) {
+            if ($sd->code) {
+                $deptCodes->push($sd->code);
+            }
+        }
+        return $deptCodes->unique()->filter()->implode(' / ') ?: '—';
+    }
+
+
 
     public function isApprover($user): bool
     {

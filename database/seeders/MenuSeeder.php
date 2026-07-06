@@ -21,7 +21,7 @@ class MenuSeeder extends Seeder
         );
 
         // Ensure permission 'view' exists
-        DB::table('permissions')->updateOrInsert(['id' => 1], ['permission_name' => 'view']);
+        DB::table('permissions')->updateOrInsert(['permission_name' => 'view'], ['permission_name' => 'view']);
 
         // ----------------------------------------------------------------
         // Sync all menus into the global `menus` table (source of truth)

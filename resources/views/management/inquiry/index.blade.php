@@ -14,12 +14,12 @@
         </div>
         <div class="flex items-center gap-2">
             <button @click="showAssessmentConfigModal = true"
-               class="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 font-medium rounded-none shadow-sm transition-colors text-sm">
+               class="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 font-medium rounded-none transition-colors text-sm">
                 <i class="fa-solid fa-gears text-xs"></i>
                 Scoring Config
             </button>
             <button @click="openWizard()"
-               class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium rounded-none shadow-sm transition-colors text-sm">
+               class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium rounded-nones transition-colors text-sm">
                 <i class="fa-solid fa-plus text-xs"></i>
                 Create New Inquiry
             </button>
@@ -43,138 +43,43 @@
         </script>
     @endif
 
-    <!-- Filters Card -->
-    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 p-4 transition-colors duration-200">
-        <form method="GET" action="{{ route('management.inquiry.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
-            <div>
-                <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Search</label>
-                <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Search No, Customer, Project..." 
-                       class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-none px-3 py-2 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500 transition-colors">
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Status</label>
-                <select name="status" 
-                        class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-none px-3 py-2 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500 transition-colors">
+    {{-- Inquiry List Card with Integrated Filter Bar --}}
+    <div class="bg-white dark:bg-slate-800 rounded-xs border border-slate-200 dark:border-slate-700 overflow-hidden relative">
+        
+        {{-- Integrated Filter Bar --}}
+        <div class="flex flex-wrap items-center gap-4 p-4 bg-slate-100/50 dark:bg-slate-900/30">
+            <div class="flex items-center gap-2">
+                <label for="filter-status" class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status:</label>
+                <select id="filter-status" class="bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-none text-xs px-3 py-1.5 focus:outline-none focus:border-blue-500 text-slate-700 dark:text-slate-300">
                     <option value="">All Statuses</option>
-                    <option value="Draft" {{ ($filters['status'] ?? '') === 'Draft' ? 'selected' : '' }}>Draft</option>
-                    <option value="Active" {{ ($filters['status'] ?? '') === 'Active' ? 'selected' : '' }}>Active</option>
-                    <option value="Cancelled" {{ ($filters['status'] ?? '') === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
-                    <option value="Closed" {{ ($filters['status'] ?? '') === 'Closed' ? 'selected' : '' }}>Closed</option>
+                    <option value="Draft">Draft</option>
+                    <option value="Active">Active</option>
+                    <option value="Closed">Closed</option>
+                    <option value="Cancelled">Cancelled</option>
                 </select>
             </div>
-            <div>
-                <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">From Date</label>
-                <input type="date" name="date_from" value="{{ $filters['date_from'] ?? '' }}" 
-                       class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-none px-3 py-2 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500 transition-colors">
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">To Date</label>
-                <input type="date" name="date_to" value="{{ $filters['date_to'] ?? '' }}" 
-                       class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-none px-3 py-2 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500 transition-colors">
-            </div>
-            <div class="flex gap-2">
-                <button type="submit" 
-                        class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-none text-sm transition-colors flex items-center justify-center gap-1.5">
-                    <i class="fa-solid fa-magnifying-glass text-xs"></i> Filter
-                </button>
-                <a href="{{ route('management.inquiry.index') }}" 
-                   class="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-medium py-2 px-4 rounded-none text-sm transition-colors flex items-center justify-center">
-                    Reset
-                </a>
-            </div>
-        </form>
-    </div>
+        </div>
 
-    <!-- List Table Card -->
-    <x-table id="inquiries-table">
-        <thead>
-            <tr class="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400">
-                <th class="p-3 text-xs font-semibold uppercase tracking-wider">Inquiry No</th>
-                <th class="p-3 text-xs font-semibold uppercase tracking-wider">Customer</th>
-                <th class="p-3 text-xs font-semibold uppercase tracking-wider">Model</th>
-                <th class="p-3 text-xs font-semibold uppercase tracking-wider">Inquiry Date</th>
-                <th class="p-3 text-xs font-semibold uppercase tracking-wider text-center">Products</th>
-                <th class="p-3 text-xs font-semibold uppercase tracking-wider">Status</th>
-                <th class="p-3 text-xs font-semibold uppercase tracking-wider text-right">Actions</th>
-            </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-200 dark:divide-slate-700/80 text-sm">
-            @foreach($inquiries as $inquiry)
-                <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 text-slate-800 dark:text-slate-100 transition-colors duration-150">
-                    <td class="p-3 font-semibold text-blue-600 dark:text-blue-400">
-                        <a href="{{ route('management.inquiry.show', $inquiry->hashed_id) }}" class="hover:underline">
-                            {{ $inquiry->inquiry_no }}
-                        </a>
-                    </td>
-                    <td class="p-3 font-mono text-xs">{{ $inquiry->customer->code ?? '—' }}</td>
-                    <td class="p-3 text-xs">{{ $inquiry->model_name ?? '—' }}</td>
-                    <td class="p-3">{{ $inquiry->inquiry_date->format('d M Y') }}</td>
-                    <td class="p-3 text-center">
-                        <span class="px-2 py-0.5 bg-slate-100 dark:bg-slate-900 font-semibold text-xs rounded-none">
-                            {{ $inquiry->products()->count() }}
-                        </span>
-                    </td>
-                    <td class="p-3">
-                        @if($inquiry->status === 'Draft')
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-semibold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-900/30">
-                                <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Draft
-                            </span>
-                        @elseif($inquiry->status === 'Active')
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-semibold bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-400 border border-sky-200 dark:border-sky-900/30">
-                                <span class="w-1.5 h-1.5 rounded-full bg-sky-500"></span> Active
-                            </span>
-                        @elseif($inquiry->status === 'Closed')
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/30">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Closed
-                            </span>
-                        @elseif($inquiry->status === 'Cancelled')
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-semibold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900/30">
-                                <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Cancelled
-                            </span>
-                        @else
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-semibold bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-400 border border-slate-200 dark:border-slate-800">
-                                {{ $inquiry->status }}
-                            </span>
-                        @endif
-                    </td>
-                    <td class="p-3 text-right">
-                        <div class="flex items-center justify-end gap-2">
-                            <a href="{{ route('management.inquiry.show', $inquiry->hashed_id) }}" 
-                               title="View Details"
-                               class="w-7 h-7 flex items-center justify-center bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 transition-colors">
-                                <i class="fa-solid fa-eye text-xs"></i>
-                            </a>
-                            @if($inquiry->status === 'Draft')
-                                <button @click="
-                                    editForm = {
-                                        id: '{{ $inquiry->id }}',
-                                        customer_id: '{{ $inquiry->customer_id }}',
-                                        project_id: '{{ $inquiry->model_id }}',
-                                        project_name: '{{ addslashes($inquiry->project_name) }}',
-                                        inquiry_date: '{{ $inquiry->inquiry_date->format('Y-m-d') }}',
-                                        remarks: '{{ addslashes($inquiry->remarks) }}'
-                                    };
-                                    showEditModal = true;"
-                                    title="Edit Header"
-                                    class="w-7 h-7 flex items-center justify-center bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-blue-600 dark:text-blue-400 transition-colors">
-                                    <i class="fa-solid fa-pen-to-square text-xs"></i>
-                                </button>
-                            @endif
-                            <form id="delete-form-{{ $inquiry->id }}" action="{{ route('management.inquiry.destroy', $inquiry->id) }}" method="POST" class="inline">
-                                @csrf
-                                @method('DELETE')
-                                <button type="button" @click="confirmDeleteInquiry('{{ $inquiry->id }}')"
-                                    title="Delete Inquiry"
-                                    class="w-7 h-7 flex items-center justify-center bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-400 transition-colors">
-                                    <i class="fa-solid fa-trash-can text-xs"></i>
-                                </button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-            @endforeach
-        </tbody>
-    </x-table>
+        <div class="border-t border-slate-100 dark:border-slate-700 p-4 bg-white dark:bg-slate-800">
+            <table id="inquiries-table" class="custom-table w-full text-left border-collapse">
+                <thead>
+                    <tr class="border-b-2 border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900/30 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                        <th class="px-3 py-2.5 w-12 text-center bg-slate-100/50 dark:bg-slate-900/50">#</th>
+                        <th class="px-3 py-2.5 bg-slate-100/50 dark:bg-slate-900/50">Inquiry No</th>
+                        <th class="px-3 py-2.5 bg-slate-100/50 dark:bg-slate-900/50">Customer</th>
+                        <th class="px-3 py-2.5 bg-slate-100/50 dark:bg-slate-900/50">Model</th>
+                        <th class="px-3 py-2.5 bg-slate-100/50 dark:bg-slate-900/50">Inquiry Date</th>
+                        <th class="px-3 py-2.5 text-center bg-slate-100/50 dark:bg-slate-900/50">Products</th>
+                        <th class="px-3 py-2.5 bg-slate-100/50 dark:bg-slate-900/50">Created WO</th>
+                        <th class="px-3 py-2.5 bg-slate-100/50 dark:bg-slate-900/50">Status</th>
+                        <th class="px-3 py-2.5 text-right w-36 bg-slate-100/50 dark:bg-slate-900/50">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200 dark:divide-slate-700/80 text-sm">
+                </tbody>
+            </table>
+        </div>
+    </div>
 
     <!-- Wizard (Add) Modal -->
     <div x-show="showWizard" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4" style="display: none;">
@@ -472,6 +377,23 @@
                         });
                     });
                 });
+
+                // Bind global methods for server-side DataTable actions
+                window._alpine_editInquiryHeader = (id, customerId, projectId, projectName, inquiryDateRaw, remarks) => {
+                    this.editForm = {
+                        id: id,
+                        customer_id: customerId,
+                        project_id: projectId,
+                        project_name: projectName,
+                        inquiry_date: inquiryDateRaw,
+                        remarks: remarks
+                    };
+                    this.showEditModal = true;
+                };
+
+                window._alpine_confirmDeleteInquiry = (id) => {
+                    this.confirmDeleteInquiry(id);
+                };
             },
 
             openWizard() {
@@ -561,7 +483,15 @@
                     confirmButtonText: 'Yes, delete it!',
                     cancelButtonText: 'No',
                     onConfirm: () => {
-                        document.getElementById('delete-form-' + id).submit();
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = '{{ url("management/inquiry") }}/' + id;
+                        form.innerHTML = `
+                            @csrf
+                            @method('DELETE')
+                        `;
+                        document.body.appendChild(form);
+                        form.submit();
                     }
                 });
             },
@@ -712,8 +642,107 @@
     });
 
     $(function() {
-        defaultDataTable('#inquiries-table', {
-            order: [[0, 'desc']],
+        const table = defaultDataTable('#inquiries-table', {
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: '{{ route('management.inquiry.index') }}',
+                data: function(d) {
+                    d.status = $('#filter-status').val();
+                }
+            },
+            columns: [
+                { data: 'index_num', name: 'index_num', orderable: false, searchable: false, className: 'text-center' },
+                { data: 'inquiry_no', name: 'inquiry_no' },
+                { 
+                    data: 'customer_code', 
+                    name: 'customer_code',
+                    render: function(data, type, row) {
+                        return '<span class="font-mono text-xs" title="' + row.customer_name + '">' + data + '</span>';
+                    }
+                },
+                { data: 'project_name', name: 'project_name' },
+                { data: 'inquiry_date', name: 'inquiry_date' },
+                { 
+                    data: 'products_count', 
+                    name: 'products_count', 
+                    className: 'text-center',
+                    render: function(data) {
+                        return '<span class="px-2 py-0.5 bg-slate-100 dark:bg-slate-900 font-bold text-xs rounded-none">' + data + '</span>';
+                    }
+                },
+                { 
+                    data: 'work_orders', 
+                    name: 'work_orders',
+                    orderable: false,
+                    render: function(data) {
+                        if (!data || data.length === 0) {
+                            return '<span class="text-xs text-slate-400 italic">None</span>';
+                        }
+                        let html = '<div class="flex flex-col gap-1.5">';
+                        data.forEach(function(wo) {
+                            html += `<a href="${wo.show_url}" class="text-xs font-normal text-blue-600 hover:text-blue-800 hover:underline dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1.5 whitespace-nowrap">
+                                <i class="fa-solid fa-file-signature text-[10px] text-slate-400 dark:text-slate-500"></i>
+                                <span>${wo.wo_number}</span>
+                            </a>`;
+                        });
+                        html += '</div>';
+                        return html;
+                    }
+                },
+                { 
+                    data: 'status', 
+                    name: 'status',
+                    render: function(data) {
+                        if (data === 'Draft') {
+                            return `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-semibold bg-blue-100/70 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-900/30"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Draft</span>`;
+                        } else if (data === 'Active') {
+                            return `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-semibold bg-sky-100/70 dark:bg-sky-950/40 text-sky-700 dark:text-sky-400 border border-sky-200 dark:border-sky-900/30"><span class="w-1.5 h-1.5 rounded-full bg-sky-500"></span> Active</span>`;
+                        } else if (data === 'Closed') {
+                            return `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-semibold bg-emerald-100/70 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/30"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Closed</span>`;
+                        } else if (data === 'Cancelled') {
+                            return `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-semibold bg-rose-100/70 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900/30"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Cancelled</span>`;
+                        }
+                        return `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-semibold bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-400 border border-slate-200 dark:border-slate-800">${data}</span>`;
+                    }
+                },
+                { 
+                    data: 'hashed_id', 
+                    name: 'hashed_id', 
+                    orderable: false, 
+                    searchable: false, 
+                    className: 'text-right',
+                    render: function(data, type, row) {
+                        let actionsHtml = `<div class="flex items-center justify-end gap-2">
+                            <a href="${row.show_url}" title="View Details"
+                               class="w-7 h-7 flex items-center justify-center bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 transition-colors">
+                                <i class="fa-solid fa-eye text-xs"></i>
+                            </a>`;
+                        
+                        if (row.status === 'Draft') {
+                            let escapedProjectName = row.project_name ? row.project_name.replace(/'/g, "\\'") : '';
+                            let escapedRemarks = row.remarks ? row.remarks.replace(/'/g, "\\'") : '';
+                            actionsHtml += `
+                            <button onclick="window._alpine_editInquiryHeader('${row.id}', '${row.customer_id}', '${row.project_id}', '${escapedProjectName}', '${row.inquiry_date_raw}', '${escapedRemarks}')"
+                                    title="Edit Header"
+                                    class="w-7 h-7 flex items-center justify-center bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-blue-600 dark:text-blue-400 transition-colors">
+                                <i class="fa-solid fa-pen-to-square text-xs"></i>
+                            </button>`;
+                        }
+                        
+                        actionsHtml += `
+                            <button onclick="window._alpine_confirmDeleteInquiry('${row.id}')"
+                                    title="Delete Inquiry"
+                                    class="w-7 h-7 flex items-center justify-center bg-rose-100/60 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-400 transition-colors">
+                                <i class="fa-solid fa-trash-can text-xs"></i>
+                            </button>
+                        </div>`;
+                        
+                        return actionsHtml;
+                    }
+                }
+            ],
+            order: [[1, 'desc']],
             language: {
                 emptyTable: `
                     <div class="py-16 flex flex-col items-center justify-center text-center w-full">
@@ -725,6 +754,11 @@
                     </div>
                 `
             }
+        });
+
+        // Trigger filter reload
+        $('#filter-status').on('change', function() {
+            table.draw();
         });
     });
 </script>

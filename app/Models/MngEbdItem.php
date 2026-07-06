@@ -14,7 +14,7 @@ class MngEbdItem extends Model
     protected $fillable = [
         'ebd_header_id',
         'parent_id',
-        'level_aktif',
+        'active_level',
         // Part identification
         'part_no',
         'part_name',
@@ -39,6 +39,7 @@ class MngEbdItem extends Model
         // Standard part
         'std_part_no',
         'std_qty',
+        'std_uom',
         // Packing
         'packing_type',
         'pcs_packing',
@@ -48,7 +49,7 @@ class MngEbdItem extends Model
     ];
 
     protected $casts = [
-        'level_aktif'     => 'integer',
+        'active_level'    => 'integer',
         'pcs_month'       => 'integer',
         'qty_unit'        => 'integer',
         'width'           => 'decimal:2',

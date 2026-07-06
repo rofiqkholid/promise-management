@@ -117,6 +117,21 @@ Route::middleware('auth')->prefix('management')->name('management.')->group(func
     Route::post('ebd/import', [EbdController::class, 'import'])->name('ebd.import');
     Route::post('ebd/{id}/delete', [EbdController::class, 'destroy'])->name('ebd.destroy');
 
+    // EBD Items CRUD
+    Route::post('ebd/{ebdHeaderId}/items', [EbdController::class, 'storeItem'])->name('ebd.store-item');
+    Route::post('ebd/items/{itemId}/update', [EbdController::class, 'updateItem'])->name('ebd.update-item');
+    Route::post('ebd/items/{itemId}/delete', [EbdController::class, 'destroyItem'])->name('ebd.destroy-item');
+
+    // EBD Tooling Process CRUD
+    Route::post('ebd/items/{itemId}/tooling', [EbdController::class, 'storeToolingProcess'])->name('ebd.store-tooling');
+    Route::post('ebd/tooling/{id}/update', [EbdController::class, 'updateToolingProcess'])->name('ebd.update-tooling');
+    Route::post('ebd/tooling/{id}/delete', [EbdController::class, 'destroyToolingProcess'])->name('ebd.destroy-tooling');
+
+    // EBD Additional Process CRUD
+    Route::post('ebd/items/{itemId}/addprocess', [EbdController::class, 'storeAddProcess'])->name('ebd.store-addprocess');
+    Route::post('ebd/addprocess/{id}/update', [EbdController::class, 'updateAddProcess'])->name('ebd.update-addprocess');
+    Route::post('ebd/addprocess/{id}/delete', [EbdController::class, 'destroyAddProcess'])->name('ebd.destroy-addprocess');
+
     // Calendar & Holiday Routes
     Route::get('calendar', [CalendarController::class, 'index'])->name('calendar.index');
     Route::get('calendar/events', [CalendarController::class, 'getEvents'])->name('calendar.events');

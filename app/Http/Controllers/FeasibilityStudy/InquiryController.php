@@ -21,15 +21,100 @@ class InquiryController extends Controller
 
     public function index(Request $request)
     {
-        $filters = $request->only(['search', 'status', 'date_from', 'date_to']);
-        $inquiries = $this->inquiryService->paginateInquiries(1000, $filters);
+        if ($request->ajax() || $request->wantsJson()) {
+            $draw = $request->input('draw');
+            $start = $request->input('start', 0);
+            $length = $request->input('length', 10);
+            
+            // Custom filters & Search
+            $status = $request->input('status');
+            $search = $request->input('search.value');
+            
+            $query = \App\Models\ProjectInquiry::with(['customer', 'projectModel', 'products', 'workOrders']);
+            
+            // Apply status filter
+            if ($status) {
+                $query->where('status', $status);
+            }
+            
+            // Apply search filter (search by inquiry_no, project_name, customer_code, customer_name)
+            if ($search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('inquiry_no', 'like', "%{$search}%")
+                      ->orWhere('project_name', 'like', "%{$search}%")
+                      ->orWhereHas('customer', fn($cq) => $cq->where('name', 'like', "%{$search}%")->orWhere('code', 'like', "%{$search}%"))
+                      ->orWhereHas('projectModel', fn($mq) => $mq->where('name', 'like', "%{$search}%"));
+                });
+            }
+            
+            // Get total records
+            $totalRecords = \App\Models\ProjectInquiry::count();
+            $filteredRecords = $query->count();
+            
+            // Apply sorting
+            $orderColumnIndex = $request->input('order.0.column');
+            $orderDir = $request->input('order.0.dir', 'desc');
+            
+            $sortableColumns = [
+                1 => 'inquiry_no',
+                2 => 'inquiry_date',
+                3 => 'project_name',
+                4 => 'status'
+            ];
+            
+            if (isset($sortableColumns[$orderColumnIndex])) {
+                $query->orderBy($sortableColumns[$orderColumnIndex], $orderDir);
+            } else {
+                $query->orderBy('created_at', 'desc');
+            }
+            
+            // Paginate
+            $inquiries = $query->skip($start)->take($length)->get();
+            
+            $data = [];
+            foreach ($inquiries as $inq) {
+                $wos = $inq->workOrders->map(function($wo) {
+                    return [
+                        'wo_number' => $wo->wo_number,
+                        'show_url' => route('management.work-order.show', $this->encryptId($wo->id))
+                    ];
+                })->unique('wo_number')->values()->all();
+
+                $data[] = [
+                    'index_num' => $start + count($data) + 1,
+                    'id' => $inq->id,
+                    'customer_id' => $inq->customer_id,
+                    'project_id' => $inq->model_id,
+                    'remarks' => $inq->remarks,
+                    'inquiry_date_raw' => $inq->inquiry_date ? $inq->inquiry_date->format('Y-m-d') : '',
+                    'inquiry_no' => $inq->inquiry_no,
+                    'inquiry_date' => $inq->inquiry_date ? $inq->inquiry_date->format('d M Y') : '—',
+                    'customer_code' => $inq->customer->code ?? '—',
+                    'customer_name' => $inq->customer->name ?? '—',
+                    'project_name' => $inq->project_name ?? $inq->projectModel->name ?? '—',
+                    'products_count' => $inq->products->count(),
+                    'status' => $inq->status,
+                    'work_orders' => $wos,
+                    'hashed_id' => $this->encryptId($inq->id),
+                    'show_url' => route('management.inquiry.show', $this->encryptId($inq->id))
+                ];
+            }
+            
+            return response()->json([
+                'draw' => intval($draw),
+                'recordsTotal' => $totalRecords,
+                'recordsFiltered' => $filteredRecords,
+                'data' => $data
+            ]);
+        }
+
         $customers = \App\Models\Customer::where('is_active', 1)->orderBy('name', 'asc')->get();
         $models = \App\Models\ProjectModel::orderBy('name', 'asc')->get();
         
         $categories = \App\Models\ScoreCategory::with('options')->orderBy('sort_order', 'asc')->get();
         $rankings = \App\Models\AssessmentRanking::orderBy('sort_order', 'asc')->get();
         
-        return view('management.inquiry.index', compact('inquiries', 'filters', 'customers', 'models', 'categories', 'rankings'));
+        return view('management.inquiry.index', compact('customers', 'models', 'categories', 'rankings'));
     }
 
     public function create()
@@ -227,11 +312,18 @@ class InquiryController extends Controller
                 $this->inquiryService->forceDeleteInquiryWithProducts($decryptedId);
             }
 
-            $this->inquiryService->importProducts($decryptedId, $file);
-            return redirect()->back()->with('success', 'Products successfully imported!');
+            $result = $this->inquiryService->importProducts($decryptedId, $file);
+            
+            if (!empty($result['errors'])) {
+                return redirect()->back()
+                    ->with('import_errors', $result['errors'])
+                    ->with('import_success', 'Import completed with warnings/errors.');
+            }
+            
+            return redirect()->back()->with('import_success', 'Products successfully imported!');
         } catch (\Exception $e) {
             Log::error('Import products failed', ['inquiry_id' => $id, 'error' => $e->getMessage()]);
-            return redirect()->back()->with('error', 'Import failed: ' . $e->getMessage());
+            return redirect()->back()->with('import_error', 'Import failed: ' . $e->getMessage());
         }
     }
 

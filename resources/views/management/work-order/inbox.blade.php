@@ -34,7 +34,7 @@
 @endphp
 
 {{-- Main Container: Matches the structural layout pattern in form.blade.php (mt-16 and h-[calc(100vh-64px)]) --}}
-<div class="flex h-[calc(100vh-64px)] mt-16 overflow-hidden bg-white" x-data="outlookInbox()" x-init="initInbox()">
+<div class="flex h-[calc(100vh-64px)] mt-15 overflow-hidden bg-white" x-data="outlookInbox()" x-init="initInbox()">
     
     {{-- Toast Notification --}}
     <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-slate-800 text-white text-xs py-2.5 px-4 font-medium flex items-center gap-2 border-l-4 border-[#0c4da2]">
@@ -137,8 +137,8 @@
             <template x-if="!selectedHashedId">
                 <div class="flex-1 flex flex-col items-center justify-center text-center p-8 text-slate-400 bg-white">
                     <i class="fa-solid fa-envelope-open text-4xl mb-4 text-slate-200"></i>
-                    <h3 class="text-xs font-bold text-slate-700 uppercase tracking-widest mb-1">SPK Review Console</h3>
-                    <p class="text-xs text-slate-500 max-w-sm">Select an SPK from the left panel to review its details, approve, or update checklist progress.</p>
+                    <h3 class="text-xs font-bold text-slate-700 uppercase tracking-widest mb-1">WO Review Console</h3>
+                    <p class="text-xs text-slate-500 max-w-sm">Select an WO from the left panel to review its details, approve, or update checklist progress.</p>
                 </div>
             </template>
             
@@ -170,7 +170,7 @@
                                 <button type="button" @click="activeRightTab = 'checklist'" 
                                         class="py-2 text-xs font-bold border-b-2 transition-all cursor-pointer"
                                         :class="activeRightTab === 'checklist' ? 'border-[#0c4da2] text-[#0c4da2]' : 'border-transparent text-slate-500 hover:text-slate-800'">
-                                    PIC Checklist Progress
+                                    PIC Task     Progress
                                 </button>
                             </div>
                         </div>
@@ -229,53 +229,63 @@
                                             <div class="border border-slate-200 rounded-xs overflow-hidden">
                                                 {{-- Accordion Header --}}
                                                 <button type="button" @click="toggleDept(proc.process_id, dept.department_id)"
-                                                        class="w-full flex justify-between items-center bg-slate-50 hover:bg-slate-100/70 p-2.5 border-b border-slate-150 text-xs font-semibold cursor-pointer select-none">
+                                                        class="w-full flex justify-between items-center bg-slate-50 hover:bg-slate-100/70 p-2.5 border-b border-slate-200 text-xs font-semibold cursor-pointer select-none">
                                                     <div class="flex items-center gap-2">
-                                                        <span class="px-2 py-0.5 rounded-xs bg-slate-200 text-slate-850 font-bold" x-text="dept.department_code"></span>
+                                                        <span class="px-2 py-0.5 rounded-xs bg-slate-200 text-slate-800 font-bold" x-text="dept.department_code"></span>
                                                         <span class="text-slate-500" x-text="'(PIC: ' + dept.pic_name + ')'"></span>
                                                         <template x-if="dept.is_my_pic_task === true || dept.is_my_pic_task === 1">
-                                                            <span class="px-1.5 py-0.5 bg-blue-50 text-[#0c4da2] font-bold text-[8.5px] rounded-xs uppercase tracking-wider">My Task</span>
+                                                            <span class="px-2 py-0.5 bg-indigo-100 text-indigo-700 border border-indigo-200 font-extrabold text-[9px] rounded-xs uppercase tracking-wider">My Task</span>
                                                         </template>
                                                     </div>
-                                                    <div class="flex items-center gap-2.5">
-                                                        <span class="font-mono text-slate-700" x-text="dept.checked_product_ids.length + '/' + detailData.products.length + ' Done'"></span>
+                                                    <div class="flex items-center gap-3 select-none">
+                                                        <div class="flex items-center gap-2">
+                                                            <span class="font-mono text-slate-600 text-[11px]" x-text="dept.checked_product_ids.length + '/' + detailData.products.length + ' Done'"></span>
+                                                            <div class="w-48 bg-slate-200 h-1.5 rounded-full overflow-hidden border border-slate-300/30 flex-shrink-0">
+                                                                <div class="bg-[#0c4da2] h-full rounded-full transition-all duration-300" :style="'width: ' + (detailData.products.length > 0 ? (dept.checked_product_ids.length / detailData.products.length * 100) : 0) + '%'"></div>
+                                                            </div>
+                                                        </div>
                                                         <i class="fa-solid text-[9px] text-slate-400" :class="isDeptExpanded(proc.process_id, dept.department_id) ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
                                                     </div>
                                                 </button>
                                                 
-                                                {{-- Progress Bar (always visible) --}}
-                                                <div class="w-full bg-slate-200 h-1.5 rounded-none overflow-hidden">
-                                                    <div class="bg-[#0c4da2] h-full transition-all duration-300" :style="'width: ' + (detailData.products.length > 0 ? (dept.checked_product_ids.length / detailData.products.length * 100) : 0) + '%'"></div>
-                                                </div>
-                                                
                                                 {{-- Accordion Body (Checkbox checklist) --}}
-                                                <div x-show="isDeptExpanded(proc.process_id, dept.department_id)" class="p-3 space-y-2.5 bg-white border-t border-slate-100">
+                                                <div x-show="isDeptExpanded(proc.process_id, dept.department_id)" class="p-3 space-y-2.5 bg-white border-t border-slate-200">
+                                                    {{-- Lock Warning if not approved --}}
+                                                    <template x-if="detailData.status !== 'Approved' && detailData.status !== 'Released'">
+                                                        <div class="px-2.5 py-1.5 text-[10px] bg-amber-50 text-amber-700 border border-amber-200 rounded-xs flex items-center gap-1.5 font-bold mb-2">
+                                                            <i class="fa-solid fa-lock"></i> Progress checklist is locked during approval process.
+                                                        </div>
+                                                    </template>
+                                                    
                                                     <div class="bg-slate-50 p-2.5 border border-slate-200 rounded-xs">
                                                         <div class="grid grid-cols-2 gap-2">
                                                             <template x-for="p in detailData.products.filter(p => !checklistSearchQuery || p.customer_part_no.toLowerCase().includes(checklistSearchQuery.toLowerCase()) || p.customer_part_name.toLowerCase().includes(checklistSearchQuery.toLowerCase()))" :key="p.id">
-                                                                <div class="flex items-center justify-between p-2 border rounded-xs text-xs transition-colors duration-200"
-                                                                     :class="dept.checked_product_ids.includes(Number(p.id)) ? 'border-emerald-250 bg-emerald-50/20' : 'border-slate-200 bg-white'">
+                                                                <div class="flex items-center justify-between p-2 border rounded-xs text-xs transition-colors duration-200 shadow-2xs"
+                                                                     :class="dept.checked_product_ids.includes(Number(p.id)) ? 'border-emerald-200 bg-emerald-50/20' : 'border-slate-200 bg-white'">
                                                                     
-                                                                    <template x-if="dept.is_my_pic_task === true || dept.is_my_pic_task === 1">
+                                                                    {{-- Checkbox for PIC (Enabled only if approved) --}}
+                                                                    <template x-if="(dept.is_my_pic_task === true || dept.is_my_pic_task === 1) && (detailData.status === 'Approved' || detailData.status === 'Released')">
                                                                         <label class="flex items-center gap-2.5 cursor-pointer w-full select-none text-slate-700">
                                                                             <input type="checkbox" name="checked_product_ids[]" :value="p.id"
                                                                                    :checked="dept.checked_product_ids.includes(Number(p.id))"
                                                                                    @change="toggleProductChecked(proc.process_id, dept.department_id, p.id, $event.target.checked)"
                                                                                    class="h-3.5 w-3.5 rounded-xs border-slate-300 text-[#0c4da2] focus:ring-0 cursor-pointer">
                                                                             <div class="min-w-0 flex-1">
-                                                                                <span class="font-bold text-slate-800 block" :class="dept.checked_product_ids.includes(Number(p.id)) ? 'text-emerald-800' : 'text-slate-800'" x-text="p.customer_part_no"></span>
+                                                                                <span class="font-extrabold block text-slate-800" :class="dept.checked_product_ids.includes(Number(p.id)) ? 'text-emerald-800' : 'text-slate-800'" x-text="p.customer_part_no"></span>
                                                                                 <span class="text-[10px] text-slate-455 truncate block" x-text="p.customer_part_name"></span>
                                                                             </div>
                                                                         </label>
                                                                     </template>
                                                                     
-                                                                    <template x-if="!(dept.is_my_pic_task === true || dept.is_my_pic_task === 1)">
+                                                                    {{-- Read-only or Disabled checklist if not PIC or not approved --}}
+                                                                    <template x-if="!((dept.is_my_pic_task === true || dept.is_my_pic_task === 1) && (detailData.status === 'Approved' || detailData.status === 'Released'))">
                                                                         <div class="flex items-center gap-2.5 w-full">
-                                                                            <span class="text-xs w-4 text-center font-bold"
-                                                                                  :class="dept.checked_product_ids.includes(Number(p.id)) ? 'text-emerald-500' : 'text-slate-300'"
-                                                                                  x-text="dept.checked_product_ids.includes(Number(p.id)) ? '✓' : '✗'"></span>
+                                                                            <div class="w-4 h-4 rounded-xs flex items-center justify-center flex-none border"
+                                                                                 :class="dept.checked_product_ids.includes(Number(p.id)) ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700'">
+                                                                                <i class="fa-solid text-[8px]" :class="dept.checked_product_ids.includes(Number(p.id)) ? 'fa-check' : 'fa-xmark'"></i>
+                                                                            </div>
                                                                             <div class="min-w-0 flex-1">
-                                                                                <span class="font-semibold block" :class="dept.checked_product_ids.includes(Number(p.id)) ? 'text-emerald-800 font-bold' : 'text-slate-600'" x-text="p.customer_part_no"></span>
+                                                                                <span class="font-bold block" :class="dept.checked_product_ids.includes(Number(p.id)) ? 'text-emerald-800 font-extrabold' : 'text-slate-600'" x-text="p.customer_part_no"></span>
                                                                                 <span class="text-[10px] text-slate-455 truncate block" x-text="p.customer_part_name"></span>
                                                                             </div>
                                                                         </div>
@@ -284,6 +294,16 @@
                                                             </template>
                                                         </div>
                                                     </div>
+                                                    
+                                                    {{-- Save Button for PIC --}}
+                                                    <template x-if="(dept.is_my_pic_task === true || dept.is_my_pic_task === 1) && (detailData.status === 'Approved' || detailData.status === 'Released')">
+                                                        <div class="flex justify-end pt-2">
+                                                            <button type="button" @click="saveDeptProgress(proc.process_id, dept.department_id, dept.checked_product_ids)"
+                                                                    class="px-4 py-1.5 bg-indigo-650 hover:bg-indigo-750 text-white font-bold text-[10px] uppercase tracking-wider rounded-xs shadow-sm hover:shadow transition-all cursor-pointer flex items-center gap-1.5">
+                                                                <i class="fa-solid fa-floppy-disk text-[9px]"></i> Save Progress
+                                                            </button>
+                                                        </div>
+                                                    </template>
                                                 </div>
                                             </div>
                                         </template>
@@ -598,11 +618,13 @@ function outlookInbox() {
             } else {
                 dept.checked_product_ids = dept.checked_product_ids.filter(id => id !== productId);
             }
+        },
 
+        saveDeptProgress(processId, departmentId, checkedProductIds) {
             const fd = new FormData();
             fd.append('process_id', processId);
             fd.append('department_id', departmentId);
-            dept.checked_product_ids.forEach(id => {
+            checkedProductIds.forEach(id => {
                 fd.append('checked_product_ids[]', id);
             });
 
@@ -616,7 +638,7 @@ function outlookInbox() {
             })
             .then(res => {
                 if (res.ok) {
-                    this.showToast('Progress updated!');
+                    this.showToast('Progress saved successfully!');
                 } else {
                     this.showToast('Failed to save progress.');
                 }

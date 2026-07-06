@@ -5,17 +5,17 @@
 @section('header-title', 'Feasibility Study')
 
 @section('content')
-<div class="p-4 pt-17.5 text-gray-900 dark:text-gray-100 space-y-4">
+<div class="flex-1 overflow-y-auto p-4 pt-17.5 space-y-4 transition-colors duration-200">
 
     {{-- ===== HEADER ACTIONS ===== --}}
-    <div class="sm:flex sm:items-center sm:justify-between mb-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-            <h2 class="text-xl xl:text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tighter leading-none">Engineering Breakdown (EBD)</h2>
-            <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 font-normal">Manage engineering breakdown specifications and BOM lists.</p>
+            <h1 class="text-2xl font-bold tracking-tight text-slate-800 dark:text-white">Engineering Breakdown (EBD)</h1>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Manage engineering breakdown specifications and BOM lists</p>
         </div>
         <div class="mt-4 sm:mt-0 flex gap-2">
             <button type="button" id="btn-open-import-modal"
-                    class="inline-flex items-center justify-center gap-2 px-4 h-9 bg-indigo-600 hover:bg-indigo-700 border border-transparent rounded-xs text-xs font-medium text-white active:scale-[0.98] transition-all shadow-sm cursor-pointer">
+                    class="inline-flex items-center justify-center gap-2 px-4 h-9 bg-indigo-600 hover:bg-indigo-700 border border-transparent rounded-xs text-xs font-medium text-white active:scale-[0.98] transition-all cursor-pointer">
                 <i class="fa-solid fa-file-import"></i>
                 Import EBD File
             </button>
@@ -25,77 +25,26 @@
     {{-- ===== EBD HEADERS TABLE ===== --}}
     <x-table id="ebd-table">
         <thead>
-            <tr class="border-b-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/30 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                <th class="px-3 py-2.5 w-8 text-center">#</th>
-                <th class="px-3 py-2.5">WO No.</th>
-                <th class="px-3 py-2.5">Customer</th>
-                <th class="px-3 py-2.5">Model</th>
-                <th class="px-3 py-2.5">EBD Date</th>
-                <th class="px-3 py-2.5 text-center">Revision</th>
-                <th class="px-3 py-2.5 text-center">Status</th>
-                <th class="px-3 py-2.5">Created By</th>
-                <th class="px-3 py-2.5 text-right w-32">Actions</th>
+            <tr class="border-b-2 border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900/30 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                <th class="px-3 py-2.5 w-12 text-center bg-slate-100/50 dark:bg-slate-900/50">#</th>
+                <th class="px-3 py-2.5 bg-slate-100/50 dark:bg-slate-900/50">WO No.</th>
+                <th class="px-3 py-2.5 bg-slate-100/50 dark:bg-slate-900/50">Customer</th>
+                <th class="px-3 py-2.5 bg-slate-100/50 dark:bg-slate-900/50">Model</th>
+                <th class="px-3 py-2.5 bg-slate-100/50 dark:bg-slate-900/50">EBD Date</th>
+                <th class="px-3 py-2.5 text-center bg-slate-100/50 dark:bg-slate-900/50">Revision</th>
+                <th class="px-3 py-2.5 text-center bg-slate-100/50 dark:bg-slate-900/50">Status</th>
+                <th class="px-3 py-2.5 bg-slate-100/50 dark:bg-slate-900/50">Created By</th>
+                <th class="px-3 py-2.5 text-right w-32 bg-slate-100/50 dark:bg-slate-900/50">Actions</th>
             </tr>
         </thead>
-        <tbody>
-            @forelse($ebdHeaders as $index => $ebd)
-                @php
-                    $statusCls = match($ebd->status) {
-                        'Released' => 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/30',
-                        default    => 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-900/30',
-                    };
-                @endphp
-                <tr class="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors">
-                    <td class="px-3 py-2.5 text-center text-slate-400 font-mono text-[10px]">{{ $index + 1 }}</td>
-                    <td class="px-3 py-2.5 font-bold text-slate-800 dark:text-slate-100">
-                        {{ $ebd->workOrder->wo_number ?? '—' }}
-                    </td>
-                    <td class="px-3 py-2.5 text-slate-700 dark:text-slate-200 font-semibold">
-                        {{ $ebd->customer->code ?? '—' }}
-                    </td>
-                    <td class="px-3 py-2.5 text-slate-600 dark:text-slate-300">
-                        {{ $ebd->projectModel->name ?? '—' }}
-                    </td>
-                    <td class="px-3 py-2.5 text-slate-600 dark:text-slate-300 font-mono text-xs">
-                        {{ $ebd->date ? $ebd->date->format('d M Y') : '—' }}
-                    </td>
-                    <td class="px-3 py-2.5 text-center font-mono text-slate-600 dark:text-slate-300">
-                        Rev. {{ $ebd->revision }}
-                    </td>
-                    <td class="px-3 py-2.5 text-center">
-                        <span class="inline-block px-2 py-0.5 text-[10px] font-bold border rounded-xs {{ $statusCls }}">
-                            {{ $ebd->status }}
-                        </span>
-                    </td>
-                    <td class="px-3 py-2.5 text-slate-500 dark:text-slate-400 text-xs">
-                        {{ $ebd->created_by ?? '—' }}
-                    </td>
-                    <td class="px-3 py-2.5 text-right flex justify-end gap-1.5 align-middle">
-                        {{-- View --}}
-                        <a href="{{ route('management.ebd.show', $ebd->id) }}"
-                           title="View BOM Detail"
-                           class="w-6 h-6 flex items-center justify-center bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 hover:border-blue-400 hover:text-blue-700 text-slate-600 dark:text-slate-300 transition-colors">
-                            <i class="fa-solid fa-eye text-[10px]"></i>
-                        </a>
-                        {{-- Delete --}}
-                        <button type="button"
-                                title="Delete EBD"
-                                onclick="confirmDeleteEbd({{ $ebd->id }})"
-                                class="w-6 h-6 flex items-center justify-center bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/30 hover:bg-rose-500 hover:border-rose-500 hover:text-white text-rose-600 dark:text-rose-400 transition-colors cursor-pointer">
-                            <i class="fa-solid fa-trash text-[10px]"></i>
-                        </button>
-                    </td>
-                </tr>
-            @empty
-                {{-- Handled by DataTable emptyTable --}}
-            @endforelse
+        <tbody class="divide-y divide-slate-200 dark:divide-slate-700/80 text-sm">
         </tbody>
     </x-table>
 </div>
 
 {{-- ===== IMPORT MODAL ===== --}}
 <div id="import-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm">
-    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl w-full max-w-lg mx-4 animate-fade-in">
+    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xs shadow-2xl w-full max-w-lg mx-4 animate-fade-in">
 
         {{-- Modal Header --}}
         <div class="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-700">
@@ -104,7 +53,7 @@
                 <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">Upload an XLSX file to create a new EBD document</p>
             </div>
             <button type="button" id="btn-close-import-modal"
-                    class="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
+                    class="w-7 h-7 flex items-center justify-center rounded-xs text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
                 <i class="fa-solid fa-xmark text-sm"></i>
             </button>
         </div>
@@ -120,7 +69,7 @@
                         Work Order (SPK) <span class="text-slate-400 font-normal normal-case">(Optional)</span>
                     </label>
                     <select name="wo_id" id="input-wo-id"
-                            class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                            class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
                         <option value="">— No Work Order —</option>
                         @foreach($workOrders as $wo)
                             <option value="{{ $wo->id }}">{{ $wo->wo_number }}</option>
@@ -134,7 +83,7 @@
                         Customer <span class="text-slate-400 font-normal normal-case">(Optional)</span>
                     </label>
                     <select name="customer_id" id="input-customer-id"
-                            class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                            class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
                         <option value="">— Select Customer —</option>
                         @foreach($customers as $customer)
                             <option value="{{ $customer->id }}">{{ $customer->code }} — {{ $customer->name }}</option>
@@ -148,7 +97,7 @@
                         Model <span class="text-slate-400 font-normal normal-case">(Optional)</span>
                     </label>
                     <select name="model_id" id="input-model-id"
-                            class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                            class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
                         <option value="">— Select Model —</option>
                         @foreach($models as $model)
                             <option value="{{ $model->id }}">{{ $model->name }}</option>
@@ -164,7 +113,7 @@
                         </label>
                         <input type="date" name="date" id="input-date" required
                                value="{{ date('Y-m-d') }}"
-                               class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                               class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
                     </div>
                     <div>
                         <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
@@ -172,7 +121,7 @@
                         </label>
                         <input type="text" name="revision" id="input-revision"
                                value="0" placeholder="e.g. 0, 1, A"
-                               class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                               class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
                     </div>
                 </div>
 
@@ -182,7 +131,7 @@
                         EBD File (XLSX) <span class="text-rose-500">*</span>
                     </label>
                     <div id="drop-zone"
-                         class="relative border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-5 text-center cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/30 dark:hover:bg-indigo-950/20 transition-all group">
+                         class="relative border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xs p-5 text-center cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/30 dark:hover:bg-indigo-950/20 transition-all group">
                         <input type="file" name="file_ebd" id="input-file-ebd" required
                                accept=".xlsx,.zip"
                                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
@@ -202,18 +151,18 @@
                 </div>
 
                 {{-- Import Result Alert Container (Errors/Warnings) --}}
-                <div id="importResult" class="hidden text-xs rounded-lg border"></div>
+                <div id="importResult" class="hidden text-xs rounded-xs border"></div>
 
             </div>
 
             {{-- Modal Footer --}}
-            <div class="px-5 py-3.5 bg-slate-50 dark:bg-slate-900/30 border-t border-slate-200 dark:border-slate-700 flex items-center justify-end gap-2 rounded-b-xl">
+            <div class="px-5 py-3.5 bg-slate-50 dark:bg-slate-900/30 border-t border-slate-200 dark:border-slate-700 flex items-center justify-end gap-2 rounded-b-xs">
                 <button type="button" id="btn-cancel-import"
-                        class="px-4 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
+                        class="px-4 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600 rounded-xs hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
                     Cancel
                 </button>
                 <button type="submit" id="btn-submit-import"
-                        class="px-4 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm hover:shadow transition-all flex items-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed">
+                        class="px-4 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xs shadow-sm hover:shadow transition-all flex items-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed">
                     <i class="fa-solid fa-file-import text-[10px]"></i>
                     <span id="btn-submit-text">Start Import</span>
                     <span id="btn-submit-spinner" class="hidden">
@@ -235,7 +184,72 @@ $(function () {
     // DATATABLE INIT
     // =========================================================================
     defaultDataTable('#ebd-table', {
-        order: [[0, 'asc']],
+        processing: true,
+        serverSide: true,
+        ajax: {
+            url: '{{ route("management.ebd.index") }}'
+        },
+        columns: [
+            { data: 'index_num', name: 'index_num', orderable: false, searchable: false, className: 'text-center text-slate-400 font-mono text-[10px]' },
+            { 
+                data: 'wo_number', 
+                name: 'wo_number',
+                className: 'font-bold text-slate-800 dark:text-slate-100'
+            },
+            { 
+                data: 'customer_code', 
+                name: 'customer_code',
+                className: 'text-slate-700 dark:text-slate-200 font-semibold',
+                render: function(data, type, row) {
+                    return `<span title="${row.customer_name}">${data}</span>`;
+                }
+            },
+            { data: 'model_name', name: 'model_name', className: 'text-slate-600 dark:text-slate-300' },
+            { data: 'date', name: 'date', className: 'text-slate-600 dark:text-slate-300 font-mono text-xs' },
+            { 
+                data: 'revision', 
+                name: 'revision', 
+                className: 'text-center font-mono text-slate-600 dark:text-slate-300',
+                render: function(data) {
+                    return 'Rev. ' + data;
+                }
+            },
+            { 
+                data: 'status', 
+                name: 'status', 
+                className: 'text-center',
+                render: function(data) {
+                    let statusCls = data === 'Released' 
+                        ? 'bg-emerald-100/70 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-900/30'
+                        : 'bg-blue-100/70 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-200/60 dark:border-blue-900/30';
+                    return `<span class="inline-block px-2 py-0.5 text-[10px] font-bold border rounded-xs ${statusCls}">${data}</span>`;
+                }
+            },
+            { data: 'created_by', name: 'created_by', className: 'text-slate-500 dark:text-slate-400 text-xs' },
+            { 
+                data: 'id', 
+                name: 'id', 
+                orderable: false, 
+                searchable: false, 
+                className: 'text-right',
+                render: function(data, type, row) {
+                    return `<div class="flex justify-end gap-1.5 align-middle">
+                        <a href="${row.show_url}"
+                           title="View BOM Detail"
+                           class="w-6 h-6 flex items-center justify-center bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 hover:border-blue-400 hover:text-blue-700 text-slate-600 dark:text-slate-300 transition-colors rounded-xs">
+                            <i class="fa-solid fa-eye text-[10px]"></i>
+                        </a>
+                        <button type="button"
+                                title="Delete EBD"
+                                onclick="confirmDeleteEbd(${data})"
+                                class="w-6 h-6 flex items-center justify-center bg-rose-100/60 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/30 hover:bg-rose-500 hover:border-rose-500 hover:text-white text-rose-600 dark:text-rose-400 transition-colors cursor-pointer rounded-xs">
+                            <i class="fa-solid fa-trash text-[10px]"></i>
+                        </button>
+                    </div>`;
+                }
+            }
+        ],
+        order: [[1, 'desc']],
         language: {
             emptyTable: `
                 <div class="py-16 flex flex-col items-center justify-center text-center w-full">

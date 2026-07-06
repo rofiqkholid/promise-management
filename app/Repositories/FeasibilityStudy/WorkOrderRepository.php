@@ -10,14 +10,16 @@ class WorkOrderRepository
 {
     public function paginate($perPage = 10, array $filters = [])
     {
-        $query = WorkOrder::with(['inquiry.customer', 'inquiry.projectModel', 'ownerDepartment']);
+        $query = WorkOrder::with(['inquiry.customer', 'inquiry.projectModel', 'ownerDepartment', 'processes', 'products', 'approvals']);
 
         if (!empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function($q) use ($search) {
                 $q->where('wo_number', 'like', "%{$search}%")
                   ->orWhereHas('inquiry', fn($iq) => $iq->where('inquiry_no', 'like', "%{$search}%")
-                                                        ->orWhere('project_name', 'like', "%{$search}%"));
+                                                        ->orWhere('project_name', 'like', "%{$search}%"))
+                  ->orWhereHas('products', fn($p) => $p->where('customer_part_no', 'like', "%{$search}%")
+                                                       ->orWhere('customer_part_name', 'like', "%{$search}%"));
             });
         }
 
