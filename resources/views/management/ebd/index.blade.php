@@ -4,6 +4,8 @@
 @section('page_title', 'Engineering Breakdown (EBD)')
 @section('header-title', 'Feasibility Study')
 
+
+
 @section('content')
 <div class="flex-1 overflow-y-auto p-4 pt-17.5 space-y-4 transition-colors duration-200">
 
@@ -72,7 +74,11 @@
                             class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
                         <option value="">— No Work Order —</option>
                         @foreach($workOrders as $wo)
-                            <option value="{{ $wo->id }}">{{ $wo->wo_number }}</option>
+                            <option value="{{ $wo->id }}"
+                                    data-customer-id="{{ $wo->inquiry->customer_id ?? '' }}"
+                                    data-model-id="{{ $wo->inquiry->model_id ?? '' }}">
+                                {{ $wo->wo_number }}
+                            </option>
                         @endforeach
                     </select>
                 </div>
@@ -80,9 +86,9 @@
                 {{-- Customer --}}
                 <div>
                     <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
-                        Customer <span class="text-slate-400 font-normal normal-case">(Optional)</span>
+                        Customer <span class="text-rose-500">*</span>
                     </label>
-                    <select name="customer_id" id="input-customer-id"
+                    <select name="customer_id" id="input-customer-id" required
                             class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
                         <option value="">— Select Customer —</option>
                         @foreach($customers as $customer)
@@ -94,9 +100,9 @@
                 {{-- Model --}}
                 <div>
                     <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
-                        Model <span class="text-slate-400 font-normal normal-case">(Optional)</span>
+                        Model <span class="text-rose-500">*</span>
                     </label>
-                    <select name="model_id" id="input-model-id"
+                    <select name="model_id" id="input-model-id" required
                             class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
                         <option value="">— Select Model —</option>
                         @foreach($models as $model)
@@ -174,6 +180,108 @@
     </div>
 </div>
 
+{{-- ===== EDIT MODAL ===== --}}
+<div id="edit-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm">
+    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xs shadow-2xl w-full max-w-lg mx-4 animate-fade-in">
+        {{-- Modal Header --}}
+        <div class="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-700">
+            <div>
+                <h2 class="text-sm font-bold text-slate-850 dark:text-white">Edit EBD Document</h2>
+                <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">Update EBD header metadata</p>
+            </div>
+            <button type="button" id="btn-close-edit-modal"
+                    class="w-7 h-7 flex items-center justify-center rounded-xs text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+        </div>
+
+        {{-- Modal Body --}}
+        <form id="form-edit-ebd">
+            @csrf
+            <input type="hidden" id="edit-ebd-id">
+            <div class="px-5 py-4 space-y-4">
+                {{-- WO Selection --}}
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                        Work Order (SPK) <span class="text-slate-400 font-normal normal-case">(Optional)</span>
+                    </label>
+                    <select name="wo_id" id="edit-wo-id"
+                            class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                        <option value="">— No Work Order —</option>
+                        @foreach($workOrders as $wo)
+                            <option value="{{ $wo->id }}"
+                                    data-customer-id="{{ $wo->inquiry->customer_id ?? '' }}"
+                                    data-model-id="{{ $wo->inquiry->model_id ?? '' }}">
+                                {{ $wo->wo_number }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Customer --}}
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                        Customer <span class="text-rose-500">*</span>
+                    </label>
+                    <select name="customer_id" id="edit-customer-id" required
+                            class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                        <option value="">— Select Customer —</option>
+                        @foreach($customers as $customer)
+                            <option value="{{ $customer->id }}">{{ $customer->code }} — {{ $customer->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Model --}}
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                        Model <span class="text-rose-500">*</span>
+                    </label>
+                    <select name="model_id" id="edit-model-id" required
+                            class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                        <option value="">— Select Model —</option>
+                        @foreach($models as $model)
+                            <option value="{{ $model->id }}">{{ $model->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Date & Revision --}}
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                            EBD Date <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="date" name="date" id="edit-date" required
+                               class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                            Revision <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text" name="revision" id="edit-revision" required
+                               placeholder="e.g. 0, 1, A"
+                               class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                    </div>
+                </div>
+            </div>
+
+            {{-- Modal Footer --}}
+            <div class="px-5 py-3.5 bg-slate-50 dark:bg-slate-900/30 border-t border-slate-200 dark:border-slate-700 flex items-center justify-end gap-2 rounded-b-xs">
+                <button type="button" id="btn-cancel-edit"
+                        class="px-4 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600 rounded-xs hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
+                    Cancel
+                </button>
+                <button type="submit" id="btn-submit-edit"
+                        class="px-4 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xs shadow-sm hover:shadow transition-all flex items-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-floppy-disk text-[10px]"></i>
+                    <span>Save Changes</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <x-sweetalert />
 
 @push('scripts')
@@ -240,9 +348,15 @@ $(function () {
                             <i class="fa-solid fa-eye text-[10px]"></i>
                         </a>
                         <button type="button"
+                                title="Edit EBD Header"
+                                onclick="openEditModal(${row.id}, ${row.wo_id || 'null'}, ${row.customer_id || 'null'}, ${row.model_id || 'null'}, '${row.date_raw || ''}', '${row.revision || '0'}')"
+                                class="w-6 h-6 flex items-center justify-center bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 hover:border-indigo-400 hover:text-indigo-700 text-slate-600 dark:text-slate-300 transition-colors rounded-xs cursor-pointer">
+                            <i class="fa-solid fa-pencil text-[10px]"></i>
+                        </button>
+                        <button type="button"
                                 title="Delete EBD"
                                 onclick="confirmDeleteEbd(${data})"
-                                class="w-6 h-6 flex items-center justify-center bg-rose-100/60 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/30 hover:bg-rose-500 hover:border-rose-500 hover:text-white text-rose-600 dark:text-rose-400 transition-colors cursor-pointer rounded-xs">
+                                class="w-6 h-6 flex items-center justify-center bg-rose-100/60 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/30 hover:bg-rose-500 hover:border-rose-500 hover:text-white text-rose-600 dark:text-rose-450 transition-colors cursor-pointer rounded-xs">
                             <i class="fa-solid fa-trash text-[10px]"></i>
                         </button>
                     </div>`;
@@ -271,6 +385,10 @@ $(function () {
     function openImportModal() {
         $('#import-modal').removeClass('hidden').addClass('flex');
         $('#importResult').addClass('hidden').removeClass('bg-rose-50 text-rose-900 border-rose-100 p-4').html('');
+        
+        $('#input-wo-id').select2({ dropdownParent: $('#import-modal'), width: '100%' });
+        $('#input-customer-id').select2({ dropdownParent: $('#import-modal'), width: '100%' });
+        $('#input-model-id').select2({ dropdownParent: $('#import-modal'), width: '100%' });
     }
 
     function closeImportModal() {
@@ -376,6 +494,79 @@ $(function () {
                     .html(errorHtml);
 
                 showToast('Import failed - check error details', 'error');
+            }
+        });
+    });
+
+    // Auto select customer and model based on chosen WO in Import Modal
+    $('#input-wo-id').on('change', function() {
+        const selectedOption = $(this).find('option:selected');
+        const customerId = selectedOption.data('customer-id');
+        const modelId = selectedOption.data('model-id');
+        if (customerId) $('#input-customer-id').val(customerId).trigger('change.select2');
+        if (modelId) $('#input-model-id').val(modelId).trigger('change.select2');
+    });
+
+    // Auto select customer and model based on chosen WO in Edit Modal
+    $('#edit-wo-id').on('change', function() {
+        const selectedOption = $(this).find('option:selected');
+        const customerId = selectedOption.data('customer-id');
+        const modelId = selectedOption.data('model-id');
+        if (customerId) $('#edit-customer-id').val(customerId).trigger('change.select2');
+        if (modelId) $('#edit-model-id').val(modelId).trigger('change.select2');
+    });
+
+    // =========================================================================
+    // EDIT MODAL ACTIONS
+    // =========================================================================
+    window.openEditModal = function (id, woId, customerId, modelId, dateRaw, revision) {
+        $('#form-edit-ebd')[0].reset();
+        $('#edit-ebd-id').val(id);
+        
+        $('#edit-modal').removeClass('hidden').addClass('flex');
+
+        $('#edit-wo-id').select2({ dropdownParent: $('#edit-modal'), width: '100%' });
+        $('#edit-customer-id').select2({ dropdownParent: $('#edit-modal'), width: '100%' });
+        $('#edit-model-id').select2({ dropdownParent: $('#edit-modal'), width: '100%' });
+
+        $('#edit-wo-id').val(woId || '').trigger('change.select2');
+        $('#edit-customer-id').val(customerId || '').trigger('change.select2');
+        $('#edit-model-id').val(modelId || '').trigger('change.select2');
+
+        $('#edit-date').val(dateRaw || '');
+        $('#edit-revision').val(revision || '0');
+    };
+
+    window.closeEditModal = function () {
+        $('#edit-modal').addClass('hidden').removeClass('flex');
+        $('#form-edit-ebd')[0].reset();
+    };
+
+    $('#btn-close-edit-modal, #btn-cancel-edit').on('click', closeEditModal);
+
+    // Close edit modal on backdrop click
+    $('#edit-modal').on('click', function (e) {
+        if ($(e.target).is('#edit-modal')) closeEditModal();
+    });
+
+    $('#form-edit-ebd').on('submit', function (e) {
+        e.preventDefault();
+        const id = $('#edit-ebd-id').val();
+        
+        $.ajax({
+            url: `{{ url('management/ebd') }}/${id}/update`,
+            type: 'POST',
+            data: $(this).serialize(),
+            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+            success: function (response) {
+                closeEditModal();
+                showToast(response.message || 'EBD header updated successfully!', 'success');
+                // Reload DataTable
+                $('#ebd-table').DataTable().ajax.reload(null, false);
+            },
+            error: function (xhr) {
+                const res = xhr.responseJSON;
+                showToast(res?.message || 'Failed to update EBD header.', 'error');
             }
         });
     });

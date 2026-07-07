@@ -10,17 +10,71 @@ use Illuminate\Http\Request;
 
 class ApprovalConfigController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $rules = ApprovalConfig::with(['department'])
-            ->orderBy('approval_level', 'asc')
-            ->orderBy('sort_order', 'asc')
-            ->get();
+        if ($request->ajax() || $request->wantsJson() || $request->has('draw')) {
+            $draw = $request->input('draw');
+            $start = $request->input('start', 0);
+            $length = $request->input('length', 10);
+
+            $query = ApprovalConfig::with(['department']);
+            
+            $search = $request->input('search.value');
+            if ($search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('position_label', 'like', "%{$search}%")
+                      ->orWhere('action_label', 'like', "%{$search}%")
+                      ->orWhereHas('department', fn($dq) => $dq->where('name', 'like', "%{$search}%")->orWhere('code', 'like', "%{$search}%"));
+                });
+            }
+            
+            $totalRecords = ApprovalConfig::count();
+            $filteredRecords = $query->count();
+            
+            $rules = $query->orderBy('approval_level', 'asc')
+                           ->orderBy('sort_order', 'asc')
+                           ->skip($start)->take($length)->get();
+                           
+            $data = [];
+            foreach ($rules as $rule) {
+                $approvers = [];
+                foreach ($rule->approver_users as $u) {
+                    $approvers[] = [
+                        'name' => $u->name,
+                        'nik' => $u->nik,
+                        'id' => $u->id
+                    ];
+                }
+                
+                $data[] = [
+                    'id' => $rule->id,
+                    'rule_id' => $rule->rule_id,
+                    'approval_level' => $rule->approval_level,
+                    'position_label' => $rule->position_label,
+                    'action_label' => $rule->action_label ?? 'Checked',
+                    'department_id' => $rule->department_id,
+                    'department_name' => $rule->department->name ?? '—',
+                    'department_code' => $rule->department->code ?? '',
+                    'approver_users' => $approvers,
+                    'sort_order' => $rule->sort_order,
+                    'is_active' => $rule->is_active,
+                    'destroy_url' => route('management.approval-config.destroy', $rule->rule_id),
+                    'raw_rule' => $rule->toArray()
+                ];
+            }
+            
+            return response()->json([
+                'draw' => intval($draw),
+                'recordsTotal' => $totalRecords,
+                'recordsFiltered' => $filteredRecords,
+                'data' => $data
+            ]);
+        }
 
         $departments = Department::orderBy('name')->get();
         $users = User::where('is_active', true)->orderBy('name')->get();
 
-        return view('management.approval-config.index', compact('rules', 'departments', 'users'));
+        return view('management.approval-config.index', compact('departments', 'users'));
     }
 
     public function store(Request $request)

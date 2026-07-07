@@ -153,7 +153,7 @@
                     <div class="h-6 w-[1px] bg-slate-300 dark:bg-slate-700 mx-1"></div>
                 @endif
                 <button @click="showEditModal = true"
-                        class="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-350 dark:border-slate-705 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold transition-colors cursor-pointer rounded-xs">
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold transition-colors cursor-pointer rounded-xs">
                     <i class="fa-solid fa-pen-to-square text-xs"></i> Edit Info
                 </button>
                 <form id="close-inquiry-form" method="POST" action="{{ route('management.inquiry.close', $inquiry->hashed_id) }}"
@@ -167,9 +167,9 @@
                 <form id="cancel-inquiry-form" method="POST" action="{{ route('management.inquiry.cancel', $inquiry->hashed_id) }}"
                       class="inline">
                     @csrf
-                    <button type="button" onclick="confirmCancelInquiry()"
+                    <button type="button" onclick="confirmDeleteInquiry()"
                             class="inline-flex items-center gap-2 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-colors cursor-pointer rounded-xs">
-                        <i class="fa-solid fa-ban text-xs"></i> Cancel
+                        <i class="fa-solid fa-trash-can text-xs"></i> Delete
                     </button>
                 </form>
             @endif
@@ -184,7 +184,7 @@
                 <span class="text-xs font-bold text-slate-800 dark:text-slate-100">
                     {{ $inquiry->customer->name ?? '—' }}
                     @if($inquiry->customer && $inquiry->customer->code)
-                        <span class="text-slate-400 dark:text-slate-500 font-normal">({{ $inquiry->customer->code }})</span>
+                        <span class="text-slate-800 dark:text-slate-500 font-medium">({{ $inquiry->customer->code }})</span>
                     @endif
                 </span>
             </div>
@@ -344,22 +344,19 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Customer <span class="text-rose-500">*</span></label>
-                        <select x-model="editForm.customer_id" required @change="editForm.project_id = ''"
+                        <select id="edit_customer_select" required
                                 class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-3 py-2 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500">
                             <option value="">Select Customer</option>
                             @foreach($customers as $c)
-                                <option value="{{ $c->id }}">{{ $c->name }}</option>
+                                <option value="{{ $c->id }}" {{ $c->id == $inquiry->customer_id ? 'selected' : '' }}>{{ $c->code ? '[' . $c->code . '] ' : '' }}{{ $c->name }}</option>
                             @endforeach
                         </select>
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Project Name (Model) <span class="text-rose-500">*</span></label>
-                        <select x-model="editForm.project_id" required :disabled="!editForm.customer_id"
+                        <select id="edit_model_select" required
                                 class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-3 py-2 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500 disabled:opacity-50">
                             <option value="">Select Model</option>
-                            <template x-for="m in getFilteredModels(editForm.customer_id)" :key="m.id">
-                                <option :value="m.id" x-text="m.name" :selected="m.id == editForm.project_id"></option>
-                            </template>
                         </select>
                     </div>
                 </div>
@@ -585,31 +582,6 @@
             <form action="{{ route('management.inquiry.import', $inquiry->hashed_id) }}" method="POST" enctype="multipart/form-data" class="p-5 space-y-4">
                 @csrf
 
-                {{-- Import Specific Flash Messages --}}
-                @if(session('import_success'))
-                    <div class="flex items-start gap-2 p-3 bg-emerald-50 dark:bg-emerald-950/30 border-l-4 border-emerald-500 text-emerald-800 dark:text-emerald-400 text-xs">
-                        <i class="fa-solid fa-circle-check mt-0.5"></i>{{ session('import_success') }}
-                    </div>
-                @endif
-                @if(session('import_error'))
-                    <div class="flex items-start gap-2 p-3 bg-rose-50 dark:bg-rose-950/30 border-l-4 border-rose-500 text-rose-800 dark:text-rose-400 text-xs">
-                        <i class="fa-solid fa-circle-xmark mt-0.5"></i>{{ session('import_error') }}
-                    </div>
-                @endif
-                @if(session('import_errors') && is_array(session('import_errors')) && count(session('import_errors')) > 0)
-                    <div class="space-y-2 p-3 bg-amber-50 dark:bg-amber-955/20 border-l-4 border-amber-500 text-amber-800 dark:text-amber-400 text-xs">
-                        <p class="font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Excel Import Warnings/Errors:</p>
-                        <div class="max-h-[150px] overflow-y-auto space-y-1 divide-y divide-amber-100 dark:divide-amber-900/20">
-                            @foreach(session('import_errors') as $err)
-                                <div class="pt-1 text-[11px]">
-                                    <strong>Row {{ $err['row'] ?? '?' }}:</strong>
-                                    <span>{{ is_array($err['errors']) ? implode(', ', $err['errors']) : $err['errors'] }}</span>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
-
                 <div class="space-y-3">
                     <p class="text-xs text-slate-600 dark:text-slate-400">
                         Upload your spreadsheet (.xlsx, .xls) containing product information to import them directly into this inquiry.
@@ -634,6 +606,31 @@
                             <p class="text-[10px] text-amber-700 dark:text-amber-400 mt-0.5">Jika dicentang, proses import akan **menghapus semua produk lama** pada inquiry ini sebelum mengisi dengan yang baru. Jika tidak dicentang, data baru akan **ditambahkan** ke daftar produk yang ada.</p>
                         </div>
                     </div>
+
+                    {{-- Import Specific Flash Messages --}}
+                    @if(session('import_success'))
+                        <div class="flex items-start gap-2 p-3 bg-emerald-50 dark:bg-emerald-950/30 border-l-4 border-emerald-500 text-emerald-800 dark:text-emerald-400 text-xs">
+                            <i class="fa-solid fa-circle-check mt-0.5"></i>{{ session('import_success') }}
+                        </div>
+                    @endif
+                    @if(session('import_error'))
+                        <div class="flex items-start gap-2 p-3 bg-rose-50 dark:bg-rose-950/30 border-l-4 border-rose-500 text-rose-800 dark:text-rose-400 text-xs">
+                            <i class="fa-solid fa-circle-xmark mt-0.5"></i>{{ session('import_error') }}
+                        </div>
+                    @endif
+                    @if(session('import_errors') && is_array(session('import_errors')) && count(session('import_errors')) > 0)
+                        <div class="space-y-2 p-3 bg-amber-50 dark:bg-amber-955/20 border-l-4 border-amber-500 text-amber-800 dark:text-amber-400 text-xs">
+                            <p class="font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Excel Import Warnings/Errors:</p>
+                            <div class="max-h-[150px] overflow-y-auto space-y-1 divide-y divide-amber-100 dark:divide-amber-900/20">
+                                @foreach(session('import_errors') as $err)
+                                    <div class="pt-1 text-[11px]">
+                                        <strong>Row {{ $err['row'] ?? '?' }}:</strong>
+                                        <span>{{ is_array($err['errors']) ? implode(', ', $err['errors']) : $err['errors'] }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
                 </div>
                 <div class="flex justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-700">
                     <button type="button" @click="showImportModal = false"
@@ -774,13 +771,22 @@ document.addEventListener('alpine:init', () => {
         editForm: {
             id: '{{ $inquiry->id }}',
             customer_id: '{{ $inquiry->customer_id }}',
-            project_id:  '{{ $inquiry->project_id }}',
+            project_id:  '{{ $inquiry->model_id }}',
             inquiry_date:  '{{ $inquiry->inquiry_date->format('Y-m-d') }}',
             remarks:       @json($inquiry->remarks)
         },
         getFilteredModels(customerId) {
             const allModels = @json($models);
-            return allModels.filter(m => m.customer_id == customerId);
+            const filtered = allModels.filter(m => m.customer_id == customerId);
+            const unique = [];
+            const names = new Set();
+            filtered.forEach(m => {
+                if (m.id == this.editForm.project_id || !names.has(m.name)) {
+                    names.add(m.name);
+                    unique.push(m);
+                }
+            });
+            return unique;
         },
         showAssessmentConfigModal: false,
         showProductModal: false,
@@ -855,6 +861,66 @@ document.addEventListener('alpine:init', () => {
                 this._initialProducts = JSON.parse(JSON.stringify(this.products));
             }
             this.$nextTick(() => this.renderRows());
+
+            // Watch showEditModal to initialize Select2
+            this.$watch('showEditModal', (value) => {
+                if (value) {
+                    setTimeout(() => {
+                        const self = this;
+                        const $customerSelect = $('#edit_customer_select');
+                        
+                        if (typeof $customerSelect.select2 === 'function') {
+                            $customerSelect.select2({
+                                dropdownParent: $customerSelect.parent(),
+                                width: '100%'
+                            }).off('change').on('change', function() {
+                                const newCustId = $(this).val();
+                                if (newCustId !== self.editForm.customer_id) {
+                                    self.editForm.customer_id = newCustId;
+                                    self.editForm.project_id = '';
+                                }
+                                self.updateModelSelect2();
+                            }).val(self.editForm.customer_id).trigger('change');
+
+                            // Initialize Model Select2
+                            self.updateModelSelect2();
+                        }
+                    }, 100);
+                }
+            });
+
+            @if(session('import_success'))
+                showToast("{{ session('import_success') }}", 'success');
+            @endif
+            @if(session('import_error'))
+                showToast("{{ session('import_error') }}", 'error');
+            @endif
+        },
+
+        updateModelSelect2() {
+            const self = this;
+            const models = this.getFilteredModels(this.editForm.customer_id);
+            const $modelSelect = $('#edit_model_select');
+            
+            // Clear existing options
+            $modelSelect.empty().append('<option value="">Select Model</option>');
+            
+            // Add filtered options
+            models.forEach(m => {
+                const isSelected = m.id == self.editForm.project_id;
+                const option = new Option(m.name, m.id, isSelected, isSelected);
+                $modelSelect.append(option);
+            });
+            
+            // Initialize/Re-initialize select2 and set value
+            if (typeof $modelSelect.select2 === 'function') {
+                $modelSelect.select2({
+                    dropdownParent: $modelSelect.parent(),
+                    width: '100%'
+                }).off('change').on('change', function() {
+                    self.editForm.project_id = $(this).val();
+                }).val(this.editForm.project_id || '').trigger('change');
+            }
         },
 
         // ── Render table rows from this.products array (client-side) ── //
@@ -1390,13 +1456,13 @@ function confirmCloseInquiry() {
     });
 }
 
-function confirmCancelInquiry() {
+function confirmDeleteInquiry() {
     window.confirmDialog({
-        title: 'Cancel Inquiry?',
-        text: 'Are you sure you want to cancel this inquiry?',
+        title: 'Delete Inquiry?',
+        text: 'Are you sure you want to delete this inquiry?',
         icon: 'warning',
         confirmButtonColor: '#dc2626', // Rose 600
-        confirmButtonText: 'Yes, cancel it!',
+        confirmButtonText: 'Yes, delete it!',
         cancelButtonText: 'No',
         onConfirm: () => document.getElementById('cancel-inquiry-form').submit()
     });

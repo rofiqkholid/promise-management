@@ -115,6 +115,7 @@ Route::middleware('auth')->prefix('management')->name('management.')->group(func
     Route::get('ebd', [EbdController::class, 'index'])->name('ebd.index');
     Route::get('ebd/{id}', [EbdController::class, 'show'])->name('ebd.show');
     Route::post('ebd/import', [EbdController::class, 'import'])->name('ebd.import');
+    Route::post('ebd/{id}/update', [EbdController::class, 'updateHeader'])->name('ebd.update');
     Route::post('ebd/{id}/delete', [EbdController::class, 'destroy'])->name('ebd.destroy');
 
     // EBD Items CRUD

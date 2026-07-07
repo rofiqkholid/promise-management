@@ -22,17 +22,7 @@
         </button>
     </div>
 
-    {{-- Alerts --}}
-    @if(session('success'))
-        <div class="p-3 bg-emerald-50 dark:bg-emerald-950/30 border-l-4 border-emerald-500 text-emerald-800 dark:text-emerald-400 text-xs rounded-r-xs">
-            <i class="fa-solid fa-check-circle mr-1.5"></i> {{ session('success') }}
-        </div>
-    @endif
-    @if(session('error'))
-        <div class="p-3 bg-rose-50 dark:bg-rose-950/30 border-l-4 border-rose-500 text-rose-700 dark:text-rose-400 text-xs rounded-r-xs">
-            <i class="fa-solid fa-triangle-exclamation mr-1.5"></i> {{ session('error') }}
-        </div>
-    @endif
+
     @if($errors->any())
         <div class="p-3 bg-rose-50 dark:bg-rose-950/30 border-l-4 border-rose-500 text-rose-700 dark:text-rose-400 text-xs rounded-r-xs">
             <div class="font-bold mb-1"><i class="fa-solid fa-triangle-exclamation mr-1.5"></i> Please correct the following errors:</div>
@@ -54,103 +44,22 @@
         </div>
     </div>
 
-    {{-- Rules Table --}}
-    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 rounded-xs shadow-xs">
-        <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40 flex justify-between items-center rounded-t-xs">
-            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Approval Rules — SPK Document</span>
-            <span class="text-[10px] text-slate-400">{{ $rules->count() }} rule(s) configured</span>
-        </div>
-
-        <div class="overflow-x-auto">
-            <table class="w-full text-xs text-left border-collapse">
-                <thead>
-                    <tr class="border-b-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/30 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                        <th class="px-4 py-2.5 w-16 text-center">Level</th>
-                        <th class="px-4 py-2.5">Position Label</th>
-                        <th class="px-4 py-2.5">Action Header</th>
-                        <th class="px-4 py-2.5">Department</th>
-                        <th class="px-4 py-2.5">Specific Approver</th>
-                        <th class="px-4 py-2.5 w-20 text-center">Order</th>
-                        <th class="px-4 py-2.5 w-20 text-center">Status</th>
-                        <th class="px-4 py-2.5 w-28 text-right">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($rules as $rule)
-                        <tr class="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                            <td class="px-4 py-3 text-center">
-                                <span class="inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-black
-                                    {{ $rule->approval_level === 1 ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400' :
-                                       ($rule->approval_level === 2 ? 'bg-purple-100 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400' :
-                                       'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300') }}">
-                                    {{ $rule->approval_level }}
-                                </span>
-                            </td>
-                            <td class="px-4 py-3 font-semibold text-slate-800 dark:text-slate-100">
-                                {{ $rule->position_label }}
-                            </td>
-                            <td class="px-4 py-3 text-slate-600 dark:text-slate-300">
-                                <span class="px-2 py-0.5 text-[10px] font-bold bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xs border border-slate-200 dark:border-slate-600">
-                                    {{ $rule->action_label ?? 'Checked' }}
-                                </span>
-                            </td>
-                            <td class="px-4 py-3 text-slate-600 dark:text-slate-300">
-                                <span class="font-medium">{{ $rule->department->name ?? '—' }}</span>
-                                <span class="text-slate-400 text-[10px] ml-1">({{ $rule->department->code ?? '' }})</span>
-                            </td>
-                            <td class="px-4 py-3 text-slate-600 dark:text-slate-300">
-                                @if($rule->approverUsers->isNotEmpty())
-                                    <div class="flex flex-col gap-1">
-                                        @foreach($rule->approverUsers as $u)
-                                            <div class="flex items-center gap-2">
-                                                <div class="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-[8px] font-bold flex-shrink-0">
-                                                    {{ strtoupper(substr($u->name, 0, 1)) }}
-                                                </div>
-                                                <span class="text-xs">{{ $u->name }}</span>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                @else
-                                    <span class="text-[10px] italic text-slate-400">Any user in department</span>
-                                @endif
-                            </td>
-                            <td class="px-4 py-3 text-center text-slate-500 font-mono">{{ $rule->sort_order }}</td>
-                            <td class="px-4 py-3 text-center">
-                                @if($rule->is_active)
-                                    <span class="inline-block px-2 py-0.5 text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900 rounded-xs">Active</span>
-                                @else
-                                    <span class="inline-block px-2 py-0.5 text-[10px] font-bold bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-600 rounded-xs">Inactive</span>
-                                @endif
-                            </td>
-                            <td class="px-4 py-3 text-right">
-                                <div class="flex justify-end gap-1.5 align-middle">
-                                    <button onclick="openEditModal({{ $rule }})" title="Edit"
-                                            class="w-6 h-6 flex items-center justify-center bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 hover:border-blue-400 hover:text-blue-700 text-slate-600 dark:text-slate-300 transition-colors">
-                                        <i class="fa-solid fa-pen text-[10px]"></i>
-                                    </button>
-                                    <form action="{{ route('management.approval-config.destroy', $rule->rule_id) }}" method="POST">
-                                        @csrf
-                                        <button type="button" onclick="confirmDeleteRule(this.form)" title="Delete"
-                                                class="w-6 h-6 flex items-center justify-center bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900 hover:border-rose-500 text-rose-600 dark:text-rose-400 transition-colors">
-                                            <i class="fa-solid fa-trash-can text-[10px]"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="py-16 text-center">
-                                <i class="fa-solid fa-shield-halved text-4xl text-slate-300 dark:text-slate-600 block mb-3"></i>
-                                <p class="text-sm font-semibold text-slate-400">No approval rules configured yet.</p>
-                                <p class="text-xs text-slate-400 mt-1">Click "Add Approval Level" to define who can approve SPK documents.</p>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
+    <x-table id="approval-config-table" class="w-full text-xs text-left border-collapse">
+        <thead>
+            <tr class="border-b-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/30 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                <th class="px-4 py-2.5 w-16 text-center">Level</th>
+                <th class="px-4 py-2.5">Position Label</th>
+                <th class="px-4 py-2.5">Action Header</th>
+                <th class="px-4 py-2.5">Department</th>
+                <th class="px-4 py-2.5">Specific Approver</th>
+                <th class="px-4 py-2.5 w-20 text-center">Order</th>
+                <th class="px-4 py-2.5 w-20 text-center">Status</th>
+                <th class="px-4 py-2.5 w-28 text-right">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </x-table>
 
 </div>
 
@@ -296,6 +205,13 @@
 </div>
 
 <script>
+window.approvalRulesData = {};
+
+window.openEditModalFromId = function (id) {
+    const rule = window.approvalRulesData[id];
+    if (rule) openEditModal(rule);
+};
+
 function openEditModal(rule) {
     document.getElementById('edit-form').action = '{{ url('management/approval-config') }}/' + rule.rule_id + '/update';
     document.getElementById('edit_approval_level').value = rule.approval_level;
@@ -325,6 +241,119 @@ $(document).ready(function () {
         allowClear: true,
         width: '100%',
     });
+
+    @if(session('success'))
+        showToast("{{ session('success') }}", 'success');
+    @endif
+    @if(session('error'))
+        showToast("{{ session('error') }}", 'error');
+    @endif
+
+    defaultDataTable('#approval-config-table', {
+        processing: true,
+        serverSide: true,
+        ajax: {
+            url: '{{ route("management.approval-config.index") }}'
+        },
+        columns: [
+            {
+                data: 'approval_level',
+                name: 'approval_level',
+                className: 'text-center',
+                render: function(data) {
+                    let cls = data === 1 ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400' :
+                              (data === 2 ? 'bg-purple-100 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400' :
+                              'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300');
+                    return `<span class="inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-black ${cls}">${data}</span>`;
+                }
+            },
+            {
+                data: 'position_label',
+                name: 'position_label',
+                className: 'font-semibold text-slate-800 dark:text-slate-100',
+                render: function(data) {
+                    return data;
+                }
+            },
+            {
+                data: 'action_label',
+                name: 'action_label',
+                render: function(data) {
+                    return `<span class="px-2 py-0.5 text-[10px] font-bold bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xs border border-slate-200 dark:border-slate-600">${data}</span>`;
+                }
+            },
+            {
+                data: 'department_name',
+                name: 'department_name',
+                render: function(data, type, row) {
+                    return `<span class="font-medium">${data || '—'}</span>
+                            <span class="text-slate-400 text-[10px] ml-1">(${row.department_code || ''})</span>`;
+                }
+            },
+            {
+                data: 'approver_users',
+                name: 'approver_users',
+                orderable: false,
+                render: function(data) {
+                    if (data && data.length > 0) {
+                        let html = '<div class="flex flex-col gap-1">';
+                        data.forEach(function(u) {
+                            let firstChar = u.name ? u.name.charAt(0).toUpperCase() : '?';
+                            html += `<div class="flex items-center gap-2">
+                                        <div class="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-[8px] font-bold flex-shrink-0">
+                                            ${firstChar}
+                                        </div>
+                                        <span class="text-xs">${u.name}</span>
+                                    </div>`;
+                        });
+                        html += '</div>';
+                        return html;
+                    }
+                    return `<span class="text-[10px] italic text-slate-400">Any user in department</span>`;
+                }
+            },
+            {
+                data: 'sort_order',
+                name: 'sort_order',
+                className: 'text-center text-slate-500 font-mono'
+            },
+            {
+                data: 'is_active',
+                name: 'is_active',
+                className: 'text-center',
+                render: function(data) {
+                    if (data) {
+                        return `<span class="inline-block px-2 py-0.5 text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900 rounded-xs">Active</span>`;
+                    }
+                    return `<span class="inline-block px-2 py-0.5 text-[10px] font-bold bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-600 rounded-xs">Inactive</span>`;
+                }
+            },
+            {
+                data: 'id',
+                name: 'id',
+                orderable: false,
+                searchable: false,
+                className: 'text-right',
+                render: function(data, type, row) {
+                    window.approvalRulesData[row.id] = row.raw_rule;
+                    return `<div class="flex justify-end gap-1.5 align-middle">
+                                <button onclick="window.openEditModalFromId(${row.id})" title="Edit"
+                                        class="w-6 h-6 flex items-center justify-center bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 hover:border-blue-400 hover:text-blue-700 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer">
+                                    <i class="fa-solid fa-pen text-[10px]"></i>
+                                </button>
+                                <form action="${row.destroy_url}" method="POST" class="inline">
+                                    <input type="hidden" name="_token" value="${$('meta[name="csrf-token"]').attr('content')}">
+                                    <button type="button" onclick="confirmDeleteRule(this.form)" title="Delete"
+                                            class="w-6 h-6 flex items-center justify-center bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900 hover:border-rose-500 text-rose-600 dark:text-rose-450 transition-colors cursor-pointer">
+                                        <i class="fa-solid fa-trash-can text-[10px]"></i>
+                                    </button>
+                                </form>
+                            </div>`;
+                }
+            }
+        ],
+        order: [[0, 'asc'], [5, 'asc']]
+    });
 });
 
 // Alpine.js component: custom multi-select with searchable dropdown + tag list
@@ -334,16 +363,13 @@ function approverSelect(nativeId, allItems, initialIds) {
         selectedIds: initialIds.map(Number),
         search: '',
         open: false,
-
         get filtered() {
             const q = this.search.toLowerCase();
             return this.allItems.filter(i => i.label.toLowerCase().includes(q));
         },
-
         get selectedItems() {
             return this.allItems.filter(i => this.selectedIds.includes(i.id));
         },
-
         toggle(item) {
             const idx = this.selectedIds.indexOf(item.id);
             if (idx === -1) {
@@ -352,19 +378,15 @@ function approverSelect(nativeId, allItems, initialIds) {
                 this.selectedIds.splice(idx, 1);
             }
             this.syncNativeSelect();
-            // Keep dropdown open after selection
         },
-
         remove(id) {
             this.selectedIds = this.selectedIds.filter(x => x !== id);
             this.syncNativeSelect();
         },
-
         setSelected(ids) {
             this.selectedIds = ids.map(Number);
             this.syncNativeSelect();
         },
-
         syncNativeSelect() {
             const sel = document.getElementById(nativeId);
             if (!sel) return;

@@ -93,9 +93,11 @@ class EbdController extends Controller
             ]);
         }
 
-        $workOrders = WorkOrder::select('id', 'wo_number')->orderByDesc('id')->get();
+        $workOrders = WorkOrder::with(['inquiry' => function($q) {
+            $q->select('id', 'customer_id', 'model_id');
+        }])->select('id', 'wo_number', 'inquiry_id')->orderByDesc('id')->get();
         $customers  = Customer::select('id', 'name', 'code')->orderBy('name')->get();
-        $models     = ProjectModel::select('id', 'name')->orderBy('name')->get();
+        $models     = ProjectModel::select('id', 'name')->orderBy('name')->get()->unique('name');
 
         return view('management.ebd.index', compact('workOrders', 'customers', 'models'));
     }
@@ -130,11 +132,13 @@ class EbdController extends Controller
     {
         // 1. Validate form input
         $request->validate([
-            'file_ebd' => 'required|file|max:20480', // Relax mimes check to prevent local server MIME detection issues
-            'wo_id'    => 'nullable|integer',
-            'date'     => 'required|date',
-            'revision' => 'nullable|string|max:20',
-            'ebd_id'   => 'nullable|integer',
+            'file_ebd'    => 'required|file|max:20480', // Relax mimes check to prevent local server MIME detection issues
+            'wo_id'       => 'nullable|integer',
+            'customer_id' => 'required|integer',
+            'model_id'    => 'required|integer',
+            'date'        => 'required|date',
+            'revision'    => 'nullable|string|max:20',
+            'ebd_id'      => 'nullable|integer',
         ]);
 
         $ebdId = $request->input('ebd_id');
@@ -212,6 +216,44 @@ class EbdController extends Controller
             return response()->json([
                 'status'  => 'error',
                 'message' => 'Internal server error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // =========================================================================
+    // UPDATE HEADER — Edit header metadata without file re-import
+    // =========================================================================
+    public function updateHeader(Request $request, $id)
+    {
+        $request->validate([
+            'wo_id'       => 'nullable|integer',
+            'customer_id' => 'required|integer',
+            'model_id'    => 'required|integer',
+            'date'        => 'required|date',
+            'revision'    => 'required|string|max:20',
+        ]);
+
+        try {
+            $ebdHeader = MngEbdHeader::findOrFail($id);
+            $ebdHeader->update([
+                'wo_id'       => $request->input('wo_id') ?: null,
+                'customer_id' => $request->input('customer_id'),
+                'model_id'    => $request->input('model_id'),
+                'date'        => $request->input('date'),
+                'revision'    => $request->input('revision'),
+            ]);
+
+            return response()->json([
+                'status'  => 'success',
+                'message' => 'EBD header updated successfully.'
+            ], 200);
+
+        } catch (\Exception $e) {
+            Log::error('EBD Header Update failed: ' . $e->getMessage());
+
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Failed to update EBD header: ' . $e->getMessage()
             ], 500);
         }
     }

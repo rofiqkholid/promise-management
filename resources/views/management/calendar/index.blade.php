@@ -7,10 +7,10 @@
     /* Notion/Trello Style Calendar Overrides */
     .fc {
         font-family: inherit;
-        --fc-border-color: #f1f5f9;
-        --fc-today-bg-color: #f8fafc;
+        --fc-border-color: #cbd5e1; /* Clearer slate-300 borders */
+        --fc-today-bg-color: #eff6ff; /* Light blue bg */
         --fc-button-bg-color: #ffffff;
-        --fc-button-border-color: #e2e8f0;
+        --fc-button-border-color: #cbd5e1;
         --fc-button-text-color: #334155;
         --fc-button-hover-bg-color: #f8fafc;
         --fc-button-hover-border-color: #cbd5e1;
@@ -18,14 +18,38 @@
         --fc-button-active-border-color: #cbd5e1;
     }
     .dark .fc {
-        --fc-border-color: #334155;
-        --fc-today-bg-color: #1e293b;
+        --fc-border-color: #475569; /* Clearer slate-600 borders */
+        --fc-today-bg-color: rgba(30, 58, 138, 0.25);
         --fc-button-bg-color: #1e293b;
         --fc-button-border-color: #475569;
         --fc-button-text-color: #cbd5e1;
         --fc-button-hover-bg-color: #0f172a;
         --fc-button-hover-border-color: #64748b;
         --fc-button-active-bg-color: #0f172a;
+    }
+
+    /* Make today cell highlight extremely clear with a blue circle */
+    .fc .fc-day-today {
+        background-color: #eff6ff !important;
+    }
+    .fc .fc-day-today .fc-daygrid-day-number {
+        background-color: #2563eb;
+        color: #ffffff !important;
+        border-radius: 9999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        margin: 4px;
+        padding: 0 !important;
+    }
+    .dark .fc .fc-day-today {
+        background-color: rgba(30, 58, 138, 0.25) !important;
+    }
+    .dark .fc .fc-day-today .fc-daygrid-day-number {
+        background-color: #3b82f6;
+        color: #ffffff !important;
     }
     
     /* Toolbar customizations */
@@ -100,8 +124,8 @@
         border: none !important;
         margin: 1px 3px !important;
         cursor: pointer;
-        padding: 1.5px 4px !important;
-        font-size: 9.5px !important;
+        padding: 3px 6px !important;
+        font-size: 10.5px !important;
         line-height: 1.25 !important;
         transition: opacity 0.15s ease, transform 0.15s ease;
     }
@@ -110,12 +134,44 @@
         transform: translateY(-0.5px);
     }
     
-    /* Scrollbars */
-    .custom-scroll::-webkit-scrollbar {
-        width: 6px;
-    }
     .custom-scroll::-webkit-scrollbar-track {
         background: transparent;
+    }
+    
+    /* FullCalendar Scroller and Scrollbar Overrides */
+    .fc-scroller {
+        overflow-y: auto !important;
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE/Edge */
+    }
+    .fc-scroller::-webkit-scrollbar {
+        width: 0px; /* Chrome/Safari */
+        background: transparent;
+    }
+    .fc-scroller-hinh {
+        overflow: hidden !important;
+    }
+    
+    /* Microsoft Outlook Style Now Indicator */
+    .fc-timegrid-now-indicator-line {
+        border-color: #2563eb !important;
+        border-width: 2px 0 0 !important;
+    }
+    .fc-timegrid-now-indicator-arrow {
+        border-color: transparent transparent transparent #2563eb !important;
+        border-width: 5px 0 5px 6px !important;
+    }
+    
+    /* Outlook Style Slot Heights & Borders */
+    .fc-timegrid-slot {
+        height: 42px !important;
+    }
+    .fc .fc-timegrid-slots .fc-timegrid-slot-minor {
+        border-top-style: dotted !important;
+        border-top-color: #cbd5e1 !important; /* Samar dotted line */
+    }
+    .dark .fc .fc-timegrid-slots .fc-timegrid-slot-minor {
+        border-top-color: #475569 !important;
     }
     .custom-scroll::-webkit-scrollbar-thumb {
         background: #e2e8f0;
@@ -125,95 +181,143 @@
         background: #334155;
     }
 </style>
-
-<div class="flex-1 overflow-y-auto p-6 pt-17.5 space-y-6 bg-slate-50/50 dark:bg-slate-900/60" x-data="calendarDashboard">
+<div class="flex h-[calc(100vh-64px)] mt-16 overflow-hidden bg-white dark:bg-slate-900 flex-col border-t border-slate-300 dark:border-slate-800" x-data="calendarDashboard">
     
-    <!-- Top Action Bar -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-slate-800 p-6 border border-slate-200/60 dark:border-slate-700/50 rounded-xs shadow-2xs">
+    {{-- ===== ACTION BAR ===== --}}
+    <div class="flex items-center justify-between px-6 py-3 bg-slate-100 dark:bg-slate-900 border-b border-slate-300 dark:border-slate-800 flex-shrink-0">
         <div>
-            <h1 class="text-xl font-black tracking-tight text-slate-800 dark:text-white flex items-center gap-2">
+            <h1 class="text-sm font-bold tracking-tight text-slate-800 dark:text-white flex items-center gap-2">
                 <i class="fa-regular fa-calendar-check text-blue-600"></i>
                 <span>Calendar &amp; Holiday Master</span>
             </h1>
-            <p class="text-xs text-slate-400 mt-1">Schedule company events and define holidays to calculate effective working days for SPK priorities.</p>
+            <p class="text-[10px] text-slate-405 dark:text-slate-400 mt-0.5">Schedule company events and define holidays to calculate effective working days.</p>
         </div>
         <button @click="openCreateModal()"
-                class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold transition-all text-xs uppercase tracking-wider rounded-xs shadow-xs cursor-pointer">
+                class="inline-flex items-center justify-center gap-2 px-3 h-8 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold transition-all text-xs rounded-xs shadow-none cursor-pointer">
             <i class="fa-solid fa-plus text-[10px]"></i>
-            Add Event / Holiday
+            Add Event
         </button>
     </div>
 
-    <!-- Main Workspace -->
-    <div class="grid grid-cols-1 xl:grid-cols-4 gap-6">
+    {{-- ===== TWO-COLUMN SPLIT PANEL CONTAINER (FULL PANEL) ===== --}}
+    <div class="flex-1 flex min-h-0 overflow-hidden">
         
-        <!-- Interactive Calendar (Left 3 Columns) -->
-        <div class="xl:col-span-3 bg-white dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700/50 p-6 rounded-xs shadow-2xs space-y-4">
-            
-            <!-- Quick Navigation Row -->
-            <div class="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-700/50">
-                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Quick Year Jump:</span>
-                <select id="year-selector" @change="goToYear($event.target.value)"
-                        class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs px-2.5 py-1 rounded-sm focus:outline-none cursor-pointer text-slate-700 dark:text-slate-200">
-                    <option value="2024">2024</option>
-                    <option value="2025">2025</option>
-                    <option value="2026" selected>2026</option>
-                    <option value="2027">2027</option>
-                    <option value="2028">2028</option>
-                    <option value="2029">2029</option>
-                    <option value="2030">2030</option>
-                </select>
+        {{-- LEFT PANEL: Legend, Mini Calendar, Upcoming Holidays --}}
+        <div class="w-[30%] max-w-[360px] min-w-[280px] flex flex-col bg-slate-100/50 dark:bg-slate-900/30 border-r border-slate-300 dark:border-slate-800 overflow-hidden h-full">
+            <div class="px-4 py-3 bg-slate-100/50 dark:bg-slate-900/80 border-b border-slate-300 dark:border-slate-800 flex items-center justify-between">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                    <i class="fa-solid fa-filter text-[10px]"></i> Filters &amp; Preview
+                </span>
             </div>
 
-            <div id="calendar"></div>
+            <div class="flex-1 overflow-y-auto p-4 space-y-4 custom-scroll">
+                <!-- Legend / Filters -->
+                <div class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 p-4 rounded-xs shadow-2xs space-y-3">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Calendar Colors</span>
+                    <div class="space-y-2 text-xs">
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-3.5 h-3.5 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900 rounded-sm flex-shrink-0"></span>
+                            <span class="font-medium text-slate-700 dark:text-slate-200">Company &amp; National Holiday</span>
+                        </div>
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-3.5 h-3.5 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-sm flex-shrink-0"></span>
+                            <span class="font-semibold text-slate-700 dark:text-slate-200">Company Event / Schedule</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mini Calendar -->
+                <div class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 p-4 rounded-xs shadow-2xs space-y-3">
+                    <div class="flex justify-between items-center pb-1 border-b border-slate-100 dark:border-slate-700/50">
+                        <span class="text-xs font-bold text-slate-850 dark:text-white" x-text="miniMonthName + ' ' + miniYear"></span>
+                        <div class="flex gap-1">
+                            <button type="button" @click="prevMiniMonth()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs px-1 cursor-pointer"><i class="fa-solid fa-chevron-left text-[10px]"></i></button>
+                            <button type="button" @click="nextMiniMonth()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs px-1 cursor-pointer"><i class="fa-solid fa-chevron-right text-[10px]"></i></button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-7 gap-y-2 text-center text-[10px]">
+                        <span class="font-bold text-slate-400">Su</span>
+                        <span class="font-bold text-slate-400">Mo</span>
+                        <span class="font-bold text-slate-400">Tu</span>
+                        <span class="font-bold text-slate-400">We</span>
+                        <span class="font-bold text-slate-400">Th</span>
+                        <span class="font-bold text-slate-400">Fr</span>
+                        <span class="font-bold text-slate-400">Sa</span>
+                        
+                        <template x-for="d in miniDays">
+                            <button type="button" 
+                                    @click="d.isCurrentMonth ? selectMiniDate(d.day) : null"
+                                    :class="{
+                                        'text-slate-800 dark:text-slate-200 font-semibold hover:bg-slate-100 dark:hover:bg-slate-700/50': d.isCurrentMonth && !d.isToday,
+                                        'text-slate-350 dark:text-slate-650': !d.isCurrentMonth,
+                                        'bg-blue-600 text-white dark:bg-blue-500 dark:text-white rounded-full font-black': d.isToday
+                                    }"
+                                    class="h-6 w-6 flex items-center justify-center mx-auto text-[10px] cursor-pointer rounded-full transition-colors focus:outline-none"
+                                    x-text="d.day">
+                            </button>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Upcoming Holiday List -->
+                <div class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 p-4 rounded-xs shadow-2xs flex flex-col space-y-3">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block pb-1 border-b border-slate-100 dark:border-slate-700/50">Upcoming Holidays</span>
+                    <div class="divide-y divide-slate-100 dark:divide-slate-700/50 pr-1 max-h-[220px] overflow-y-auto custom-scroll">
+                        <template x-for="holiday in upcomingHolidays" :key="holiday.id">
+                            <div class="py-2.5 flex items-start justify-between gap-3">
+                                <div class="min-w-0">
+                                    <span class="block font-bold text-xs text-slate-800 dark:text-slate-200 truncate" x-text="holiday.title"></span>
+                                    <span class="block text-[10px] text-slate-400 mt-0.5" x-text="holiday.extendedProps.description || 'Official Holiday'"></span>
+                                </div>
+                                <span class="px-2 py-0.5 bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-450 border border-rose-200/40 dark:border-rose-900/30 text-[9px] font-bold uppercase rounded-sm flex-shrink-0" x-text="formatDateStr(holiday.start)"></span>
+                            </div>
+                        </template>
+                        <template x-if="upcomingHolidays.length === 0">
+                            <p class="py-8 text-center text-xs text-slate-400 italic">No upcoming holidays.</p>
+                        </template>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- Meta Sidebar (Right 1 Column) -->
-        <div class="xl:col-span-1 space-y-6">
-            
-            <!-- Legend / Information -->
-            <div class="bg-white dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700/50 p-5 rounded-xs shadow-2xs space-y-4">
-                <h3 class="text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-widest border-b border-slate-100 dark:border-slate-700/50 pb-2.5 flex items-center gap-2">
-                    <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Calendar Legend
-                </h3>
-                <div class="space-y-3.5 text-xs">
-                    <div class="flex items-start gap-3">
-                        <span class="w-3.5 h-3.5 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900 rounded-sm flex-shrink-0 mt-0.5"></span>
-                        <div class="flex-1">
-                            <span class="font-bold text-slate-700 dark:text-slate-200">Company &amp; National Holiday</span>
-                            <span class="block text-[10px] text-slate-400 mt-0.5">Excludes dates from SPK Due Date calculations</span>
-                        </div>
-                    </div>
-                    <div class="flex items-start gap-3">
-                        <span class="w-3.5 h-3.5 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-sm flex-shrink-0 mt-0.5"></span>
-                        <div class="flex-1">
-                            <span class="font-bold text-slate-700 dark:text-slate-200">Company Event / Schedule</span>
-                            <span class="block text-[10px] text-slate-400 mt-0.5">Custom company plans (Normal working days)</span>
-                        </div>
+        {{-- RIGHT PANEL: INTERACTIVE CALENDAR --}}
+        <div class="flex-1 flex flex-col min-h-0 overflow-y-auto bg-white dark:bg-slate-800 p-6 space-y-4 h-full">
+            <!-- Custom Header Row -->
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-2 border-b border-slate-100 dark:border-slate-700/50">
+                <!-- Month Picker (with navigation buttons next to it) -->
+                <div class="flex items-center gap-2">
+                    <button type="button" @click="navigate('prev')" class="w-8 h-8 flex items-center justify-center border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xs text-slate-600 dark:text-slate-300 transition-colors cursor-pointer">
+                        <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                    </button>
+
+                    <input type="month" id="month-picker" @change="goToMonth($event.target.value)"
+                            class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-sm font-bold px-3 py-1.5 rounded-xs focus:outline-none cursor-pointer text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus:border-blue-500">
+
+                    <button type="button" @click="navigate('next')" class="w-8 h-8 flex items-center justify-center border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xs text-slate-600 dark:text-slate-300 transition-colors cursor-pointer">
+                        <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                    </button>
+                </div>
+
+                <div class="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
+                    <!-- View Switcher Tabs (Day | Week | Month) -->
+                    <div class="flex bg-slate-100 dark:bg-slate-900 p-0.5 rounded-sm border border-slate-200 dark:border-slate-700">
+                        <button type="button" 
+                                @click="changeView('timeGridDay')" 
+                                :class="currentView === 'timeGridDay' ? 'bg-white dark:bg-slate-800 shadow-xs text-slate-850 dark:text-white' : 'text-slate-500 dark:text-slate-400'" 
+                                class="px-3 py-1 text-xs font-semibold rounded-xs transition-all cursor-pointer">Day</button>
+                        <button type="button" 
+                                @click="changeView('timeGridWeek')" 
+                                :class="currentView === 'timeGridWeek' ? 'bg-white dark:bg-slate-800 shadow-xs text-slate-850 dark:text-white' : 'text-slate-500 dark:text-slate-400'" 
+                                class="px-3 py-1 text-xs font-semibold rounded-xs transition-all cursor-pointer">Week</button>
+                        <button type="button" 
+                                @click="changeView('dayGridMonth')" 
+                                :class="currentView === 'dayGridMonth' ? 'bg-white dark:bg-slate-800 shadow-xs text-slate-850 dark:text-white' : 'text-slate-500 dark:text-slate-400'" 
+                                class="px-3 py-1 text-xs font-semibold rounded-xs transition-all cursor-pointer">Month</button>
                     </div>
                 </div>
             </div>
 
-            <!-- Upcoming Holiday List -->
-            <div class="bg-white dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700/50 p-5 rounded-xs shadow-2xs flex flex-col max-h-[520px] space-y-4">
-                <h3 class="text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-widest border-b border-slate-100 dark:border-slate-700/50 pb-2.5 flex items-center gap-2">
-                    <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Upcoming Holidays
-                </h3>
-                <div class="overflow-y-auto flex-grow divide-y divide-slate-100 dark:divide-slate-700/50 pr-1 custom-scroll">
-                    <template x-for="holiday in upcomingHolidays" :key="holiday.id">
-                        <div class="py-2.5 flex items-start justify-between gap-3">
-                            <div class="min-w-0">
-                                <span class="block font-bold text-xs text-slate-800 dark:text-slate-200 truncate" x-text="holiday.title"></span>
-                                <span class="block text-[10px] text-slate-400 mt-0.5" x-text="holiday.extendedProps.description || 'Official Holiday'"></span>
-                            </div>
-                            <span class="px-2 py-0.5 bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 border border-rose-200/40 dark:border-rose-900/30 text-[9px] font-bold uppercase rounded-sm flex-shrink-0" x-text="formatDateStr(holiday.start)"></span>
-                        </div>
-                    </template>
-                    <template x-if="upcomingHolidays.length === 0">
-                        <p class="py-8 text-center text-xs text-slate-400 italic">No upcoming holidays scheduled.</p>
-                    </template>
-                </div>
-            </div>
+            <div id="calendar" class="flex-1 min-h-[680px] h-[680px] pt-2"></div>
         </div>
     </div>
 
@@ -328,15 +432,102 @@ document.addEventListener('alpine:init', () => {
         upcomingHolidays: [],
         calendar: null,
 
+        // Custom view & Mini-calendar states
+        currentView: 'dayGridMonth',
+        miniYear: new Date().getFullYear(),
+        miniMonth: new Date().getMonth(),
+        miniDays: [],
+        monthNames: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+
+        get miniMonthName() {
+            return this.monthNames[this.miniMonth];
+        },
+
         init() {
+            this.generateMiniDays();
             this.initCalendar();
             this.loadUpcomingHolidays();
+        },
+
+        changeView(viewName) {
+            this.currentView = viewName;
+            if (this.calendar) {
+                this.calendar.changeView(viewName);
+            }
+        },
+
+        navigate(direction) {
+            if (this.calendar) {
+                if (direction === 'prev') this.calendar.prev();
+                if (direction === 'next') this.calendar.next();
+            }
+        },
+
+        generateMiniDays() {
+            const firstDayIndex = new Date(this.miniYear, this.miniMonth, 1).getDay(); // 0 = Sunday
+            const totalDays = new Date(this.miniYear, this.miniMonth + 1, 0).getDate();
+            const prevTotalDays = new Date(this.miniYear, this.miniMonth, 0).getDate();
+            
+            let days = [];
+            // Fill previous month overlap days
+            for (let i = firstDayIndex - 1; i >= 0; i--) {
+                days.push({ day: prevTotalDays - i, isCurrentMonth: false });
+            }
+            // Fill current month days
+            for (let i = 1; i <= totalDays; i++) {
+                const isToday = i === new Date().getDate() && this.miniMonth === new Date().getMonth() && this.miniYear === new Date().getFullYear();
+                days.push({ day: i, isCurrentMonth: true, isToday });
+            }
+            // Fill next month overlap days to complete grid
+            const remainingCells = 42 - days.length;
+            for (let i = 1; i <= remainingCells; i++) {
+                days.push({ day: i, isCurrentMonth: false });
+            }
+            this.miniDays = days;
+        },
+
+        prevMiniMonth() {
+            if (this.miniMonth === 0) {
+                this.miniMonth = 11;
+                this.miniYear--;
+            } else {
+                this.miniMonth--;
+            }
+            this.generateMiniDays();
+            if (this.calendar) {
+                this.calendar.gotoDate(new Date(this.miniYear, this.miniMonth, 1));
+            }
+        },
+
+        nextMiniMonth() {
+            if (this.miniMonth === 11) {
+                this.miniMonth = 0;
+                this.miniYear++;
+            } else {
+                this.miniMonth++;
+            }
+            this.generateMiniDays();
+            if (this.calendar) {
+                this.calendar.gotoDate(new Date(this.miniYear, this.miniMonth, 1));
+            }
+        },
+
+        selectMiniDate(day) {
+            if (this.calendar) {
+                this.calendar.gotoDate(new Date(this.miniYear, this.miniMonth, day));
+            }
         },
 
         initCalendar() {
             const calendarEl = document.getElementById('calendar');
             this.calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
+                headerToolbar: false, // Hide built-in header toolbar
+                height: '100%',       // Let it expand to the container height
+                nowIndicator: true,   // Display Outlook style blue time-indicator line
+                slotMinTime: '07:00:00', // Start view at 7 AM
+                slotMaxTime: '19:00:00', // End view at 7 PM
+                slotDuration: '00:30:00', // Show 30-min slots (2 rows per hour)
                 editable: false,
                 selectable: true,
                 events: '{{ route("management.calendar.events") }}',
@@ -349,66 +540,60 @@ document.addEventListener('alpine:init', () => {
                     this.openEditModal(info.event);
                 },
 
-                // Sync the year-selector dropdown whenever dates set changes (prev/next clicks)
+                // Sync the month picker whenever date shifts
                 datesSet: (info) => {
-                    let currentYear = info.view.currentStart.getFullYear();
-                    let el = document.getElementById('year-selector');
-                    if (el) el.value = currentYear;
+                    let activeDate = this.calendar.getDate();
+                    this.miniYear = activeDate.getFullYear();
+                    this.miniMonth = activeDate.getMonth();
+                    this.generateMiniDays();
+
+                    // Format as YYYY-MM
+                    let yyyy = activeDate.getFullYear();
+                    let mm = String(activeDate.getMonth() + 1).padStart(2, '0');
+                    let monthVal = `${yyyy}-${mm}`;
+                    let el = document.getElementById('month-picker');
+                    if (el) el.value = monthVal;
+
+                    this.currentView = info.view.type;
                 },
 
-                // Custom Pastel style mapper to match Notion aesthetics
+                // Custom solid style mapper
                 eventDidMount: (info) => {
                     let isHoliday = info.event.extendedProps.is_holiday;
                     let customColor = info.event.extendedProps.color;
                     
-                    // Default light colors
-                    let bgColor = isHoliday ? '#ffe2dd' : '#e3f2fd';
-                    let textColor = isHoliday ? '#bf1a1a' : '#0d47a1';
-                    
-                    // Default dark colors
-                    let darkBgColor = isHoliday ? '#5f2621' : '#1e293b';
-                    let darkTextColor = isHoliday ? '#ffaba4' : '#64b5f6';
+                    // Solid colors
+                    let bgColor = isHoliday ? '#ef4444' : '#3b82f6';
+                    let textColor = '#ffffff';
 
                     if (customColor && !isHoliday) {
-                        const colorMap = {
-                            '#3b82f6': { bg: '#e3f2fd', text: '#0d47a1', darkBg: '#1e293b', darkText: '#64b5f6' }, // Blue
-                            '#10b981': { bg: '#e8f5e9', text: '#1b5e20', darkBg: '#064e3b', darkText: '#81c784' }, // Green
-                            '#8b5cf6': { bg: '#f3e5f5', text: '#4a148c', darkBg: '#3b0764', darkText: '#d8b4fe' }, // Purple
-                            '#f59e0b': { bg: '#fff3e0', text: '#e65100', darkBg: '#451a03', darkText: '#fde047' }, // Amber
-                            '#ec4899': { bg: '#fce4ec', text: '#880e4f', darkBg: '#500724', darkText: '#fda4af' }  // Pink
-                        };
-                        let match = colorMap[customColor];
-                        if (match) {
-                            bgColor = match.bg;
-                            textColor = match.text;
-                            darkBgColor = match.darkBg;
-                            darkTextColor = match.darkText;
-                        }
+                        bgColor = customColor;
                     }
 
                     // Apply styles
-                    const isDarkMode = document.documentElement.classList.contains('dark');
-                    info.el.style.backgroundColor = isDarkMode ? darkBgColor : bgColor;
-                    info.el.style.color = isDarkMode ? darkTextColor : textColor;
+                    info.el.style.backgroundColor = bgColor;
+                    info.el.style.color = textColor;
                     info.el.style.borderRadius = '3px';
                     info.el.style.border = 'none';
+                    info.el.style.padding = '3px 6px';
 
                     let titleEl = info.el.querySelector('.fc-event-title');
                     if (titleEl) {
-                        titleEl.style.color = isDarkMode ? darkTextColor : textColor;
+                        titleEl.style.color = textColor;
                         titleEl.style.fontWeight = '600';
-                        titleEl.style.fontSize = '9.5px';
+                        titleEl.style.fontSize = '10.5px';
                     }
                 }
             });
             this.calendar.render();
         },
 
-        goToYear(year) {
-            if (this.calendar) {
-                let currentDate = this.calendar.getDate();
-                let month = String(currentDate.getMonth() + 1).padStart(2, '0');
-                this.calendar.gotoDate(`${year}-${month}-01`);
+        goToMonth(val) {
+            if (val && this.calendar) {
+                let parts = val.split('-'); // [YYYY, MM]
+                let year = parseInt(parts[0]);
+                let month = parseInt(parts[1]) - 1; // 0-indexed month
+                this.calendar.gotoDate(new Date(year, month, 1));
             }
         },
 

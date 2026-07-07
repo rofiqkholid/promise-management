@@ -5,12 +5,12 @@
 @section('header-title', 'Engineering Breakdown (EBD)')
 
 @section('content')
-<div class="flex h-[calc(100vh-64px)] mt-16 overflow-hidden bg-white dark:bg-slate-900 flex-col border-t border-slate-200 dark:border-slate-800">
+<div class="flex h-[calc(100vh-64px)] mt-16 overflow-hidden bg-white dark:bg-slate-900 flex-col border-t border-slate-300 dark:border-slate-800">
 
-    {{-- ===== METADATA BAR (MICROSOFT FLUENT STYLE WITH BACK ACTION) ===== --}}
-    <div class="flex items-center gap-6 px-6 py-3 bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex-shrink-0 text-xs text-slate-800 dark:text-slate-100">
+    {{-- ===== METADATA BAR ===== --}}
+    <div class="flex items-center gap-6 px-6 py-3 bg-slate-100 dark:bg-slate-900 border-b border-slate-300 dark:border-slate-800 flex-shrink-0 text-xs text-slate-800 dark:text-slate-100">
         {{-- Back Action & Revision info --}}
-        <div class="flex flex-col gap-1.5 pr-6 border-r border-slate-200 dark:border-slate-700 flex-shrink-0">
+        <div class="flex flex-col gap-1.5 pr-6 border-r border-slate-300 dark:border-slate-700 flex-shrink-0">
             <div class="flex gap-1.5">
                 <a href="{{ route('management.ebd.index') }}"
                    class="inline-flex items-center justify-center gap-2 px-3 h-8 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 border border-slate-300 dark:border-slate-600 rounded-xs text-xs font-semibold text-slate-750 dark:text-slate-250 transition-all active:scale-98">
@@ -21,7 +21,7 @@
                     <i class="fa-solid fa-file-import text-[10px]"></i> Import EBD
                 </button>
             </div>
-            <span class="text-[9px] font-mono font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none">
+            <span class="text-[11px] font-mono font-bold text-slate-650 dark:text-slate-350 uppercase tracking-wider mt-0.5">
                 Revision: {{ $ebdHeader->revision }}
             </span>
         </div>
@@ -34,7 +34,12 @@
             </div>
             <div>
                 <span class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-0.5">Customer</span>
-                <span class="font-medium text-slate-850 dark:text-slate-100 text-xs">{{ $ebdHeader->customer->name ?? '—' }}</span>
+                <span class="font-medium text-slate-850 dark:text-slate-100 text-xs">
+                    {{ $ebdHeader->customer->name ?? '—' }} 
+                    @if(isset($ebdHeader->customer->code))
+                        ({{ $ebdHeader->customer->code }})
+                    @endif
+                </span>
             </div>
             <div>
                 <span class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-0.5">Project Model</span>
@@ -47,11 +52,11 @@
         </div>
 
         {{-- Global Status --}}
-        <div class="pl-6 border-l border-slate-200 dark:border-slate-700 flex-shrink-0">
+        <div class="pl-6 border-l border-slate-300 dark:border-slate-700 flex-shrink-0">
             @php
                 $statusCls = match($ebdHeader->status) {
-                    'Released' => 'bg-emerald-100/70 text-emerald-700 border-emerald-200/60 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900/30',
-                    default    => 'bg-blue-100/70 text-blue-700 border-blue-200/60 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-900/30',
+                    'Released' => 'bg-emerald-100/70 text-emerald-700 border-emerald-350/60 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900/30',
+                    default    => 'bg-blue-100/70 text-blue-700 border-blue-350/60 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-900/30',
                 };
             @endphp
             <span class="px-2.5 py-1 text-xs font-semibold border rounded-xs tracking-wide {{ $statusCls }}">
@@ -64,14 +69,14 @@
     <div class="flex-1 flex min-h-0 overflow-hidden">
         
         {{-- LEFT PANEL: INTERACTIVE BOM TREE --}}
-        <div class="w-[30%] max-w-[360px] min-w-[280px] flex flex-col bg-slate-100/50 dark:bg-slate-900/30 border-r border-slate-200 overflow-hidden h-full">
-            <div class="px-4 py-3 bg-slate-100/50 dark:bg-slate-900/80 border-b border-slate-200 flex items-center justify-between">
+        <div class="w-[30%] max-w-[360px] min-w-[280px] flex flex-col bg-slate-100/50 dark:bg-slate-900/30 border-r border-slate-300 overflow-hidden h-full">
+            <div class="px-4 py-3 bg-slate-100/50 dark:bg-slate-900/80 border-b border-slate-300 flex items-center justify-between">
                 <span class="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-200 flex items-center gap-2">
-                    <i class="fa-solid fa-sitemap text-indigo-550 text-[10px]"></i> Component Tree
+                    <i class="fa-solid fa-sitemap text-indigo-550 text-[10px]"></i> BOM List
                 </span>
                 <div class="flex items-center gap-1.5">
                     <button type="button" id="btn-add-root-part" title="Add Root Part"
-                            class="w-6 h-6 flex items-center justify-center bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-750 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xs transition-colors shadow-sm cursor-pointer">
+                            class="w-6 h-6 flex items-center justify-center bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-750 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xs transition-colors cursor-pointer">
                         <i class="fa-solid fa-plus text-[10px]"></i>
                     </button>
                     <span class="text-[10px] bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 px-2 py-0.5 rounded-xs font-mono font-semibold">
@@ -131,9 +136,6 @@
                             <button type="button" class="btn-add-sub-part w-5 h-5 flex items-center justify-center bg-white dark:bg-slate-800 border border-slate-250 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-450 rounded-xs transition-colors cursor-pointer" title="Add sub-part" data-parent-id="{{ $item->id }}">
                                 <i class="fa-solid fa-plus text-[9px]"></i>
                             </button>
-                            <button type="button" class="btn-delete-part w-5 h-5 flex items-center justify-center bg-white dark:bg-slate-800 border border-slate-250 dark:border-slate-700 hover:bg-rose-50 dark:hover:bg-rose-950/20 hover:text-rose-600 dark:hover:text-rose-450 text-slate-500 dark:text-slate-450 rounded-xs transition-colors cursor-pointer" title="Delete part" data-item-id="{{ $item->id }}">
-                                <i class="fa-regular fa-trash-can text-[9px]"></i>
-                            </button>
                         </div>
                         
                         <i class="fa-solid fa-chevron-right text-[9px] text-slate-450 group-hover:text-slate-500 transition-colors flex-shrink-0"></i>
@@ -150,14 +152,24 @@
         {{-- RIGHT PANEL: COMPACT DETAIL CARD --}}
         <div class="flex-1 flex flex-col bg-white dark:bg-slate-800 overflow-hidden h-full">
                 {{-- Card Title Bar (Active Part Identifiers) --}}
-            <div class="px-5 py-4 bg-slate-100 dark:bg-slate-900/50 border-b border-slate-350 dark:border-slate-650 flex items-center justify-between flex-shrink-0">
-                <div>
-                    <h3 id="active-part-no" class="text-sm font-mono font-semibold text-slate-800 dark:text-slate-100 leading-none">Select a part...</h3>
-                    <p id="active-part-name" class="text-[11px] text-slate-600 dark:text-slate-400 mt-1.5 font-medium">Click any part on the left BOM list to view details.</p>
+            <div class="px-5 py-4 bg-slate-100 dark:bg-slate-900/50 border-b border-slate-300 dark:border-slate-600 flex items-center justify-between flex-shrink-0">
+                <div class="flex items-stretch gap-3">
+                    <div id="active-part-outline" class="flex-shrink-0 px-2.5 flex items-center justify-center rounded-xs text-xs font-bold bg-slate-200 dark:bg-slate-700 text-slate-750 dark:text-slate-300 min-w-[54px]">
+                        —
+                    </div>
+                    <div class="flex flex-col justify-center">
+                        <h2 id="active-part-no" class="text-base font-mono font-bold text-slate-800 dark:text-slate-100 leading-tight">Select a part...</h2>
+                        <p id="active-part-name" class="text-xs text-slate-500 dark:text-slate-450 mt-0.5 font-medium leading-normal">Click any part on the left BOM list to view details.</p>
+                    </div>
                 </div>
-                <button type="button" id="btn-edit-specs" class="hidden px-2.5 py-1 text-[11px] font-bold bg-white hover:bg-slate-100 border border-slate-300 dark:border-slate-700 text-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-750 rounded-xs shadow-sm flex items-center gap-1.5 transition-all cursor-pointer">
-                    <i class="fa-regular fa-pen-to-square"></i> Edit Specs
-                </button>
+                <div class="flex items-center gap-2">
+                    <button type="button" id="btn-edit-specs" class="hidden w-8 h-8 flex items-center justify-center bg-white hover:bg-slate-100 border border-slate-300 dark:border-slate-700 text-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-750 rounded-xs transition-all cursor-pointer" title="Edit Specs">
+                        <i class="fa-regular fa-pen-to-square text-[13px]"></i>
+                    </button>
+                    <button type="button" id="btn-delete-part" class="hidden w-8 h-8 flex items-center justify-center bg-white hover:bg-rose-50 border border-slate-300 dark:border-slate-700 text-rose-600 dark:bg-slate-900 dark:text-rose-400 dark:hover:bg-rose-950/20 rounded-xs transition-all cursor-pointer" title="Delete Part">
+                        <i class="fa-regular fa-trash-can text-[13px]"></i>
+                    </button>
+                </div>
             </div>
 
             {{-- Inside Detail Tabs Navigation (Microsoft Pivot Style) --}}
@@ -293,12 +305,12 @@
                             <div id="sketch-card" class="border border-slate-200 dark:border-slate-700 bg-slate-100/50 dark:bg-slate-900/30 p-4 rounded-xs w-full flex flex-col min-h-[300px]">
                                 <h4 class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3 border-b border-slate-350 dark:border-slate-650 pb-1.5">Sketch / Drawing</h4>
                                 <div id="sketch-wrapper" class="flex-1 flex items-center justify-center bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-xs p-3 min-h-[220px]">
-                                    <img id="sketch-img" src="" alt="Part Sketch" class="hidden max-w-full max-h-60 object-contain rounded-xs">
-                                    <div id="sketch-placeholder" class="text-slate-400 dark:text-slate-600 flex flex-col items-center justify-center text-center">
-                                        <i class="fa-regular fa-image text-4xl mb-2.5"></i>
-                                        <p class="text-xs font-semibold">No sketch available</p>
-                                        <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1 max-w-[180px]">Import EBD spreadsheet containing drawing files</p>
-                                    </div>
+                                    <x-image-viewer 
+                                        id="sketch-img"
+                                        placeholderId="sketch-placeholder"
+                                        placeholderText="No sketch available"
+                                        placeholderSubtext="Import EBD spreadsheet containing drawing files"
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -310,7 +322,7 @@
                 <div id="card-tab-tooling" class="card-tab-panel hidden space-y-3">
                     <div class="flex justify-between items-center">
                         <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Tooling Processes</span>
-                        <button type="button" id="btn-add-tooling" class="px-2.5 py-1 text-[11px] font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xs shadow-sm flex items-center gap-1.5 transition-all">
+                        <button type="button" id="btn-add-tooling" class="px-3.5 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xs shadow-sm flex items-center gap-1.5 transition-all cursor-pointer">
                             <i class="fa-solid fa-plus text-[10px]"></i> Add Tooling
                         </button>
                     </div>
@@ -345,7 +357,7 @@
                 <div id="card-tab-addprocess" class="card-tab-panel hidden space-y-3">
                     <div class="flex justify-between items-center">
                         <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Additional Processes</span>
-                        <button type="button" id="btn-add-addprocess" class="px-2.5 py-1 text-[11px] font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xs shadow-sm flex items-center gap-1.5 transition-all">
+                        <button type="button" id="btn-add-addprocess" class="px-3.5 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xs shadow-sm flex items-center gap-1.5 transition-all cursor-pointer">
                             <i class="fa-solid fa-plus text-[10px]"></i> Add Process
                         </button>
                     </div>
@@ -815,6 +827,13 @@ $(function () {
 
         $('.card-tab-panel').addClass('hidden');
         $('#card-tab-' + target).removeClass('hidden');
+
+        // Show/hide Edit Specs button based on active tab
+        if (target === 'specs' && currentSelectedItemId) {
+            $('#btn-edit-specs').removeClass('hidden');
+        } else {
+            $('#btn-edit-specs').addClass('hidden');
+        }
     });
 
     // 3. Selection handler for BOM Tree items
@@ -826,22 +845,25 @@ $(function () {
     function selectBomItem(itemId) {
         currentSelectedItemId = itemId;
         localStorage.setItem('ebd_active_item_id', itemId);
-        $('#btn-edit-specs').removeClass('hidden');
+        const activeTab = $('.card-tab-btn.active-tab').data('tab') || 'specs';
+        if (activeTab === 'specs') {
+            $('#btn-edit-specs').removeClass('hidden');
+        } else {
+            $('#btn-edit-specs').addClass('hidden');
+        }
+        $('#btn-delete-part').removeClass('hidden');
 
         const item = itemsLookup[itemId];
         if (!item) return;
 
         // Highlight selected left panel item
-        $('.bom-item-row').removeClass('bg-indigo-100/60 dark:bg-indigo-950/20 border-indigo-200 dark:border-indigo-800 text-indigo-900 dark:text-indigo-200');
-        $(`.bom-item-row[data-item-id="${itemId}"]`).addClass('bg-indigo-100/60 dark:bg-indigo-950/20 border-indigo-200 dark:border-indigo-800 text-indigo-900 dark:text-indigo-200');
+        $('.bom-item-row').removeClass('bg-indigo-100/60 dark:bg-indigo-950/20 border-indigo-600 dark:border-indigo-500 text-indigo-900 dark:text-indigo-200').addClass('border-transparent');
+        $(`.bom-item-row[data-item-id="${itemId}"]`).addClass('bg-indigo-100/60 dark:bg-indigo-950/20 border-indigo-600 dark:border-indigo-500 text-indigo-900 dark:text-indigo-200').removeClass('border-transparent');
 
         // Populate Identifiers
-        const outlineNumber = $(`.bom-item-row[data-item-id="${itemId}"]`).attr('data-outline') || '';
-        if (outlineNumber) {
-            $('#active-part-no').html(`<span class="text-slate-400 dark:text-slate-500 font-normal mr-2">${outlineNumber}</span> ${item.part_no || '—'}`);
-        } else {
-            $('#active-part-no').text(item.part_no || '—');
-        }
+        const outlineNumber = $(`.bom-item-row[data-item-id="${itemId}"]`).attr('data-outline') || '—';
+        $('#active-part-outline').text(outlineNumber);
+        $('#active-part-no').text(item.part_no || '—');
         $('#active-part-name').text(item.part_name || '—');
         
         // Populate Rank and Status in information panel grid
@@ -880,19 +902,36 @@ $(function () {
 
         // Display sketch card if image path is present in DB
         if (item.sketch && item.sketch.trim() !== '') {
-            const storageBase = '{{ asset("storage") }}';
             let sketchPath = item.sketch.trim();
             if (sketchPath.startsWith('http://') || sketchPath.startsWith('https://')) {
                 // Keep external URLs as-is
             } else {
                 sketchPath = sketchPath.replace(/^\/+/, '');
+                if (sketchPath.startsWith('storage/')) {
+                    sketchPath = sketchPath.substring(8);
+                }
+                const storageBase = '{{ asset("storage") }}';
                 sketchPath = storageBase + '/' + sketchPath;
             }
-            $('#sketch-img').attr('src', sketchPath).removeClass('hidden');
-            $('#sketch-placeholder').addClass('hidden');
+
+            // Ensure protocol matches current page to avoid mixed content / firewall blocks
+            if (window.location.protocol === 'https:' && sketchPath.startsWith('http://')) {
+                sketchPath = sketchPath.replace('http://', 'https://');
+            }
+
+            if (typeof window.initializeImageViewer === 'function') {
+                window.initializeImageViewer(sketchPath);
+            } else {
+                $('#sketch-img').attr('src', sketchPath).removeClass('hidden');
+                $('#sketch-placeholder').addClass('hidden');
+            }
         } else {
-            $('#sketch-img').addClass('hidden').attr('src', '');
-            $('#sketch-placeholder').removeClass('hidden');
+            if (typeof window.initializeImageViewer === 'function') {
+                window.initializeImageViewer('');
+            } else {
+                $('#sketch-img').addClass('hidden').attr('src', '');
+                $('#sketch-placeholder').removeClass('hidden');
+            }
         }
 
         // Tooling list count badge
@@ -923,6 +962,16 @@ $(function () {
                             ${tp.tooling_status ? `<span class="px-1.5 py-0.5 text-[9px] font-bold bg-amber-100/70 text-amber-700 dark:bg-amber-955/40 dark:text-amber-400 rounded-xs">${tp.tooling_status}</span>` : '—'}
                         </td>
                         <td class="p-2 text-slate-500 dark:text-slate-400 text-[10px] max-w-[160px] truncate" title="${tp.information || ''}">${tp.information || '—'}</td>
+                        <td class="p-2 text-center">
+                            <div class="flex items-center justify-center gap-1.5">
+                                <button type="button" class="btn-edit-tooling w-7 h-7 flex items-center justify-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xs transition-colors cursor-pointer" title="Edit Tooling" data-id="${tp.id}">
+                                    <i class="fa-regular fa-pen-to-square text-xs"></i>
+                                </button>
+                                <button type="button" class="btn-delete-tooling w-7 h-7 flex items-center justify-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-rose-600 dark:text-rose-450 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-xs transition-colors cursor-pointer" title="Delete Tooling" data-id="${tp.id}">
+                                    <i class="fa-regular fa-trash-can text-xs"></i>
+                                </button>
+                            </div>
+                        </td>
                     </tr>
                 `;
             });
@@ -947,6 +996,16 @@ $(function () {
                         <td class="p-2 text-center">${ap.qty ?? 0}</td>
                         <td class="p-2 text-center font-mono text-slate-400">${ap.unit ?? 'pcs'}</td>
                         <td class="p-2 text-right font-bold text-teal-600 dark:text-teal-400 font-mono">${costVal}</td>
+                        <td class="p-2 text-center">
+                            <div class="flex items-center justify-center gap-1.5">
+                                <button type="button" class="btn-edit-addprocess w-7 h-7 flex items-center justify-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xs transition-colors cursor-pointer" title="Edit Process" data-id="${ap.id}">
+                                    <i class="fa-regular fa-pen-to-square text-xs"></i>
+                                </button>
+                                <button type="button" class="btn-delete-addprocess w-7 h-7 flex items-center justify-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-rose-600 dark:text-rose-450 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-xs transition-colors cursor-pointer" title="Delete Process" data-id="${ap.id}">
+                                    <i class="fa-regular fa-trash-can text-xs"></i>
+                                </button>
+                            </div>
+                        </td>
                     </tr>
                 `;
             });
@@ -1211,10 +1270,10 @@ $(function () {
         });
     });
 
-    // Delete part tree row action
-    $(document).on('click', '.btn-delete-part', function (e) {
-        e.stopPropagation();
-        const itemId = $(this).data('item-id');
+    // Delete part action from header
+    $('#btn-delete-part').on('click', function () {
+        if (!currentSelectedItemId) return;
+        const itemId = currentSelectedItemId;
         
         Swal.fire({
             title: 'Delete Part?',
