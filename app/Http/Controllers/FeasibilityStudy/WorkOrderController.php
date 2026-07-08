@@ -578,7 +578,7 @@ class WorkOrderController extends Controller
                         if ($workOrder->status !== 'Pending Approval') return false;
                         $pending = $workOrder->approvals()->where('status', 'Pending')->get();
                         foreach ($pending as $approval) {
-                            $rule = \App\Models\ApprovalConfig::activeFor('WO')
+                            $rule = \App\Models\ApprovalConfig::activeFor('SPK')
                                 ->where('approval_level', $approval->approval_level)
                                 ->where('department_id', $approval->department_id)
                                 ->first();
