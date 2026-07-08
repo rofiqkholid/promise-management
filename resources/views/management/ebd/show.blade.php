@@ -172,7 +172,7 @@
                 </div>
             </div>
 
-            {{-- Inside Detail Tabs Navigation (Microsoft Pivot Style) --}}
+            {{-- Inside Detail Tabs Navigation --}}
             <div class="border-b border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-5 flex-shrink-0">
                 <nav class="flex gap-4" id="detail-card-tabs">
                     <button type="button" data-tab="specs"

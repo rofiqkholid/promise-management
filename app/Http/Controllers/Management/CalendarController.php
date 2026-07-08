@@ -198,36 +198,58 @@ class CalendarController extends Controller
     }
 
     /**
-     * Fetch Indonesian public holidays from public API and cache them.
+     * Fetch Indonesian public holidays from Google Calendar API and cache them.
      */
     private function getNationalHolidays()
     {
-        return cache()->remember('id_national_holidays_cache_v2', 86400, function () {
-            $holidays = [];
-            $years = [now()->year - 1, now()->year, now()->year + 1];
-            
-            foreach ($years as $year) {
-                try {
-                    $response = \Illuminate\Support\Facades\Http::timeout(3)->get("https://api-hari-libur.vercel.app/api?year={$year}");
-                    if ($response->successful()) {
-                        $data = $response->json();
-                        $holidayList = $data['data'] ?? [];
-                        if (is_array($holidayList)) {
-                            foreach ($holidayList as $item) {
-                                if (!empty($item['date'])) {
-                                    $holidays[] = [
-                                        'date' => $item['date'],
-                                        'title' => $item['description'] ?? 'Hari Libur Nasional',
-                                    ];
-                                }
-                            }
+        return cache()->remember('id_national_holidays_cache_v3', 86400, function () {
+            $apiKey = env('GOOGLE_CALENDAR_API_KEY');
+            if (empty($apiKey)) {
+                Log::warning("GOOGLE_CALENDAR_API_KEY is not set in env. Indonesian holidays cannot be loaded from Google Calendar API.");
+                return [];
+            }
+
+            $calendarId = 'id.indonesian.official#holiday@group.v.calendar.google.com';
+            $url = "https://www.googleapis.com/calendar/v3/calendars/" . urlencode($calendarId) . "/events";
+
+            try {
+                $timeMin = (now()->year - 1) . '-01-01T00:00:00Z';
+                $timeMax = (now()->year + 1) . '-12-31T23:59:59Z';
+
+                $response = \Illuminate\Support\Facades\Http::timeout(5)->get($url, [
+                    'key' => $apiKey,
+                    'timeMin' => $timeMin,
+                    'timeMax' => $timeMax,
+                    'singleEvents' => 'true',
+                    'orderBy' => 'startTime',
+                    'maxResults' => 250,
+                ]);
+
+                if ($response->successful()) {
+                    $data = $response->json();
+                    $items = $data['items'] ?? [];
+                    $holidays = [];
+
+                    foreach ($items as $item) {
+                        $date = $item['start']['date'] ?? substr($item['start']['dateTime'] ?? '', 0, 10);
+                        if (!empty($date)) {
+                            $holidays[] = [
+                                'date' => $date,
+                                'title' => $item['summary'] ?? 'Hari Libur Nasional',
+                            ];
                         }
                     }
-                } catch (\Exception $e) {
-                    Log::warning("Failed to fetch national holidays for year {$year}: " . $e->getMessage());
+
+                    return $holidays;
+                } else {
+                    Log::warning("Failed to fetch Google Calendar holidays: " . $response->body());
                 }
+            } catch (\Exception $e) {
+                Log::warning("Failed to fetch Google Calendar holidays: " . $e->getMessage());
             }
-            return $holidays;
+
+            return [];
         }) ?? [];
     }
 }
+
