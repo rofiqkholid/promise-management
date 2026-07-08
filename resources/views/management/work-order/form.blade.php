@@ -592,6 +592,7 @@
                                         </button>
                                         <form action="{{ route('management.process-checklist.destroy', $p->id) }}" method="POST" onsubmit="return confirm('Delete this process?')" class="inline-flex">
                                             @csrf
+                                            <input type="hidden" name="redirect_to" value="{{ request()->fullUrl() }}">
                                             <button type="submit" class="p-1.5 bg-rose-50 dark:bg-rose-950/20 border border-rose-250 dark:border-rose-900/50 text-rose-600 dark:text-rose-450 hover:border-rose-500 rounded-xs transition-colors flex items-center justify-center w-7 h-7" title="Delete">
                                                 <i class="fa-solid fa-trash-can text-[11px]"></i>
                                             </button>
@@ -620,6 +621,7 @@
         </div>
         <form id="process-config-form" action="" method="POST" class="p-5 space-y-4 text-xs">
             @csrf
+            <input type="hidden" name="redirect_to" value="{{ request()->fullUrl() }}">
             <div>
                 <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Process Code <span class="text-rose-500">*</span></label>
                 <input type="text" name="process_code" id="proc_code" required placeholder="e.g. CUTTING" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
@@ -754,6 +756,7 @@
                                         </button>
                                         <form action="{{ route('management.approval-config.destroy', $rule->id) }}" method="POST" onsubmit="return confirm('Delete this approval rule?')" class="inline-flex">
                                             @csrf
+                                            <input type="hidden" name="redirect_to" value="{{ request()->fullUrl() }}">
                                             <button type="submit" class="p-1.5 bg-rose-50 dark:bg-rose-950/20 border border-rose-250 dark:border-rose-900/50 text-rose-600 dark:text-rose-450 hover:border-rose-500 rounded-xs transition-colors flex items-center justify-center w-7 h-7" title="Delete">
                                                 <i class="fa-solid fa-trash-can text-[11px]"></i>
                                             </button>
@@ -782,6 +785,7 @@
         </div>
         <form id="approval-config-form" action="" method="POST" class="p-5 space-y-4 text-xs">
             @csrf
+            <input type="hidden" name="redirect_to" value="{{ request()->fullUrl() }}">
             <input type="hidden" name="document_type" value="WO">
             <div>
                 <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Approval Level <span class="text-rose-500">*</span></label>
@@ -1106,8 +1110,10 @@ document.addEventListener('alpine:init', () => {
         async init() {
             // Restore draft if in create mode (no workOrder ID present)
             let isEditMode = {{ isset($workOrder) ? 'true' : 'false' }};
+            let inquiryId = '{{ isset($inquiry) ? $inquiry->hashed_id : "" }}';
+            let draftKey = 'spk_form_draft_' + inquiryId;
             if (!isEditMode) {
-                let saved = localStorage.getItem('spk_form_draft');
+                let saved = localStorage.getItem(draftKey);
                 if (saved) {
                     try {
                         let draft = JSON.parse(saved);
@@ -1206,6 +1212,8 @@ document.addEventListener('alpine:init', () => {
         },
 
         saveDraft() {
+            let inquiryId = '{{ isset($inquiry) ? $inquiry->hashed_id : "" }}';
+            let draftKey = 'spk_form_draft_' + inquiryId;
             let draft = {
                 department_id: this.department_id,
                 work_order_no: this.work_order_no,
@@ -1222,7 +1230,7 @@ document.addEventListener('alpine:init', () => {
                 selected_approval_rules: this.selected_approval_rules,
                 due_dates_closed: this.due_dates_closed
             };
-            localStorage.setItem('spk_form_draft', JSON.stringify(draft));
+            localStorage.setItem(draftKey, JSON.stringify(draft));
         },
 
         checkPrioritySuggestions() {
@@ -1707,15 +1715,17 @@ document.addEventListener('alpine:init', () => {
                 contentType: 'application/json',
                 data: JSON.stringify(payload),
                 success: function(response) {
+                    let inquiryId = '{{ isset($inquiry) ? $inquiry->hashed_id : "" }}';
+                    let draftKey = 'spk_form_draft_' + inquiryId;
                     if (response.success && response.redirect_url) {
                         showToast(response.message || 'Successfully saved SPK!', 'success');
-                        localStorage.removeItem('spk_form_draft');
+                        localStorage.removeItem(draftKey);
                         setTimeout(function() {
                             window.location.href = response.redirect_url;
                         }, 1500);
                     } else {
                         showToast(response.message || 'Successfully saved SPK!', 'success');
-                        localStorage.removeItem('spk_form_draft');
+                        localStorage.removeItem(draftKey);
                     }
                 },
                 error: function(xhr) {

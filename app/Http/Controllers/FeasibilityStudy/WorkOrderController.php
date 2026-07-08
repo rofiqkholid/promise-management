@@ -688,7 +688,7 @@ class WorkOrderController extends Controller
             'is_active' => $request->has('is_active') ? true : true,
         ]);
 
-        return redirect()->back()->with('success', 'Master Process successfully created.');
+        return redirect($request->input('redirect_to', redirect()->back()->getTargetUrl()))->with('success', 'Master Process successfully created.');
     }
 
     public function updateProcess(Request $request, $id)
@@ -720,7 +720,7 @@ class WorkOrderController extends Controller
             'is_active' => $request->has('is_active'),
         ]);
 
-        return redirect()->back()->with('success', 'Master Process successfully updated.');
+        return redirect($request->input('redirect_to', redirect()->back()->getTargetUrl()))->with('success', 'Master Process successfully updated.');
     }
 
     public function destroyProcess($id)
@@ -728,9 +728,9 @@ class WorkOrderController extends Controller
         try {
             $process = \App\Models\WorkOrderProcess::findOrFail($id);
             $process->delete();
-            return redirect()->back()->with('success', 'Master Process successfully deleted.');
+            return redirect(request()->input('redirect_to', redirect()->back()->getTargetUrl()))->with('success', 'Master Process successfully deleted.');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Failed to delete process: ' . $e->getMessage());
+            return redirect(request()->input('redirect_to', redirect()->back()->getTargetUrl()))->with('error', 'Failed to delete process: ' . $e->getMessage());
         }
     }
 

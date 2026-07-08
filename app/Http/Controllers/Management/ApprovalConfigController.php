@@ -94,7 +94,7 @@ class ApprovalConfigController extends Controller
 
         ApprovalConfig::create($validated);
 
-        return redirect()->back()->with('success', 'Approval configuration created successfully.');
+        return redirect($request->input('redirect_to', redirect()->back()->getTargetUrl()))->with('success', 'Approval configuration created successfully.');
     }
 
     public function update(Request $request, $id)
@@ -121,7 +121,7 @@ class ApprovalConfigController extends Controller
 
         $rule->update($validated);
 
-        return redirect()->back()->with('success', 'Approval configuration updated successfully.');
+        return redirect($request->input('redirect_to', redirect()->back()->getTargetUrl()))->with('success', 'Approval configuration updated successfully.');
     }
 
     public function destroy($id)
@@ -129,6 +129,6 @@ class ApprovalConfigController extends Controller
         $rule = ApprovalConfig::findOrFail($id);
         $rule->delete();
 
-        return redirect()->back()->with('success', 'Approval configuration deleted.');
+        return redirect(request()->input('redirect_to', redirect()->back()->getTargetUrl()))->with('success', 'Approval configuration deleted.');
     }
 }
