@@ -1073,6 +1073,7 @@ document.addEventListener('alpine:init', () => {
             }
         },
         holidays: [],
+        effective_working_days: [],
         selected_approval_rules: (@json(isset($workOrder) ? ($workOrder->selected_approval_rule_ids ?: $approvalRules->pluck('id')) : $approvalRules->pluck('id')) || []).map(Number),
         
         // All approval rules with their department_id for filtering
@@ -1165,34 +1166,14 @@ document.addEventListener('alpine:init', () => {
             try {
                 let response = await fetch('{{ route('management.calendar.holidays') }}');
                 if (response.ok) {
-                    this.holidays = await response.json();
+                    let data = await response.json();
+                    this.holidays = data.holidays || [];
+                    this.effective_working_days = data.effective_working_days || [];
                 }
             } catch (e) {
                 console.error('Failed to load holidays list', e);
             }
             this.checkPrioritySuggestions();
-        },
-
-        saveDraft() {
-            let inquiryId = '{{ isset($inquiry) ? $inquiry->hashed_id : "" }}';
-            let draftKey = 'spk_form_draft_' + inquiryId;
-            let draft = {
-                department_id: this.department_id,
-                work_order_no: this.work_order_no,
-                subject: this.subject,
-                priority: this.priority,
-                selected_processes: this.selected_processes,
-                process_departments: this.process_departments,
-                process_pics: this.process_pics,
-                support_departments: this.support_departments,
-                remarks: this.remarks,
-                publish_date: this.publish_date,
-                first_sample_date: this.first_sample_date,
-                due_date_plan: this.due_date_plan,
-                selected_approval_rules: this.selected_approval_rules,
-                due_dates_closed: this.due_dates_closed
-            };
-            localStorage.setItem(draftKey, JSON.stringify(draft));
         },
 
         checkPrioritySuggestions() {
@@ -1219,15 +1200,17 @@ document.addEventListener('alpine:init', () => {
 
             while (current <= targetDate) {
                 let dayOfWeek = current.getDay(); // 0 = Sunday, 6 = Saturday
-                if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-                    let y = current.getFullYear();
-                    let m = String(current.getMonth() + 1).padStart(2, '0');
-                    let d = String(current.getDate()).padStart(2, '0');
-                    let dateStr = `${y}-${m}-${d}`;
-                    
-                    if (!this.holidays.includes(dateStr)) {
-                        workingDays++;
-                    }
+                let y = current.getFullYear();
+                let m = String(current.getMonth() + 1).padStart(2, '0');
+                let d = String(current.getDate()).padStart(2, '0');
+                let dateStr = `${y}-${m}-${d}`;
+                
+                let isEffectiveWorking = this.effective_working_days.includes(dateStr);
+                let isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+                let isHoliday = this.holidays.includes(dateStr);
+
+                if (isEffectiveWorking || (!isWeekend && !isHoliday)) {
+                    workingDays++;
                 }
                 current.setDate(current.getDate() + 1);
             }

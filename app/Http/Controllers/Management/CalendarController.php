@@ -260,6 +260,18 @@ class CalendarController extends Controller
                 }
             }
 
+            // Also normal events that are effective working days (e.g. weekend overrides)
+            $workingEvents = CalendarEvent::where('is_holiday', false)->whereNull('api_holiday_date')->get();
+            $effectiveWorkingDates = [];
+            foreach ($workingEvents as $w) {
+                $start = clone $w->start_date;
+                $end = clone $w->end_date;
+                while ($start->lte($end)) {
+                    $effectiveWorkingDates[] = $start->format('Y-m-d');
+                    $start->addDay();
+                }
+            }
+
             // Get DB overrides
             $overrides = CalendarEvent::whereNotNull('api_holiday_date')->get();
             $overridePolicies = [];
@@ -274,15 +286,31 @@ class CalendarController extends Controller
                 if (isset($overridePolicies[$dateKey])) {
                     if ($overridePolicies[$dateKey] === true) {
                         $holidayDates[] = $dateKey;
+                    } else {
+                        // It's overridden as effective working day
+                        $effectiveWorkingDates[] = $dateKey;
                     }
                 } else {
                     $holidayDates[] = $dateKey;
                 }
             }
 
-            return response()->json(array_unique($holidayDates));
+            // Any other override that is explicitly set to is_holiday = false (meaning working day)
+            foreach ($overridePolicies as $dateKey => $isHoliday) {
+                if ($isHoliday === false) {
+                    $effectiveWorkingDates[] = $dateKey;
+                }
+            }
+
+            return response()->json([
+                'holidays' => array_values(array_unique($holidayDates)),
+                'effective_working_days' => array_values(array_unique($effectiveWorkingDates))
+            ]);
         } catch (\Exception $e) {
-            return response()->json([], 500);
+            return response()->json([
+                'holidays' => [],
+                'effective_working_days' => []
+            ], 500);
         }
     }
 
