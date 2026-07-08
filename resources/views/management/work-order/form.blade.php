@@ -1960,7 +1960,11 @@ document.addEventListener('alpine:init', () => {
                 products: (alpine.products || []).map(function(p) {
                     return {
                         work_order_product_id: p.work_order_product_id || null,
-                        inquiry_product_id: p.inquiry_product_id,
+                        inquiry_product_id: p.inquiry_product_id || null,
+                        tempId: p.tempId || '',
+                        parentTempId: p.parentTempId || '',
+                        customer_part_no: p.customer_part_no || '',
+                        customer_part_name: p.customer_part_name || '',
                         eo: p.eo || '',
                         class_id: p.class_id || '',
                         uom: p.uom || '',
