@@ -1447,7 +1447,34 @@ document.addEventListener('alpine:init', () => {
             try {
                 let r = await fetch('{{ route("management.api.processes") }}');
                 if (r.ok) {
+                    let oldProcesses = JSON.parse(JSON.stringify(this.processesList));
                     this.processesList = await r.json();
+                    
+                    // For any process that is currently selected:
+                    // If its default assigned departments changed in the master data,
+                    // we should update its active assigned departments in our form.
+                    this.selected_processes.forEach(numId => {
+                        let oldProc = oldProcesses.find(p => p.id == numId);
+                        let newProc = this.processesList.find(p => p.id == numId);
+                        if (newProc && (!oldProc || oldProc.default_assigned_departments !== newProc.default_assigned_departments)) {
+                            try {
+                                let parsed = JSON.parse(newProc.default_assigned_departments) || [];
+                                let deptIds = parsed.map(d => typeof d === 'object' ? d.department_id : d).map(Number);
+                                this.process_departments[numId] = deptIds;
+                                
+                                // Also update PICs
+                                parsed.forEach(d => {
+                                    if (typeof d === 'object' && d.default_pic_user_id) {
+                                        this.process_pics[numId + '_' + d.department_id] = d.default_pic_user_id;
+                                    }
+                                });
+                            } catch (e) {
+                                console.error(e);
+                            }
+                        }
+                    });
+                    
+                    this.syncGlobalSupportDepartments();
                 }
             } catch (e) {
                 console.error(e);
