@@ -1115,51 +1115,6 @@ document.addEventListener('alpine:init', () => {
         },
 
         async init() {
-            // Restore draft if in create mode (no workOrder ID present)
-            let isEditMode = {{ isset($workOrder) ? 'true' : 'false' }};
-            let inquiryId = '{{ isset($inquiry) ? $inquiry->hashed_id : "" }}';
-            let draftKey = 'spk_form_draft_' + inquiryId;
-            if (!isEditMode) {
-                let saved = localStorage.getItem(draftKey);
-                if (saved) {
-                    try {
-                        let draft = JSON.parse(saved);
-                        if (draft.department_id) this.department_id = draft.department_id;
-                        if (draft.work_order_no) this.work_order_no = draft.work_order_no;
-                        if (draft.subject) this.subject = draft.subject;
-                        if (draft.priority) this.priority = draft.priority;
-                        if (draft.selected_processes) this.selected_processes = draft.selected_processes;
-                        if (draft.process_departments) this.process_departments = draft.process_departments;
-                        if (draft.process_pics) this.process_pics = draft.process_pics;
-                        if (draft.support_departments) this.support_departments = draft.support_departments;
-                        if (draft.remarks) this.remarks = draft.remarks;
-                        if (draft.publish_date) this.publish_date = draft.publish_date;
-                        if (draft.first_sample_date) this.first_sample_date = draft.first_sample_date;
-                        if (draft.due_date_plan) this.due_date_plan = draft.due_date_plan;
-                        if (draft.selected_approval_rules) this.selected_approval_rules = draft.selected_approval_rules;
-                        if (draft.due_dates_closed) this.due_dates_closed = draft.due_dates_closed;
-                        
-                        // Sync select2 inputs
-                        setTimeout(() => {
-                            $('.select2-department').val(this.department_id).trigger('change.select2');
-                        }, 200);
-                    } catch (e) {
-                        console.error('Failed to restore SPK draft', e);
-                    }
-                }
-
-                // Setup watchers for auto-save
-                let autoSaveKeys = [
-                    'department_id', 'work_order_no', 'subject', 'priority', 
-                    'selected_processes', 'process_departments', 'process_pics', 
-                    'support_departments', 'remarks', 'publish_date', 
-                    'first_sample_date', 'due_date_plan', 'selected_approval_rules', 
-                    'due_dates_closed'
-                ];
-                autoSaveKeys.forEach(key => {
-                    this.$watch(key, () => this.saveDraft());
-                });
-            }
 
             this.updateDepartmentIdFromProcesses();
             this.syncGlobalSupportDepartments(); // also triggers updateApprovalSuggestions
@@ -1763,17 +1718,13 @@ document.addEventListener('alpine:init', () => {
                 contentType: 'application/json',
                 data: JSON.stringify(payload),
                 success: function(response) {
-                    let inquiryId = '{{ isset($inquiry) ? $inquiry->hashed_id : "" }}';
-                    let draftKey = 'spk_form_draft_' + inquiryId;
                     if (response.success && response.redirect_url) {
                         showToast(response.message || 'Successfully saved SPK!', 'success');
-                        localStorage.removeItem(draftKey);
                         setTimeout(function() {
                             window.location.href = response.redirect_url;
                         }, 1500);
                     } else {
                         showToast(response.message || 'Successfully saved SPK!', 'success');
-                        localStorage.removeItem(draftKey);
                     }
                 },
                 error: function(xhr) {
