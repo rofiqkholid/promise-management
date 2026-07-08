@@ -534,7 +534,6 @@
         </form>
     @endif
 </div>
-</div>
 
 {{-- ── MODAL: MASTER PROCESS CHECKLIST ────────────────────────── --}}
 <div id="modal-master-process" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
@@ -829,6 +828,7 @@
             </div>
         </form>
     </div>
+</div>
 </div>
 
 <script>
