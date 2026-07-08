@@ -137,8 +137,8 @@ Route::middleware('auth')->prefix('management')->name('management.')->group(func
     Route::get('calendar', [CalendarController::class, 'index'])->name('calendar.index');
     Route::get('calendar/events', [CalendarController::class, 'getEvents'])->name('calendar.events');
     Route::post('calendar/events', [CalendarController::class, 'store'])->name('calendar.store');
-    Route::patch('calendar/events/{id}', [CalendarController::class, 'update'])->name('calendar.update');
-    Route::delete('calendar/events/{id}', [CalendarController::class, 'destroy'])->name('calendar.destroy');
+    Route::match(['patch', 'post'], 'calendar/events/{id}', [CalendarController::class, 'update'])->name('calendar.update');
+    Route::match(['delete', 'post'], 'calendar/events/{id}/delete', [CalendarController::class, 'destroy'])->name('calendar.destroy');
     Route::get('calendar/holidays', [CalendarController::class, 'getHolidays'])->name('calendar.holidays');
 });
 

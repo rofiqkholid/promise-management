@@ -806,18 +806,22 @@ document.addEventListener('alpine:init', () => {
 
             let baseEventsUrl = '{{ route("management.calendar.store") }}';
             let url = this.isEditMode 
-                ? baseEventsUrl + '/' + this.form.id
+                ? '{{ url("management/calendar/events") }}/' + this.form.id
                 : baseEventsUrl;
             let method = this.isEditMode ? 'PATCH' : 'POST';
 
+            // Use POST + _method spoofing to avoid web server PATCH/DELETE 403 issues
+            let actualMethod = method;
+
             fetch(url, {
-                method: method,
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-HTTP-Method-Override': actualMethod,
                     'Accept': 'application/json'
                 },
-                body: JSON.stringify(this.form)
+                body: JSON.stringify(Object.assign({}, this.form, { _method: actualMethod }))
             })
             .then(r => r.json())
             .then(data => {
@@ -835,12 +839,15 @@ document.addEventListener('alpine:init', () => {
         deleteEvent() {
             if (!confirm('Are you sure you want to delete this event/override?')) return;
 
-            fetch('{{ route("management.calendar.store") }}/' + this.form.id, {
-                method: 'DELETE',
+            fetch('{{ url("management/calendar/events") }}/' + this.form.id + '/delete', {
+                method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-HTTP-Method-Override': 'DELETE',
+                    'Content-Type': 'application/json',
                     'Accept': 'application/json'
-                }
+                },
+                body: JSON.stringify({ _method: 'DELETE' })
             })
             .then(r => r.json())
             .then(data => {
