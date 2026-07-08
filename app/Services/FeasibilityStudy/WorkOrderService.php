@@ -257,7 +257,7 @@ class WorkOrderService
 
             $pendingApproval = null;
             foreach ($pendingApprovals as $approval) {
-                $checkRule = ApprovalConfig::activeFor('WO')
+                $checkRule = ApprovalConfig::activeFor('SPK')
                     ->where('approval_level', $approval->approval_level)
                     ->where('department_id', $approval->department_id)
                     ->first();
@@ -340,7 +340,7 @@ class WorkOrderService
 
             $pendingApproval = null;
             foreach ($pendingApprovals as $approval) {
-                $checkRule = ApprovalConfig::activeFor('WO')
+                $checkRule = ApprovalConfig::activeFor('SPK')
                     ->where('approval_level', $approval->approval_level)
                     ->where('department_id', $approval->department_id)
                     ->first();
