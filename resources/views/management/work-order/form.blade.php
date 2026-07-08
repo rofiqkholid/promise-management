@@ -1142,7 +1142,7 @@ document.addEventListener('alpine:init', () => {
         usersList: [],
         
         // Pre-populated selected products
-        products: @json(isset($workOrder) ? $workOrder->products->sortBy('sort_order')->values() : $inquiry->products)->map(p => ({
+        products: @json(isset($workOrder) ? $workOrder->products->sortBy('sort_order')->values() : $inquiry->products).map(p => ({
             id: p.id ?? null,
             tempId: 'prod_' + Math.random().toString(36).substr(2, 9),
             parent_id: p.parent_id ?? null,
