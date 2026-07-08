@@ -70,7 +70,8 @@ class ApprovalConfig extends Model
      */
     public function scopeActiveFor($query, string $type = 'WO')
     {
-        return $query->where('document_type', $type)
+        $types = ($type === 'WO') ? ['WO', 'SPK'] : [$type];
+        return $query->whereIn('document_type', $types)
                      ->where('is_active', true)
                      ->orderBy('approval_level', 'asc')
                      ->orderBy('sort_order', 'asc');

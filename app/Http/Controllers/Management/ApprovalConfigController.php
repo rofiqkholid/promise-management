@@ -146,7 +146,7 @@ class ApprovalConfigController extends Controller
 
     public function apiGetRules()
     {
-        $rules = ApprovalConfig::with(['department', 'approverUsers'])->where('document_type', 'SPK')->orderBy('approval_level', 'asc')->orderBy('sort_order', 'asc')->get();
+        $rules = ApprovalConfig::with(['department', 'approverUsers'])->whereIn('document_type', ['WO', 'SPK'])->orderBy('approval_level', 'asc')->orderBy('sort_order', 'asc')->get();
         
         $data = [];
         foreach ($rules as $rule) {
