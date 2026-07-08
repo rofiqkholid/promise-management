@@ -204,7 +204,7 @@ class WorkOrderService
                 throw new \Exception('Only Draft Work Orders can be submitted.');
             }
 
-            $rules = ApprovalConfig::activeFor('WO')->get();
+            $rules = ApprovalConfig::activeFor('SPK')->get();
             if ($rules->isEmpty()) {
                 throw new \Exception('No approval rules configured for Work Order (WO). Please contact administrator.');
             }
