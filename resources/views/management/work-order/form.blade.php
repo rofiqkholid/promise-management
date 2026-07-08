@@ -993,6 +993,28 @@ function openEditApprovalModal(rule) {
             ];
         })->values()->toArray();
     }
+
+    // Prepare approvalRulesList and approvalRulesListFull to avoid nested Blade parser brackets conflicts
+    $approvalRulesListMapped = $approvalRules->map(fn($r) => [
+        'id' => $r->id,
+        'department_id' => $r->department_id,
+        'dept_code' => $r->department->code ?? $r->department->name ?? ''
+    ])->values()->toArray();
+
+    $approvalRulesListFullMapped = $approvalRules->map(fn($r) => [
+        'id' => $r->id,
+        'rule_id' => $r->rule_id,
+        'approval_level' => $r->approval_level,
+        'position_label' => $r->position_label,
+        'action_label' => $r->action_label ?? 'Checked',
+        'department_id' => $r->department_id,
+        'department_name' => $r->department->name ?? '—',
+        'department_code' => $r->department->code ?? '',
+        'approver_user_ids' => $r->approver_user_ids ?? [],
+        'sort_order' => $r->sort_order,
+        'is_active' => $r->is_active,
+        'approver_users_list_names' => $r->approver_users->pluck('name')->implode(', ')
+    ])->values()->toArray();
 @endphp
 
 <script>
@@ -1054,21 +1076,8 @@ document.addEventListener('alpine:init', () => {
         selected_approval_rules: @json(isset($workOrder) ? ($workOrder->selected_approval_rule_ids ?: $approvalRules->pluck('id')) : $approvalRules->pluck('id')),
         
         // All approval rules with their department_id for filtering
-        approvalRulesList: @json($approvalRules->map(fn($r) => ['id' => $r->id, 'department_id' => $r->department_id, 'dept_code' => $r->department->code ?? $r->department->name ?? ''])->values()),
-        approvalRulesListFull: @json($approvalRules->map(fn($r) => [
-            'id' => $r->id,
-            'rule_id' => $r->rule_id,
-            'approval_level' => $r->approval_level,
-            'position_label' => $r->position_label,
-            'action_label' => $r->action_label ?? 'Checked',
-            'department_id' => $r->department_id,
-            'department_name' => $r->department->name ?? '—',
-            'department_code' => $r->department->code ?? '',
-            'approver_user_ids' => $r->approver_user_ids ?? [],
-            'sort_order' => $r->sort_order,
-            'is_active' => $r->is_active,
-            'approver_users_list_names' => $r->approver_users->pluck('name')->implode(', ')
-        ])->values()),
+        approvalRulesList: @json($approvalRulesListMapped),
+        approvalRulesListFull: @json($approvalRulesListFullMapped),
         
         // Departments list lookup
         departmentsList: @json($departments),
