@@ -198,7 +198,7 @@ class WorkOrder extends Model
         }
         $pending = $this->approvals()->where('status', 'Pending')->get();
         foreach ($pending as $approval) {
-            $rule = ApprovalConfig::activeFor('WO')
+            $rule = ApprovalConfig::activeFor('SPK')
                 ->where('approval_level', $approval->approval_level)
                 ->where('department_id', $approval->department_id)
                 ->first();
