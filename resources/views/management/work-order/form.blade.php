@@ -302,68 +302,63 @@
                 
                 <div class="space-y-3">
                     <div class="space-y-2.5">
-                        @foreach($processes as $proc)
-                            @php
-                                $procDetail = isset($workOrder) ? $workOrder->processes->find($proc->id) : null;
-                                $savedDepts = $procDetail ? json_decode($procDetail->pivot->assigned_departments ?? '[]') : null;
-                                $defaultDepts = json_decode($proc->default_assigned_departments ?? '[]', true) ?: [];
-                            @endphp
-                            <div class="flex flex-col p-3.5 border rounded-xs"
-                                 :class="isProcessSelected({{ $proc->id }}) 
+                        <template x-for="proc in processesList" :key="proc.id">
+                            <div class="flex flex-col p-3.5 border rounded-xs animate-fadeIn"
+                                 :class="isProcessSelected(proc.id) 
                                     ? 'border-slate-300 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/50' 
                                     : 'border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/50'">
                                 
                                 {{-- Left Side: Custom Checkbox & Process info --}}
                                 <div class="flex items-center gap-3">
                                     <label class="relative flex items-center justify-center cursor-pointer select-none">
-                                        <input type="checkbox" name="processes[]" value="{{ $proc->id }}" 
-                                               :checked="isProcessSelected({{ $proc->id }})"
-                                               @change="toggleProcess({{ $proc->id }})"
+                                        <input type="checkbox" name="processes[]" :value="proc.id" 
+                                               :checked="isProcessSelected(proc.id)"
+                                               @change="toggleProcess(proc.id)"
                                                class="peer h-4.5 w-4.5 cursor-pointer appearance-none rounded-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 checked:border-blue-600 checked:bg-blue-600 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-                                               {{ !$isEditable ? 'disabled' : '' }}>
+                                               :disabled="!isEditable">
                                         <span class="absolute text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none text-xs">
                                             <i class="fa-solid fa-check text-[10px]"></i>
                                         </span>
                                     </label>
                                     <div>
                                         <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block"
-                                              :class="isProcessSelected({{ $proc->id }}) ? 'text-blue-700 dark:text-blue-400 font-extrabold' : ''">
-                                            {{ $proc->process_name }}
+                                              :class="isProcessSelected(proc.id) ? 'text-blue-700 dark:text-blue-400 font-extrabold' : ''"
+                                              x-text="proc.process_name">
                                         </span>
-                                        <span class="text-[10px] text-slate-500 block mt-0.5">Owner: {{ $proc->getDefaultAssignedDepartments()->pluck('name')->implode(', ') ?: 'N/A' }}</span>
+                                        <span class="text-[10px] text-slate-500 block mt-0.5" x-text="'Owner: ' + getProcessDefaultDeptsLabel(proc)"></span>
                                     </div>
                                 </div>
                                 
                                 {{-- Assigned Departments checkable badges list --}}
-                                <div x-show="isProcessSelected({{ $proc->id }})" class="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+                                <div x-show="isProcessSelected(proc.id)" class="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
                                     <div class="text-[10px] text-slate-500 uppercase font-medium mb-1.5">Assigned Departments:</div>
                                     <div class="flex flex-wrap gap-1.5">
-                                        @foreach($departments as $dept)
+                                        <template x-for="dept in departmentsList" :key="dept.id">
                                             <label class="inline-flex items-center gap-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-2 py-0.5 text-[10px] cursor-pointer select-none rounded-xs font-semibold"
-                                                   :class="process_departments[{{ $proc->id }}] && process_departments[{{ $proc->id }}].map(Number).includes({{ $dept->id }}) 
+                                                   :class="process_departments[proc.id] && process_departments[proc.id].map(Number).includes(dept.id) 
                                                         ? 'bg-blue-50 border-blue-300 text-blue-700 dark:bg-blue-950/20 dark:border-blue-800 dark:text-blue-400 font-bold' 
                                                         : 'text-slate-600 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800/50'">
                                                 <input type="checkbox" 
-                                                       value="{{ $dept->id }}" 
-                                                       x-model.number="process_departments[{{ $proc->id }}]"
+                                                       :value="dept.id" 
+                                                       x-model.number="process_departments[proc.id]"
                                                        @change="syncGlobalSupportDepartments()"
                                                        class="h-3 w-3 rounded-xs border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-0"
-                                                       {{ !$isEditable ? 'disabled' : '' }}>
-                                                <span>{{ $dept->code }}</span>
+                                                       :disabled="!isEditable">
+                                                <span x-text="dept.code"></span>
                                             </label>
-                                        @endforeach
+                                        </template>
                                     </div>
                                     
                                     <!-- PIC Selection List -->
                                     <div class="mt-3 space-y-2 border-t border-slate-100 dark:border-slate-800/60 pt-2"
-                                         x-show="process_departments[{{ $proc->id }}] && process_departments[{{ $proc->id }}].length > 0">
+                                         x-show="process_departments[proc.id] && process_departments[proc.id].length > 0">
                                         <div class="text-[10px] text-slate-500 uppercase font-medium">Assign PIC for each department:</div>
-                                        <template x-for="deptId in (process_departments[{{ $proc->id }}] || [])" :key="deptId">
+                                        <template x-for="deptId in (process_departments[proc.id] || [])" :key="deptId">
                                             <div class="flex items-center justify-between gap-3 bg-slate-100 dark:bg-slate-800 p-2 border border-slate-300 dark:border-slate-700 rounded-xs">
                                                 <span class="text-xs font-bold text-slate-700 dark:text-slate-350" x-text="getDeptCodeById(deptId)"></span>
                                                 <div class="flex items-center gap-2">
                                                     <label class="text-xs text-slate-700 dark:text-slate-350">PIC:</label>
-                                                    <select x-init="setTimeout(() => window.initPicSelect2($el, deptId, process_pics[{{ $proc->id }} + '_' + deptId], val => { process_pics[{{ $proc->id }} + '_' + deptId] = val; }, !isEditable), 50)"
+                                                    <select x-init="setTimeout(() => window.initPicSelect2($el, deptId, process_pics[proc.id + '_' + deptId], val => { process_pics[proc.id + '_' + deptId] = val; }, !isEditable), 50)"
                                                             class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs w-48">
                                                     </select>
                                                 </div>
@@ -372,7 +367,7 @@
                                     </div>
                                 </div>
                             </div>
-                        @endforeach
+                        </template>
                     </div>
                 </div>
             </div>
@@ -391,50 +386,49 @@
             <p class="text-[10px] text-slate-500 dark:text-slate-450 mb-2">Select the required approval level. The approval <span class="text-blue-600 font-semibold">marked in blue</span> is recommended based on the department selected in the Process Checklist.</p>
             
             <div class="space-y-2">
-                @foreach($approvalRules as $rule)
-                    @php $ruleId = $rule->id; $ruleDeptId = $rule->department_id; @endphp
-                    <label class="flex items-start gap-3 p-3 border rounded-xs cursor-pointer select-none transition-all duration-150"
+                <template x-for="rule in approvalRulesListFull" :key="rule.id">
+                    <label class="flex items-start gap-3 p-3 border rounded-xs cursor-pointer select-none transition-all duration-150 animate-fadeIn"
                            :class="{
-                               'border-blue-400 bg-blue-50/40 dark:border-blue-700 dark:bg-blue-950/20 shadow-sm': selected_approval_rules.map(Number).includes({{ $ruleId }}) && isSuggestedRule({{ $ruleDeptId }}),
-                               'border-slate-300 bg-slate-50/60 dark:border-slate-700 dark:bg-slate-800/30': selected_approval_rules.map(Number).includes({{ $ruleId }}) && !isSuggestedRule({{ $ruleDeptId }}),
-                               'border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/50 opacity-60': !selected_approval_rules.map(Number).includes({{ $ruleId }})
+                               'border-blue-400 bg-blue-50/40 dark:border-blue-700 dark:bg-blue-950/20 shadow-sm': selected_approval_rules.map(Number).includes(rule.id) && isSuggestedRule(rule.department_id),
+                               'border-slate-300 bg-slate-50/60 dark:border-slate-700 dark:bg-slate-800/30': selected_approval_rules.map(Number).includes(rule.id) && !isSuggestedRule(rule.department_id),
+                               'border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/50 opacity-60': !selected_approval_rules.map(Number).includes(rule.id)
                            }">
-                        <input type="checkbox" name="selected_approval_rules[]" value="{{ $ruleId }}"
+                        <input type="checkbox" name="selected_approval_rules[]" :value="rule.id"
                                x-model.number="selected_approval_rules"
                                :disabled="!isEditable"
                                class="h-4 w-4 rounded-xs border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-0 mt-0.5 flex-shrink-0">
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-2 flex-wrap">
                                 <span class="text-xs font-bold text-slate-800 dark:text-slate-200">
-                                    Level {{ $rule->approval_level }}: {{ $rule->position_label }} ({{ $rule->action_label }})
+                                    Level <span x-text="rule.approval_level"></span>: <span x-text="rule.position_label"></span> (<span x-text="rule.action_label"></span>)
                                 </span>
                                 {{-- Suggested badge --}}
-                                <span x-show="isSuggestedRule({{ $ruleDeptId }})"
+                                <span x-show="isSuggestedRule(rule.department_id)"
                                       class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 border border-blue-200 dark:border-blue-800 rounded-full">
                                     <i class="fa-solid fa-bolt text-[8px]"></i> Department Suggestion
                                 </span>
                                 {{-- Not matching badge --}}
-                                <span x-show="!isSuggestedRule({{ $ruleDeptId }})"
+                                <span x-show="!isSuggestedRule(rule.department_id)"
                                       class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-semibold bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500 border border-slate-200 dark:border-slate-700 rounded-full">
                                     <i class="fa-solid fa-minus text-[8px]"></i> Other Dept
                                 </span>
                             </div>
                             <span class="text-[10px] text-slate-500 dark:text-slate-300 block mt-0.5">
-                                Dept: {{ $rule->department->name ?? '—' }}
-                                @if($rule->approverUsers->isNotEmpty())
-                                    · Approver: {{ $rule->approverUsers->pluck('name')->implode(', ') }}
-                                @endif
+                                Dept: <span x-text="rule.department_name"></span>
+                                <template x-if="rule.approver_users_list_names">
+                                    <span> · Approver: <span x-text="rule.approver_users_list_names"></span></span>
+                                </template>
                             </span>
                         </div>
                     </label>
-                @endforeach
+                </template>
 
-                @if($approvalRules->isEmpty())
+                <template x-if="approvalRulesListFull.length === 0">
                     <div class="py-6 text-center text-slate-400">
                         <i class="fa-solid fa-triangle-exclamation text-amber-400 mr-1"></i>
                         <span class="text-xs">No active approval rules found. Please configure them in the <a href="{{ route('management.approval-config.index') }}" class="text-blue-500 underline">Approval Matrix</a>.</span>
                     </div>
-                @endif
+                </template>
             </div>
         </x-form-card>
 
@@ -571,36 +565,31 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-850">
-                        @foreach($processes as $p)
+                        <template x-for="p in processesList" :key="p.id">
                             <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/20">
-                                <td class="p-2.5 font-mono text-slate-750 dark:text-slate-300">{{ $p->process_code }}</td>
-                                <td class="p-2.5 font-bold text-slate-800 dark:text-slate-200">{{ $p->process_name }}</td>
-                                <td class="p-2.5 text-slate-500 dark:text-slate-400">
-                                    {{ $p->getDefaultAssignedDepartments()->pluck('code')->implode(', ') ?: '—' }}
-                                </td>
+                                <td class="p-2.5 font-mono text-slate-750 dark:text-slate-300" x-text="p.process_code"></td>
+                                <td class="p-2.5 font-bold text-slate-800 dark:text-slate-200" x-text="p.process_name"></td>
+                                <td class="p-2.5 text-slate-500 dark:text-slate-400" x-text="getProcessDefaultDeptsLabel(p)"></td>
                                 <td class="p-2.5 text-center">
-                                    @if($p->is_active)
+                                    <template x-if="p.is_active">
                                         <span class="px-1.5 py-0.5 text-[9px] font-bold bg-emerald-50 dark:bg-emerald-950/20 text-emerald-650 dark:text-emerald-450 border border-emerald-250 dark:border-emerald-900 rounded-xs">Active</span>
-                                    @else
+                                    </template>
+                                    <template x-if="!p.is_active">
                                         <span class="px-1.5 py-0.5 text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700 rounded-xs">Inactive</span>
-                                    @endif
+                                    </template>
                                 </td>
                                 <td class="p-2.5 text-right">
                                     <div class="flex justify-end items-center gap-2">
-                                        <button type="button" onclick="openEditProcessModal({{ json_encode($p) }})" class="p-1.5 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-blue-400 text-slate-600 dark:text-slate-350 hover:text-blue-650 rounded-xs transition-colors flex items-center justify-center w-7 h-7" title="Edit">
+                                        <button type="button" @click="openEditProcessModal(p)" class="p-1.5 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-blue-400 text-slate-600 dark:text-slate-350 hover:text-blue-650 rounded-xs transition-colors flex items-center justify-center w-7 h-7" title="Edit">
                                             <i class="fa-solid fa-pen-to-square text-[11px]"></i>
                                         </button>
-                                        <form action="{{ route('management.process-checklist.destroy', $p->id) }}" method="POST" onsubmit="return confirm('Delete this process?')" class="inline-flex">
-                                            @csrf
-                                            <input type="hidden" name="redirect_to" value="{{ request()->fullUrl() }}">
-                                            <button type="submit" class="p-1.5 bg-rose-50 dark:bg-rose-950/20 border border-rose-250 dark:border-rose-900/50 text-rose-600 dark:text-rose-450 hover:border-rose-500 rounded-xs transition-colors flex items-center justify-center w-7 h-7" title="Delete">
-                                                <i class="fa-solid fa-trash-can text-[11px]"></i>
-                                            </button>
-                                        </form>
+                                        <button type="button" @click="deleteProcessAjax(p.id)" class="p-1.5 bg-rose-50 dark:bg-rose-950/20 border border-rose-250 dark:border-rose-900/50 text-rose-600 dark:text-rose-450 hover:border-rose-500 rounded-xs transition-colors flex items-center justify-center w-7 h-7" title="Delete">
+                                            <i class="fa-solid fa-trash-can text-[11px]"></i>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
-                        @endforeach
+                        </template>
                     </tbody>
                 </table>
             </div>
@@ -730,41 +719,36 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-850">
-                        @foreach($approvalRules as $rule)
+                        <template x-for="rule in approvalRulesListFull" :key="rule.id">
                             <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/20">
-                                <td class="p-2.5 text-center font-bold">{{ $rule->approval_level }}</td>
-                                <td class="p-2.5 font-bold text-slate-800 dark:text-slate-200">{{ $rule->position_label }}</td>
+                                <td class="p-2.5 text-center font-bold" x-text="rule.approval_level"></td>
+                                <td class="p-2.5 font-bold text-slate-800 dark:text-slate-200" x-text="rule.position_label"></td>
                                 <td class="p-2.5">
-                                    <span class="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 text-slate-650 dark:text-slate-300 font-semibold rounded-xs">{{ $rule->action_label ?? 'Checked' }}</span>
+                                    <span class="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 text-slate-650 dark:text-slate-300 font-semibold rounded-xs" x-text="rule.action_label || 'Checked'"></span>
                                 </td>
-                                <td class="p-2.5 font-semibold text-slate-700 dark:text-slate-350">{{ $rule->department->code ?? '—' }}</td>
-                                <td class="p-2.5 text-slate-500 dark:text-slate-400 text-[10px]">
-                                    {{ $rule->approverUsers->pluck('name')->implode(', ') ?: 'Any in Department' }}
-                                </td>
-                                <td class="p-2.5 text-center font-mono">{{ $rule->sort_order }}</td>
+                                <td class="p-2.5 font-semibold text-slate-700 dark:text-slate-350" x-text="rule.department_code || '—'"></td>
+                                <td class="p-2.5 text-slate-500 dark:text-slate-400 text-[10px]" x-text="rule.approver_users_list_names || 'Any in Department'"></td>
+                                <td class="p-2.5 text-center font-mono" x-text="rule.sort_order"></td>
                                 <td class="p-2.5 text-center">
-                                    @if($rule->is_active)
+                                    <template x-if="rule.is_active">
                                         <span class="px-1.5 py-0.5 text-[9px] font-bold bg-emerald-50 dark:bg-emerald-950/20 text-emerald-650 dark:text-emerald-450 border border-emerald-250 dark:border-emerald-900 rounded-xs">Active</span>
-                                    @else
+                                    </template>
+                                    <template x-if="!rule.is_active">
                                         <span class="px-1.5 py-0.5 text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700 rounded-xs">Inactive</span>
-                                    @endif
+                                    </template>
                                 </td>
                                 <td class="p-2.5 text-right">
                                     <div class="flex justify-end items-center gap-2">
-                                        <button type="button" onclick="openEditApprovalModal({{ json_encode($rule) }})" class="p-1.5 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-blue-400 text-slate-600 dark:text-slate-300 hover:text-blue-650 rounded-xs transition-colors flex items-center justify-center w-7 h-7" title="Edit">
+                                        <button type="button" @click="openEditApprovalModal(rule)" class="p-1.5 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-blue-400 text-slate-600 dark:text-slate-300 hover:text-blue-650 rounded-xs transition-colors flex items-center justify-center w-7 h-7" title="Edit">
                                             <i class="fa-solid fa-pen-to-square text-[11px]"></i>
                                         </button>
-                                        <form action="{{ route('management.approval-config.destroy', $rule->id) }}" method="POST" onsubmit="return confirm('Delete this approval rule?')" class="inline-flex">
-                                            @csrf
-                                            <input type="hidden" name="redirect_to" value="{{ request()->fullUrl() }}">
-                                            <button type="submit" class="p-1.5 bg-rose-50 dark:bg-rose-950/20 border border-rose-250 dark:border-rose-900/50 text-rose-600 dark:text-rose-450 hover:border-rose-500 rounded-xs transition-colors flex items-center justify-center w-7 h-7" title="Delete">
-                                                <i class="fa-solid fa-trash-can text-[11px]"></i>
-                                            </button>
-                                        </form>
+                                        <button type="button" @click="deleteApprovalAjax(rule.id)" class="p-1.5 bg-rose-50 dark:bg-rose-950/20 border border-rose-250 dark:bg-rose-900/50 text-rose-600 dark:text-rose-450 hover:border-rose-500 rounded-xs transition-colors flex items-center justify-center w-7 h-7" title="Delete">
+                                            <i class="fa-solid fa-trash-can text-[11px]"></i>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
-                        @endforeach
+                        </template>
                     </tbody>
                 </table>
             </div>
@@ -1071,6 +1055,20 @@ document.addEventListener('alpine:init', () => {
         
         // All approval rules with their department_id for filtering
         approvalRulesList: @json($approvalRules->map(fn($r) => ['id' => $r->id, 'department_id' => $r->department_id, 'dept_code' => $r->department->code ?? $r->department->name ?? ''])->values()),
+        approvalRulesListFull: @json($approvalRules->map(fn($r) => [
+            'id' => $r->id,
+            'rule_id' => $r->rule_id,
+            'approval_level' => $r->approval_level,
+            'position_label' => $r->position_label,
+            'action_label' => $r->action_label ?? 'Checked',
+            'department_id' => $r->department_id,
+            'department_name' => $r->department->name ?? '—',
+            'department_code' => $r->department->code ?? '',
+            'approver_user_ids' => $r->approver_user_ids ?? [],
+            'sort_order' => $r->sort_order,
+            'is_active' => $r->is_active,
+            'approver_users_list_names' => $r->approver_users->pluck('name')->implode(', ')
+        ])->values()),
         
         // Departments list lookup
         departmentsList: @json($departments),
@@ -1479,6 +1477,47 @@ document.addEventListener('alpine:init', () => {
             let month = months[date.getMonth()];
             let year = date.getFullYear();
             return `${day}-${month}-${year}`;
+        },
+
+        async refreshProcesses() {
+            try {
+                let r = await fetch('{{ route("management.api.processes") }}');
+                if (r.ok) {
+                    this.processesList = await r.json();
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        },
+
+        async refreshApprovalRules() {
+            try {
+                let r = await fetch('{{ route("management.api.approval-rules") }}');
+                if (r.ok) {
+                    let data = await r.json();
+                    this.approvalRulesListFull = data;
+                    this.approvalRulesList = data.map(r => ({
+                        id: r.id,
+                        department_id: r.department_id,
+                        dept_code: r.department_code
+                    }));
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        },
+
+        getProcessDefaultDeptsLabel(p) {
+            try {
+                let parsed = JSON.parse(p.default_assigned_departments || '[]');
+                return parsed.map(d => {
+                    let deptId = typeof d === 'object' ? d.department_id : d;
+                    let dept = this.departmentsList.find(x => x.id == deptId);
+                    return dept ? dept.code : '';
+                }).filter(Boolean).join(', ') || '—';
+            } catch (e) {
+                return '—';
+            }
         }
     }));
 });
@@ -1742,6 +1781,113 @@ document.addEventListener('alpine:init', () => {
                 }
             });
         });
+
+        // Intercept Process Config Form via AJAX
+        $('#process-config-form').on('submit', function(e) {
+            e.preventDefault();
+            let $form = $(this);
+            let url = $form.attr('action');
+            let formData = new FormData(this);
+            
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    showToast(response.message || 'Successfully saved process!', 'success');
+                    document.getElementById('modal-process-config').classList.add('hidden');
+                    
+                    let formEl = document.getElementById('spkFormContainer');
+                    if (formEl) {
+                        Alpine.$data(formEl).refreshProcesses();
+                    }
+                },
+                error: function(xhr) {
+                    let msg = 'Failed to save process';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        msg += ': ' + xhr.responseJSON.message;
+                    }
+                    showToast(msg, 'error');
+                }
+            });
+        });
+
+        // Intercept Approval Config Form via AJAX
+        $('#approval-config-form').on('submit', function(e) {
+            e.preventDefault();
+            let $form = $(this);
+            let url = $form.attr('action');
+            let formData = new FormData(this);
+            
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    showToast(response.message || 'Successfully saved approval rule!', 'success');
+                    document.getElementById('modal-approval-config').classList.add('hidden');
+                    
+                    let formEl = document.getElementById('spkFormContainer');
+                    if (formEl) {
+                        Alpine.$data(formEl).refreshApprovalRules();
+                    }
+                },
+                error: function(xhr) {
+                    let msg = 'Failed to save approval rule';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        msg += ': ' + xhr.responseJSON.message;
+                    }
+                    showToast(msg, 'error');
+                }
+            });
+        });
+
+        // Global functions to delete process or approval rule via AJAX
+        window.deleteProcessAjax = function(id) {
+            if (!confirm('Are you sure you want to delete this process?')) return;
+            $.ajax({
+                url: '{{ url("management/process-checklist") }}/' + id + '/delete',
+                type: 'POST',
+                data: {
+                    _token: $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    showToast(response.message || 'Deleted successfully!', 'success');
+                    let formEl = document.getElementById('spkFormContainer');
+                    if (formEl) {
+                        Alpine.$data(formEl).refreshProcesses();
+                    }
+                },
+                error: function(xhr) {
+                    showToast('Failed to delete process', 'error');
+                }
+            });
+        };
+
+        window.deleteApprovalAjax = function(id) {
+            if (!confirm('Are you sure you want to delete this approval rule?')) return;
+            $.ajax({
+                url: '{{ url("management/approval-config") }}/' + id + '/delete',
+                type: 'POST',
+                data: {
+                    _token: $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    showToast(response.message || 'Deleted successfully!', 'success');
+                    let formEl = document.getElementById('spkFormContainer');
+                    if (formEl) {
+                        Alpine.$data(formEl).refreshApprovalRules();
+                    }
+                },
+                error: function(xhr) {
+                    showToast('Failed to delete approval rule', 'error');
+                }
+            });
+        };
     });
 
     // Alpine.js component: custom multi-select with searchable dropdown + tag list

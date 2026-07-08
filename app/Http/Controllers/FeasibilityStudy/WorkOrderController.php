@@ -688,6 +688,10 @@ class WorkOrderController extends Controller
             'is_active' => $request->has('is_active') ? true : true,
         ]);
 
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['success' => true, 'message' => 'Master Process successfully created.']);
+        }
+
         return redirect($request->input('redirect_to', redirect()->back()->getTargetUrl()))->with('success', 'Master Process successfully created.');
     }
 
@@ -720,6 +724,10 @@ class WorkOrderController extends Controller
             'is_active' => $request->has('is_active'),
         ]);
 
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['success' => true, 'message' => 'Master Process successfully updated.']);
+        }
+
         return redirect($request->input('redirect_to', redirect()->back()->getTargetUrl()))->with('success', 'Master Process successfully updated.');
     }
 
@@ -728,8 +736,14 @@ class WorkOrderController extends Controller
         try {
             $process = \App\Models\WorkOrderProcess::findOrFail($id);
             $process->delete();
+            if (request()->wantsJson() || request()->ajax()) {
+                return response()->json(['success' => true, 'message' => 'Master Process successfully deleted.']);
+            }
             return redirect(request()->input('redirect_to', redirect()->back()->getTargetUrl()))->with('success', 'Master Process successfully deleted.');
         } catch (\Exception $e) {
+            if (request()->wantsJson() || request()->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Failed to delete process: ' . $e->getMessage()], 422);
+            }
             return redirect(request()->input('redirect_to', redirect()->back()->getTargetUrl()))->with('error', 'Failed to delete process: ' . $e->getMessage());
         }
     }
@@ -777,5 +791,11 @@ class WorkOrderController extends Controller
             ]);
         }
         return response()->json($users);
+    }
+
+    public function apiGetProcesses()
+    {
+        $processes = \App\Models\WorkOrderProcess::orderBy('process_name')->get();
+        return response()->json($processes);
     }
 }

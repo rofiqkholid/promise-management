@@ -47,6 +47,8 @@ Route::get('/dashboard', function () {
 
 Route::middleware('auth')->prefix('management')->name('management.')->group(function () {
     Route::get('api/users', [WorkOrderController::class, 'apiGetUsers'])->name('api.users');
+    Route::get('api/processes', [WorkOrderController::class, 'apiGetProcesses'])->name('api.processes');
+    Route::get('api/approval-rules', [ApprovalConfigController::class, 'apiGetRules'])->name('api.approval-rules');
 
     // Inquiry Routes
     Route::middleware('check.menu:management.inquiry.index')->group(function () {

@@ -94,6 +94,10 @@ class ApprovalConfigController extends Controller
 
         ApprovalConfig::create($validated);
 
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['success' => true, 'message' => 'Approval configuration created successfully.']);
+        }
+
         return redirect($request->input('redirect_to', redirect()->back()->getTargetUrl()))->with('success', 'Approval configuration created successfully.');
     }
 
@@ -121,6 +125,10 @@ class ApprovalConfigController extends Controller
 
         $rule->update($validated);
 
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['success' => true, 'message' => 'Approval configuration updated successfully.']);
+        }
+
         return redirect($request->input('redirect_to', redirect()->back()->getTargetUrl()))->with('success', 'Approval configuration updated successfully.');
     }
 
@@ -129,6 +137,46 @@ class ApprovalConfigController extends Controller
         $rule = ApprovalConfig::findOrFail($id);
         $rule->delete();
 
+        if (request()->wantsJson() || request()->ajax()) {
+            return response()->json(['success' => true, 'message' => 'Approval configuration deleted.']);
+        }
+
         return redirect(request()->input('redirect_to', redirect()->back()->getTargetUrl()))->with('success', 'Approval configuration deleted.');
+    }
+
+    public function apiGetRules()
+    {
+        $rules = ApprovalConfig::with(['department', 'approverUsers'])->orderBy('approval_level', 'asc')->orderBy('sort_order', 'asc')->get();
+        
+        $data = [];
+        foreach ($rules as $rule) {
+            $approvers = [];
+            foreach ($rule->approver_users as $u) {
+                $approvers[] = [
+                    'name' => $u->name,
+                    'nik' => $u->nik,
+                    'id' => $u->id
+                ];
+            }
+            
+            $data[] = [
+                'id' => $rule->id,
+                'rule_id' => $rule->rule_id,
+                'approval_level' => $rule->approval_level,
+                'position_label' => $rule->position_label,
+                'action_label' => $rule->action_label ?? 'Checked',
+                'department_id' => $rule->department_id,
+                'department_name' => $rule->department->name ?? '—',
+                'department_code' => $rule->department->code ?? '',
+                'approver_users' => $approvers,
+                'approver_user_ids' => $rule->approver_user_ids ?? [],
+                'approver_users_list_names' => collect($approvers)->pluck('name')->implode(', '),
+                'sort_order' => $rule->sort_order,
+                'is_active' => $rule->is_active,
+                'destroy_url' => route('management.approval-config.destroy', $rule->rule_id),
+                'raw_rule' => $rule->toArray()
+            ];
+        }
+        return response()->json($data);
     }
 }
