@@ -262,7 +262,7 @@ class WorkOrderController extends Controller
         $inquiry = $workOrder->inquiry;
         $departments = Department::orderBy('name', 'asc')->get();
         $processes = WorkOrderProcess::where('is_active', true)->orderBy('id', 'asc')->get();
-        $approvalRules = ApprovalConfig::activeFor('WO')->get();
+        $approvalRules = ApprovalConfig::activeFor('SPK')->get();
         $users = User::orderBy('name', 'asc')->get();
         $woHeader = $workOrder->docFormat;
 

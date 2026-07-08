@@ -251,6 +251,7 @@
                         <div x-show="step.due_date_closed" class="text-[8px] text-rose-600 font-bold mt-1">
                             Due Close: <span x-text="formatDateStr(step.due_date_closed)"></span>
                         </div>
+                    </div>
                 </template>
             </div>
         </div>
