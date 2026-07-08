@@ -1299,6 +1299,7 @@ document.addEventListener('alpine:init', () => {
             } catch (e) {
                 console.error('Failed to load holidays list', e);
             }
+            this.sortProductsHierarchically();
             this.checkPrioritySuggestions();
         },
 
@@ -1692,6 +1693,7 @@ document.addEventListener('alpine:init', () => {
                 p.uom = this.activeBom.uom;
                 p.remarks = this.activeBom.remarks;
             }
+            this.sortProductsHierarchically();
             document.getElementById('modal-bom-item').classList.add('hidden');
         },
 
@@ -1715,6 +1717,32 @@ document.addEventListener('alpine:init', () => {
                 if (depth > 10) break;
             }
             return depth;
+        },
+
+        sortProductsHierarchically() {
+            let sorted = [];
+            const addChildren = (parentTempId) => {
+                let children = this.products.filter(p => p.parentTempId === parentTempId);
+                children.forEach(child => {
+                    sorted.push(child);
+                    addChildren(child.tempId);
+                });
+            };
+
+            let roots = this.products.filter(p => !p.parentTempId);
+            roots.forEach(root => {
+                sorted.push(root);
+                addChildren(root.tempId);
+            });
+
+            // Add orphans
+            this.products.forEach(p => {
+                if (!sorted.includes(p)) {
+                    sorted.push(p);
+                }
+            });
+
+            this.products = sorted;
         }
     }));
 });
