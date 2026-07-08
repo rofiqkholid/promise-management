@@ -202,7 +202,7 @@ class CalendarController extends Controller
      */
     private function getNationalHolidays()
     {
-        return cache()->remember('id_national_holidays_cache_v3', 86400, function () {
+        return cache()->remember('id_national_holidays_cache_v4', 86400, function () {
             $apiKey = env('GOOGLE_CALENDAR_API_KEY');
             if (empty($apiKey)) {
                 Log::warning("GOOGLE_CALENDAR_API_KEY is not set in env. Indonesian holidays cannot be loaded from Google Calendar API.");
@@ -216,7 +216,9 @@ class CalendarController extends Controller
                 $timeMin = (now()->year - 1) . '-01-01T00:00:00Z';
                 $timeMax = (now()->year + 1) . '-12-31T23:59:59Z';
 
-                $response = \Illuminate\Support\Facades\Http::timeout(5)->get($url, [
+                $response = \Illuminate\Support\Facades\Http::withHeaders([
+                    'Referer' => 'https://promise.summitadyawinsa.co.id/'
+                ])->timeout(5)->get($url, [
                     'key' => $apiKey,
                     'timeMin' => $timeMin,
                     'timeMax' => $timeMax,

@@ -406,10 +406,7 @@
 
 @endsection
 
-@push('styles')
-<!-- FullCalendar CSS CDN -->
-<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet" />
-@endpush
+
 
 @push('scripts')
 <!-- FullCalendar JS CDN -->
