@@ -440,43 +440,99 @@
 
         {{-- Product Specifications Card (BOM) --}}
         <x-form-card title="3. Product Specifications (BOM)" icon="fa-boxes-stacked">
+            <x-slot name="headerActions">
+                @if($isEditable)
+                    <button type="button" @click="addBomItem()"
+                            class="text-[11px] font-medium text-blue-600 hover:text-blue-700 bg-blue-50 dark:bg-blue-950/40 border border-blue-400 dark:border-blue-700 px-2 py-2 rounded-xs transition-colors">
+                        <i class="fa-solid fa-plus mr-1"></i> Add BOM Item
+                    </button>
+                @endif
+            </x-slot>
             
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs border-collapse">
                     <thead>
                         <tr class="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/30 text-[10px] font-bold text-center text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                            <th class="p-2 min-w-36">Part Number / Name</th>
-                            <th class="p-2">EO</th>
-                            <th class="p-2">Class ID</th>
-                            <th class="p-2">UOM</th>
+                            <th class="p-2 w-16 text-center">Arrange</th>
+                            <th class="p-2 min-w-48 text-left">Part Number / Name</th>
+                            <th class="p-2 min-w-32 text-left">Parent Item</th>
+                            <th class="p-2 w-20">EO</th>
+                            <th class="p-2 w-28">Class ID</th>
+                            <th class="p-2 w-20">UOM</th>
                             <th class="p-2">Remarks</th>
+                            <th class="p-2 w-12 text-center">Action</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <template x-for="(prod, index) in products" :key="index">
+                        <template x-for="(prod, index) in products" :key="prod.tempId">
                             <tr class="border-b border-slate-100 dark:border-slate-800/60 hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
+                                <!-- Sequence arrangement buttons -->
+                                <td class="p-2 text-center">
+                                    <div class="flex justify-center items-center gap-1">
+                                        <button type="button" @click="moveUp(index)" class="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xs text-slate-500" title="Move Up">
+                                            <i class="fa-solid fa-arrow-up text-[10px]"></i>
+                                        </button>
+                                        <button type="button" @click="moveDown(index)" class="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xs text-slate-500" title="Move Down">
+                                            <i class="fa-solid fa-arrow-down text-[10px]"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                                <!-- Part info with depth indentation -->
+                                <td class="p-2" :style="'padding-left: ' + (getBomDepth(prod) * 1.5 + 0.5) + 'rem'">
+                                    <div class="flex items-center gap-1.5">
+                                        <template x-if="getBomDepth(prod) > 0">
+                                            <span class="text-slate-400 dark:text-slate-650 font-mono select-none">└─</span>
+                                        </template>
+                                        <div class="flex-1">
+                                            <template x-if="prod.inquiry_product_id">
+                                                <div>
+                                                    <div class="font-bold text-slate-800 dark:text-slate-200" x-text="prod.customer_part_no"></div>
+                                                    <div class="text-[10px] text-slate-400" x-text="prod.customer_part_name"></div>
+                                                </div>
+                                            </template>
+                                            <template x-if="!prod.inquiry_product_id">
+                                                <div class="space-y-1">
+                                                    <input type="text" x-model="prod.customer_part_no" placeholder="Part Number..." class="w-full py-1 px-1.5 text-xs border border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:outline-none bg-white dark:bg-slate-900 rounded-xs" :disabled="!isEditable">
+                                                    <input type="text" x-model="prod.customer_part_name" placeholder="Part Name..." class="w-full py-1 px-1.5 text-[10px] border border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:outline-none bg-white dark:bg-slate-900 rounded-xs" :disabled="!isEditable">
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </td>
+                                <!-- Parent selector -->
                                 <td class="p-2">
-                                    <div class="font-bold text-slate-800 dark:text-slate-200" x-text="prod.customer_part_no"></div>
-                                    <div class="text-[10px] text-slate-400" x-text="prod.customer_part_name"></div>
+                                    <select x-model="prod.parentTempId" class="w-full p-1 text-xs border border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:outline-none bg-white dark:bg-slate-900 rounded-xs" :disabled="!isEditable">
+                                        <option value="">-- None --</option>
+                                        <template x-for="parent in products.filter(p => p.tempId !== prod.tempId)" :key="parent.tempId">
+                                            <option :value="parent.tempId" x-text="(parent.customer_part_no || 'New Item') + ' - ' + (parent.customer_part_name || '')"></option>
+                                        </template>
+                                    </select>
+                                </td>
+                                <td class="p-2 text-center">
+                                    <input type="text" x-model="prod.eo" class="w-full py-1 px-1.5 text-xs text-center border border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:outline-none bg-white dark:bg-slate-900 rounded-xs" :disabled="!isEditable">
                                 </td>
                                 <td class="p-2">
-                                    <input type="text" x-model="prod.eo" class="py-1 px-1.5 text-xs text-center border border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:outline-none" :disabled="!isEditable">
-                                </td>
-                                <td class="p-2">
-                                    <select x-model="prod.class_id" class="p-1 text-xs border border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:outline-none" :disabled="!isEditable">
+                                    <select x-model="prod.class_id" class="w-full p-1 text-xs border border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:outline-none bg-white dark:bg-slate-900 rounded-xs" :disabled="!isEditable">
                                         <option value="FG">FG (Finished Good)</option>
                                         <option value="RM">RM (Raw Material)</option>
                                     </select>
                                 </td>
                                 <td class="p-2">
-                                    <select x-model="prod.uom" class="p-1 text-xs border border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:outline-none" :disabled="!isEditable">
+                                    <select x-model="prod.uom" class="w-full p-1 text-xs border border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:outline-none bg-white dark:bg-slate-900 rounded-xs" :disabled="!isEditable">
                                         <option value="Kg">Kg</option>
                                         <option value="Sheet">Sheet</option>
                                         <option value="Pcs">Pcs</option>
                                     </select>
                                 </td>
                                 <td class="p-2">
-                                    <input type="text" x-model="prod.remarks" class="py-1 px-1.5 text-xs border border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:outline-none" placeholder="Remarks..." :disabled="!isEditable">
+                                    <input type="text" x-model="prod.remarks" class="w-full py-1 px-1.5 text-xs border border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:outline-none bg-white dark:bg-slate-900 rounded-xs" placeholder="Remarks..." :disabled="!isEditable">
+                                </td>
+                                <td class="p-2 text-center">
+                                    <template x-if="!prod.inquiry_product_id">
+                                        <button type="button" @click="removeBomItem(index)" class="p-1 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 border border-transparent hover:border-rose-300 rounded-xs" title="Remove Item">
+                                            <i class="fa-solid fa-xmark text-sm"></i>
+                                        </button>
+                                    </template>
                                 </td>
                             </tr>
                         </template>
@@ -1086,7 +1142,11 @@ document.addEventListener('alpine:init', () => {
         usersList: [],
         
         // Pre-populated selected products
-        products: @json(isset($workOrder) ? $workOrder->products : $inquiry->products).map(p => ({
+        products: @json(isset($workOrder) ? $workOrder->products->sortBy('sort_order')->values() : $inquiry->products)->map(p => ({
+            id: p.id ?? null,
+            tempId: 'prod_' + Math.random().toString(36).substr(2, 9),
+            parent_id: p.parent_id ?? null,
+            parentTempId: null,
             work_order_product_id: p.id ?? null, // WO product PK (null for new WO)
             inquiry_product_id: p.inquiry_product_id ?? p.id, // FK to mng_inquiry_products
             customer_code: '{{ isset($workOrder) ? ($workOrder->inquiry->customer->code ?? "") : ($inquiry->customer->code ?? "") }}',
@@ -1116,6 +1176,15 @@ document.addEventListener('alpine:init', () => {
         },
 
         async init() {
+            // Resolve parentTempId relationships on page load
+            this.products.forEach(p => {
+                if (p.parent_id) {
+                    let parent = this.products.find(x => x.id == p.parent_id);
+                    if (parent) {
+                        p.parentTempId = parent.tempId;
+                    }
+                }
+            });
 
             this.updateDepartmentIdFromProcesses();
             this.syncGlobalSupportDepartments(); // also triggers updateApprovalSuggestions
@@ -1492,6 +1561,72 @@ document.addEventListener('alpine:init', () => {
             } catch (e) {
                 return '—';
             }
+        },
+
+        addBomItem() {
+            this.products.push({
+                id: null,
+                tempId: 'prod_' + Math.random().toString(36).substr(2, 9),
+                parent_id: null,
+                parentTempId: '',
+                work_order_product_id: null,
+                inquiry_product_id: null,
+                customer_code: '{{ isset($workOrder) ? ($workOrder->inquiry->customer->code ?? "") : ($inquiry->customer->code ?? "") }}',
+                model_name: '{{ isset($workOrder) ? ($workOrder->inquiry->projectModel->name ?? "") : ($inquiry->projectModel->name ?? "") }}',
+                customer_part_no: '',
+                customer_part_name: '',
+                destination: '',
+                sop_date: '',
+                eol_date: '',
+                model_life: '',
+                annual_volume: '',
+                eo: '-',
+                class_id: 'RM',
+                uom: 'Pcs',
+                variant: '',
+                has_2d_data: false,
+                has_3d_data: false,
+                has_tech_doc: false,
+                remarks: ''
+            });
+        },
+
+        removeBomItem(index) {
+            let target = this.products[index];
+            this.products.forEach(p => {
+                if (p.parentTempId === target.tempId) {
+                    p.parentTempId = '';
+                    p.parent_id = null;
+                }
+            });
+            this.products.splice(index, 1);
+        },
+
+        moveUp(index) {
+            if (index === 0) return;
+            let temp = this.products[index];
+            this.products[index] = this.products[index - 1];
+            this.products[index - 1] = temp;
+            this.products = [...this.products];
+        },
+
+        moveDown(index) {
+            if (index === this.products.length - 1) return;
+            let temp = this.products[index];
+            this.products[index] = this.products[index + 1];
+            this.products[index + 1] = temp;
+            this.products = [...this.products];
+        },
+
+        getBomDepth(prod) {
+            let depth = 0;
+            let current = prod;
+            while (current && current.parentTempId) {
+                depth++;
+                current = this.products.find(p => p.tempId === current.parentTempId);
+                if (depth > 10) break;
+            }
+            return depth;
         }
     }));
 });

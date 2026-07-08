@@ -54,98 +54,57 @@ class WorkOrderService
             
             $this->workOrderRepo->attachProcessesAndPics($workOrder->id, $processes, $assignedPics);
 
-            // Sync work order products - read from JSON body (sent by AJAX with Content-Type: application/json)
-            $jsonProducts = request()->json('products');
-            $productsParam = (!empty($jsonProducts) && is_array($jsonProducts))
-                ? $jsonProducts
-                : (request()->has('products_json')
-                    ? (json_decode(request()->input('products_json'), true) ?: [])
-                    : request()->input('products'));
-            if ($productsParam) {
-                // When sent as JSON from Alpine, inquiry_product_id is already the raw integer ID
-                $productIds = is_array($productsParam)
-                    ? array_map(fn($p) => is_array($p) ? (int)($p['inquiry_product_id'] ?? 0) : (int)$p, $productsParam)
-                    : array_filter(explode(',', $productsParam));
-                // Decrypt product IDs
-                $decryptedIds = array_map(function($pid) {
-                    // Try decrypting or return as is if numeric
-                    if (is_array($pid)) {
-                        $pid = $pid['id'] ?? ($pid['inquiry_product_id'] ?? null);
+            // Sync work order products - read from JSON body
+            $reqProducts = request()->input('products', []);
+            if (!empty($reqProducts) && is_array($reqProducts)) {
+                $insertedIds = []; // tempId => database ID
+                
+                foreach ($reqProducts as $idx => $rp) {
+                    $inqProductId = isset($rp['inquiry_product_id']) && is_numeric($rp['inquiry_product_id']) ? (int)$rp['inquiry_product_id'] : null;
+                    
+                    $inqProduct = null;
+                    if ($inqProductId) {
+                        $inqProduct = DB::table('mng_inquiry_products')->where('id', $inqProductId)->first();
                     }
-                    if (is_numeric($pid)) return (int)$pid;
-                    if (empty($pid) || !is_string($pid)) return null;
-                    // decryptId helper equivalent (basic fallback helper in parent controller or direct inline decrypt if needed)
-                    // Let's implement decryption logic here directly or fetch from model if helper exists.
-                    // For safety, we can replicate the decryption logic:
-                    try {
-                        $hex = str_replace('-', '', $pid);
-                        $encrypted = null;
-                        if (strlen($hex) === 32) {
-                            $encrypted = @hex2bin($hex);
-                        } else {
-                            $base64 = strtr($pid, '-_', '+/');
-                            $len = strlen($base64) % 4;
-                            if ($len) {
-                                $base64 .= str_repeat('=', 4 - $len);
-                            }
-                            $decoded = base64_decode($base64);
-                            if ($decoded !== false && strlen($decoded) === 16) {
-                                $encrypted = $decoded;
-                            }
-                        }
-                        if ($encrypted && strlen($encrypted) === 16) {
-                            $appKey = config('app.key', 'mng_secret_fallback_key_123');
-                            $key = substr(md5($appKey), 0, 16);
-                            $plain = '';
-                            for ($i = 0; $i < 16; $i++) {
-                                $plain .= chr(ord($encrypted[$i]) ^ ord($key[$i]));
-                            }
-                            $mid = substr($plain, 5, 6);
-                            return (int)$mid;
-                        }
-                    } catch (\Exception $e) {}
-                    return null;
-                }, $productIds);
 
-                $reqProducts = request()->input('products', []);
-                foreach (array_filter($decryptedIds) as $pId) {
-                    $inqProduct = DB::table('mng_inquiry_products')->where('id', $pId)->first();
-                    if ($inqProduct) {
-                        // Find matching overrides submitted from client table for this inquiry_product_id
-                        $override = null;
-                        if (is_array($reqProducts)) {
-                            foreach ($reqProducts as $rp) {
-                                $rpId = $rp['inquiry_product_id'] ?? null;
-                                if ($rpId && (int)$rpId === $pId) {
-                                    $override = $rp;
-                                    break;
-                                }
-                            }
-                        }
-                        
-                        DB::table('mng_wo_products')->insert([
-                            'work_order_id' => $workOrder->id,
-                            'inquiry_product_id' => $pId,
-                            'customer_name' => $workOrder->inquiry->customer->name ?? '',
-                            'model_name' => $inqProduct->variant ?? '',
-                            'variant' => $inqProduct->variant ?? '',
-                            'customer_part_no' => $inqProduct->customer_part_no ?? '',
-                            'customer_part_name' => $inqProduct->customer_part_name ?? '',
-                            'destination' => $inqProduct->destination ?? '',
-                            'sop_date' => $inqProduct->sop_date ?? null,
-                            'eol_date' => $inqProduct->eol_date ?? null,
-                            'model_life' => $inqProduct->model_life ?? null,
-                            'annual_volume' => $inqProduct->annual_volume ?? null,
-                            'eo' => $override['eo'] ?? '-',
-                            'class_id' => $override['class_id'] ?? 'FG',
-                            'uom' => $override['uom'] ?? 'Kg',
-                            'has_2d_data' => $inqProduct->has_2d_data ?? false,
-                            'has_3d_data' => $inqProduct->has_3d_data ?? false,
-                            'has_tech_doc' => $inqProduct->has_tech_doc ?? false,
-                            'remarks' => $override['remarks'] ?? ($inqProduct->remarks ?? ''),
-                            'created_at' => now(),
-                            'updated_at' => now()
-                        ]);
+                    $insertData = [
+                        'work_order_id' => $workOrder->id,
+                        'inquiry_product_id' => $inqProductId,
+                        'customer_name' => $workOrder->inquiry->customer->name ?? '',
+                        'model_name' => $inqProduct->variant ?? $workOrder->inquiry->projectModel->name ?? '',
+                        'variant' => $inqProduct->variant ?? $rp['variant'] ?? '',
+                        'customer_part_no' => $inqProduct->customer_part_no ?? $rp['customer_part_no'] ?? '',
+                        'customer_part_name' => $inqProduct->customer_part_name ?? $rp['customer_part_name'] ?? '',
+                        'destination' => $inqProduct->destination ?? $rp['destination'] ?? '',
+                        'sop_date' => $inqProduct->sop_date ?? (!empty($rp['sop_date']) ? $rp['sop_date'] : null),
+                        'eol_date' => $inqProduct->eol_date ?? (!empty($rp['eol_date']) ? $rp['eol_date'] : null),
+                        'model_life' => $inqProduct->model_life ?? (!empty($rp['model_life']) ? (int)$rp['model_life'] : null),
+                        'annual_volume' => $inqProduct->annual_volume ?? (!empty($rp['annual_volume']) ? (int)$rp['annual_volume'] : null),
+                        'eo' => $rp['eo'] ?? '-',
+                        'class_id' => $rp['class_id'] ?? 'FG',
+                        'uom' => $rp['uom'] ?? 'Kg',
+                        'has_2d_data' => $inqProduct->has_2d_data ?? (bool)($rp['has_2d_data'] ?? false),
+                        'has_3d_data' => $inqProduct->has_3d_data ?? (bool)($rp['has_3d_data'] ?? false),
+                        'has_tech_doc' => $inqProduct->has_tech_doc ?? (bool)($rp['has_tech_doc'] ?? false),
+                        'remarks' => $rp['remarks'] ?? ($inqProduct->remarks ?? ''),
+                        'sort_order' => $idx,
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ];
+
+                    $newId = DB::table('mng_wo_products')->insertGetId($insertData);
+                    
+                    if (isset($rp['tempId'])) {
+                        $insertedIds[$rp['tempId']] = $newId;
+                    }
+                }
+
+                // Second pass: update parent_id based on client parentTempId mapping
+                foreach ($reqProducts as $rp) {
+                    if (isset($rp['tempId']) && isset($rp['parentTempId']) && isset($insertedIds[$rp['parentTempId']])) {
+                        DB::table('mng_wo_products')
+                            ->where('id', $insertedIds[$rp['tempId']])
+                            ->update(['parent_id' => $insertedIds[$rp['parentTempId']]]);
                     }
                 }
             }
@@ -165,29 +124,60 @@ class WorkOrderService
             $workOrder->update($data);
             $this->workOrderRepo->attachProcessesAndPics($workOrder->id, $processes, $assignedPics);
 
-            // Sync mng_wo_products overrides (eo, class_id, uom, remarks) on update
+            // Sync mng_wo_products: delete existing and insert new
+            DB::table('mng_wo_products')->where('work_order_id', $workOrder->id)->delete();
+
             $reqProducts = request()->input('products', []);
-            if (is_array($reqProducts)) {
-                foreach ($reqProducts as $rp) {
-                    $woProductId = $rp['work_order_product_id'] ?? null;
-                    $inqProductId = $rp['inquiry_product_id'] ?? null;
+            if (!empty($reqProducts) && is_array($reqProducts)) {
+                $insertedIds = []; // tempId => database ID
+                
+                foreach ($reqProducts as $idx => $rp) {
+                    $inqProductId = isset($rp['inquiry_product_id']) && is_numeric($rp['inquiry_product_id']) ? (int)$rp['inquiry_product_id'] : null;
                     
-                    $query = DB::table('mng_wo_products')->where('work_order_id', $workOrder->id);
-                    if ($woProductId) {
-                        $query->where('id', $woProductId);
-                    } elseif ($inqProductId) {
-                        $query->where('inquiry_product_id', $inqProductId);
-                    } else {
-                        continue;
+                    $inqProduct = null;
+                    if ($inqProductId) {
+                        $inqProduct = DB::table('mng_inquiry_products')->where('id', $inqProductId)->first();
                     }
-                    
-                    $query->update([
+
+                    $insertData = [
+                        'work_order_id' => $workOrder->id,
+                        'inquiry_product_id' => $inqProductId,
+                        'customer_name' => $workOrder->inquiry->customer->name ?? '',
+                        'model_name' => $inqProduct->variant ?? $workOrder->inquiry->projectModel->name ?? '',
+                        'variant' => $inqProduct->variant ?? $rp['variant'] ?? '',
+                        'customer_part_no' => $inqProduct->customer_part_no ?? $rp['customer_part_no'] ?? '',
+                        'customer_part_name' => $inqProduct->customer_part_name ?? $rp['customer_part_name'] ?? '',
+                        'destination' => $inqProduct->destination ?? $rp['destination'] ?? '',
+                        'sop_date' => $inqProduct->sop_date ?? (!empty($rp['sop_date']) ? $rp['sop_date'] : null),
+                        'eol_date' => $inqProduct->eol_date ?? (!empty($rp['eol_date']) ? $rp['eol_date'] : null),
+                        'model_life' => $inqProduct->model_life ?? (!empty($rp['model_life']) ? (int)$rp['model_life'] : null),
+                        'annual_volume' => $inqProduct->annual_volume ?? (!empty($rp['annual_volume']) ? (int)$rp['annual_volume'] : null),
                         'eo' => $rp['eo'] ?? '-',
                         'class_id' => $rp['class_id'] ?? 'FG',
                         'uom' => $rp['uom'] ?? 'Kg',
-                        'remarks' => $rp['remarks'] ?? '',
+                        'has_2d_data' => $inqProduct->has_2d_data ?? (bool)($rp['has_2d_data'] ?? false),
+                        'has_3d_data' => $inqProduct->has_3d_data ?? (bool)($rp['has_3d_data'] ?? false),
+                        'has_tech_doc' => $inqProduct->has_tech_doc ?? (bool)($rp['has_tech_doc'] ?? false),
+                        'remarks' => $rp['remarks'] ?? ($inqProduct->remarks ?? ''),
+                        'sort_order' => $idx,
+                        'created_at' => now(),
                         'updated_at' => now()
-                    ]);
+                    ];
+
+                    $newId = DB::table('mng_wo_products')->insertGetId($insertData);
+                    
+                    if (isset($rp['tempId'])) {
+                        $insertedIds[$rp['tempId']] = $newId;
+                    }
+                }
+
+                // Second pass: update parent_id based on client parentTempId mapping
+                foreach ($reqProducts as $rp) {
+                    if (isset($rp['tempId']) && isset($rp['parentTempId']) && isset($insertedIds[$rp['parentTempId']])) {
+                        DB::table('mng_wo_products')
+                            ->where('id', $insertedIds[$rp['tempId']])
+                            ->update(['parent_id' => $insertedIds[$rp['parentTempId']]]);
+                    }
                 }
             }
 
