@@ -197,7 +197,7 @@ class WorkOrderController extends Controller
 
         $departments = Department::orderBy('name', 'asc')->get();
         $processes = WorkOrderProcess::orderBy('id', 'asc')->get();
-        $approvalRules = ApprovalConfig::activeFor('WO')->get();
+        $approvalRules = ApprovalConfig::activeFor('SPK')->get();
         $users = User::orderBy('name', 'asc')->get();
 
         // Reset counter per year based on created_at year

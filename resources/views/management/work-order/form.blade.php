@@ -769,7 +769,7 @@
         <form id="approval-config-form" action="" method="POST" class="p-5 space-y-4 text-xs">
             @csrf
             <input type="hidden" name="redirect_to" value="{{ request()->fullUrl() }}">
-            <input type="hidden" name="document_type" value="WO">
+            <input type="hidden" name="document_type" value="SPK">
             <div>
                 <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Approval Level <span class="text-rose-500">*</span></label>
                 <input type="number" name="approval_level" id="app_level" required min="1" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">

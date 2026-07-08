@@ -68,10 +68,9 @@ class ApprovalConfig extends Model
     /**
      * Scope: active rules for a document type, ordered by level.
      */
-    public function scopeActiveFor($query, string $type = 'WO')
+    public function scopeActiveFor($query, string $type = 'SPK')
     {
-        $types = ($type === 'WO') ? ['WO', 'SPK'] : [$type];
-        return $query->whereIn('document_type', $types)
+        return $query->where('document_type', $type)
                      ->where('is_active', true)
                      ->orderBy('approval_level', 'asc')
                      ->orderBy('sort_order', 'asc');
