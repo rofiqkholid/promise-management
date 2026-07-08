@@ -442,8 +442,8 @@
         <x-form-card title="3. Product Specifications (BOM)" icon="fa-boxes-stacked">
             <x-slot name="headerActions">
                 @if($isEditable)
-                    <button type="button" @click="addBomItem()"
-                            class="text-[11px] font-medium text-blue-600 hover:text-blue-700 bg-blue-50 dark:bg-blue-950/40 border border-blue-400 dark:border-blue-700 px-2 py-2 rounded-xs transition-colors">
+                    <button type="button" @click="openAddBom()"
+                            class="text-[11px] font-medium text-blue-600 hover:text-blue-700 bg-blue-50 dark:bg-blue-950/40 border border-blue-400 dark:border-blue-700 px-2 py-2 rounded-xs transition-colors cursor-pointer">
                         <i class="fa-solid fa-plus mr-1"></i> Add BOM Item
                     </button>
                 @endif
@@ -453,30 +453,38 @@
                 <table class="w-full text-left text-xs border-collapse">
                     <thead>
                         <tr class="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/30 text-[10px] font-bold text-center text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                            <th class="p-2 w-16 text-center">Arrange</th>
+                            @if($isEditable)
+                                <th class="p-2 w-10 text-center">Drag</th>
+                            @endif
                             <th class="p-2 min-w-48 text-left">Part Number / Name</th>
-                            <th class="p-2 min-w-32 text-left">Parent Item</th>
                             <th class="p-2 w-20">EO</th>
                             <th class="p-2 w-28">Class ID</th>
                             <th class="p-2 w-20">UOM</th>
                             <th class="p-2">Remarks</th>
-                            <th class="p-2 w-12 text-center">Action</th>
+                            <th class="p-2 w-20 text-center">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         <template x-for="(prod, index) in products" :key="prod.tempId">
-                            <tr class="border-b border-slate-100 dark:border-slate-800/60 hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
-                                <!-- Sequence arrangement buttons -->
-                                <td class="p-2 text-center">
-                                    <div class="flex justify-center items-center gap-1">
-                                        <button type="button" @click="moveUp(index)" class="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xs text-slate-500" title="Move Up">
-                                            <i class="fa-solid fa-arrow-up text-[10px]"></i>
-                                        </button>
-                                        <button type="button" @click="moveDown(index)" class="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xs text-slate-500" title="Move Down">
-                                            <i class="fa-solid fa-arrow-down text-[10px]"></i>
-                                        </button>
-                                    </div>
-                                </td>
+                            <tr :draggable="isEditable ? 'true' : 'false'"
+                                @dragstart="draggedIndex = index; $event.dataTransfer.effectAllowed = 'move';"
+                                @dragover.prevent=""
+                                @drop="
+                                    if (draggedIndex !== null && draggedIndex !== index) {
+                                        let item = products[draggedIndex];
+                                        products.splice(draggedIndex, 1);
+                                        products.splice(index, 0, item);
+                                        products = [...products];
+                                    }
+                                    draggedIndex = null;
+                                "
+                                class="border-b border-slate-100 dark:border-slate-800/60 hover:bg-slate-50/50 dark:hover:bg-slate-800/40 align-middle"
+                                :class="isEditable ? 'cursor-grab active:cursor-grabbing' : ''">
+                                @if($isEditable)
+                                    <td class="p-2 text-center text-slate-400 select-none">
+                                        <i class="fa-solid fa-grip-vertical text-xs"></i>
+                                    </td>
+                                @endif
                                 <!-- Part info with depth indentation -->
                                 <td class="p-2" :style="'padding-left: ' + (getBomDepth(prod) * 1.5 + 0.5) + 'rem'">
                                     <div class="flex items-center gap-1.5">
@@ -484,55 +492,30 @@
                                             <span class="text-slate-400 dark:text-slate-650 font-mono select-none">└─</span>
                                         </template>
                                         <div class="flex-1">
-                                            <template x-if="prod.inquiry_product_id">
-                                                <div>
-                                                    <div class="font-bold text-slate-800 dark:text-slate-200" x-text="prod.customer_part_no"></div>
-                                                    <div class="text-[10px] text-slate-400" x-text="prod.customer_part_name"></div>
-                                                </div>
-                                            </template>
-                                            <template x-if="!prod.inquiry_product_id">
-                                                <div class="space-y-1">
-                                                    <input type="text" x-model="prod.customer_part_no" placeholder="Part Number..." class="w-full py-1 px-1.5 text-xs border border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:outline-none bg-white dark:bg-slate-900 rounded-xs" :disabled="!isEditable">
-                                                    <input type="text" x-model="prod.customer_part_name" placeholder="Part Name..." class="w-full py-1 px-1.5 text-[10px] border border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:outline-none bg-white dark:bg-slate-900 rounded-xs" :disabled="!isEditable">
-                                                </div>
-                                            </template>
+                                            <div class="font-bold text-slate-800 dark:text-slate-200" x-text="prod.customer_part_no || '—'"></div>
+                                            <div class="text-[10px] text-slate-400" x-text="prod.customer_part_name || '—'"></div>
                                         </div>
                                     </div>
                                 </td>
-                                <!-- Parent selector -->
-                                <td class="p-2">
-                                    <select x-model="prod.parentTempId" class="w-full p-1 text-xs border border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:outline-none bg-white dark:bg-slate-900 rounded-xs" :disabled="!isEditable">
-                                        <option value="">-- None --</option>
-                                        <template x-for="parent in products.filter(p => p.tempId !== prod.tempId)" :key="parent.tempId">
-                                            <option :value="parent.tempId" x-text="(parent.customer_part_no || 'New Item') + ' - ' + (parent.customer_part_name || '')"></option>
-                                        </template>
-                                    </select>
-                                </td>
+                                <td class="p-2 text-center" x-text="prod.eo"></td>
+                                <td class="p-2 text-center" x-text="prod.class_id"></td>
+                                <td class="p-2 text-center" x-text="prod.uom"></td>
+                                <td class="p-2" x-text="prod.remarks || '—'"></td>
                                 <td class="p-2 text-center">
-                                    <input type="text" x-model="prod.eo" class="w-full py-1 px-1.5 text-xs text-center border border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:outline-none bg-white dark:bg-slate-900 rounded-xs" :disabled="!isEditable">
-                                </td>
-                                <td class="p-2">
-                                    <select x-model="prod.class_id" class="w-full p-1 text-xs border border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:outline-none bg-white dark:bg-slate-900 rounded-xs" :disabled="!isEditable">
-                                        <option value="FG">FG (Finished Good)</option>
-                                        <option value="RM">RM (Raw Material)</option>
-                                    </select>
-                                </td>
-                                <td class="p-2">
-                                    <select x-model="prod.uom" class="w-full p-1 text-xs border border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:outline-none bg-white dark:bg-slate-900 rounded-xs" :disabled="!isEditable">
-                                        <option value="Kg">Kg</option>
-                                        <option value="Sheet">Sheet</option>
-                                        <option value="Pcs">Pcs</option>
-                                    </select>
-                                </td>
-                                <td class="p-2">
-                                    <input type="text" x-model="prod.remarks" class="w-full py-1 px-1.5 text-xs border border-slate-200 dark:border-slate-700 focus:border-blue-500 focus:outline-none bg-white dark:bg-slate-900 rounded-xs" placeholder="Remarks..." :disabled="!isEditable">
-                                </td>
-                                <td class="p-2 text-center">
-                                    <template x-if="!prod.inquiry_product_id">
-                                        <button type="button" @click="removeBomItem(index)" class="p-1 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 border border-transparent hover:border-rose-300 rounded-xs" title="Remove Item">
-                                            <i class="fa-solid fa-xmark text-sm"></i>
-                                        </button>
-                                    </template>
+                                    <div class="flex justify-center gap-1">
+                                        @if($isEditable)
+                                            <button type="button" @click="openEditBom(index)" class="p-1 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/20 rounded-xs cursor-pointer" title="Edit Item">
+                                                <i class="fa-solid fa-pen-to-square text-xs"></i>
+                                            </button>
+                                            <template x-if="!prod.inquiry_product_id">
+                                                <button type="button" @click="removeBomItem(index)" class="p-1 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-xs cursor-pointer" title="Remove Item">
+                                                    <i class="fa-solid fa-trash text-xs"></i>
+                                                </button>
+                                            </template>
+                                        @else
+                                            <span class="text-[10px] text-slate-400">—</span>
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                         </template>
@@ -887,6 +870,66 @@
 </div>
 </div>
 
+{{-- ── MODAL: BOM ITEM CONFIGURATION (ADD/EDIT) ────────────────── --}}
+<div id="modal-bom-item" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-xs shadow-2xl w-full max-w-md border border-slate-200 dark:border-slate-700">
+        <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+            <h3 class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">
+                <span x-text="activeBom.index === null ? 'Add' : 'Edit'"></span> BOM Item
+            </h3>
+            <button onclick="document.getElementById('modal-bom-item').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 text-lg leading-none cursor-pointer">&times;</button>
+        </div>
+        <form @submit.prevent="saveBomItem()" class="p-5 space-y-4 text-xs">
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Part Number <span class="text-rose-500">*</span></label>
+                <input type="text" x-model="activeBom.customer_part_no" required :disabled="activeBom.inquiry_product_id" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
+            </div>
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Part Name <span class="text-rose-500">*</span></label>
+                <input type="text" x-model="activeBom.customer_part_name" required :disabled="activeBom.inquiry_product_id" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
+            </div>
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Parent Item</label>
+                <select x-model="activeBom.parentTempId" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
+                    <option value="">-- None (Top Level) --</option>
+                    <template x-for="parent in products.filter(p => p.tempId !== activeBom.tempId)" :key="parent.tempId">
+                        <option :value="parent.tempId" x-text="(parent.customer_part_no || 'New Item') + ' - ' + (parent.customer_part_name || '')"></option>
+                    </template>
+                </select>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">EO</label>
+                    <input type="text" x-model="activeBom.eo" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Class ID</label>
+                    <select x-model="activeBom.class_id" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
+                        <option value="FG">FG (Finished Good)</option>
+                        <option value="RM">RM (Raw Material)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">UOM</label>
+                    <select x-model="activeBom.uom" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
+                        <option value="Kg">Kg</option>
+                        <option value="Sheet">Sheet</option>
+                        <option value="Pcs">Pcs</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Remarks</label>
+                <textarea x-model="activeBom.remarks" rows="2" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500" placeholder="Remarks..."></textarea>
+            </div>
+            <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-750">
+                <button type="button" onclick="document.getElementById('modal-bom-item').classList.add('hidden')" class="px-3.5 py-1.5 border border-slate-200 dark:border-slate-750 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-900 rounded-xs font-bold transition-colors cursor-pointer">Cancel</button>
+                <button type="submit" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xs transition-colors cursor-pointer">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
 function openAddProcessModal() {
     document.getElementById('modal-process-title').innerText = 'Add Master Process';
@@ -1130,6 +1173,19 @@ document.addEventListener('alpine:init', () => {
         },
         holidays: [],
         effective_working_days: [],
+        draggedIndex: null,
+        activeBom: {
+            index: null,
+            tempId: null,
+            parentTempId: '',
+            customer_part_no: '',
+            customer_part_name: '',
+            eo: '-',
+            class_id: 'RM',
+            uom: 'Pcs',
+            remarks: '',
+            inquiry_product_id: null
+        },
         selected_approval_rules: (@json(isset($workOrder) ? ($workOrder->selected_approval_rule_ids ?: $approvalRules->pluck('id')) : $approvalRules->pluck('id')) || []).map(Number),
         
         // All approval rules with their department_id for filtering
@@ -1563,32 +1619,79 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
-        addBomItem() {
-            this.products.push({
-                id: null,
+        openAddBom() {
+            this.activeBom = {
+                index: null,
                 tempId: 'prod_' + Math.random().toString(36).substr(2, 9),
-                parent_id: null,
                 parentTempId: '',
-                work_order_product_id: null,
-                inquiry_product_id: null,
-                customer_code: '{{ isset($workOrder) ? ($workOrder->inquiry->customer->code ?? "") : ($inquiry->customer->code ?? "") }}',
-                model_name: '{{ isset($workOrder) ? ($workOrder->inquiry->projectModel->name ?? "") : ($inquiry->projectModel->name ?? "") }}',
                 customer_part_no: '',
                 customer_part_name: '',
-                destination: '',
-                sop_date: '',
-                eol_date: '',
-                model_life: '',
-                annual_volume: '',
                 eo: '-',
                 class_id: 'RM',
                 uom: 'Pcs',
-                variant: '',
-                has_2d_data: false,
-                has_3d_data: false,
-                has_tech_doc: false,
-                remarks: ''
-            });
+                remarks: '',
+                inquiry_product_id: null
+            };
+            document.getElementById('modal-bom-item').classList.remove('hidden');
+        },
+
+        openEditBom(index) {
+            let p = this.products[index];
+            this.activeBom = {
+                index: index,
+                tempId: p.tempId,
+                parentTempId: p.parentTempId || '',
+                customer_part_no: p.customer_part_no,
+                customer_part_name: p.customer_part_name,
+                eo: p.eo || '-',
+                class_id: p.class_id || 'FG',
+                uom: p.uom || 'Kg',
+                remarks: p.remarks || '',
+                inquiry_product_id: p.inquiry_product_id
+            };
+            document.getElementById('modal-bom-item').classList.remove('hidden');
+        },
+
+        saveBomItem() {
+            if (this.activeBom.index === null) {
+                // Add new
+                this.products.push({
+                    id: null,
+                    tempId: this.activeBom.tempId,
+                    parent_id: null,
+                    parentTempId: this.activeBom.parentTempId,
+                    work_order_product_id: null,
+                    inquiry_product_id: null,
+                    customer_code: '{{ isset($workOrder) ? ($workOrder->inquiry->customer->code ?? "") : ($inquiry->customer->code ?? "") }}',
+                    model_name: '{{ isset($workOrder) ? ($workOrder->inquiry->projectModel->name ?? "") : ($inquiry->projectModel->name ?? "") }}',
+                    customer_part_no: this.activeBom.customer_part_no,
+                    customer_part_name: this.activeBom.customer_part_name,
+                    destination: '',
+                    sop_date: '',
+                    eol_date: '',
+                    model_life: '',
+                    annual_volume: '',
+                    eo: this.activeBom.eo,
+                    class_id: this.activeBom.class_id,
+                    uom: this.activeBom.uom,
+                    variant: '',
+                    has_2d_data: false,
+                    has_3d_data: false,
+                    has_tech_doc: false,
+                    remarks: this.activeBom.remarks
+                });
+            } else {
+                // Edit existing
+                let p = this.products[this.activeBom.index];
+                p.parentTempId = this.activeBom.parentTempId;
+                p.customer_part_no = this.activeBom.customer_part_no;
+                p.customer_part_name = this.activeBom.customer_part_name;
+                p.eo = this.activeBom.eo;
+                p.class_id = this.activeBom.class_id;
+                p.uom = this.activeBom.uom;
+                p.remarks = this.activeBom.remarks;
+            }
+            document.getElementById('modal-bom-item').classList.add('hidden');
         },
 
         removeBomItem(index) {
@@ -1600,22 +1703,6 @@ document.addEventListener('alpine:init', () => {
                 }
             });
             this.products.splice(index, 1);
-        },
-
-        moveUp(index) {
-            if (index === 0) return;
-            let temp = this.products[index];
-            this.products[index] = this.products[index - 1];
-            this.products[index - 1] = temp;
-            this.products = [...this.products];
-        },
-
-        moveDown(index) {
-            if (index === this.products.length - 1) return;
-            let temp = this.products[index];
-            this.products[index] = this.products[index + 1];
-            this.products[index + 1] = temp;
-            this.products = [...this.products];
         },
 
         getBomDepth(prod) {
