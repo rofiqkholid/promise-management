@@ -324,7 +324,7 @@
                                                class="w-full px-2.5 py-1.5 text-xs border border-slate-300 bg-white text-slate-800 rounded-xs focus:outline-none focus:border-[#0c4da2]">
                                     </div>
                                     {{-- Due Date Closed --}}
-                                    <div class="flex flex-col gap-1 shrink-0">
+                                    <div class="flex flex-col gap-1 shrink-0" x-show="isLastApprovalLevel()">
                                         <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Due Date Closed</span>
                                         <input type="date" x-model="dueDateClosed"
                                                class="px-2.5 py-1.5 text-xs border border-slate-300 bg-white text-slate-800 rounded-xs focus:outline-none focus:border-[#0c4da2]">
@@ -432,6 +432,15 @@ function outlookInbox() {
             return list;
         },
         
+        isLastApprovalLevel() {
+            if (!this.detailData.approvals || this.detailData.approvals.length === 0) return false;
+            let approvals = this.detailData.approvals;
+            let maxLevel = Math.max(...approvals.map(a => Number(a.approval_level)));
+            let activeStep = approvals.find(a => a.status === 'Pending');
+            if (!activeStep) return false;
+            return Number(activeStep.approval_level) === maxLevel;
+        },
+
         getFilterLabel() {
             return {
                 'all': 'All SPK',
