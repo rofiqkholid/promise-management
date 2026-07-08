@@ -804,9 +804,10 @@ document.addEventListener('alpine:init', () => {
                 this.form.color = this.form.is_holiday ? '#ef4444' : '#10b981';
             }
 
+            let baseEventsUrl = '{{ route("management.calendar.store") }}';
             let url = this.isEditMode 
-                ? '{{ url('management/calendar/events') }}/' + this.form.id
-                : '{{ route("management.calendar.store") }}';
+                ? baseEventsUrl + '/' + this.form.id
+                : baseEventsUrl;
             let method = this.isEditMode ? 'PATCH' : 'POST';
 
             fetch(url, {
@@ -834,7 +835,7 @@ document.addEventListener('alpine:init', () => {
         deleteEvent() {
             if (!confirm('Are you sure you want to delete this event/override?')) return;
 
-            fetch('{{ url('management/calendar/events') }}/' + this.form.id, {
+            fetch('{{ route("management.calendar.store") }}/' + this.form.id, {
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
