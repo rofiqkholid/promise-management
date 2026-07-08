@@ -386,12 +386,12 @@
             <p class="text-[10px] text-slate-500 dark:text-slate-450 mb-2">Select the required approval level. The approval <span class="text-blue-600 font-semibold">marked in blue</span> is recommended based on the department selected in the Process Checklist.</p>
             
             <div class="space-y-2">
-                <template x-for="rule in approvalRulesListFull" :key="rule.id">
+                <template x-for="rule in approvalRulesListFull.filter(r => r.is_active)" :key="rule.id">
                     <label class="flex items-start gap-3 p-3 border rounded-xs cursor-pointer select-none transition-all duration-150 animate-fadeIn"
                            :class="{
-                               'border-blue-400 bg-blue-50/40 dark:border-blue-700 dark:bg-blue-950/20 shadow-sm': selected_approval_rules.map(Number).includes(rule.id) && isSuggestedRule(rule.department_id),
-                               'border-slate-300 bg-slate-50/60 dark:border-slate-700 dark:bg-slate-800/30': selected_approval_rules.map(Number).includes(rule.id) && !isSuggestedRule(rule.department_id),
-                               'border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/50 opacity-60': !selected_approval_rules.map(Number).includes(rule.id)
+                               'border-blue-400 bg-blue-50/40 dark:border-blue-700 dark:bg-blue-950/20 shadow-sm': selected_approval_rules.includes(Number(rule.id)) && isSuggestedRule(rule.department_id),
+                               'border-slate-300 bg-slate-50/60 dark:border-slate-700 dark:bg-slate-800/30': selected_approval_rules.includes(Number(rule.id)) && !isSuggestedRule(rule.department_id),
+                               'border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/50 opacity-60': !selected_approval_rules.includes(Number(rule.id))
                            }">
                         <input type="checkbox" name="selected_approval_rules[]" :value="rule.id"
                                x-model.number="selected_approval_rules"
@@ -1073,7 +1073,7 @@ document.addEventListener('alpine:init', () => {
             }
         },
         holidays: [],
-        selected_approval_rules: @json(isset($workOrder) ? ($workOrder->selected_approval_rule_ids ?: $approvalRules->pluck('id')) : $approvalRules->pluck('id')),
+        selected_approval_rules: (@json(isset($workOrder) ? ($workOrder->selected_approval_rule_ids ?: $approvalRules->pluck('id')) : $approvalRules->pluck('id')) || []).map(Number),
         
         // All approval rules with their department_id for filtering
         approvalRulesList: @json($approvalRulesListMapped),
