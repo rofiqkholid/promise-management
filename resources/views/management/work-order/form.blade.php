@@ -868,7 +868,6 @@
         </form>
     </div>
 </div>
-</div>
 
 {{-- ── MODAL: BOM ITEM CONFIGURATION (ADD/EDIT) ────────────────── --}}
 <div id="modal-bom-item" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
@@ -929,6 +928,8 @@
         </form>
     </div>
 </div>
+</div> <!-- closes spkFormContainer -->
+</div> <!-- closes spkFormWrapper -->
 
 <script>
 function openAddProcessModal() {
@@ -1180,7 +1181,7 @@ document.addEventListener('alpine:init', () => {
             parentTempId: '',
             customer_part_no: '',
             customer_part_name: '',
-            eo: '-',
+            eo: '',
             class_id: 'RM',
             uom: 'Pcs',
             remarks: '',
@@ -1214,7 +1215,7 @@ document.addEventListener('alpine:init', () => {
             eol_date: p.eol_date ? (typeof p.eol_date === 'string' ? p.eol_date.substring(0, 10) : p.eol_date) : '',
             model_life: p.model_life ?? '',
             annual_volume: p.annual_volume ?? '',
-            eo: p.eo ?? '-',
+            eo: p.eo ?? '',
             class_id: p.class_id ?? 'FG',
             uom: p.uom ?? 'Kg',
             variant: p.variant ?? '',
@@ -1626,7 +1627,7 @@ document.addEventListener('alpine:init', () => {
                 parentTempId: '',
                 customer_part_no: '',
                 customer_part_name: '',
-                eo: '-',
+                eo: '',
                 class_id: 'RM',
                 uom: 'Pcs',
                 remarks: '',
