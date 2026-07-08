@@ -14,7 +14,10 @@ class CalendarEvent extends Model
     protected $fillable = [
         'title',
         'start_date',
+        'start_time',
         'end_date',
+        'end_time',
+        'api_holiday_date',
         'is_holiday',
         'description',
         'color',
@@ -23,6 +26,7 @@ class CalendarEvent extends Model
     protected $casts = [
         'start_date' => 'date:Y-m-d',
         'end_date' => 'date:Y-m-d',
+        'api_holiday_date' => 'date:Y-m-d',
         'is_holiday' => 'boolean',
     ];
 }

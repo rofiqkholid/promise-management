@@ -17,51 +17,120 @@ class CalendarController extends Controller
     public function getEvents(Request $request)
     {
         try {
-            $events = CalendarEvent::all()->map(function ($event) {
+            // Load all database events
+            $dbEvents = CalendarEvent::all();
+            
+            // Separate overrides and normal events
+            $normalDbEvents = [];
+            $overridesByDate = [];
+            foreach ($dbEvents as $event) {
+                if ($event->api_holiday_date) {
+                    $overridesByDate[$event->api_holiday_date->format('Y-m-d')] = $event;
+                } else {
+                    $normalDbEvents[] = $event;
+                }
+            }
+
+            $events = [];
+
+            // Map normal database events
+            foreach ($normalDbEvents as $event) {
                 // Determine color based on type if not explicitly set
                 $color = $event->color;
                 if (!$color) {
-                    $color = $event->is_holiday ? '#ffe2dd' : '#e3f2fd'; // Notion default soft red or blue pastel
+                    $color = $event->is_holiday ? '#ef4444' : '#3b82f6'; // Solid red or solid blue
                 }
 
-                return [
+                $startStr = $event->start_date->format('Y-m-d');
+                if ($event->start_time) {
+                    $startStr .= 'T' . $event->start_time;
+                }
+
+                $endStr = $event->end_date ? $event->end_date->format('Y-m-d') : $event->start_date->format('Y-m-d');
+                if ($event->end_time) {
+                    $endStr .= 'T' . $event->end_time;
+                } elseif ($event->end_date) {
+                    $endStr = $event->end_date->addDay()->format('Y-m-d');
+                }
+
+                $events[] = [
                     'id' => 'db-' . $event->id,
                     'title' => $event->title,
-                    'start' => $event->start_date->format('Y-m-d'),
-                    // FullCalendar end date is exclusive, so add 1 day if end_date exists
-                    'end' => $event->end_date ? $event->end_date->addDay()->format('Y-m-d') : $event->start_date->format('Y-m-d'),
-                    'allDay' => true,
+                    'start' => $startStr,
+                    'end' => $endStr,
+                    'allDay' => empty($event->start_time),
                     'backgroundColor' => $color,
                     'borderColor' => $color,
                     'extendedProps' => [
                         'is_holiday' => $event->is_holiday,
                         'description' => $event->description,
                         'color' => $event->color,
+                        'start_time' => $event->start_time ? substr($event->start_time, 0, 5) : null,
+                        'end_time' => $event->end_time ? substr($event->end_time, 0, 5) : null,
                         'raw_end' => $event->end_date ? $event->end_date->format('Y-m-d') : $event->start_date->format('Y-m-d'),
-                        'is_db' => true
+                        'is_db' => true,
+                        'api_holiday_date' => null
                     ]
                 ];
-            })->toArray();
+            }
 
             // Merge dynamic national holidays from external API
-            $nationalHolidays = $this->getNationalHolidays();
+            $startYear = $request->input('start') ? date('Y', strtotime($request->input('start'))) : date('Y');
+            $endYear = $request->input('end') ? date('Y', strtotime($request->input('end'))) : date('Y');
+
+            $nationalHolidays = [];
+            for ($year = $startYear; $year <= $endYear; $year++) {
+                $nationalHolidays = array_merge($nationalHolidays, $this->getNationalHolidays($year));
+            }
+
             foreach ($nationalHolidays as $nh) {
-                $events[] = [
-                    'id' => 'national-' . $nh['date'],
-                    'title' => $nh['title'],
-                    'start' => $nh['date'],
-                    'end' => $nh['date'],
-                    'allDay' => true,
-                    'backgroundColor' => '#ffe2dd', // Red pastel to match holidays
-                    'borderColor' => '#ffe2dd',
-                    'extendedProps' => [
-                        'is_holiday' => true,
-                        'description' => 'Hari Libur Nasional Indonesia (API)',
-                        'color' => '#ffe2dd',
-                        'raw_end' => $nh['date'],
-                        'is_db' => false
-                    ]
-                ];
+                $dateKey = $nh['date'];
+
+                if (isset($overridesByDate[$dateKey])) {
+                    $override = $overridesByDate[$dateKey];
+                    $isHoliday = (bool) $override->is_holiday;
+                    $color = $override->color;
+                    if (!$color) {
+                        $color = $isHoliday ? '#ef4444' : '#10b981'; // Green for effective working day overrides
+                    }
+
+                    $events[] = [
+                        'id' => 'db-' . $override->id,
+                        'title' => $override->title,
+                        'start' => $dateKey,
+                        'end' => $dateKey,
+                        'allDay' => true,
+                        'backgroundColor' => $color,
+                        'borderColor' => $color,
+                        'extendedProps' => [
+                            'is_holiday' => $isHoliday,
+                            'description' => $override->description ?? 'Hari Libur Nasional Indonesia (API - Kebijakan Perusahaan)',
+                            'color' => $override->color,
+                            'raw_end' => $dateKey,
+                            'is_db' => true,
+                            'api_holiday_date' => $dateKey,
+                            'original_title' => $nh['title']
+                        ]
+                    ];
+                } else {
+                    $events[] = [
+                        'id' => 'national-' . $dateKey,
+                        'title' => $nh['title'],
+                        'start' => $dateKey,
+                        'end' => $dateKey,
+                        'allDay' => true,
+                        'backgroundColor' => '#ef4444',
+                        'borderColor' => '#ef4444',
+                        'extendedProps' => [
+                            'is_holiday' => true,
+                            'description' => 'Hari Libur Nasional Indonesia (API)',
+                            'color' => '#ef4444',
+                            'raw_end' => $dateKey,
+                            'is_db' => false,
+                            'api_holiday_date' => $dateKey
+                        ]
+                    ];
+                }
             }
 
             return response()->json($events);
@@ -76,7 +145,10 @@ class CalendarController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'start_date' => 'required|date',
+            'start_time' => 'nullable|string',
             'end_date' => 'nullable|date|after_or_equal:start_date',
+            'end_time' => 'nullable|string',
+            'api_holiday_date' => 'nullable|date',
             'is_holiday' => 'nullable|boolean',
             'description' => 'nullable|string',
             'color' => 'nullable|string|max:50',
@@ -85,11 +157,11 @@ class CalendarController extends Controller
         try {
             $validated['is_holiday'] = $request->boolean('is_holiday', false);
             
-            // Set red color for holiday if color is not custom
+            // Set colors if empty
             if ($validated['is_holiday'] && empty($validated['color'])) {
                 $validated['color'] = '#ef4444';
             } elseif (!$validated['is_holiday'] && empty($validated['color'])) {
-                $validated['color'] = '#3b82f6';
+                $validated['color'] = !empty($validated['api_holiday_date']) ? '#10b981' : '#3b82f6';
             }
 
             if (empty($validated['end_date'])) {
@@ -116,7 +188,10 @@ class CalendarController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'start_date' => 'required|date',
+            'start_time' => 'nullable|string',
             'end_date' => 'nullable|date|after_or_equal:start_date',
+            'end_time' => 'nullable|string',
+            'api_holiday_date' => 'nullable|date',
             'is_holiday' => 'nullable|boolean',
             'description' => 'nullable|string',
             'color' => 'nullable|string|max:50',
@@ -128,7 +203,7 @@ class CalendarController extends Controller
             if ($validated['is_holiday'] && empty($validated['color'])) {
                 $validated['color'] = '#ef4444';
             } elseif (!$validated['is_holiday'] && empty($validated['color'])) {
-                $validated['color'] = '#3b82f6';
+                $validated['color'] = !empty($validated['api_holiday_date']) ? '#10b981' : '#3b82f6';
             }
 
             if (empty($validated['end_date'])) {
@@ -171,7 +246,7 @@ class CalendarController extends Controller
     public function getHolidays()
     {
         try {
-            $holidays = CalendarEvent::where('is_holiday', true)->get();
+            $holidays = CalendarEvent::where('is_holiday', true)->whereNull('api_holiday_date')->get();
             $holidayDates = [];
 
             foreach ($holidays as $h) {
@@ -185,10 +260,24 @@ class CalendarController extends Controller
                 }
             }
 
+            // Get DB overrides
+            $overrides = CalendarEvent::whereNotNull('api_holiday_date')->get();
+            $overridePolicies = [];
+            foreach ($overrides as $ov) {
+                $overridePolicies[$ov->api_holiday_date->format('Y-m-d')] = (bool) $ov->is_holiday;
+            }
+
             // Merge dynamic national holidays from external API
             $nationalHolidays = $this->getNationalHolidays();
             foreach ($nationalHolidays as $nh) {
-                $holidayDates[] = $nh['date'];
+                $dateKey = $nh['date'];
+                if (isset($overridePolicies[$dateKey])) {
+                    if ($overridePolicies[$dateKey] === true) {
+                        $holidayDates[] = $dateKey;
+                    }
+                } else {
+                    $holidayDates[] = $dateKey;
+                }
             }
 
             return response()->json(array_unique($holidayDates));
@@ -200,9 +289,17 @@ class CalendarController extends Controller
     /**
      * Fetch Indonesian public holidays from Google Calendar API and cache them.
      */
-    private function getNationalHolidays()
+    private function getNationalHolidays($year = null)
     {
-        return cache()->remember('id_national_holidays_cache_v4', 86400, function () {
+        if ($year) {
+            $cacheKey = "id_national_holidays_{$year}_v7";
+            $years = [$year];
+        } else {
+            $cacheKey = "id_national_holidays_multi_v7";
+            $years = [now()->year - 1, now()->year, now()->year + 1];
+        }
+
+        return cache()->remember($cacheKey, 86400, function () use ($years) {
             $apiKey = env('GOOGLE_CALENDAR_API_KEY');
             if (empty($apiKey)) {
                 Log::warning("GOOGLE_CALENDAR_API_KEY is not set in env. Indonesian holidays cannot be loaded from Google Calendar API.");
@@ -212,45 +309,45 @@ class CalendarController extends Controller
             $calendarId = 'id.indonesian.official#holiday@group.v.calendar.google.com';
             $url = "https://www.googleapis.com/calendar/v3/calendars/" . urlencode($calendarId) . "/events";
 
-            try {
-                $timeMin = (now()->year - 1) . '-01-01T00:00:00Z';
-                $timeMax = (now()->year + 1) . '-12-31T23:59:59Z';
+            $holidays = [];
+            foreach ($years as $y) {
+                try {
+                    $timeMin = "{$y}-01-01T00:00:00Z";
+                    $timeMax = "{$y}-12-31T23:59:59Z";
 
-                $response = \Illuminate\Support\Facades\Http::withHeaders([
-                    'Referer' => 'https://promise.summitadyawinsa.co.id/'
-                ])->timeout(5)->get($url, [
-                    'key' => $apiKey,
-                    'timeMin' => $timeMin,
-                    'timeMax' => $timeMax,
-                    'singleEvents' => 'true',
-                    'orderBy' => 'startTime',
-                    'maxResults' => 250,
-                ]);
+                    $response = \Illuminate\Support\Facades\Http::withHeaders([
+                        'Referer' => 'https://promise.summitadyawinsa.co.id/'
+                    ])->timeout(5)->get($url, [
+                        'key' => $apiKey,
+                        'timeMin' => $timeMin,
+                        'timeMax' => $timeMax,
+                        'singleEvents' => 'true',
+                        'orderBy' => 'startTime',
+                        'maxResults' => 250,
+                    ]);
 
-                if ($response->successful()) {
-                    $data = $response->json();
-                    $items = $data['items'] ?? [];
-                    $holidays = [];
+                    if ($response->successful()) {
+                        $data = $response->json();
+                        $items = $data['items'] ?? [];
 
-                    foreach ($items as $item) {
-                        $date = $item['start']['date'] ?? substr($item['start']['dateTime'] ?? '', 0, 10);
-                        if (!empty($date)) {
-                            $holidays[] = [
-                                'date' => $date,
-                                'title' => $item['summary'] ?? 'Hari Libur Nasional',
-                            ];
+                        foreach ($items as $item) {
+                            $date = $item['start']['date'] ?? substr($item['start']['dateTime'] ?? '', 0, 10);
+                            if (!empty($date)) {
+                                $holidays[] = [
+                                    'date' => $date,
+                                    'title' => $item['summary'] ?? 'Hari Libur Nasional',
+                                ];
+                            }
                         }
+                    } else {
+                        Log::warning("Failed to fetch Google Calendar holidays for year {$y}: " . $response->body());
                     }
-
-                    return $holidays;
-                } else {
-                    Log::warning("Failed to fetch Google Calendar holidays: " . $response->body());
+                } catch (\Exception $e) {
+                    Log::warning("Failed to fetch Google Calendar holidays for year {$y}: " . $e->getMessage());
                 }
-            } catch (\Exception $e) {
-                Log::warning("Failed to fetch Google Calendar holidays: " . $e->getMessage());
             }
 
-            return [];
+            return $holidays;
         }) ?? [];
     }
 }
