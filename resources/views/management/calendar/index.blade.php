@@ -798,6 +798,12 @@ document.addEventListener('alpine:init', () => {
             // Ensure is_holiday is cast to a strict boolean
             this.form.is_holiday = this.form.is_holiday === true || this.form.is_holiday === 'true';
 
+            // For API holiday overrides, always assign the canonical color based on policy
+            // since the color picker is hidden for these events
+            if (this.isApiHoliday) {
+                this.form.color = this.form.is_holiday ? '#ef4444' : '#10b981';
+            }
+
             let url = this.isEditMode 
                 ? '{{ url('management/calendar/events') }}/' + this.form.id
                 : '{{ route("management.calendar.store") }}';
