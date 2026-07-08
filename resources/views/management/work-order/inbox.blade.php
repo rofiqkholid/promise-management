@@ -355,6 +355,8 @@
     </div>
 </div>
 
+@include('components.sweetalert')
+
 @push('scripts')
 <script>
 const WO_BASE_URL = '{{ url('management') }}';
@@ -573,34 +575,48 @@ function outlookInbox() {
         },
         
         submitApproval(action) {
-            const url = `${WO_BASE_URL}/work-order/${this.selectedHashedId}/${action}`;
-            const fd = new FormData();
-            fd.append('remarks', this.approvalRemarks);
-            if (action === 'approve') {
-                fd.append('due_date_closed', this.dueDateClosed);
-            }
-            
-            fetch(url, {
-                method: 'POST',
-                body: fd,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+            const actionText = action === 'approve' ? 'approve' : 'reject';
+            const actionCapitalized = action === 'approve' ? 'Approve' : 'Reject';
+            const confirmColor = action === 'approve' ? '#10b981' : '#ef4444'; // Emerald for approve, Rose for reject
+
+            window.confirmDialog({
+                title: `${actionCapitalized} SPK?`,
+                text: `Are you sure you want to ${actionText} this SPK document?`,
+                icon: action === 'approve' ? 'success' : 'warning',
+                confirmButtonText: `Yes, ${actionCapitalized}`,
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: confirmColor,
+                onConfirm: () => {
+                    const url = `${WO_BASE_URL}/work-order/${this.selectedHashedId}/${action}`;
+                    const fd = new FormData();
+                    fd.append('remarks', this.approvalRemarks);
+                    if (action === 'approve') {
+                        fd.append('due_date_closed', this.dueDateClosed);
+                    }
+                    
+                    fetch(url, {
+                        method: 'POST',
+                        body: fd,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                        }
+                    })
+                    .then(res => {
+                        if (res.ok) {
+                            this.showToast(`Document successfully ${action === 'approve' ? 'approved' : 'rejected'}.`);
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1000);
+                        } else {
+                            this.showToast('Failed to process document.');
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        this.showToast('Network error occurred.');
+                    });
                 }
-            })
-            .then(res => {
-                if (res.ok) {
-                    this.showToast(`Document successfully ${action === 'approve' ? 'approved' : 'rejected'}.`);
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1000);
-                } else {
-                    this.showToast('Failed to process document.');
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                this.showToast('Network error occurred.');
             });
         },
         
