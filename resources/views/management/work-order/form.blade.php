@@ -881,11 +881,11 @@
         <form @submit.prevent="saveBomItem()" class="p-5 space-y-4 text-xs">
             <div>
                 <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Part Number <span class="text-rose-500">*</span></label>
-                <input type="text" x-model="activeBom.customer_part_no" required :disabled="activeBom.inquiry_product_id" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
+                <input type="text" x-model="activeBom.customer_part_no" required :disabled="!!activeBom.inquiry_product_id" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
             </div>
             <div>
                 <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Part Name <span class="text-rose-500">*</span></label>
-                <input type="text" x-model="activeBom.customer_part_name" required :disabled="activeBom.inquiry_product_id" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
+                <input type="text" x-model="activeBom.customer_part_name" required :disabled="!!activeBom.inquiry_product_id" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
             </div>
             <div>
                 <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Parent Item</label>
@@ -1205,7 +1205,7 @@ document.addEventListener('alpine:init', () => {
             parent_id: p.parent_id ?? null,
             parentTempId: null,
             work_order_product_id: p.id ?? null, // WO product PK (null for new WO)
-            inquiry_product_id: p.inquiry_product_id ?? p.id, // FK to mng_inquiry_products
+            inquiry_product_id: @json(isset($workOrder)) ? p.inquiry_product_id : p.id, // FK to mng_inquiry_products
             customer_code: '{{ isset($workOrder) ? ($workOrder->inquiry->customer->code ?? "") : ($inquiry->customer->code ?? "") }}',
             model_name: '{{ isset($workOrder) ? ($workOrder->inquiry->projectModel->name ?? "") : ($inquiry->projectModel->name ?? "") }}',
             customer_part_no: p.customer_part_no ?? '',
