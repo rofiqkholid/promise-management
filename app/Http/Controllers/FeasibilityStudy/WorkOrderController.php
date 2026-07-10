@@ -401,8 +401,7 @@ class WorkOrderController extends Controller
         $rejected->load(['inquiry.customer', 'inquiry.projectModel', 'products', 'ownerDepartment', 'processes']);
         $myTasks->load(['inquiry.customer', 'inquiry.projectModel', 'products', 'ownerDepartment', 'processes']);
         $all->load(['inquiry.customer', 'inquiry.projectModel', 'products', 'ownerDepartment', 'processes']);
-
-        $approvalRules = ApprovalConfig::activeFor('WO')->get();
+        $approvalRules = ApprovalConfig::activeFor('SPK')->get();
 
         return view('management.work-order.inbox', compact('recent', 'approved', 'rejected', 'myTasks', 'all', 'approvalRules'));
     }
@@ -456,20 +455,25 @@ class WorkOrderController extends Controller
             $deptNames = collect();
             if ($workOrder->ownerDepartment) {
                 $deptCodes->push($workOrder->ownerDepartment->code);
-                $deptNames->push($workOrder->ownerDepartment->name);
+                $deptNames->push($workOrder->ownerDepartment->name . ($workOrder->ownerDepartment->code ? " ({$workOrder->ownerDepartment->code})" : ""));
             }
             foreach ($workOrder->supportDepartments as $sd) {
                 if ($sd->code) $deptCodes->push($sd->code);
-                if ($sd->name) $deptNames->push($sd->name);
+                if ($sd->name) $deptNames->push($sd->name . ($sd->code ? " ({$sd->code})" : ""));
             }
             $targetDepts = $deptCodes->unique()->filter()->implode(' / ') ?: '—';
             $targetDeptsFull = $deptNames->unique()->filter()->implode(' / ') ?: '—';
 
             // Format Approvals
             $approvals = $workOrder->approvals->sortBy('approval_level')->map(function($a) {
+                $rule = \App\Models\ApprovalConfig::activeFor('SPK')
+                    ->where('approval_level', $a->approval_level)
+                    ->where('department_id', $a->department_id)
+                    ->first();
                 return [
                     'approval_level' => $a->approval_level,
                     'approver_position' => $a->approver_position,
+                    'action_label' => $rule->action_label ?? 'Checked',
                     'status' => $a->status,
                     'approver_name' => $a->approver_name,
                     'remarks' => $a->remarks,
@@ -513,8 +517,9 @@ class WorkOrderController extends Controller
             $products = $workOrder->products->map(function($prod) use ($workOrder) {
                 return [
                     'id' => $prod->id,
-                    'customer_part_no' => $prod->inquiryProduct->customer_part_no ?? '—',
-                    'customer_part_name' => $prod->inquiryProduct->customer_part_name ?? '—',
+                    'parent_id' => $prod->parent_id,
+                    'customer_part_no' => $prod->customer_part_no ?: ($prod->inquiryProduct->customer_part_no ?? '—'),
+                    'customer_part_name' => $prod->customer_part_name ?: ($prod->inquiryProduct->customer_part_name ?? '—'),
                     'eo' => $prod->eo ?: '-',
                     'class_id' => $prod->class_id,
                     'uom' => $prod->uom,
@@ -527,13 +532,11 @@ class WorkOrderController extends Controller
                     'sop_date' => $prod->sop_date ? $prod->sop_date->format('Y-m-d') : '',
                     'has_2d_data' => $prod->has_2d_data ?? false,
                     'has_3d_data' => $prod->has_3d_data ?? false,
-                    'has_tech_doc' => $prod->has_tech_doc ?? false
                 ];
             })->values();
-
             $dueDatesClosedData = [];
             foreach ($workOrder->approvals as $app) {
-                $rule = \App\Models\ApprovalConfig::activeFor('WO')
+                $rule = \App\Models\ApprovalConfig::activeFor('SPK')
                     ->where('approval_level', $app->approval_level)
                     ->where('department_id', $app->department_id)
                     ->first();
@@ -558,7 +561,7 @@ class WorkOrderController extends Controller
                     'document_no' => $workOrder->docFormat->document_no ?? 'FO-13-02',
                     'doc_department' => $workOrder->docFormat->doc_department ?? 'Sales',
                     'doc_publish_date' => $workOrder->docFormat->doc_publish_date ? \Carbon\Carbon::parse($workOrder->docFormat->doc_publish_date)->format('d-M-Y') : '01-Jan-2024',
-                    'publish_date' => $workOrder->docFormat->doc_publish_date ? \Carbon\Carbon::parse($workOrder->docFormat->doc_publish_date)->format('Y-m-d') : '2024-01-01',
+                    'publish_date' => $workOrder->publish_date ? \Carbon\Carbon::parse($workOrder->publish_date)->format('Y-m-d') : null,
                     'released_at' => $workOrder->released_at ? $workOrder->released_at->format('Y-m-d') : ($workOrder->status === 'Approved' ? ($workOrder->updated_at ? $workOrder->updated_at->format('Y-m-d') : null) : null),
                     'doc_revision_no' => $workOrder->docFormat->revision_no ?? 0,
                     'page_hal' => $workOrder->docFormat->page_hal ?? '1',

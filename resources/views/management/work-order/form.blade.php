@@ -142,7 +142,7 @@
                     $user         = auth()->user();
                     $canActOnThis = false;
                     if ($pendingStep) {
-                        $rule = \App\Models\ApprovalConfig::activeFor('WO')
+                        $rule = \App\Models\ApprovalConfig::activeFor('SPK')
                             ->where('approval_level', $pendingStep->approval_level)
                             ->first();
                         $canActOnThis = $rule ? $rule->canBeApprovedBy($user) : true;
@@ -1081,9 +1081,14 @@ function openEditApprovalModal(rule) {
     $approvalsData = [];
     if (isset($workOrder)) {
         $approvalsData = $workOrder->approvals->sortBy('approval_level')->map(function($a) {
+            $rule = \App\Models\ApprovalConfig::activeFor('SPK')
+                ->where('approval_level', $a->approval_level)
+                ->where('department_id', $a->department_id)
+                ->first();
             return [
                 'approval_level' => $a->approval_level,
                 'approver_position' => $a->approver_position,
+                'action_label' => $rule->action_label ?? 'Checked',
                 'status' => $a->status,
                 'approver_name' => $a->approver_name,
                 'remarks' => $a->remarks,
@@ -1139,7 +1144,7 @@ document.addEventListener('alpine:init', () => {
         page_hal: @json(isset($workOrder) ? ($workOrder->docFormat->page_hal ?? '1') : ($woHeader->page_hal ?? '1')),
         revision_no: {{ isset($workOrder) ? $workOrder->revision_no : 0 }},
         doc_revision_no: @json(isset($workOrder) ? ($workOrder->docFormat->revision_no ?? 0) : ($woHeader->revision_no ?? 0)),
-        publish_date: @json(isset($workOrder) ? ($workOrder->publish_date ? (is_string($workOrder->publish_date) ? substr($workOrder->publish_date, 0, 10) : $workOrder->publish_date->format('Y-m-d')) : now()->format('Y-m-d')) : now()->format('Y-m-d')),
+        publish_date: @json(isset($workOrder) ? ($workOrder->publish_date ? (is_string($workOrder->publish_date) ? substr($workOrder->publish_date, 0, 10) : $workOrder->publish_date->format('Y-m-d')) : '') : ''),
         first_sample_date: @json(isset($workOrder) ? ($workOrder->first_sample_date ? (is_string($workOrder->first_sample_date) ? substr($workOrder->first_sample_date, 0, 10) : $workOrder->first_sample_date->format('Y-m-d')) : '') : ''),
         due_date_plan: @json(isset($workOrder) ? ($workOrder->due_date_plan ? (is_string($workOrder->due_date_plan) ? substr($workOrder->due_date_plan, 0, 10) : $workOrder->due_date_plan->format('Y-m-d')) : '') : ''),
         due_dates_closed: @json((object)$dueDatesClosedData),
@@ -1156,9 +1161,11 @@ document.addEventListener('alpine:init', () => {
                     .sort((a, b) => a.approval_level - b.approval_level);
 
                 sortedSelectedRules.forEach((rule, idx) => {
+                    let ruleFull = this.approvalRulesListFull.find(r => r.id == rule.id);
                     list.push({
                         approval_level: rule.approval_level,
                         approver_position: rule.dept_code + ' Leader',
+                        action_label: ruleFull ? ruleFull.action_label : 'Checked',
                         status: 'Waiting',
                         approver_name: '',
                         remarks: '',
@@ -1528,6 +1535,7 @@ document.addEventListener('alpine:init', () => {
         getUniqueSchedules() {
             let uniqueMap = {};
             this.products.forEach(p => {
+                if (p.parentTempId || p.parent_id) return;
                 let label = p.variant || p.destination || '';
                 let key = `${label}-${p.sop_date}`;
                 if (!uniqueMap[key]) {
@@ -1968,7 +1976,16 @@ document.addEventListener('alpine:init', () => {
                         eo: p.eo || '',
                         class_id: p.class_id || '',
                         uom: p.uom || '',
-                        remarks: p.remarks || ''
+                        remarks: p.remarks || '',
+                        destination: p.destination || '',
+                        sop_date: p.sop_date || '',
+                        eol_date: p.eol_date || '',
+                        model_life: p.model_life || '',
+                        annual_volume: p.annual_volume || '',
+                        variant: p.variant || '',
+                        has_2d_data: p.has_2d_data || false,
+                        has_3d_data: p.has_3d_data || false,
+                        has_tech_doc: p.has_tech_doc || false
                     };
                 }),
                 process_pics: alpine.process_pics || {}

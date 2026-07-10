@@ -198,7 +198,7 @@
                                  get released_at() { return detailData.released_at; },
                                  get created_by() { return detailData.created_by; },
                                  get created_at() { return detailData.created_at; },
-                                 get target_departments_full() { return detailData.target_departments || '—'; },
+                                 get target_departments_full() { return detailData.target_departments_full || '—'; },
                                  getDeptCodeByRuleId(ruleId) {
                                      let rule = this.approvalRulesList.find(r => r.id == ruleId);
                                      return rule ? rule.dept_code : '—';
@@ -547,6 +547,7 @@ function outlookInbox() {
             let seen = new Set();
             if (this.detailData && this.detailData.products) {
                 this.detailData.products.forEach(p => {
+                    if (p.parent_id || p.parentTempId) return;
                     let key = (p.sop_date || '') + '_' + (p.variant || '') + '_' + (p.annual_volume || '');
                     if (!seen.has(key)) {
                         seen.add(key);

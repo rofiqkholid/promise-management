@@ -9,8 +9,8 @@
 
     {{-- ===== METADATA BAR ===== --}}
     <div class="flex items-center gap-6 px-6 py-3 bg-slate-100 dark:bg-slate-900 border-b border-slate-300 dark:border-slate-800 flex-shrink-0 text-xs text-slate-800 dark:text-slate-100">
-        {{-- Back Action & Revision info --}}
-        <div class="flex flex-col gap-1.5 pr-6 border-r border-slate-300 dark:border-slate-700 flex-shrink-0">
+        {{-- Back Action --}}
+        <div class="flex items-center pr-6 border-r border-slate-300 dark:border-slate-700 flex-shrink-0">
             <div class="flex gap-1.5">
                 <a href="{{ route('management.ebd.index') }}"
                    class="inline-flex items-center justify-center gap-2 px-3 h-8 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 border border-slate-300 dark:border-slate-600 rounded-xs text-xs font-semibold text-slate-750 dark:text-slate-250 transition-all active:scale-98">
@@ -21,38 +21,73 @@
                     <i class="fa-solid fa-file-import text-[10px]"></i> Import EBD
                 </button>
             </div>
-            <span class="text-[11px] font-mono font-bold text-slate-650 dark:text-slate-350 uppercase tracking-wider mt-0.5">
-                Revision: {{ $ebdHeader->revision }}
+        </div>        {{-- Metadata Row --}}
+        <div class="flex-1 flex flex-wrap lg:flex-nowrap items-center gap-y-3 px-4 py-2 border border-slate-300 dark:border-slate-800 rounded-xs bg-slate-50/40 dark:bg-slate-950/20 mx-2">
+            
+            {{-- WO Number --}}
+            <div class="flex items-center gap-2.5 min-w-0 w-1/2 lg:w-[15%]">
+                <div class="w-8 h-8 flex items-center justify-center rounded-xs bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex-shrink-0">
+                    <i class="fa-solid fa-file-invoice text-xs"></i>
+                </div>
+                <div class="min-w-0">
+                    <span class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-0.5">WO Number</span>
+                    <span class="block font-semibold text-slate-850 dark:text-slate-100 text-xs truncate">{{ $ebdHeader->workOrder->wo_number ?? '—' }}</span>
+                </div>
+            </div>
+
+            {{-- Divider --}}
+            <div class="hidden lg:block w-px h-8 bg-slate-300 dark:bg-slate-800 self-center flex-shrink-0"></div>
+
+            {{-- Customer --}}
+            <div class="flex items-center gap-2.5 min-w-0 w-1/2 lg:w-[45%] lg:px-4">
+                <div class="w-8 h-8 flex items-center justify-center rounded-xs bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex-shrink-0">
+                    <i class="fa-solid fa-building text-xs"></i>
+                </div>
+                <div class="min-w-0 w-full">
+                    <span class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-0.5">Customer</span>
+                    <span class="block font-semibold text-slate-850 dark:text-slate-100 text-xs truncate" title="@if(isset($ebdHeader->customer->code)){{ $ebdHeader->customer->code }} - @endif{{ $ebdHeader->customer->name ?? '' }}">
+                        @if(isset($ebdHeader->customer->code))
+                            {{ $ebdHeader->customer->code }} -
+                        @endif
+                        {{ $ebdHeader->customer->name ?? '—' }}
+                    </span>
+                </div>
+            </div>
+
+            {{-- Divider --}}
+            <div class="hidden lg:block w-px h-8 bg-slate-300 dark:bg-slate-800 self-center flex-shrink-0"></div>
+
+            {{-- Project Model --}}
+            <div class="flex items-center gap-2.5 min-w-0 w-1/2 lg:w-[20%] lg:px-4">
+                <div class="w-8 h-8 flex items-center justify-center rounded-xs bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex-shrink-0">
+                    <i class="fa-solid fa-tags text-xs"></i>
+                </div>
+                <div class="min-w-0">
+                    <span class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-0.5">Project Model</span>
+                    <span class="block font-semibold text-slate-850 dark:text-slate-100 text-xs truncate">{{ $ebdHeader->projectModel->name ?? '—' }}</span>
+                </div>
+            </div>
+
+            {{-- Divider --}}
+            <div class="hidden lg:block w-px h-8 bg-slate-300 dark:bg-slate-800 self-center flex-shrink-0"></div>
+
+            {{-- EBD Date --}}
+            <div class="flex items-center gap-2.5 min-w-0 w-1/2 lg:w-[20%] lg:pl-4">
+                <div class="w-8 h-8 flex items-center justify-center rounded-xs bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex-shrink-0">
+                    <i class="fa-solid fa-calendar-days text-xs"></i>
+                </div>
+                <div class="min-w-0">
+                    <span class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-0.5">EBD Date</span>
+                    <span class="block font-mono font-semibold text-slate-900 dark:text-slate-100 text-xs truncate">{{ $ebdHeader->date ? $ebdHeader->date->format('d M Y') : '—' }}</span>
+                </div>
+            </div>
+        </div>
+
+        {{-- Global Revision & Status --}}
+        <div class="pl-6 border-l border-slate-300 dark:border-slate-700 flex-shrink-0 flex items-center gap-2.5">
+            <span class="px-2.5 py-1 text-xs font-mono font-bold border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-slate-850 dark:text-slate-100 rounded-xs tracking-wide">
+                REV: {{ $ebdHeader->revision }}
             </span>
-        </div>
-
-        {{-- Metadata Grid --}}
-        <div class="flex-1 grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div>
-                <span class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-0.5">WO Number</span>
-                <span class="font-medium text-slate-850 dark:text-slate-100 text-xs">{{ $ebdHeader->workOrder->wo_number ?? '—' }}</span>
-            </div>
-            <div>
-                <span class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-0.5">Customer</span>
-                <span class="font-medium text-slate-850 dark:text-slate-100 text-xs">
-                    {{ $ebdHeader->customer->name ?? '—' }} 
-                    @if(isset($ebdHeader->customer->code))
-                        ({{ $ebdHeader->customer->code }})
-                    @endif
-                </span>
-            </div>
-            <div>
-                <span class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-0.5">Project Model</span>
-                <span class="font-medium text-slate-850 dark:text-slate-100 text-xs">{{ $ebdHeader->projectModel->name ?? '—' }}</span>
-            </div>
-            <div>
-                <span class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-0.5">EBD Date</span>
-                <span class="font-mono text-slate-900 dark:text-slate-100 font-medium text-xs">{{ $ebdHeader->date ? $ebdHeader->date->format('d M Y') : '—' }}</span>
-            </div>
-        </div>
-
-        {{-- Global Status --}}
-        <div class="pl-6 border-l border-slate-300 dark:border-slate-700 flex-shrink-0">
             @php
                 $statusCls = match($ebdHeader->status) {
                     'Released' => 'bg-emerald-100/70 text-emerald-700 border-emerald-350/60 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900/30',
@@ -88,8 +123,21 @@
             <div class="flex-1 overflow-y-auto p-2 space-y-0.5">
                 @php
                     $levels = [];
+                    if (!function_exists('flattenBomTree')) {
+                        function flattenBomTree($items, &$result = [], $level = 1) {
+                            foreach ($items as $item) {
+                                $item->bom_level = $level;
+                                $result[] = $item;
+                                if ($item->relationLoaded('children') && $item->children && $item->children->count() > 0) {
+                                    flattenBomTree($item->children, $result, $level + 1);
+                                }
+                            }
+                            return $result;
+                        }
+                    }
+                    $orderedItems = flattenBomTree($ebdHeader->rootItems);
                 @endphp
-                @forelse ($ebdHeader->items as $item)
+                @forelse ($orderedItems as $item)
                     @php
                         $currentLevel = $item->bom_level ?? $item->active_level ?? 1;
                         
@@ -187,6 +235,10 @@
                             class="card-tab-btn py-2.5 text-xs font-semibold border-b-2 border-transparent text-slate-650 hover:text-slate-800 dark:hover:text-slate-300 -mb-px transition-all">
                         Add Process (<span id="addprocess-badge-count">0</span>)
                     </button>
+                    <button type="button" data-tab="packing"
+                            class="card-tab-btn py-2.5 text-xs font-semibold border-b-2 border-transparent text-slate-650 hover:text-slate-800 dark:hover:text-slate-300 -mb-px transition-all">
+                        Packing & Transport
+                    </button>
                 </nav>
             </div>
 
@@ -275,29 +327,6 @@
                                     </div>
                                 </div>
                             </div>
-
-                            {{-- Packing & Transport Cost --}}
-                            <div>
-                                <h4 class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3 border-b border-slate-300 dark:border-slate-600 pb-1.5">Packing & Transport</h4>
-                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-xs">
-                                        <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">PACKING TYPE</span>
-                                        <span id="pack-type" class="font-medium text-slate-900 dark:text-slate-100 text-sm">—</span>
-                                    </div>
-                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-xs">
-                                        <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">PCS/PACK</span>
-                                        <span id="pack-pcs" class="font-medium text-slate-900 dark:text-slate-100 text-sm">—</span>
-                                    </div>
-                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-xs">
-                                        <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">PART VOL (m²)</span>
-                                        <span id="part-vol-m2" class="font-medium text-slate-900 dark:text-slate-100 text-sm font-mono">—</span>
-                                    </div>
-                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-xs">
-                                        <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">TRUCK VOL (m²)</span>
-                                        <span id="truck-vol-m2" class="font-medium text-slate-900 dark:text-slate-100 text-sm font-mono">—</span>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
 
                         {{-- Sketch / Drawing (Right Side) --}}
@@ -315,6 +344,33 @@
                             </div>
                         </div>
 
+                    </div>
+                </div>
+
+                {{-- TAB: PACKING & TRANSPORT --}}
+                <div id="card-tab-packing" class="card-tab-panel hidden">
+                    <div class="space-y-6">
+                        <div>
+                            <h4 class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3 border-b border-slate-300 dark:border-slate-600 pb-1.5">Packing & Transport Details</h4>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xs p-4 shadow-sm">
+                                <div class="p-3 bg-slate-100/50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xs">
+                                    <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">PACKING TYPE</span>
+                                    <span id="pack-type" class="font-medium text-slate-900 dark:text-slate-100 text-sm">—</span>
+                                </div>
+                                <div class="p-3 bg-slate-100/50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xs">
+                                    <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">PCS/PACK</span>
+                                    <span id="pack-pcs" class="font-medium text-slate-900 dark:text-slate-100 text-sm">—</span>
+                                </div>
+                                <div class="p-3 bg-slate-100/50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xs">
+                                    <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">PART VOL (m²)</span>
+                                    <span id="part-vol-m2" class="font-medium text-slate-900 dark:text-slate-100 text-sm font-mono">—</span>
+                                </div>
+                                <div class="p-3 bg-slate-100/50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xs">
+                                    <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">TRUCK VOL (m²)</span>
+                                    <span id="truck-vol-m2" class="font-medium text-slate-900 dark:text-slate-100 text-sm font-mono">—</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -337,7 +393,7 @@
                                     <th class="p-2.5">Process Name</th>
                                     <th class="p-2.5">Homeline</th>
                                     <th class="p-2.5 text-right">Tonnage</th>
-                                    <th class="p-2.5 text-right">Die Ht</th>
+                                    <th class="p-2.5 text-right">DH</th>
                                     <th class="p-2.5 text-center">Cav</th>
                                     <th class="p-2.5 text-center">Qty</th>
                                     <th class="p-2.5 text-right">Price</th>
@@ -829,7 +885,7 @@ $(function () {
         $('#card-tab-' + target).removeClass('hidden');
 
         // Show/hide Edit Specs button based on active tab
-        if (target === 'specs' && currentSelectedItemId) {
+        if ((target === 'specs' || target === 'packing') && currentSelectedItemId) {
             $('#btn-edit-specs').removeClass('hidden');
         } else {
             $('#btn-edit-specs').addClass('hidden');
@@ -846,7 +902,7 @@ $(function () {
         currentSelectedItemId = itemId;
         localStorage.setItem('ebd_active_item_id', itemId);
         const activeTab = $('.card-tab-btn.active-tab').data('tab') || 'specs';
-        if (activeTab === 'specs') {
+        if (activeTab === 'specs' || activeTab === 'packing') {
             $('#btn-edit-specs').removeClass('hidden');
         } else {
             $('#btn-edit-specs').addClass('hidden');

@@ -1,8 +1,7 @@
-{{-- Unified Live SPK Document Preview (Pure Paper Sheet Component) --}}
-<div class="bg-white border border-slate-400 dark:border-slate-600 shadow-xl font-serif text-black w-full max-w-[760px] p-8 space-y-5">
+<div class="bg-white border border-slate-400 dark:border-slate-600 shadow-xl text-black w-full max-w-[760px] p-8 space-y-5" style="font-family: 'Times New Roman', Times, serif;">
     
     {{-- Document Header Table --}}
-    <table class="w-full border-collapse border border-slate-900 text-xs font-serif text-slate-900">
+    <table class="w-full border-collapse border border-slate-900 text-xs text-slate-900" style="font-family: 'Times New Roman', Times, serif;">
         <tbody>
             <tr class="divide-x divide-slate-900">
                 <td class="w-[30%] p-2 text-center border-b border-slate-900 align-middle">
@@ -207,49 +206,57 @@
     {{-- Signature Table (Approval Workflow) using Div Table to bypass browser template hoisting bugs --}}
     <div class="table w-full border border-slate-900 text-[9.5px] text-slate-900 text-center">
         <div class="table-row-group">
-            <div class="table-row font-bold bg-slate-50 border-b border-slate-900 flex">
-                <div class="table-cell p-1 border-b border-slate-900 border-r border-slate-900 last:border-r-0" :style="{ width: (100 / (1 + approvals.length)) + '%' }">Prepared</div>
+            <div class="table-row font-bold bg-slate-50 border-b border-slate-900">
+                <div class="table-cell p-1 border-r border-slate-900 last:border-r-0" :style="{ width: (100 / (1 + approvals.length)) + '%' }">Prepared</div>
                 <template x-for="(step, idx) in approvals" :key="idx">
-                    <div class="table-cell p-1 border-b border-slate-900 border-r border-slate-900 last:border-r-0" x-text="step.approver_position" :style="{ width: (100 / (1 + approvals.length)) + '%' }"></div>
+                    <div class="table-cell p-1 border-r border-slate-900 last:border-r-0" x-text="step.action_label" :style="{ width: (100 / (1 + approvals.length)) + '%' }"></div>
                 </template>
             </div>
-            <div class="table-row flex h-20">
+            <div class="table-row">
                 {{-- Dibuat / Creator --}}
-                <div class="table-cell p-2 border-b border-slate-900 border-r border-slate-900 last:border-r-0 align-bottom relative" :style="{ width: (100 / (1 + approvals.length)) + '%' }">
-                    <div class="absolute inset-x-0 top-1 text-center text-[8.5px] text-emerald-600 font-bold italic">APPROVED</div>
-                    <div class="absolute inset-x-0 top-4 text-center text-[7.5px] text-slate-400" x-text="formatDateStr(created_at)"></div>
-                    <div class="font-bold text-[9.5px]" x-text="created_by"></div>
-                    <div class="text-[8px] text-slate-400">Staff MKT</div>
+                <div class="table-cell p-1.5 border-r border-slate-900 last:border-r-0 align-top" :style="{ width: (100 / (1 + approvals.length)) + '%' }">
+                    <div class="flex flex-col justify-between items-center h-20 w-full">
+                        <div class="flex flex-col items-center">
+                            <div class="inline-block border-2 border-emerald-600 text-emerald-600 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-xs transform -rotate-3 select-none origin-center">APPROVED</div>
+                            <div class="text-[8.5px] text-slate-500 mt-0.5" x-text="formatDateStr(created_at)"></div>
+                        </div>
+                        <div class="mt-auto">
+                            <div class="font-bold text-[9.5px]" x-text="created_by"></div>
+                            <div class="text-[8px] text-slate-400">Staff MKT</div>
+                        </div>
+                    </div>
                 </div>
                 {{-- Approvers --}}
                 <template x-for="(step, idx) in approvals" :key="idx">
-                    <div class="table-cell p-2 border-b border-slate-900 border-r border-slate-900 last:border-r-0 align-bottom relative" :style="{ width: (100 / (1 + approvals.length)) + '%' }">
-                        <template x-if="step.status === 'Approved'">
-                            <div>
-                                <div class="absolute inset-x-0 top-1 text-center text-[8.5px] text-emerald-600 font-bold italic">APPROVED</div>
-                                <div class="absolute inset-x-0 top-4 text-center text-[7.5px] text-slate-400" x-text="step.approved_at"></div>
-                                <div class="font-bold text-[9.5px] text-slate-900" x-text="step.approver_name"></div>
+                    <div class="table-cell p-1.5 border-r border-slate-900 last:border-r-0 align-top" :style="{ width: (100 / (1 + approvals.length)) + '%' }">
+                        <div class="flex flex-col justify-between items-center h-20 w-full">
+                            <div class="flex flex-col items-center w-full">
+                                <template x-if="step.status === 'Approved'">
+                                    <div class="flex flex-col items-center">
+                                        <div class="inline-block border-2 border-emerald-600 text-emerald-600 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-xs transform -rotate-3 select-none origin-center">APPROVED</div>
+                                        <div class="text-[8.5px] text-slate-500 mt-0.5" x-text="step.approved_at"></div>
+                                        <div x-show="step.due_date_closed" class="text-[8.5px] text-rose-600 font-bold mt-0.5">
+                                            Due Close: <span x-text="formatDateStr(step.due_date_closed)"></span>
+                                        </div>
+                                    </div>
+                                </template>
+                                <template x-if="step.status === 'Rejected'">
+                                    <div class="flex flex-col items-center">
+                                        <div class="inline-block border-2 border-rose-600 text-rose-600 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-xs transform -rotate-3 select-none origin-center">REJECTED</div>
+                                        <div class="text-[8.5px] text-slate-500 mt-0.5" x-text="step.approved_at"></div>
+                                    </div>
+                                </template>
+                                <template x-if="step.status === 'Pending'">
+                                    <div class="text-[9px] text-amber-500 font-bold italic animate-pulse py-1">PENDING</div>
+                                </template>
+                                <template x-if="step.status === 'Waiting'">
+                                    <div class="text-[8.5px] text-slate-400 py-1">WAITING</div>
+                                </template>
                             </div>
-                        </template>
-                        <template x-if="step.status === 'Rejected'">
-                            <div>
-                                <div class="absolute inset-x-0 top-1 text-center text-[8.5px] text-rose-500 font-bold italic">REJECTED</div>
-                                <div class="absolute inset-x-0 top-4 text-center text-[7.5px] text-slate-400" x-text="step.approved_at"></div>
-                                <div class="font-bold text-[9.5px] text-slate-900" x-text="step.approver_name"></div>
+                            <div class="mt-auto w-full text-center">
+                                <div class="font-bold text-[9.5px] text-slate-900" x-text="step.approver_name || '—'"></div>
+                                <div class="text-[8px] text-slate-400" x-text="step.approver_position"></div>
                             </div>
-                        </template>
-                        <template x-if="step.status === 'Pending'">
-                            <div class="pb-1">
-                                <div class="text-[8.5px] text-amber-500 font-bold italic animate-pulse">PENDING</div>
-                            </div>
-                        </template>
-                        <template x-if="step.status === 'Waiting'">
-                            <div class="pb-1 text-[8px] text-slate-400">WAITING</div>
-                        </template>
-                        
-                        {{-- Due Date Closed inside the cell --}}
-                        <div x-show="step.due_date_closed" class="text-[8px] text-rose-600 font-bold mt-1">
-                            Due Close: <span x-text="formatDateStr(step.due_date_closed)"></span>
                         </div>
                     </div>
                 </template>
