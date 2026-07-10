@@ -66,10 +66,10 @@ class EbdItemImport
                 $rowCells = [];
                 for ($c = 1; $c <= $highestColIdx; $c++) {
                     $cell = $sheet->getCell([$c, $r]);
-                    $val = $cell->getValue();
-                    // Get formatted string value if cell contains formula/numeric formatting
-                    if ($val instanceof \PhpOffice\PhpSpreadsheet\Cell\CellFormula) {
-                        $val = $cell->getOldCalculatedValue();
+                    try {
+                        $val = $cell->getCalculatedValue();
+                    } catch (\Exception $ex) {
+                        $val = $cell->getOldCalculatedValue() ?? $cell->getValue();
                     }
                     $rowCells[$c - 1] = $val !== null ? (string)$val : '';
                 }

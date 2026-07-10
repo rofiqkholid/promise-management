@@ -239,6 +239,10 @@
                             class="card-tab-btn py-2.5 text-xs font-semibold border-b-2 border-transparent text-slate-650 hover:text-slate-800 dark:hover:text-slate-300 -mb-px transition-all">
                         Packing & Transport
                     </button>
+                    <button type="button" data-tab="summary"
+                            class="card-tab-btn py-2.5 text-xs font-semibold border-b-2 border-transparent text-slate-650 hover:text-slate-800 dark:hover:text-slate-300 -mb-px transition-all">
+                        Summary
+                    </button>
                 </nav>
             </div>
 
@@ -382,10 +386,10 @@
                             <i class="fa-solid fa-plus text-[10px]"></i> Add Tooling
                         </button>
                     </div>
-                    <div class="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-xs bg-white dark:bg-slate-900">
+                    <div class="overflow-x-auto border border-slate-300 dark:border-slate-700 rounded-xs bg-white dark:bg-slate-900">
                         <table class="w-full text-xs text-left border-collapse">
                             <thead>
-                                <tr class="bg-slate-100 dark:bg-slate-900 font-bold text-slate-500 uppercase tracking-wider text-[10px] divide-x divide-slate-200 dark:divide-slate-700 border-b border-slate-200 dark:border-slate-700">
+                                <tr class="bg-slate-100 dark:bg-slate-900 font-bold text-slate-500 uppercase tracking-wider text-[10px] divide-x divide-slate-300 dark:divide-slate-700 border-b border-slate-300 dark:border-slate-700">
                                     <th class="p-2.5 w-8 text-center">#</th>
                                     <th class="p-2.5">Rank</th>
                                     <th class="p-2.5">Cat</th>
@@ -402,7 +406,7 @@
                                     <th class="p-2.5 w-16 text-center">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="tooling-tbody" class="divide-y divide-slate-200 dark:divide-slate-700">
+                            <tbody id="tooling-tbody" class="divide-y divide-slate-300 dark:divide-slate-700">
                                 {{-- Filled via JS --}}
                             </tbody>
                         </table>
@@ -417,10 +421,10 @@
                             <i class="fa-solid fa-plus text-[10px]"></i> Add Process
                         </button>
                     </div>
-                    <div class="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-xs bg-white dark:bg-slate-900">
+                    <div class="overflow-x-auto border border-slate-300 dark:border-slate-700 rounded-xs bg-white dark:bg-slate-900">
                         <table class="w-full text-xs text-left border-collapse">
                             <thead>
-                                <tr class="bg-slate-100 dark:bg-slate-900 font-bold text-slate-500 uppercase tracking-wider text-[10px] divide-x divide-slate-200 dark:divide-slate-700 border-b border-slate-200 dark:border-slate-700">
+                                <tr class="bg-slate-100 dark:bg-slate-900 font-bold text-slate-500 uppercase tracking-wider text-[10px] divide-x divide-slate-300 dark:divide-slate-700 border-b border-slate-300 dark:border-slate-700">
                                     <th class="p-2.5 w-8 text-center">#</th>
                                     <th class="p-2.5">Process Name</th>
                                     <th class="p-2.5 text-center">Qty</th>
@@ -429,12 +433,150 @@
                                     <th class="p-2.5 w-16 text-center">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="addprocess-tbody" class="divide-y divide-slate-200 dark:divide-slate-700">
+                            <tbody id="addprocess-tbody" class="divide-y divide-slate-300 dark:divide-slate-700">
                                 {{-- Filled via JS --}}
                             </tbody>
                         </table>
                     </div>
                 </div>
+
+                {{-- TAB: SUMMARY --}}
+                <div id="card-tab-summary" class="card-tab-panel hidden space-y-6">
+                    
+                    {{-- Section 1: Tooling Cost/FG --}}
+                    <div class="space-y-2.5">
+                        <h4 class="text-xs font-bold text-slate-700 dark:text-slate-350 uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-calculator text-indigo-500"></i> Tooling Cost/FG Summary
+                        </h4>
+                        <div class="overflow-x-auto border border-slate-300 dark:border-slate-700 rounded-xs bg-white dark:bg-slate-900">
+                            <table class="w-full text-xs text-center border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-100 dark:bg-slate-800 font-bold text-slate-700 dark:text-slate-300 border-b border-slate-300 dark:border-slate-700">
+                                        <th class="p-2.5 border-r border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-850 text-left pl-4 w-40">Breakdown</th>
+                                        <th class="p-2.5 border-r border-slate-300 dark:border-slate-700 w-1/4">Die</th>
+                                        <th class="p-2.5 border-r border-slate-300 dark:border-slate-700 w-1/4">Jig</th>
+                                        <th class="p-2.5 border-r border-slate-300 dark:border-slate-700 w-1/4">CF</th>
+                                        <th class="p-2.5 w-1/4 bg-indigo-50/50 dark:bg-indigo-950/20 font-extrabold text-indigo-800 dark:text-indigo-300 text-right pr-4">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-300 dark:divide-slate-700">
+                                    <tr class="divide-x divide-slate-300 dark:divide-slate-700">
+                                        <td class="p-2.5 font-bold text-left bg-slate-50 dark:bg-slate-850 pl-4">Qty</td>
+                                        <td class="p-2.5 font-semibold text-slate-800 dark:text-slate-200" id="sum-tool-qty-die">—</td>
+                                        <td class="p-2.5 font-semibold text-slate-800 dark:text-slate-200" id="sum-tool-qty-jig">—</td>
+                                        <td class="p-2.5 font-semibold text-slate-800 dark:text-slate-200" id="sum-tool-qty-cf">—</td>
+                                        <td class="p-2.5 font-bold bg-indigo-50/30 dark:bg-indigo-950/10 text-indigo-700 dark:text-indigo-400 text-right pr-4" id="sum-tool-qty-total">—</td>
+                                    </tr>
+                                    <tr class="divide-x divide-slate-300 dark:divide-slate-700">
+                                        <td class="p-2.5 font-bold text-left bg-slate-50 dark:bg-slate-850 pl-4">Amount</td>
+                                        <td class="p-2.5 font-bold text-right font-mono text-slate-800 dark:text-slate-100 pr-4" id="sum-tool-amt-die">—</td>
+                                        <td class="p-2.5 font-bold text-right font-mono text-slate-800 dark:text-slate-100 pr-4" id="sum-tool-amt-jig">—</td>
+                                        <td class="p-2.5 font-bold text-right font-mono text-slate-800 dark:text-slate-100 pr-4" id="sum-tool-amt-cf">—</td>
+                                        <td class="p-2.5 font-extrabold text-right font-mono bg-indigo-50/30 dark:bg-indigo-950/10 text-indigo-700 dark:text-indigo-400 pr-4" id="sum-tool-amt-total">—</td>
+                                    </tr>
+                                    <tr class="divide-x divide-slate-300 dark:divide-slate-700">
+                                        <td class="p-2.5 font-medium text-left bg-slate-50 dark:bg-slate-850 pl-4">New</td>
+                                        <td class="p-2.5 text-slate-600 dark:text-slate-400" id="sum-tool-new-die">—</td>
+                                        <td class="p-2.5 text-slate-600 dark:text-slate-400" id="sum-tool-new-jig">—</td>
+                                        <td class="p-2.5 text-slate-600 dark:text-slate-400" id="sum-tool-new-cf">—</td>
+                                        <td class="p-2.5 font-bold bg-indigo-50/30 dark:bg-indigo-950/10 text-slate-800 dark:text-slate-200 text-right pr-4" id="sum-tool-new-total">—</td>
+                                    </tr>
+                                    <tr class="divide-x divide-slate-300 dark:divide-slate-700">
+                                        <td class="p-2.5 font-medium text-left bg-slate-50 dark:bg-slate-850 pl-4">Modif</td>
+                                        <td class="p-2.5 text-slate-600 dark:text-slate-400" id="sum-tool-mod-die">—</td>
+                                        <td class="p-2.5 text-slate-600 dark:text-slate-400" id="sum-tool-mod-jig">—</td>
+                                        <td class="p-2.5 text-slate-600 dark:text-slate-400" id="sum-tool-mod-cf">—</td>
+                                        <td class="p-2.5 font-bold bg-indigo-50/30 dark:bg-indigo-950/10 text-slate-800 dark:text-slate-200 text-right pr-4" id="sum-tool-mod-total">—</td>
+                                    </tr>
+                                    <tr class="divide-x divide-slate-300 dark:divide-slate-700">
+                                        <td class="p-2.5 font-medium text-left bg-slate-50 dark:bg-slate-850 pl-4">Common Tooling</td>
+                                        <td class="p-2.5 text-slate-600 dark:text-slate-400" id="sum-tool-comt-die">—</td>
+                                        <td class="p-2.5 text-slate-600 dark:text-slate-400" id="sum-tool-comt-jig">—</td>
+                                        <td class="p-2.5 text-slate-600 dark:text-slate-400" id="sum-tool-comt-cf">—</td>
+                                        <td class="p-2.5 font-bold bg-indigo-50/30 dark:bg-indigo-950/10 text-slate-800 dark:text-slate-200 text-right pr-4" id="sum-tool-comt-total">—</td>
+                                    </tr>
+                                    <tr class="divide-x divide-slate-300 dark:divide-slate-700">
+                                        <td class="p-2.5 font-medium text-left bg-slate-50 dark:bg-slate-850 pl-4">Common Model</td>
+                                        <td class="p-2.5 text-slate-600 dark:text-slate-400" id="sum-tool-comm-die">—</td>
+                                        <td class="p-2.5 text-slate-600 dark:text-slate-400" id="sum-tool-comm-jig">—</td>
+                                        <td class="p-2.5 text-slate-600 dark:text-slate-400" id="sum-tool-comm-cf">—</td>
+                                        <td class="p-2.5 font-bold bg-indigo-50/30 dark:bg-indigo-950/10 text-slate-800 dark:text-slate-200 text-right pr-4" id="sum-tool-comm-total">—</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {{-- Section 2: Product & Process Data --}}
+                    <div class="space-y-2.5">
+                        <h4 class="text-xs font-bold text-slate-700 dark:text-slate-350 uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-cubes text-amber-500"></i> Product Data & Parameters Summary
+                        </h4>
+                        <div class="overflow-x-auto border border-slate-300 dark:border-slate-700 rounded-xs bg-white dark:bg-slate-900">
+                            <table class="w-full text-xs border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-100 dark:bg-slate-800 font-bold text-slate-700 dark:text-slate-300 border-b border-slate-300 dark:border-slate-700">
+                                        <th class="p-2.5 border-r border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-850 text-left pl-4">Parameter</th>
+                                        <th class="p-2.5 border-r border-slate-300 dark:border-slate-700 text-center w-36">Value</th>
+                                        <th class="p-2.5 border-r border-slate-300 dark:border-slate-700 text-right w-44">Rate (IDR)</th>
+                                        <th class="p-2.5 text-right w-48 bg-amber-50/50 dark:bg-amber-950/20 font-extrabold text-amber-800 dark:text-amber-300 pr-4">Calculated Cost / Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-300 dark:divide-slate-700">
+                                    <tr class="divide-x divide-slate-300 dark:divide-slate-700">
+                                        <td class="p-2.5 text-left bg-slate-50 dark:bg-slate-850 pl-4 font-semibold">Material Weight/Pcs</td>
+                                        <td class="p-2.5 text-center font-semibold font-mono text-slate-800 dark:text-slate-200" id="sum-prod-mat-w">—</td>
+                                        <td class="p-2.5 text-right font-mono text-slate-500 pr-4">Rp 20.000 / kg</td>
+                                        <td class="p-2.5 text-right font-mono font-bold text-slate-800 dark:text-slate-100 bg-amber-50/20 dark:bg-amber-950/10 pr-4" id="sum-prod-mat-cost">—</td>
+                                    </tr>
+                                    <tr class="divide-x divide-slate-300 dark:divide-slate-700">
+                                        <td class="p-2.5 text-left bg-slate-50 dark:bg-slate-850 pl-4 font-semibold">Part Weight</td>
+                                        <td class="p-2.5 text-center font-semibold font-mono text-slate-800 dark:text-slate-200" id="sum-prod-part-w">—</td>
+                                        <td class="p-2.5 text-right font-mono text-slate-500 pr-4">Rp 20.000 / kg</td>
+                                        <td class="p-2.5 text-right font-mono font-bold text-slate-800 dark:text-slate-100 bg-amber-50/20 dark:bg-amber-950/10 pr-4" id="sum-prod-part-cost">—</td>
+                                    </tr>
+                                    <tr class="divide-x divide-slate-300 dark:divide-slate-700">
+                                        <td class="p-2.5 text-left bg-slate-50 dark:bg-slate-850 pl-4 font-semibold text-rose-600 dark:text-rose-400">Scrap Weight (Loss)</td>
+                                        <td class="p-2.5 text-center font-semibold font-mono text-rose-600 dark:text-rose-455" id="sum-prod-scrap-w">—</td>
+                                        <td class="p-2.5 text-right font-mono text-slate-500 pr-4">Rp 20.000 / kg</td>
+                                        <td class="p-2.5 text-right font-mono font-bold text-rose-600 dark:text-rose-455 bg-amber-50/20 dark:bg-amber-950/10 pr-4" id="sum-prod-scrap-cost">—</td>
+                                    </tr>
+                                    <tr class="divide-x divide-slate-300 dark:divide-slate-700">
+                                        <td class="p-2.5 text-left bg-slate-50 dark:bg-slate-850 pl-4 font-semibold">Purchase Part Qty</td>
+                                        <td class="p-2.5 text-center font-semibold text-slate-800 dark:text-slate-200" id="sum-prod-pur-p">—</td>
+                                        <td class="p-2.5 text-right text-slate-400 pr-4">—</td>
+                                        <td class="p-2.5 text-right text-slate-400 bg-amber-50/20 dark:bg-amber-950/10 pr-4">—</td>
+                                    </tr>
+                                    <tr class="divide-x divide-slate-300 dark:divide-slate-700">
+                                        <td class="p-2.5 text-left bg-slate-50 dark:bg-slate-850 pl-4 font-semibold">Supply Part Qty</td>
+                                        <td class="p-2.5 text-center font-semibold text-slate-800 dark:text-slate-200" id="sum-prod-sup-p">—</td>
+                                        <td class="p-2.5 text-right text-slate-400 pr-4">—</td>
+                                        <td class="p-2.5 text-right text-slate-400 bg-amber-50/20 dark:bg-amber-950/10 pr-4">—</td>
+                                    </tr>
+                                    <tr class="divide-x divide-slate-300 dark:divide-slate-700">
+                                        <td class="p-2.5 text-left bg-slate-50 dark:bg-slate-850 pl-4 font-semibold">Stamping (STP) Process OP Qty</td>
+                                        <td class="p-2.5 text-center font-semibold text-slate-800 dark:text-slate-200" id="sum-prod-stp">—</td>
+                                        <td class="p-2.5 text-right text-slate-400 pr-4">—</td>
+                                        <td class="p-2.5 text-right text-slate-400 bg-amber-50/20 dark:bg-amber-950/10 pr-4">—</td>
+                                    </tr>
+                                    <tr class="divide-x divide-slate-300 dark:divide-slate-700">
+                                        <td class="p-2.5 text-left bg-slate-50 dark:bg-slate-850 pl-4 font-semibold">Robotic Spot Welding (RSW) Spots</td>
+                                        <td class="p-2.5 text-center font-semibold font-mono text-slate-800 dark:text-slate-200" id="sum-prod-rsw">—</td>
+                                        <td class="p-2.5 text-right font-mono text-slate-500 pr-4">Rp 300 / spot</td>
+                                        <td class="p-2.5 text-right font-mono font-bold text-slate-800 dark:text-slate-100 bg-amber-50/20 dark:bg-amber-950/10 pr-4" id="sum-prod-rsw-cost">—</td>
+                                    </tr>
+                                    <tr class="divide-x divide-slate-300 dark:divide-slate-700">
+                                        <td class="p-2.5 text-left bg-slate-50 dark:bg-slate-850 pl-4 font-semibold">Seam Spot Welding (SSW) Spots</td>
+                                        <td class="p-2.5 text-center font-semibold font-mono text-slate-800 dark:text-slate-200" id="sum-prod-ssw">—</td>
+                                        <td class="p-2.5 text-right text-slate-400 pr-4">—</td>
+                                        <td class="p-2.5 text-right text-slate-400 bg-amber-50/20 dark:bg-amber-950/10 pr-4">—</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
 {{-- ===== IMPORT MODAL ===== --}}
 <div id="import-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm">
     <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-705 rounded-xs shadow-2xl w-full max-w-lg mx-4 animate-fade-in">
@@ -1069,6 +1211,122 @@ $(function () {
             addProcessHtml = '<tr><td colspan="5" class="p-4 text-center text-slate-400 border border-slate-200 dark:border-slate-700">No additional process data.</td></tr>';
         }
         $('#addprocess-tbody').html(addProcessHtml);
+
+        // Summary calculations
+        let qtyDie = 0, amtDie = 0, newDie = 0, modDie = 0, comtDie = 0, commDie = 0;
+        let qtyJig = 0, amtJig = 0, newJig = 0, modJig = 0, comtJig = 0, commJig = 0;
+        let qtyCf = 0, amtCf = 0, newCf = 0, modCf = 0, comtCf = 0, commCf = 0;
+
+        toolings.forEach(tp => {
+            let cat = (tp.category || '').toLowerCase();
+            let status = (tp.tooling_status || '').toLowerCase();
+            let q = parseInt(tp.qty || 1, 10);
+            let price = parseFloat(tp.price_idr || 0);
+            let amount = q * price;
+
+            if (cat === 'die') {
+                qtyDie += q;
+                amtDie += amount;
+                if (status === 'new') newDie += q;
+                else if (status === 'modif' || status === 'modification') modDie += q;
+                else if (status.includes('tooling')) comtDie += q;
+                else if (status.includes('model')) commDie += q;
+                else if (status === 'common') comtDie += q;
+            } else if (cat === 'jig') {
+                qtyJig += q;
+                amtJig += amount;
+                if (status === 'new') newJig += q;
+                else if (status === 'modif' || status === 'modification') modJig += q;
+                else if (status.includes('tooling')) comtJig += q;
+                else if (status.includes('model')) commDie += q;
+                else if (status === 'common') comtJig += q;
+            } else if (cat === 'cf' || cat === 'checking fixture') {
+                qtyCf += q;
+                amtCf += amount;
+                if (status === 'new') newCf += q;
+                else if (status === 'modif' || status === 'modification') modCf += q;
+                else if (status.includes('tooling')) comtCf += q;
+                else if (status.includes('model')) commCf += q;
+                else if (status === 'common') comtCf += q;
+            }
+        });
+
+        let qtyTotal = qtyDie + qtyJig + qtyCf;
+        let amtTotal = amtDie + amtJig + amtCf;
+        let newTotal = newDie + newJig + newCf;
+        let modTotal = modDie + modJig + modCf;
+        let comtTotal = comtDie + comtJig + comtCf;
+        let commTotal = commDie + commJig + commCf;
+
+        // Render Tooling summary
+        $('#sum-tool-qty-die').text(qtyDie);
+        $('#sum-tool-qty-jig').text(qtyJig);
+        $('#sum-tool-qty-cf').text(qtyCf);
+        $('#sum-tool-qty-total').text(qtyTotal);
+
+        $('#sum-tool-amt-die').text(qtyDie > 0 ? 'Rp ' + amtDie.toLocaleString('id-ID') : '—');
+        $('#sum-tool-amt-jig').text(qtyJig > 0 ? 'Rp ' + amtJig.toLocaleString('id-ID') : '—');
+        $('#sum-tool-amt-cf').text(qtyCf > 0 ? 'Rp ' + amtCf.toLocaleString('id-ID') : '—');
+        $('#sum-tool-amt-total').text(qtyTotal > 0 ? 'Rp ' + amtTotal.toLocaleString('id-ID') : '—');
+
+        $('#sum-tool-new-die').text(newDie);
+        $('#sum-tool-new-jig').text(newJig);
+        $('#sum-tool-new-cf').text(newCf);
+        $('#sum-tool-new-total').text(newTotal);
+
+        $('#sum-tool-mod-die').text(modDie);
+        $('#sum-tool-mod-jig').text(modJig);
+        $('#sum-tool-mod-cf').text(modCf);
+        $('#sum-tool-mod-total').text(modTotal);
+
+        // Common Tooling
+        $('#sum-tool-comt-die').text(comtDie);
+        $('#sum-tool-comt-jig').text(comtJig);
+        $('#sum-tool-comt-cf').text(comtCf);
+        $('#sum-tool-comt-total').text(comtTotal);
+
+        // Common Model
+        $('#sum-tool-comm-die').text(commDie);
+        $('#sum-tool-comm-jig').text(commJig);
+        $('#sum-tool-comm-cf').text(commCf);
+        $('#sum-tool-comm-total').text(commTotal);
+
+        // Product data calculations
+        let matWeight = item.mat_weight_pcs ? parseFloat(item.mat_weight_pcs) : 0;
+        let partWeight = item.weight ? parseFloat(item.weight) : 0;
+        let scrapWeight = Math.max(0, matWeight - partWeight);
+
+        $('#sum-prod-mat-w').text(matWeight > 0 ? matWeight.toLocaleString('id-ID', {minimumFractionDigits: 1, maximumFractionDigits: 3}) : '—');
+        $('#sum-prod-part-w').text(partWeight > 0 ? partWeight.toLocaleString('id-ID', {minimumFractionDigits: 1, maximumFractionDigits: 3}) : '—');
+        $('#sum-prod-scrap-w').text(scrapWeight > 0 ? scrapWeight.toLocaleString('id-ID', {minimumFractionDigits: 1, maximumFractionDigits: 3}) : '—');
+
+        // Calculated Costs
+        $('#sum-prod-mat-cost').text(matWeight > 0 ? 'Rp ' + (matWeight * 20000).toLocaleString('id-ID', {minimumFractionDigits: 0, maximumFractionDigits: 2}) : '—');
+        $('#sum-prod-part-cost').text(partWeight > 0 ? 'Rp ' + (partWeight * 20000).toLocaleString('id-ID', {minimumFractionDigits: 0, maximumFractionDigits: 2}) : '—');
+        $('#sum-prod-scrap-cost').text(scrapWeight > 0 ? 'Rp ' + (scrapWeight * 20000).toLocaleString('id-ID', {minimumFractionDigits: 0, maximumFractionDigits: 2}) : '—');
+
+        let purchasePartVal = (item.status || '').toLowerCase() === 'purchase part' ? (item.qty_unit ?? 1) : (item.std_qty ?? 0);
+        $('#sum-prod-pur-p').text(purchasePartVal);
+
+        let supplyPartVal = (item.status || '').toLowerCase() === 'supply part' ? (item.qty_unit ?? 1) : 0;
+        $('#sum-prod-sup-p').text(supplyPartVal);
+
+        $('#sum-prod-stp').text(qtyDie);
+
+        let rswCount = 0;
+        let sswCount = 0;
+        (item.add_processes || []).forEach(ap => {
+            let name = (ap.process_name || '').toLowerCase();
+            let q = parseInt(ap.qty || 1, 10);
+            if (name.includes('rsw') || name.includes('spot weld') || name.includes('spotweld')) {
+                rswCount += q;
+            } else if (name.includes('ssw') || name.includes('seam') || name.includes('projection')) {
+                sswCount += q;
+            }
+        });
+        $('#sum-prod-rsw').text(rswCount);
+        $('#sum-prod-ssw').text(sswCount);
+        $('#sum-prod-rsw-cost').text(rswCount > 0 ? 'Rp ' + (rswCount * 300).toLocaleString('id-ID') : '—');
     }
 
     // 4. Automatically select the first or saved active item on load
