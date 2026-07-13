@@ -1466,21 +1466,13 @@ document.addEventListener('alpine:init', () => {
         updateApprovalSuggestions() {
             if (!this.isEditable) return;
             let selectedDeptIds = this.getSelectedDepartmentIds();
-            let newSelection = [];
-            this.approvalRulesList.forEach(rule => {
-                if (selectedDeptIds.includes(parseInt(rule.department_id))) {
-                    newSelection.push(rule.id);
-                }
-            });
-            // Keep manually added rules (those not in approvalRulesList dept scope) intact
-            // Only auto-manage: add suggested ones, remove non-suggested ones that were auto-added
+            
+            // Only auto-select suggested rules; do not automatically deselect manually checked ones
             this.approvalRulesList.forEach(rule => {
                 let isNowSuggested = selectedDeptIds.includes(parseInt(rule.department_id));
                 let currentlySelected = this.selected_approval_rules.map(Number).includes(rule.id);
                 if (isNowSuggested && !currentlySelected) {
                     this.selected_approval_rules.push(rule.id);
-                } else if (!isNowSuggested && currentlySelected) {
-                    this.selected_approval_rules = this.selected_approval_rules.filter(id => Number(id) !== rule.id);
                 }
             });
         },

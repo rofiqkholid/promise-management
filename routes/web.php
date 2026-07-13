@@ -46,9 +46,9 @@ Route::get('/dashboard', function () {
 })->middleware('auth')->name('dashboard');
 
 Route::middleware('auth')->prefix('management')->name('management.')->group(function () {
-    Route::get('api/users', [WorkOrderController::class, 'apiGetUsers'])->name('api.users');
-    Route::get('api/processes', [WorkOrderController::class, 'apiGetProcesses'])->name('api.processes');
-    Route::get('api/approval-rules', [ApprovalConfigController::class, 'apiGetRules'])->name('api.approval-rules');
+    Route::get('ajax/users', [WorkOrderController::class, 'apiGetUsers'])->name('api.users');
+    Route::get('ajax/processes', [WorkOrderController::class, 'apiGetProcesses'])->name('api.processes');
+    Route::get('ajax/approval-rules', [ApprovalConfigController::class, 'apiGetRules'])->name('api.approval-rules');
 
     // Inquiry Routes
     Route::middleware('check.menu:management.inquiry.index')->group(function () {
@@ -71,7 +71,7 @@ Route::middleware('auth')->prefix('management')->name('management.')->group(func
 
     // Work Order Routes
     // Work Order Public API Routes (accessible by any authenticated user on work order screen)
-    Route::get('work-order/{id}/api-details', [WorkOrderController::class, 'apiGetDetails'])->name('work-order.api-details');
+    Route::get('work-order/{id}/ajax-details', [WorkOrderController::class, 'apiGetDetails'])->name('work-order.api-details');
     Route::get('work-order-global-progress', [WorkOrderController::class, 'apiGetGlobalProgress'])->name('work-order.api-global-progress');
 
     // Work Order Approval Inbox (accessible by users with approval menu permission)

@@ -509,7 +509,7 @@ function outlookInbox() {
             this.approvalRemarks = '';
             this.dueDateClosed = '';
             
-            fetch(`${WO_BASE_URL}/work-order/${hashedId}/api-details`)
+            fetch(`${WO_BASE_URL}/work-order/${hashedId}/ajax-details`)
                 .then(res => res.json())
                 .then(json => {
                     this.loadingDetail = false;

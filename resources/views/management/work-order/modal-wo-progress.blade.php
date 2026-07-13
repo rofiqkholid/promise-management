@@ -282,7 +282,7 @@ function woProgressModal() {
             modal.classList.remove('hidden');
             
             // Fetch Details via AJAX
-            fetch(`${WO_BASE_URL}/work-order/${hashedId}/api-details`)
+            fetch(`${WO_BASE_URL}/work-order/${hashedId}/ajax-details`)
                 .then(res => res.json())
                 .then(json => {
                     if (json.success) {
