@@ -244,7 +244,7 @@
             <div class="space-y-4">
                 <div class="grid grid-cols-2 gap-3">
                     <x-form-input label="WO Number" name="wo_number" x-model="work_order_no" required :readonly="!$isEditable" />
-                    <x-form-input label="WO Publish Date" name="publish_date" type="date" x-model="publish_date" required :disabled="!$isEditable" />
+                    <x-form-input label="WO Release Date" name="released_at" type="date" x-model="released_at" required :disabled="!$isEditable" />
                 </div>
 
                 <div class="grid grid-cols-2 gap-3 border-t border-slate-100 dark:border-slate-800 pt-3">
@@ -1140,11 +1140,10 @@ document.addEventListener('alpine:init', () => {
         document_no: @json(isset($workOrder) ? ($workOrder->docFormat->document_no ?? 'FO-13-02') : ($woHeader->document_no ?? 'FO-13-02')),
         doc_department: @json(isset($workOrder) ? ($workOrder->docFormat->doc_department ?? 'Sales') : ($woHeader->doc_department ?? 'Sales')),
         doc_publish_date: @json(isset($workOrder) ? ($workOrder->docFormat->doc_publish_date ? \Carbon\Carbon::parse($workOrder->docFormat->doc_publish_date)->format('Y-m-d') : '2024-01-01') : ($woHeader->doc_publish_date ? \Carbon\Carbon::parse($woHeader->doc_publish_date)->format('Y-m-d') : '2024-01-01')),
-        released_at: @json(isset($workOrder) ? ($workOrder->released_at ? $workOrder->released_at->format('Y-m-d') : '') : ''),
+        released_at: @json(isset($workOrder) ? ($workOrder->released_at ? (is_string($workOrder->released_at) ? substr($workOrder->released_at, 0, 10) : $workOrder->released_at->format('Y-m-d')) : '') : now()->format('Y-m-d')),
         page_hal: @json(isset($workOrder) ? ($workOrder->docFormat->page_hal ?? '1') : ($woHeader->page_hal ?? '1')),
         revision_no: {{ isset($workOrder) ? $workOrder->revision_no : 0 }},
         doc_revision_no: @json(isset($workOrder) ? ($workOrder->docFormat->revision_no ?? 0) : ($woHeader->revision_no ?? 0)),
-        publish_date: @json(isset($workOrder) ? ($workOrder->publish_date ? (is_string($workOrder->publish_date) ? substr($workOrder->publish_date, 0, 10) : $workOrder->publish_date->format('Y-m-d')) : '') : ''),
         first_sample_date: @json(isset($workOrder) ? ($workOrder->first_sample_date ? (is_string($workOrder->first_sample_date) ? substr($workOrder->first_sample_date, 0, 10) : $workOrder->first_sample_date->format('Y-m-d')) : '') : ''),
         due_date_plan: @json(isset($workOrder) ? ($workOrder->due_date_plan ? (is_string($workOrder->due_date_plan) ? substr($workOrder->due_date_plan, 0, 10) : $workOrder->due_date_plan->format('Y-m-d')) : '') : ''),
         due_dates_closed: @json((object)$dueDatesClosedData),
@@ -1957,7 +1956,7 @@ document.addEventListener('alpine:init', () => {
                 inquiry_id: $form.find('input[name="inquiry_id"]').val() || null,
                 department_id: alpine.department_id || '',
                 wo_number: alpine.work_order_no || '',
-                publish_date: alpine.publish_date || '',
+                released_at: alpine.released_at || '',
                 first_sample_date: alpine.first_sample_date || '',
                 due_date_plan: alpine.due_date_plan || '',
                 priority: alpine.priority || 'STANDARD',

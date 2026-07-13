@@ -16,7 +16,6 @@ class WorkOrder extends Model
     protected $fillable = [
         'inquiry_id',
         'wo_number',
-        'publish_date',
         'revision_no',
         'revised_from_id',
         'is_latest',
@@ -39,7 +38,6 @@ class WorkOrder extends Model
         'is_latest' => 'boolean',
         'revision_no' => 'integer',
         'request_types' => 'array',
-        'publish_date' => 'date',
         'first_sample_date' => 'date',
         'due_date_plan' => 'date',
         'due_dates_closed' => 'array',

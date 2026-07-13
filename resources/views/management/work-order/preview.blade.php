@@ -44,7 +44,7 @@
     {{-- SPK Info & Priority Block --}}
     <div class="flex justify-between items-start text-xs text-slate-900">
         <div class="space-y-1">
-            <div>Publish Date: <span class="font-bold" x-text="formatDateStr(publish_date) || '—'"></span></div>
+            <div>Release Date: <span class="font-bold" x-text="formatDateStr(released_at) || '—'"></span></div>
             <div>No. <span class="font-bold" x-text="work_order_no"></span></div>
             <div>To: <span class="font-bold" x-text="typeof isEditable !== 'undefined' ? (selected_processes.length ? (getDepartmentName(department_id) + (support_departments.length ? ' / ' + support_departments.map(d => d.name).join(', ') : '')) : '—') : (target_departments_full || '—')"></span></div>
         </div>

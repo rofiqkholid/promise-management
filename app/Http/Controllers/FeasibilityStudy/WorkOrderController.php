@@ -224,7 +224,7 @@ class WorkOrderController extends Controller
             $data = [
                 'inquiry_id'        => $this->decryptId($request->input('inquiry_id')),
                 'wo_number'         => $validated['wo_number'],
-                'publish_date'      => $validated['publish_date'],
+                'released_at'       => $validated['released_at'],
                 'first_sample_date' => $validated['first_sample_date'],
                 'due_date_plan'     => $validated['due_date_plan'],
                 'priority'          => $validated['priority'],
@@ -281,7 +281,7 @@ class WorkOrderController extends Controller
 
         try {
             $data = [
-                'publish_date'      => $validated['publish_date'],
+                'released_at'       => $validated['released_at'],
                 'first_sample_date' => $validated['first_sample_date'],
                 'due_date_plan'     => $validated['due_date_plan'],
                 'priority'          => $validated['priority'],
@@ -561,7 +561,6 @@ class WorkOrderController extends Controller
                     'document_no' => $workOrder->docFormat->document_no ?? 'FO-13-02',
                     'doc_department' => $workOrder->docFormat->doc_department ?? 'Sales',
                     'doc_publish_date' => $workOrder->docFormat->doc_publish_date ? \Carbon\Carbon::parse($workOrder->docFormat->doc_publish_date)->format('d-M-Y') : '01-Jan-2024',
-                    'publish_date' => $workOrder->publish_date ? \Carbon\Carbon::parse($workOrder->publish_date)->format('Y-m-d') : null,
                     'released_at' => $workOrder->released_at ? $workOrder->released_at->format('Y-m-d') : ($workOrder->status === 'Approved' ? ($workOrder->updated_at ? $workOrder->updated_at->format('Y-m-d') : null) : null),
                     'doc_revision_no' => $workOrder->docFormat->revision_no ?? 0,
                     'page_hal' => $workOrder->docFormat->page_hal ?? '1',

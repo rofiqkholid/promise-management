@@ -183,7 +183,6 @@
                              x-data="{ 
                                  get document_no() { return detailData.document_no; },
                                  get doc_department() { return detailData.doc_department; },
-                                 get publish_date() { return detailData.publish_date; },
                                  get doc_publish_date() { return detailData.doc_publish_date; },
                                  get doc_revision_no() { return detailData.doc_revision_no; },
                                  get page_hal() { return detailData.page_hal; },

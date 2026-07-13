@@ -25,7 +25,7 @@ class WorkOrderRequest extends FormRequest
     public function rules(): array
     {
         $rules = [
-            'publish_date'       => 'required|date',
+            'released_at'        => 'required|date',
             'first_sample_date'  => 'nullable|date',
             'due_date_plan'      => 'required|date',
             'priority'           => 'required|string|in:LOW,STANDARD,URGENT',
