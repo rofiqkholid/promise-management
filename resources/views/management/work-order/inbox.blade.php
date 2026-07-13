@@ -36,13 +36,7 @@
 {{-- Main Container: Matches the structural layout pattern in form.blade.php (mt-16 and h-[calc(100vh-64px)]) --}}
 <div class="flex h-[calc(100vh-64px)] mt-15 overflow-hidden bg-white" x-data="outlookInbox()" x-init="initInbox()">
     
-    {{-- Toast Notification --}}
-    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-slate-800 text-white text-xs py-2.5 px-4 font-medium flex items-center gap-2 border-l-4 border-[#0c4da2]">
-        <svg class="w-3.5 h-3.5 text-[#0c4da2] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-        </svg>
-        <span id="toast-message">Success!</span>
-    </div>
+    <x-sweetalert />
 
     {{-- Split Layout Grid (Spanning full width/height) --}}
     <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-0 border-t border-slate-200 bg-white min-h-0 overflow-hidden">
@@ -458,14 +452,12 @@ function outlookInbox() {
             }
         },
         
-        showToast(message) {
-            const toast = document.getElementById('toast');
-            const msgSpan = document.getElementById('toast-message');
-            msgSpan.textContent = message;
-            toast.classList.remove('translate-y-20', 'opacity-0');
-            setTimeout(() => {
-                toast.classList.add('translate-y-20', 'opacity-0');
-            }, 3000);
+        showToast(message, type = 'success') {
+            if (window.showToast) {
+                window.showToast(message, type);
+            } else {
+                alert(message);
+            }
         },
 
         formatDate(dateStr) {
@@ -532,7 +524,7 @@ function outlookInbox() {
                             });
                         });
                     } else {
-                        this.showToast('Failed to load SPK details.');
+                        this.showToast('Failed to load WO details.', 'error');
                     }
                 })
                 .catch(err => {
@@ -618,12 +610,12 @@ function outlookInbox() {
                                 window.location.reload();
                             }, 1000);
                         } else {
-                            this.showToast('Failed to process document.');
+                            this.showToast('Failed to process document.', 'error');
                         }
                     })
                     .catch(err => {
                         console.error(err);
-                        this.showToast('Network error occurred.');
+                        this.showToast('Network error occurred.', 'error');
                     });
                 }
             });
@@ -665,12 +657,12 @@ function outlookInbox() {
                 if (res.ok) {
                     this.showToast('Progress saved successfully!');
                 } else {
-                    this.showToast('Failed to save progress.');
+                    this.showToast('Failed to save progress.', 'error');
                 }
             })
             .catch(err => {
                 console.error(err);
-                this.showToast('Network error while saving progress.');
+                this.showToast('Network error while saving progress.', 'error');
             });
         },
         
