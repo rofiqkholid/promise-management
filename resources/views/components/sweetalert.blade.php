@@ -17,6 +17,10 @@
         --sa-info-bg: #eff6ff;
     }
 
+    .swal2-container {
+        z-index: 100000 !important;
+    }
+
     /* ---------- Base popup (modal) ---------- */
     .swal2-popup:not(.swal2-toast) {
         font-family: Inter, ui-sans-serif, system-ui, sans-serif !important;

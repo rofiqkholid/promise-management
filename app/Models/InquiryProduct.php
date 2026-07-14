@@ -59,4 +59,10 @@ class InquiryProduct extends Model
     {
         return $this->hasMany(WorkOrderProduct::class, 'inquiry_product_id', 'id');
     }
+
+    public function chats()
+    {
+        return $this->hasMany(InquiryProductChat::class, 'inquiry_product_id', 'id');
+    }
 }
+

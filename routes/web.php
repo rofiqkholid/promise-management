@@ -61,6 +61,11 @@ Route::middleware('auth')->prefix('management')->name('management.')->group(func
         Route::get('inquiry-product/{id}', [InquiryController::class, 'showProduct'])->name('inquiry-product.show');
         Route::patch('inquiry-product/{id}', [InquiryController::class, 'updateProduct'])->name('inquiry-product.update');
         Route::delete('inquiry-product/{id}', [InquiryController::class, 'deleteProduct'])->name('inquiry-product.delete');
+        Route::get('inquiry-product/{productId}/chats', [\App\Http\Controllers\Management\InquiryProductChatController::class, 'index'])->name('inquiry-product.chats.index');
+        Route::post('inquiry-product/{productId}/chats', [\App\Http\Controllers\Management\InquiryProductChatController::class, 'store'])->name('inquiry-product.chats.store');
+        Route::get('inquiry-product-chat/download/{chatId}', [\App\Http\Controllers\Management\InquiryProductChatController::class, 'download'])->name('inquiry-product.chats.download');
+        Route::get('inquiry-product-chat/file/{chatId}', [\App\Http\Controllers\Management\InquiryProductChatController::class, 'showFile'])->name('inquiry-product.chats.show-file');
+        Route::delete('inquiry-product-chat/{chatId}', [\App\Http\Controllers\Management\InquiryProductChatController::class, 'destroy'])->name('inquiry-product.chats.destroy');
         Route::post('inquiry-product/reorder-all', [InquiryController::class, 'reorderAll'])->name('inquiry-product.reorder-all');
         Route::post('inquiry-product/{id}/reorder', [InquiryController::class, 'reorderProduct'])->name('inquiry-product.reorder');
         Route::post('inquiry/{inquiryId}/product', [InquiryController::class, 'addProduct'])->name('inquiry.add-product');

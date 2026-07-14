@@ -979,10 +979,7 @@ document.addEventListener('alpine:init', () => {
                        </span>`
                     : '';
 
-                const upBtn = (index > 0 && !isLocked)
-                    ? `<button onclick="event.stopPropagation();window._alpine_reorder(${prod.id},'up')" title="Move Up" class="w-6 h-6 flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-350 transition-colors"><i class="fa-solid fa-arrow-up text-[9px]"></i></button>` : '';
-                const downBtn = (index < total - 1 && !isLocked)
-                    ? `<button onclick="event.stopPropagation();window._alpine_reorder(${prod.id},'down')" title="Move Down" class="w-6 h-6 flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-350 transition-colors"><i class="fa-solid fa-arrow-down text-[9px]"></i></button>` : '';
+                const chatBtn = `<button onclick="event.stopPropagation();window.dispatchEvent(new CustomEvent('open-product-chat', { detail: { id: ${prod.id} } }))" title="Chat & Details" class="w-6 h-6 flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white border border-indigo-600 hover:border-indigo-700 transition-colors"><i class="fa-solid fa-comments text-[9px]"></i></button>`;
                 const editBtn = !isLocked
                     ? `<button onclick="event.stopPropagation();window._alpine_editProduct(${prod.id})" title="Edit" class="w-6 h-6 flex items-center justify-center bg-slate-100 hover:bg-blue-50 dark:bg-slate-800 dark:hover:bg-blue-950/30 border border-slate-300 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-800 text-slate-600 dark:text-slate-350 hover:text-blue-700 dark:hover:text-blue-400 transition-colors"><i class="fa-solid fa-pen text-[9px]"></i></button>`
                     : `<span class="text-[10px] text-slate-400 italic">Locked</span>`;
@@ -1030,7 +1027,7 @@ document.addEventListener('alpine:init', () => {
                     <span class="inline-block px-2 py-0.5 text-[10px] font-bold border ${pc}">${prod.rankLabel || '—'}</span>
                   </td>
                   <td class="p-3 text-right" onclick="event.stopPropagation()">
-                    <div class="inline-flex items-center gap-1.5 justify-end">${upBtn}${downBtn}${editBtn}${deleteBtn}</div>
+                    <div class="inline-flex items-center gap-1.5 justify-end">${chatBtn}${editBtn}${deleteBtn}</div>
                   </td>
                 </tr>`;
             });
@@ -1468,5 +1465,7 @@ function confirmDeleteInquiry() {
     });
 }
 </script>
+
+@include('management.inquiry.chat_drawer')
 
 @endsection
