@@ -219,7 +219,8 @@
                         
                         <!-- User Initial Avatar (only for others) -->
                         <template x-if="msg.user_id != {{ Auth::user()->id }}">
-                            <div class="w-7 h-7 rounded-full bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-extrabold text-[10px] flex-shrink-0 select-none shadow-xs border border-emerald-200 dark:border-emerald-800"
+                            <div class="w-7 h-7 rounded-full flex items-center justify-center font-extrabold text-[10px] flex-shrink-0 select-none shadow-xs border"
+                                 :class="getUserColor(msg.user_id).avatar"
                                  x-text="msg.user_name ? msg.user_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'U'">
                             </div>
                         </template>
@@ -242,17 +243,27 @@
 
                             <!-- Sender Name (Only if others) -->
                             <span x-show="msg.user_id != {{ Auth::user()->id }}" 
-                                  class="block text-[10.5px] font-extrabold text-emerald-600 dark:text-emerald-400 mb-1" 
+                                  class="block text-[10.5px] font-extrabold mb-1" 
+                                  :class="getUserColor(msg.user_id).name"
                                   x-text="msg.user_name"></span>
 
                             <!-- Image Preview in Chat Bubble (if it is an image file) -->
                             <template x-if="msg.file_path && isImageType(msg.file_type)">
-                                <div class="mt-1 mb-1.5 border border-slate-200/80 dark:border-slate-700 rounded-xs overflow-hidden bg-slate-100 dark:bg-slate-800 max-w-[220px] relative group">
+                                <div x-data="{ imageLoaded: false }" class="mt-1 mb-1.5 border border-slate-200/80 dark:border-slate-700 rounded-xs overflow-hidden bg-slate-100 dark:bg-slate-800 max-w-[220px] relative group min-h-[80px] flex items-center justify-center">
+                                    <!-- Loader Spinner -->
+                                    <div x-show="!imageLoaded" class="absolute inset-0 flex items-center justify-center bg-slate-100/50 dark:bg-slate-800/50">
+                                        <i class="fa-solid fa-spinner animate-spin text-indigo-500 text-sm"></i>
+                                    </div>
+                                    
                                     <img :src="msg.file_url" 
-                                         :alt="msg.file_name" 
-                                         class="w-full h-auto object-cover max-h-40 hover:scale-102 transition-transform duration-200 chat-image-thumb" />
+                                          :alt="msg.file_name" 
+                                          @load="imageLoaded = true"
+                                          class="w-full h-auto object-cover max-h-40 hover:scale-102 transition-all duration-300 chat-image-thumb"
+                                          :class="imageLoaded ? 'opacity-100' : 'opacity-0'" />
+                                          
                                     <!-- Download button overlay -->
-                                    <a :href="msg.download_url" 
+                                    <a x-show="imageLoaded"
+                                       :href="msg.download_url" 
                                        download
                                        class="absolute bottom-1.5 right-1.5 w-6.5 h-6.5 rounded-xs bg-slate-900/70 hover:bg-slate-900 text-white flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 cursor-pointer shadow-xs"
                                        :title="'Download Image'">
@@ -275,7 +286,7 @@
                                               x-text="msg.file_name"
                                               :title="msg.file_name">
                                         </span>
-                                        <span class="block text-[9px] opacity-75 mt-0.5" x-text="(msg.file_name.split('.').pop().toUpperCase() || 'FILE') + ' | ' + formatBytes(msg.file_size)"></span>
+                                        <span class="block text-[9px] opacity-75 mt-0.5" x-text="((msg.file_name ? msg.file_name.split('.').pop().toUpperCase() : '') || 'FILE') + ' | ' + formatBytes(msg.file_size)"></span>
                                     </div>
                                 </div>
 
@@ -661,6 +672,9 @@ window.inquiryProductChat = function() {
                             this.scrollToBottom();
                             this.initViewer();
                         });
+                    })
+                    .listen('InquiryProductChatMessageDeleted', (e) => {
+                        this.chatMessages = this.chatMessages.filter(msg => Number(msg.id) !== Number(e.chatId));
                     });
             }
         },
@@ -738,6 +752,7 @@ window.inquiryProductChat = function() {
             if (this.chatAttachments.length === 0) {
                 const formData = new FormData();
                 formData.append('message', this.chatInputMessage);
+                this.chatInputMessage = '';
                 this.postSingleMessage(formData, true);
                 return;
             }
@@ -918,6 +933,41 @@ window.inquiryProductChat = function() {
             }
         },
 
+        getUserColor(userId) {
+            const colors = [
+                {
+                    avatar: 'bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
+                    name: 'text-emerald-600 dark:text-emerald-400'
+                },
+                {
+                    avatar: 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800',
+                    name: 'text-indigo-600 dark:text-indigo-400'
+                },
+                {
+                    avatar: 'bg-rose-100 dark:bg-rose-900 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800',
+                    name: 'text-rose-600 dark:text-rose-400'
+                },
+                {
+                    avatar: 'bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
+                    name: 'text-amber-600 dark:text-amber-400'
+                },
+                {
+                    avatar: 'bg-violet-100 dark:bg-violet-900 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800',
+                    name: 'text-violet-600 dark:text-violet-400'
+                },
+                {
+                    avatar: 'bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-800',
+                    name: 'text-teal-600 dark:text-teal-400'
+                },
+                {
+                    avatar: 'bg-cyan-100 dark:bg-cyan-900 text-cyan-700 dark:text-cyan-300 border-cyan-200 dark:border-cyan-800',
+                    name: 'text-cyan-600 dark:text-cyan-400'
+                }
+            ];
+            const index = Math.abs(parseInt(userId || 0)) % colors.length;
+            return colors[index];
+        },
+
         getAssetUrl(path) {
             if (!path) return '';
             return '/storage/' + path.replace('public/', '');
@@ -996,7 +1046,7 @@ window.inquiryProductChat = function() {
                   html = html.replace(/\n/g, '<br>');
               }
               const urlRegex = /(?<!href=")(https?:\/\/[^\s<]+)/g;
-              html = html.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-2 py-0.5 bg-sky-100 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400 rounded-xs border border-sky-200 dark:border-sky-800/30 hover:bg-sky-200 transition-colors font-semibold text-[11px] my-0.5"><i class="fa-solid fa-link text-[9px]"></i>$1</a>');
+              html = html.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-2 py-0.5 bg-sky-100 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400 rounded-xs border border-sky-200 dark:border-sky-800/30 hover:bg-sky-200 transition-colors font-semibold text-[11px] my-0.5 break-all max-w-full"><i class="fa-solid fa-link text-[9px]"></i>$1</a>');
               return html;
           },
 

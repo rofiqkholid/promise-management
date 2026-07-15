@@ -38,6 +38,7 @@ class InquiryProductChatMessageSent implements ShouldBroadcast
             'file_type' => $chat->file_type,
             'file_size' => $chat->file_size,
             'download_url' => $chat->file_path ? route('management.inquiry-product.chats.download', $chat->id) : null,
+            'file_url' => $chat->file_path ? route('management.inquiry-product.chats.show-file', $chat->id) : null,
         ];
     }
 

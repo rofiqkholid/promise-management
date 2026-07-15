@@ -30,6 +30,9 @@ class InquiryProduct extends Model
         'has_tech_doc',
         'variant',
         'remarks',
+        'forex',
+        'material_condition',
+        'decision',
     ];
 
     protected $casts = [

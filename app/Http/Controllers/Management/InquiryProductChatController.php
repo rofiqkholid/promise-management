@@ -156,18 +156,23 @@ class InquiryProductChatController extends Controller
         $chat = InquiryProductChat::findOrFail($chatId);
 
         // Only the message owner can delete it
-        if ($chat->user_id !== Auth::user()->id) {
+        if ((int) $chat->user_id !== (int) Auth::user()->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized to delete this message.'
             ], 403);
         }
 
+        $productId = $chat->inquiry_product_id;
+
         if ($chat->file_path && Storage::exists($chat->file_path)) {
             Storage::delete($chat->file_path);
         }
 
         $chat->delete();
+
+        // Broadcast deletion to other users
+        broadcast(new \App\Events\InquiryProductChatMessageDeleted($chatId, $productId))->toOthers();
 
         return response()->json([
             'success' => true,

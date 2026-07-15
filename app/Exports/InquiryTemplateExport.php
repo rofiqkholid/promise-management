@@ -15,14 +15,16 @@ class InquiryTemplateExport implements FromArray, WithHeadings, WithCustomStartC
         return [
             'No',
             'Part Num',
-            'Part Category',
             'Part Name',
+            'Part Category',
+            'Variant',
             'Destination',
             'SOP',
             'EOL',
             'Model Life',
             'Volume/y',
-            'Variant',
+            'Forex',
+            'Material Condition',
             '2d data',
             '3d data',
             'tech doc',
@@ -47,14 +49,16 @@ class InquiryTemplateExport implements FromArray, WithHeadings, WithCustomStartC
             [
                 '1',
                 '89661-0D310',
-                'Engine',
                 'Computer, Engine Control',
+                'Engine',
+                'RHD',
                 'Domestic',
                 '2026-07-01',
                 '2031-06-30',
                 '5',
                 '12000',
-                'RHD',
+                '3.95 JPY/THB, 0.0090 JPY/IDR',
+                'Mar\'22/Mar\'24',
                 'Yes',
                 'Yes',
                 'Yes',
@@ -82,10 +86,10 @@ class InquiryTemplateExport implements FromArray, WithHeadings, WithCustomStartC
     public function styles(Worksheet $sheet)
     {
         // Add title on Row 2
-        $sheet->mergeCells('A2:Y2');
+        $sheet->mergeCells('A2:AA2');
         $sheet->setCellValue('A2', 'PROJECT INQUIRY PRODUCTS IMPORT TEMPLATE');
         
-        $sheet->mergeCells('A3:Y3');
+        $sheet->mergeCells('A3:AA3');
         $sheet->setCellValue('A3', 'Fill your data starting on row 6. Headers are on row 5. Values for scoring categories (cols P-T) must match system options.');
 
         return [

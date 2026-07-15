@@ -348,6 +348,9 @@ class InquiryController extends Controller
             'has_tech_doc'       => 'nullable|boolean',
             'variant'            => 'nullable|string|max:100',
             'remarks'            => 'nullable|string',
+            'forex'              => 'nullable|string|max:100',
+            'material_condition' => 'nullable|string|max:100',
+            'decision'           => 'nullable|string|max:50',
         ]);
 
         try {
@@ -382,8 +385,8 @@ class InquiryController extends Controller
     public function updateProduct(Request $request, $productId)
     {
         $validated = $request->validate([
-            'customer_part_no'   => 'required|string|max:100',
-            'customer_part_name' => 'required|string|max:255',
+            'customer_part_no'   => 'sometimes|required|string|max:100',
+            'customer_part_name' => 'sometimes|required|string|max:255',
             'part_category'      => 'nullable|string|max:100',
             'destination'        => 'nullable|string|max:100',
             'sop_date'           => 'nullable|date',
@@ -395,6 +398,9 @@ class InquiryController extends Controller
             'has_tech_doc'       => 'nullable|boolean',
             'variant'            => 'nullable|string|max:100',
             'remarks'            => 'nullable|string',
+            'forex'              => 'nullable|string|max:100',
+            'material_condition' => 'nullable|string|max:100',
+            'decision'           => 'nullable|string|max:50',
         ]);
 
         try {

@@ -45,7 +45,7 @@ class InquiryProductImport
                 continue;
             }
 
-            // Map row to keys based on the user's specific columns (B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8, J=9, K=10, L=11, M=12, N=13, O=14, P=15, Q=16, R=17)
+            // Map row to keys based on the user's specific columns (B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8, J=9, K=10, L=11, M=12, N=13, O=14, P=15, Q=16, R=17, S=18, T=19)
             $row = [
                 'part_no'              => isset($rawRow[1]) ? trim($rawRow[1]) : null,
                 'part_name'            => isset($rawRow[2]) ? trim($rawRow[2]) : null,
@@ -56,14 +56,16 @@ class InquiryProductImport
                 'eol'                  => isset($rawRow[7]) ? trim($rawRow[7]) : null,
                 'model_life'           => isset($rawRow[8]) ? trim($rawRow[8]) : null,
                 'volumey'              => isset($rawRow[9]) ? trim($rawRow[9]) : null,
-                '2d_data'              => isset($rawRow[10]) ? trim($rawRow[10]) : null,
-                '3d_data'              => isset($rawRow[11]) ? trim($rawRow[11]) : null,
-                'tech_doc'             => isset($rawRow[12]) ? trim($rawRow[12]) : null,
-                'customer_priority'    => isset($rawRow[13]) ? trim($rawRow[13]) : null,
-                'volume_potential'     => isset($rawRow[14]) ? trim($rawRow[14]) : null,
-                'type_product'         => isset($rawRow[15]) ? trim($rawRow[15]) : null,
-                'technical_capability' => isset($rawRow[16]) ? trim($rawRow[16]) : null,
-                'investment'           => isset($rawRow[17]) ? trim($rawRow[17]) : null,
+                'forex'                => isset($rawRow[10]) ? trim($rawRow[10]) : null,
+                'material_condition'   => isset($rawRow[11]) ? trim($rawRow[11]) : null,
+                '2d_data'              => isset($rawRow[12]) ? trim($rawRow[12]) : null,
+                '3d_data'              => isset($rawRow[13]) ? trim($rawRow[13]) : null,
+                'tech_doc'             => isset($rawRow[14]) ? trim($rawRow[14]) : null,
+                'customer_priority'    => isset($rawRow[15]) ? trim($rawRow[15]) : null,
+                'volume_potential'     => isset($rawRow[16]) ? trim($rawRow[16]) : null,
+                'type_product'         => isset($rawRow[17]) ? trim($rawRow[17]) : null,
+                'technical_capability' => isset($rawRow[18]) ? trim($rawRow[18]) : null,
+                'investment'           => isset($rawRow[19]) ? trim($rawRow[19]) : null,
             ];
 
             $partNo   = isset($row['part_no']) ? trim($row['part_no']) : '';
@@ -108,6 +110,8 @@ class InquiryProductImport
                 'sop_date' => $sopDate,
                 'eol_date' => $eolDate,
                 'model_life' => !empty($row['model_life']) ? (int) $row['model_life'] : null,
+                'forex' => $row['forex'] ?? null,
+                'material_condition' => $row['material_condition'] ?? null,
                 'annual_volume' => !empty($row['volumey']) ? (int) $row['volumey'] : null,
                 'has_2d_data' => $has2d,
                 'has_3d_data' => $has3d,

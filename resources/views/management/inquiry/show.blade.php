@@ -244,6 +244,9 @@
                 'rankCode'           => $p->assessment->ranking->rank_code ?? null,
                 'rankLabel'          => $p->assessment->ranking->priority_label ?? null,
                 'spkList'            => $spkList,
+                'forex'              => $p->forex,
+                'material_condition' => $p->material_condition,
+                'decision'           => $p->decision,
             ];
         });
     @endphp
@@ -285,12 +288,14 @@
                                            class="w-3.5 h-3.5 text-blue-600 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-blue-500 cursor-pointer rounded-xs"
                                            title="Select/Deselect All Products for SPK">
                                 </th>
-                                <th class="p-3 bg-slate-50/50 dark:bg-slate-900/50">Model</th>
                                 <th class="p-3 bg-slate-50/50 dark:bg-slate-900/50">Part Number</th>
                                 <th class="p-3 bg-slate-50/50 dark:bg-slate-900/50">Part Name</th>
                                 <th class="p-3 text-center bg-slate-50/50 dark:bg-slate-900/50">Variant</th>
                                 <th class="p-3 bg-slate-50/50 dark:bg-slate-900/50">Category</th>
                                 <th class="p-3 text-right bg-slate-50/50 dark:bg-slate-900/50">Ann. Vol.</th>
+                                <th class="p-3 bg-slate-50/50 dark:bg-slate-900/50">Forex</th>
+                                <th class="p-3 bg-slate-50/50 dark:bg-slate-900/50">Material Condition</th>
+                                <th class="p-3 text-center bg-slate-50/50 dark:bg-slate-900/50 w-28">Decision</th>
                                 <th class="p-3 text-center w-20 bg-slate-50/50 dark:bg-slate-900/50">Score</th>
                                 <th class="p-3 text-center w-16 bg-slate-50/50 dark:bg-slate-900/50">Rank</th>
                                 <th class="p-3 text-center w-32 bg-slate-50/50 dark:bg-slate-900/50">Priority</th>
@@ -458,6 +463,25 @@
                                 <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Model Life (months)</label>
                                 <input type="number" x-model="productForm.model_life" min="0"
                                        class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-3 py-1.5 text-xs focus:outline-none focus:border-blue-500 text-slate-800 dark:text-slate-100">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Forex</label>
+                                <input type="text" x-model="productForm.forex"
+                                       class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-3 py-1.5 text-xs focus:outline-none focus:border-blue-500 text-slate-800 dark:text-slate-100">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Material Condition</label>
+                                <input type="text" x-model="productForm.material_condition"
+                                       class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-3 py-1.5 text-xs focus:outline-none focus:border-blue-500 text-slate-800 dark:text-slate-100">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Decision</label>
+                                <select x-model="productForm.decision"
+                                        class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-3 py-1.5 text-xs focus:outline-none focus:border-blue-500 text-slate-800 dark:text-slate-100">
+                                    <option value="">Select Decision</option>
+                                    <option value="go">Go</option>
+                                    <option value="not go">Not Go</option>
+                                </select>
                             </div>
                         </div>
 
@@ -942,12 +966,19 @@ document.addEventListener('alpine:init', () => {
                 );
             }
 
+            // Sort products so that 'not go' is always at the bottom
+            filteredProducts.sort((a, b) => {
+                const aNotGo = a.decision === 'not go' ? 1 : 0;
+                const bNotGo = b.decision === 'not go' ? 1 : 0;
+                return aNotGo - bNotGo;
+            });
+
             const total = filteredProducts.length;
             if (total === 0) {
                 const emptyMsg = this.searchQuery 
                     ? 'No records found matching your search.'
                     : 'No products have been added yet.';
-                tbody.innerHTML = `<tr><td colspan="12" class="py-16 text-center">
+                tbody.innerHTML = `<tr><td colspan="13" class="py-16 text-center">
                     <i class="fa-solid fa-folder-open text-4xl text-slate-300 block mb-3"></i>
                     <p class="text-sm font-semibold text-slate-400">${emptyMsg}</p>
                 </td></tr>`;
@@ -968,7 +999,6 @@ document.addEventListener('alpine:init', () => {
                 const pc = priorityColors[prod.rankLabel] || 'bg-slate-50 text-slate-500 border-slate-200';
                 const isSelected = this.selectedSpkProducts.includes(prod.id);
                 const checkedAttr = isSelected ? 'checked' : '';
-                const draggable = !isLocked ? 'true' : 'false';
                 const vol = prod.annual_volume ? prod.annual_volume.toLocaleString() : '—';
                 
                 const hasSpk = prod.spkList && prod.spkList.length > 0;
@@ -988,35 +1018,57 @@ document.addEventListener('alpine:init', () => {
                     : '';
 
                 // Background calculation: blue highlight when selected, otherwise alternate zebra striping
-                const rowBg = isSelected 
-                    ? 'bg-blue-50/70 dark:bg-blue-950/20 text-blue-900 dark:text-blue-100'
-                    : (index % 2 === 0 ? 'bg-white dark:bg-slate-800' : 'bg-slate-100/40 dark:bg-slate-900/30');
+                const isNotGo = prod.decision === 'not go';
+                const disabledAttr = isNotGo ? 'disabled' : '';
+                const cursorClass = isNotGo ? 'cursor-not-allowed opacity-30' : 'cursor-pointer';
+                const draggable = !isLocked && !isNotGo ? 'true' : 'false';
+                
+                let rowBg = '';
+                if (isNotGo) {
+                    rowBg = 'bg-slate-200/50 dark:bg-slate-900/60';
+                } else if (isSelected) {
+                    rowBg = 'bg-blue-50/70 dark:bg-blue-950/20 text-blue-900 dark:text-blue-100';
+                } else {
+                    rowBg = index % 2 === 0 ? 'bg-white dark:bg-slate-800' : 'bg-slate-100/40 dark:bg-slate-900/30';
+                }
 
-                const trClass = `border-b border-slate-200 dark:border-slate-700 ${rowBg} hover:bg-blue-50/30 dark:hover:bg-slate-750 transition-colors duration-150 ${!isLocked ? 'cursor-move' : ''}`;
+                const trClass = `border-b border-slate-200 dark:border-slate-700 ${rowBg} hover:bg-blue-50/30 dark:hover:bg-slate-750 transition-colors duration-150 ${!isLocked && !isNotGo ? 'cursor-move' : ''}`;
+
+                const textMuteClass = isNotGo ? 'text-slate-400 dark:text-slate-500 italic' : 'text-slate-650 dark:text-slate-300';
+                const textMuteModel = isNotGo ? 'text-slate-400 dark:text-slate-500 italic' : 'text-slate-650 dark:text-slate-100';
+                const textMuteCat   = isNotGo ? 'text-slate-400 dark:text-slate-500/80 italic' : 'text-slate-500 dark:text-slate-400';
 
                 return `<tr id="row-${prod.id}" class="${trClass}" draggable="${draggable}"
                     data-id="${prod.id}"
-                    onclick="if(!event.defaultPrevented && !${isLocked})window._alpine_editProduct(${prod.id})">
-                  <td class="p-3 text-center text-slate-400 dark:text-slate-500 font-mono text-[10px]" onclick="event.stopPropagation()">
+                    onclick="if(!event.defaultPrevented && !${isLocked} && !${isNotGo})window._alpine_editProduct(${prod.id})">
+                  <td class="p-3 text-center text-slate-500 dark:text-slate-450 font-mono text-xs font-semibold" onclick="event.stopPropagation()">
                     <span>${index + 1}</span>
                   </td>
                   <td class="p-3 text-center" onclick="event.stopPropagation()">
                     <div class="flex items-center justify-center gap-2">
-                      <i class="fa-solid fa-grip-vertical text-slate-400 dark:text-slate-500 cursor-grab active:cursor-grabbing hover:text-slate-600 dark:hover:text-slate-300 text-xs ${!isLocked?'':'opacity-25'}" title="${!isLocked?'Drag to reorder':''}"></i>
-                      <input type="checkbox" ${checkedAttr}
+                      <i class="fa-solid fa-grip-vertical text-slate-400 dark:text-slate-500 cursor-grab active:cursor-grabbing hover:text-slate-600 dark:hover:text-slate-300 text-xs ${!isLocked && !isNotGo ?'':'opacity-25'}" title="${!isLocked && !isNotGo ?'Drag to reorder':''}"></i>
+                      <input type="checkbox" ${checkedAttr} ${disabledAttr}
                         onchange="event.stopPropagation();window._alpine_toggleSpk(${prod.id}, this.checked)"
-                        class="w-3.5 h-3.5 text-blue-600 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-blue-500 cursor-pointer rounded-xs">
+                        class="w-3.5 h-3.5 text-blue-600 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-blue-500 rounded-xs ${cursorClass}"
+                        title="${isNotGo ? 'Cannot select a product with decision Not Go' : ''}">
                       ${spkBadge}
                     </div>
                   </td>
-                  <td class="p-3 font-medium text-slate-600 dark:text-slate-100">
-                    <span>${prod.model_name || '—'}</span>
+                  <td class="p-3 font-medium ${textMuteClass}">${prod.customer_part_no || '—'}</td>
+                  <td class="p-3 max-w-[180px] ${textMuteClass}" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${prod.customer_part_name || ''}">${prod.customer_part_name || '—'}</td>
+                  <td class="p-3 text-center font-medium ${textMuteClass}">${prod.variant || '—'}</td>
+                  <td class="p-3 ${textMuteCat}">${prod.part_category || '—'}</td>
+                  <td class="p-3 text-right font-mono ${isNotGo ? 'text-slate-400 dark:text-slate-500' : 'text-slate-700 dark:text-slate-300'}">${vol}</td>
+                  <td class="p-3 font-medium ${textMuteClass}">${prod.forex || '—'}</td>
+                  <td class="p-3 font-medium ${textMuteClass}">${prod.material_condition || '—'}</td>
+                  <td class="p-3 text-center" onclick="event.stopPropagation()">
+                    <select onchange="window._alpine_updateDecision(${prod.id}, this.value)"
+                            class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-750 px-1.5 py-1 text-[10px] font-bold uppercase rounded-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+                      <option value="" ${!prod.decision ? 'selected' : ''}>Select</option>
+                      <option value="go" ${prod.decision === 'go' ? 'selected' : ''}>Go</option>
+                      <option value="not go" ${prod.decision === 'not go' ? 'selected' : ''}>Not Go</option>
+                    </select>
                   </td>
-                  <td class="p-3 text-slate-600 dark:text-slate-300 font-medium">${prod.customer_part_no || '—'}</td>
-                  <td class="p-3 text-slate-600 dark:text-slate-300 max-w-[180px]" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${prod.customer_part_name || ''}">${prod.customer_part_name || '—'}</td>
-                  <td class="p-3 text-center font-medium text-slate-600 dark:text-slate-300">${prod.variant || '—'}</td>
-                  <td class="p-3 text-slate-500 dark:text-slate-400">${prod.part_category || '—'}</td>
-                  <td class="p-3 text-right font-mono text-slate-700 dark:text-slate-300">${vol}</td>
                   <td class="p-3 text-center">
                     <span id="score-badge-${prod.id}" class="score-badge ${sc}">${prod.score}</span>
                   </td>
@@ -1034,10 +1086,11 @@ document.addEventListener('alpine:init', () => {
 
             tbody.innerHTML = rows.join('');
 
-            // Sync master checkbox check state
+            // Sync master checkbox check state based on selectable (non-not go) products
             const selectAll = document.getElementById('select-all-spk');
             if (selectAll) {
-                selectAll.checked = this.selectedSpkProducts.length === this.products.length && this.products.length > 0;
+                const selectable = this.products.filter(p => p.decision !== 'not go');
+                selectAll.checked = selectable.length > 0 && this.selectedSpkProducts.length === selectable.length;
             }
 
             // Re-attach native drag events to newly rendered rows
@@ -1087,49 +1140,53 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
-        openAddProduct() {
-            this.productModalMode = 'add';
-            this.productId = null;
-            this.productForm = {
-                model_name: '{{ $inquiry->projectModel->name ?? "" }}',
-                customer_part_no: '', customer_part_name: '',
-                part_category: '', destination: '', sop_date: '', eol_date: '',
-                model_life: '', annual_volume: '',
-                has_2d_data: false, has_3d_data: false, has_tech_doc: false, variant: '', remarks: ''
-            };
-            this.assessmentForm.selections = {};
-            this.assessmentForm.remarks = '';
-            this.calculateActiveScore();
-            this.showProductModal = true;
-        },
-
-        openEditProduct(prodId) {
-            this.loading = true;
-            fetch('{{ url('management/inquiry-product') }}/' + prodId, {
-                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
-            })
-            .then(r => r.json())
-            .then(data => {
-                this.loading = false;
-                const prod = data.product || data;
-                this.productModalMode = 'edit';
-                this.productId = prod.id;
-                this.productForm = {
-                    model_name:          prod.model_name || '{{ $inquiry->projectModel->name ?? "" }}',
-                    customer_part_no:    prod.customer_part_no || '',
-                    customer_part_name:  prod.customer_part_name || '',
-                    part_category:       prod.part_category || '',
-                    destination:         prod.destination || '',
-                    sop_date:            prod.sop_date ? prod.sop_date.substring(0,10) : '',
-                    eol_date:            prod.eol_date ? prod.eol_date.substring(0,10) : '',
-                    model_life:          prod.model_life || '',
-                    annual_volume:       prod.annual_volume || '',
-                    has_2d_data:         !!prod.has_2d_data,
-                    has_3d_data:         !!prod.has_3d_data,
-                    has_tech_doc:        !!prod.has_tech_doc,
-                    variant:             prod.variant || '',
-                    remarks:             prod.remarks || ''
-                };
+         openAddProduct() {
+             this.productModalMode = 'add';
+             this.productId = null;
+             this.productForm = {
+                 model_name: '{{ $inquiry->projectModel->name ?? "" }}',
+                 customer_part_no: '', customer_part_name: '',
+                 part_category: '', destination: '', sop_date: '', eol_date: '',
+                 model_life: '', annual_volume: '',
+                 has_2d_data: false, has_3d_data: false, has_tech_doc: false, variant: '', remarks: '',
+                 forex: '', material_condition: '', decision: ''
+             };
+             this.assessmentForm.selections = {};
+             this.assessmentForm.remarks = '';
+             this.calculateActiveScore();
+             this.showProductModal = true;
+         },
+ 
+         openEditProduct(prodId) {
+             this.loading = true;
+             fetch('{{ url('management/inquiry-product') }}/' + prodId, {
+                 headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+             })
+             .then(r => r.json())
+             .then(data => {
+                 this.loading = false;
+                 const prod = data.product || data;
+                 this.productModalMode = 'edit';
+                 this.productId = prod.id;
+                 this.productForm = {
+                     model_name:          prod.model_name || '{{ $inquiry->projectModel->name ?? "" }}',
+                     customer_part_no:    prod.customer_part_no || '',
+                     customer_part_name:  prod.customer_part_name || '',
+                     part_category:       prod.part_category || '',
+                     destination:         prod.destination || '',
+                     sop_date:            prod.sop_date ? prod.sop_date.substring(0,10) : '',
+                     eol_date:            prod.eol_date ? prod.eol_date.substring(0,10) : '',
+                     model_life:          prod.model_life || '',
+                     annual_volume:       prod.annual_volume || '',
+                     has_2d_data:         !!prod.has_2d_data,
+                     has_3d_data:         !!prod.has_3d_data,
+                     has_tech_doc:        !!prod.has_tech_doc,
+                     variant:             prod.variant || '',
+                     remarks:             prod.remarks || '',
+                     forex:               prod.forex || '',
+                     material_condition:  prod.material_condition || '',
+                     decision:            prod.decision || ''
+                 };
                 this.assessmentForm.remarks = (prod.assessment && prod.assessment.remarks) ? prod.assessment.remarks : '';
                 this.assessmentForm.selections = {};
                 if (this.selectedOptions[prodId]) {
@@ -1374,14 +1431,17 @@ document.addEventListener('alpine:init', () => {
             // Sync master checkbox state
             const selectAll = document.getElementById('select-all-spk');
             if (selectAll) {
-                selectAll.checked = this.selectedSpkProducts.length === this.products.length && this.products.length > 0;
+                const selectable = this.products.filter(p => p.decision !== 'not go');
+                selectAll.checked = selectable.length > 0 && this.selectedSpkProducts.length === selectable.length;
             }
             this.renderRows();
         },
 
         toggleSelectAllSpk(isChecked) {
             if (isChecked) {
-                this.selectedSpkProducts = this.products.map(p => p.id);
+                this.selectedSpkProducts = this.products
+                    .filter(p => p.decision !== 'not go')
+                    .map(p => p.id);
             } else {
                 this.selectedSpkProducts = [];
             }
@@ -1424,6 +1484,44 @@ document.addEventListener('alpine:init', () => {
                     });
                 }
             });
+        },
+
+        updateDecision(prodId, decisionValue) {
+            this.loading = true;
+            fetch('{{ url('management/inquiry-product') }}/' + prodId, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    _method: 'PATCH',
+                    decision: decisionValue
+                })
+            })
+            .then(res => res.json())
+            .then(res => {
+                this.loading = false;
+                if (res.success) {
+                    // Update local list state
+                    const product = this.products.find(p => p.id === prodId);
+                    if (product) {
+                        product.decision = decisionValue;
+                        if (decisionValue === 'not go') {
+                            this.selectedSpkProducts = this.selectedSpkProducts.filter(sid => sid !== prodId);
+                        }
+                    }
+                    showToast('Decision updated successfully!', 'success');
+                    this.renderRows();
+                } else {
+                    showToast(res.message || 'Failed to update decision.', 'error');
+                }
+            })
+            .catch(() => {
+                this.loading = false;
+                showToast('Network error while updating decision.', 'error');
+            });
         }
     }));
 });
@@ -1439,6 +1537,7 @@ window._alpine_reorder     = (id, dir)    => { const d = _getInquiryData(); if (
 window._alpine_toggleSpk   = (id, checked)=> { const d = _getInquiryData(); if (d) d.toggleSpkSelection(id, checked); };
 window._alpine_toggleSelectAllSpk = (checked)=> { const d = _getInquiryData(); if (d) d.toggleSelectAllSpk(checked); };
 window._alpine_deleteProduct = (id)       => { const d = _getInquiryData(); if (d) d.deleteProduct(id); };
+window._alpine_updateDecision = (id, val) => { const d = _getInquiryData(); if (d) d.updateDecision(id, val); };
 
 // ── SweetAlert2 Confirmation Dialogs (delegates to x-sweetalert component) ──
 function confirmCloseInquiry() {
