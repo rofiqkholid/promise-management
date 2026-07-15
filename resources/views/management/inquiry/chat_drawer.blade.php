@@ -835,11 +835,15 @@ window.inquiryProductChat = function() {
 
         executeDeleteMessage(chatId) {
             fetch(`{{ url('management/inquiry-product-chat') }}/${chatId}`, {
-                method: 'DELETE',
+                method: 'POST',
                 headers: {
+                    'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
                     'Accept': 'application/json'
-                }
+                },
+                body: JSON.stringify({
+                    _method: 'DELETE'
+                })
             })
             .then(r => r.json())
             .then(data => {
