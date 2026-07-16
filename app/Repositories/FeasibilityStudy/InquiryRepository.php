@@ -121,10 +121,10 @@ class InquiryRepository
         $assessment->details()->delete();
         foreach ($selections as $sel) {
             PriorityAssessmentDetail::create([
-                'assessment_id' => $assessment->id,
-                'category_id'   => $sel['category_id'],
-                'option_id'     => $sel['option_id'],
-                'score_value'   => $sel['score_value'],
+                'assessment_id'  => $assessment->id,
+                'category_id'    => $sel['category_id'],
+                'option_id'      => $sel['option_id'],
+                'score_snapshot' => $sel['score_value'],
             ]);
         }
 

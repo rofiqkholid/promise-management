@@ -76,6 +76,10 @@
                 <div class="space-y-5">
                     <div class="grid grid-cols-2 gap-4">
                         <div>
+                            <span class="block text-[10px] font-medium text-slate-400 uppercase">Model Name</span>
+                            <span class="text-xs font-semibold text-slate-800 dark:text-slate-100" x-text="chatProductDetail?.model_name || '—'"></span>
+                        </div>
+                        <div>
                             <span class="block text-[10px] font-medium text-slate-400 uppercase">Part Number</span>
                             <span class="text-xs font-semibold text-slate-800 dark:text-slate-100" x-text="chatProductDetail?.customer_part_no || '—'"></span>
                         </div>
@@ -99,6 +103,37 @@
                             <span class="block text-[10px] font-medium text-slate-400 uppercase">Annual Volume</span>
                             <span class="text-xs font-semibold text-slate-800 dark:text-slate-100" x-text="chatProductDetail?.annual_volume ? Number(chatProductDetail.annual_volume).toLocaleString() : '—'"></span>
                         </div>
+                        <div>
+                            <span class="block text-[10px] font-medium text-slate-400 uppercase">SOP Date</span>
+                            <span class="text-xs font-semibold text-slate-800 dark:text-slate-100" x-text="formatDate(chatProductDetail?.sop_date)"></span>
+                        </div>
+                        <div>
+                            <span class="block text-[10px] font-medium text-slate-400 uppercase">EOL Date</span>
+                            <span class="text-xs font-semibold text-slate-800 dark:text-slate-100" x-text="formatDate(chatProductDetail?.eol_date)"></span>
+                        </div>
+                        <div>
+                            <span class="block text-[10px] font-medium text-slate-400 uppercase">Model Life</span>
+                            <span class="text-xs font-semibold text-slate-800 dark:text-slate-100" x-text="chatProductDetail?.model_life ? chatProductDetail.model_life + ' months' : '—'"></span>
+                        </div>
+                        <div>
+                            <span class="block text-[10px] font-medium text-slate-400 uppercase">Forex</span>
+                            <span class="text-xs font-semibold text-slate-800 dark:text-slate-100" x-text="chatProductDetail?.forex || '—'"></span>
+                        </div>
+                        <div>
+                            <span class="block text-[10px] font-medium text-slate-400 uppercase">Material Condition</span>
+                            <span class="text-xs font-semibold text-slate-800 dark:text-slate-100" x-text="chatProductDetail?.material_condition || '—'"></span>
+                        </div>
+                        <div>
+                            <span class="block text-[10px] font-medium text-slate-400 uppercase">Decision</span>
+                            <span class="text-xs font-bold uppercase"
+                                  :class="chatProductDetail?.decision === 'go' ? 'text-emerald-600 dark:text-emerald-450' : chatProductDetail?.decision === 'not go' ? 'text-rose-600 dark:text-rose-450' : 'text-slate-500'"
+                                  x-text="chatProductDetail?.decision || 'Pending'"></span>
+                        </div>
+                    </div>
+
+                    <div x-show="chatProductDetail?.remarks" class="p-2.5 bg-slate-100/60 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 text-xs">
+                        <span class="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">Product Remarks</span>
+                        <p class="text-slate-700 dark:text-slate-350 leading-relaxed font-medium" x-text="chatProductDetail?.remarks"></p>
                     </div>
 
                     <div class="border-t border-slate-200 dark:border-slate-700/80 pt-4 space-y-2">
@@ -138,9 +173,9 @@
                             </div>
                         </div>
 
-                        <div x-show="chatProductDetail?.remarks" class="p-3 bg-blue-50/50 dark:bg-slate-800/40 border border-blue-100/50 dark:border-slate-700 text-xs">
-                            <span class="block text-[10px] font-bold text-blue-800 dark:text-slate-400 uppercase tracking-wider mb-1">Remarks</span>
-                            <p class="text-slate-700 dark:text-slate-350 leading-relaxed" x-text="chatProductDetail?.remarks"></p>
+                        <div x-show="chatProductDetail?.assessment?.remarks" class="p-3 bg-blue-50/50 dark:bg-slate-800/40 border border-blue-100/50 dark:border-slate-700 text-xs">
+                            <span class="block text-[10px] font-bold text-blue-800 dark:text-slate-400 uppercase tracking-wider mb-1">Scoring Remarks</span>
+                            <p class="text-slate-700 dark:text-slate-350 leading-relaxed" x-text="chatProductDetail?.assessment?.remarks"></p>
                         </div>
                     </div>
                 </div>
@@ -642,6 +677,15 @@ window.inquiryProductChat = function() {
         isUlActive: false,
         isQuoteActive: false,
 
+        formatDate(dateStr) {
+            if (!dateStr) return '—';
+            const parts = dateStr.substring(0, 10).split('-');
+            if (parts.length === 3) {
+                return `${parts[2]}-${parts[1]}-${parts[0]}`;
+            }
+            return dateStr;
+        },
+
         openChat(prodId) {
             this.chatProductDetail = null;
             this.chatMessages = [];
@@ -904,14 +948,7 @@ window.inquiryProductChat = function() {
 
         isFilePreviewable(mime) {
             if (!mime) return false;
-            return this.isImageType(mime) || 
-                   mime === 'application/pdf' ||
-                   mime === 'application/msword' ||
-                   mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
-                   mime === 'application/vnd.ms-excel' ||
-                   mime === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
-                   mime === 'application/vnd.ms-powerpoint' ||
-                   mime === 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+            return this.isImageType(mime) || mime === 'application/pdf';
         },
 
         isImageType(mime) {

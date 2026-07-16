@@ -85,12 +85,18 @@
      x-data="inquiryManagement">
 
     {{-- ── Loading Overlay ──────────────────────────────────────────────── --}}
-    <div x-show="loading" class="fixed inset-0 z-[9000] bg-black/20 flex items-center justify-center" style="display:none;">
-        <div class="bg-white dark:bg-slate-800 px-5 py-4 flex items-center gap-3 shadow-xl border border-slate-200 dark:border-slate-700">
-            <i class="fa-solid fa-circle-notch fa-spin text-blue-600 text-lg"></i>
-            <span class="text-sm font-semibold text-slate-700 dark:text-slate-200">Processing…</span>
+    <div x-show="loading" class="fixed inset-0 z-[9000] bg-black/35 dark:bg-black/55 backdrop-blur-xs flex items-center justify-center" style="display:none;">
+        <div class="bg-white dark:bg-slate-900 px-6 py-5 rounded-md flex flex-col items-center justify-center gap-3 shadow-2xl border border-slate-100 dark:border-slate-800 text-center min-w-[130px]">
+            <div class="relative w-9 h-9">
+                <!-- Spinner background ring -->
+                <div class="w-9 h-9 rounded-full border-[3.5px] border-slate-100 dark:border-slate-800"></div>
+                <!-- Spinning active arc -->
+                <div class="absolute top-0 left-0 w-9 h-9 rounded-full border-[3.5px] border-transparent border-t-blue-600 dark:border-t-blue-500 animate-spin"></div>
+            </div>
+            <span class="text-[11px] font-bold text-slate-650 dark:text-slate-200 tracking-wider uppercase animate-pulse">Processing...</span>
         </div>
     </div>
+
 
     {{-- ── Page Header (Title & Actions Toolbar) ─────────────────────────── --}}
     <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 border-b border-slate-200 dark:border-slate-800 pb-4 mb-4 select-none">
@@ -98,6 +104,25 @@
         {{-- Left Side: Back Arrow, Title, Status & Date --}}
         <div class="flex items-center gap-3.5">
             <a href="{{ route('management.inquiry.index') }}"
+               @click.prevent="
+                   if (orderDirty || Object.keys(unsavedDecisions).length > 0) {
+                       window.confirmDialog({
+                           title: 'Unsaved Changes',
+                           text: 'You have unsaved changes (Order or Decisions). Are you sure you want to go back? Unsaved changes will be lost.',
+                           icon: 'warning',
+                           confirmButtonColor: '#dc2626',
+                           confirmButtonText: 'Yes, leave',
+                           cancelButtonText: 'Cancel',
+                           onConfirm: () => {
+                               allowLeaving = true;
+                               window.location.href = '{{ route('management.inquiry.index') }}';
+                           }
+                       });
+                   } else {
+                       allowLeaving = true;
+                       window.location.href = '{{ route('management.inquiry.index') }}';
+                   }
+               "
                class="flex items-center justify-center w-9 h-9 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-500 hover:text-blue-600 hover:border-blue-500 transition-colors text-sm rounded-xs"
                title="Back to list">
                 <i class="fa-solid fa-arrow-left"></i>
@@ -293,8 +318,6 @@
                                 <th class="p-3 text-center bg-slate-50/50 dark:bg-slate-900/50">Variant</th>
                                 <th class="p-3 bg-slate-50/50 dark:bg-slate-900/50">Category</th>
                                 <th class="p-3 text-right bg-slate-50/50 dark:bg-slate-900/50">Ann. Vol.</th>
-                                <th class="p-3 bg-slate-50/50 dark:bg-slate-900/50">Forex</th>
-                                <th class="p-3 bg-slate-50/50 dark:bg-slate-900/50">Material Condition</th>
                                 <th class="p-3 text-center bg-slate-50/50 dark:bg-slate-900/50 w-28">Decision</th>
                                 <th class="p-3 text-center w-20 bg-slate-50/50 dark:bg-slate-900/50">Score</th>
                                 <th class="p-3 text-center w-16 bg-slate-50/50 dark:bg-slate-900/50">Rank</th>
@@ -402,10 +425,10 @@
             </div>
 
             <form @submit.prevent="submitProductForm" class="flex flex-col flex-1 overflow-hidden">
-                <div class="overflow-y-auto flex-1 p-5 grid grid-cols-1 lg:grid-cols-2 gap-6 divide-y lg:divide-y-0 lg:divide-x lg:divide-slate-200 dark:lg:divide-slate-700">
+                <div class="overflow-y-auto flex-1 p-5 grid grid-cols-1 lg:grid-cols-2 gap-y-6 lg:gap-y-0">
                     
                     {{-- Left side: Product Specifications --}}
-                    <div class="space-y-4">
+                    <div class="space-y-4 lg:pr-6 lg:border-r border-slate-200 dark:border-slate-700">
                         <h4 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest pb-1 border-b border-slate-200/60 dark:border-slate-700/50">Product Specifications</h4>
                         
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -470,7 +493,7 @@
                                        class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-3 py-1.5 text-xs focus:outline-none focus:border-blue-500 text-slate-800 dark:text-slate-100">
                             </div>
                             <div>
-                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Material Condition</label>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Mat. Condition</label>
                                 <input type="text" x-model="productForm.material_condition"
                                        class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-3 py-1.5 text-xs focus:outline-none focus:border-blue-500 text-slate-800 dark:text-slate-100">
                             </div>
@@ -527,8 +550,8 @@
                                                     @click="assessmentForm.selections[{{ $cat->id }}] = {{ $opt->id }}; calculateActiveScore()"
                                                     :class="assessmentForm.selections[{{ $cat->id }}] == {{ $opt->id }} 
                                                         ? 'border-blue-600 dark:border-blue-500 bg-blue-50/80 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 font-bold ring-2 ring-blue-500/20' 
-                                                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400'"
-                                                    class="flex-1 px-2.5 py-1.5 border text-[11px] text-center transition-all hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none flex justify-between sm:justify-center items-center gap-1 shadow-sm"
+                                                        : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400'"
+                                                    class="flex-1 px-2.5 py-1.5 border text-[11px] text-center transition-all hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none flex justify-between sm:justify-center items-center gap-1"
                                                     {{ $isLocked ? 'disabled' : '' }}>
                                                 <span>{{ $opt->option_name }}</span>
                                                 <span class="text-[9px] font-mono opacity-80">(+{{ $opt->score_value }})</span>
@@ -546,12 +569,12 @@
                                 x-model="assessmentForm.remarks"
                                 rows="2"
                                 placeholder="Notes regarding feasibility scoring decisions…"
-                                class="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-blue-500 transition-colors resize-none shadow-sm"
+                                class="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-blue-500 transition-colors resize-none"
                                 {{ $isLocked ? 'disabled' : '' }}></textarea>
                         </div>
 
                         {{-- Score Summary Card --}}
-                        <div class="bg-blue-600 dark:bg-blue-700 text-white p-3 shadow-md flex flex-col justify-between space-y-2">
+                        <div class="bg-blue-600 dark:bg-blue-700 text-white p-3 flex flex-col justify-between space-y-2">
                             <div class="flex items-center justify-between">
                                 <div>
                                     <div class="text-[9px] font-bold uppercase tracking-widest opacity-80">Current Score</div>
@@ -619,15 +642,15 @@
                     <div>
                         <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Choose File <span class="text-rose-500">*</span></label>
                         <input type="file" name="excel_file" required accept=".xlsx,.xls"
-                               class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-3 py-2 text-xs focus:outline-none focus:border-blue-500 text-slate-700 dark:text-slate-300">
+                               class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs focus:outline-none focus:border-blue-500 text-slate-750 dark:text-slate-300 file:mr-3 file:py-2 file:px-3 file:border-0 file:bg-slate-200 dark:file:bg-slate-700 file:text-slate-700 dark:file:text-slate-200 file:text-xs file:font-bold hover:file:bg-slate-300 dark:hover:file:bg-slate-650 cursor-pointer">
                     </div>
                     {{-- Overwrite mode toggle --}}
                     <div class="flex items-start gap-3 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/30 rounded-xs">
                         <input type="checkbox" name="append" value="true" id="import_append_mode"
                                class="mt-0.5 w-3.5 h-3.5 rounded-xs border-slate-300 accent-blue-600 cursor-pointer flex-shrink-0">
                         <div>
-                            <label for="import_append_mode" class="text-xs font-bold text-amber-800 dark:text-amber-300 cursor-pointer">Overwrite mode (Centang untuk menghapus data lama)</label>
-                            <p class="text-[10px] text-amber-700 dark:text-amber-400 mt-0.5">Jika dicentang, proses import akan **menghapus semua produk lama** pada inquiry ini sebelum mengisi dengan yang baru. Jika tidak dicentang, data baru akan **ditambahkan** ke daftar produk yang ada.</p>
+                            <label for="import_append_mode" class="text-xs font-bold text-amber-800 dark:text-amber-300 cursor-pointer">Overwrite mode (Check to clear existing data)</label>
+                            <p class="text-[10px] text-amber-700 dark:text-amber-400 mt-0.5">If checked, the import process will <strong class="font-bold text-amber-900 dark:text-amber-200">delete all existing products</strong> in this inquiry before inserting the new ones. If unchecked, new products will be <strong class="font-bold text-amber-900 dark:text-amber-200">appended</strong> to the current list.</p>
                         </div>
                     </div>
 
@@ -674,7 +697,7 @@
     @include('management.inquiry.assessment-config-modal')
 
     {{-- ── Floating Actions & Save Order Bar ──────────────────────────────── --}}
-    <div x-show="selectedSpkProducts.length > 0 || orderDirty" x-cloak
+    <div x-show="selectedSpkProducts.length > 0 || orderDirty || Object.keys(unsavedDecisions).length > 0" x-cloak
          x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="translate-y-20 opacity-0"
          x-transition:enter-end="translate-y-0 opacity-100"
@@ -713,38 +736,41 @@
              </div>
          </template>
 
-         {{-- Divider if both are active --}}
-         <template x-if="selectedSpkProducts.length > 0 && orderDirty">
-             <div class="h-5 w-[1px] bg-slate-200 dark:bg-slate-700"></div>
-         </template>
+          {{-- Divider if items are selected AND there are unsaved changes (order or decisions) --}}
+          <template x-if="selectedSpkProducts.length > 0 && (orderDirty || Object.keys(unsavedDecisions).length > 0)">
+              <div class="h-5 w-[1px] bg-slate-200 dark:bg-slate-700"></div>
+          </template>
 
-         {{-- PART 2: Unsaved Order Actions --}}
-         <template x-if="orderDirty">
-             <div class="flex items-center gap-3">
-                 <div class="flex items-center gap-1.5 text-xs font-bold text-amber-600 dark:text-amber-400 whitespace-nowrap">
-                     <i class="fa-solid fa-circle-exclamation"></i>
-                     <span>Unsaved Order</span>
-                 </div>
-                 <button @click="saveOrder()"
-                         :disabled="savingOrder"
-                         class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white text-xs font-bold transition-colors cursor-pointer rounded-xs border-0 whitespace-nowrap">
-                     <template x-if="!savingOrder">
-                         <span class="flex items-center gap-1.5">
-                             <i class="fa-solid fa-floppy-disk"></i> Save Order
-                         </span>
-                     </template>
-                     <template x-if="savingOrder">
-                         <span class="flex items-center gap-1.5">
-                             <i class="fa-solid fa-circle-notch fa-spin"></i> Saving…
-                         </span>
-                     </template>
-                 </button>
-                 <button @click="discardOrder()"
-                         class="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-semibold transition-colors cursor-pointer rounded-xs whitespace-nowrap">
-                     <i class="fa-solid fa-rotate-left"></i> Reset
-                 </button>
-             </div>
-         </template>
+          {{-- PART 2: Combined Unsaved Changes Actions --}}
+          <template x-if="orderDirty || Object.keys(unsavedDecisions).length > 0">
+              <div class="flex items-center gap-3">
+                  <div class="flex items-center gap-1.5 text-xs font-bold text-amber-600 dark:text-amber-400 whitespace-nowrap">
+                      <span class="relative flex h-2 w-2">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                      </span>
+                      <span x-text="orderDirty && Object.keys(unsavedDecisions).length > 0 ? 'Unsaved Order & Decisions' : (orderDirty ? 'Unsaved Order' : 'Unsaved Decisions')"></span>
+                  </div>
+                  <button @click="saveAllChanges()"
+                          :disabled="savingOrder"
+                          class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-xs font-bold transition-colors cursor-pointer rounded-xs border-0 whitespace-nowrap">
+                      <template x-if="!savingOrder">
+                          <span class="flex items-center gap-1.5">
+                              <i class="fa-solid fa-floppy-disk"></i> Save Changes
+                          </span>
+                      </template>
+                      <template x-if="savingOrder">
+                          <span class="flex items-center gap-1.5">
+                              <i class="fa-solid fa-circle-notch fa-spin"></i> Saving…
+                          </span>
+                      </template>
+                  </button>
+                  <button @click="discardAllChanges()"
+                          class="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-semibold transition-colors cursor-pointer rounded-xs whitespace-nowrap">
+                      <i class="fa-solid fa-rotate-left"></i> Reset
+                  </button>
+              </div>
+          </template>
 
          {{-- Divider if items are selected --}}
          <template x-if="selectedSpkProducts.length > 0">
@@ -753,15 +779,27 @@
 
          {{-- PART 3: Create WO Action (Paling Kanan) --}}
          <template x-if="selectedSpkProducts.length > 0">
-             <form action="{{ route('management.work-order.create') }}" method="POST" class="inline flex-shrink-0">
+             <form id="create-spk-form" action="{{ route('management.work-order.create') }}" method="POST" class="inline flex-shrink-0"
+                   @submit="allowLeaving = true; creatingWo = true">
                  @csrf
                  <input type="hidden" name="inquiry_id" value="{{ $inquiry->hashed_id }}">
                  <template x-for="id in selectedSpkProducts" :key="id">
                      <input type="hidden" name="products[]" :value="products.find(p => p.id === id)?.hashed_id || id">
                  </template>
                  <button type="submit"
-                         class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 rounded-xs border-0 whitespace-nowrap">
-                     <i class="fa-solid fa-file-signature"></i> Create WO
+                          :disabled="orderDirty || Object.keys(unsavedDecisions).length > 0 || creatingWo"
+                          :title="orderDirty || Object.keys(unsavedDecisions).length > 0 ? 'Please save your changes before creating a Work Order.' : ''"
+                          class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 dark:disabled:bg-slate-700 disabled:text-slate-450 dark:disabled:text-slate-500 disabled:cursor-not-allowed text-white text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 rounded-xs border-0 whitespace-nowrap">
+                     <template x-if="!creatingWo">
+                          <span class="flex items-center gap-1.5">
+                              <i class="fa-solid fa-file-signature"></i> Create WO
+                          </span>
+                      </template>
+                      <template x-if="creatingWo">
+                          <span class="flex items-center gap-1.5">
+                              <i class="fa-solid fa-circle-notch fa-spin"></i> Creating WO…
+                          </span>
+                      </template>
                  </button>
              </form>
          </template>
@@ -827,9 +865,12 @@ document.addEventListener('alpine:init', () => {
         searchQuery: '',
         products: [],
         _initialProducts: [],
+        allowLeaving: false,
         orderDirty: false,
         savingOrder: false,
+        creatingWo: false,
         selectedSpkProducts: [],
+        unsavedDecisions: {},
         showAssessmentDrawer: false,
         activeProduct: null,
         assessmentForm: {
@@ -885,6 +926,14 @@ document.addEventListener('alpine:init', () => {
                 this._initialProducts = JSON.parse(JSON.stringify(this.products));
             }
             this.$nextTick(() => this.renderRows());
+
+            // Handle page reload/browser navigation warning when changes are unsaved
+            window.addEventListener('beforeunload', (e) => {
+                if (!this.allowLeaving && (this.orderDirty || Object.keys(this.unsavedDecisions).length > 0)) {
+                    e.preventDefault();
+                    e.returnValue = '';
+                }
+            });
 
             // Watch showEditModal to initialize Select2
             this.$watch('showEditModal', (value) => {
@@ -966,7 +1015,7 @@ document.addEventListener('alpine:init', () => {
                 );
             }
 
-            // Sort products so that 'not go' is always at the bottom
+            // Sort products so that original 'not go' is always at the bottom (keeps order stable during edit)
             filteredProducts.sort((a, b) => {
                 const aNotGo = a.decision === 'not go' ? 1 : 0;
                 const bNotGo = b.decision === 'not go' ? 1 : 0;
@@ -1018,7 +1067,8 @@ document.addEventListener('alpine:init', () => {
                     : '';
 
                 // Background calculation: blue highlight when selected, otherwise alternate zebra striping
-                const isNotGo = prod.decision === 'not go';
+                const currentDecision = this.unsavedDecisions[prod.id] !== undefined ? this.unsavedDecisions[prod.id] : prod.decision;
+                const isNotGo = currentDecision === 'not go';
                 const disabledAttr = isNotGo ? 'disabled' : '';
                 const cursorClass = isNotGo ? 'cursor-not-allowed opacity-30' : 'cursor-pointer';
                 const draggable = !isLocked && !isNotGo ? 'true' : 'false';
@@ -1054,19 +1104,17 @@ document.addEventListener('alpine:init', () => {
                       ${spkBadge}
                     </div>
                   </td>
-                  <td class="p-3 font-medium ${textMuteClass}">${prod.customer_part_no || '—'}</td>
+                  <td class="p-3 font-semibold ${textMuteClass}">${prod.customer_part_no || '—'}</td>
                   <td class="p-3 max-w-[180px] ${textMuteClass}" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${prod.customer_part_name || ''}">${prod.customer_part_name || '—'}</td>
                   <td class="p-3 text-center font-medium ${textMuteClass}">${prod.variant || '—'}</td>
                   <td class="p-3 ${textMuteCat}">${prod.part_category || '—'}</td>
                   <td class="p-3 text-right font-mono ${isNotGo ? 'text-slate-400 dark:text-slate-500' : 'text-slate-700 dark:text-slate-300'}">${vol}</td>
-                  <td class="p-3 font-medium ${textMuteClass}">${prod.forex || '—'}</td>
-                  <td class="p-3 font-medium ${textMuteClass}">${prod.material_condition || '—'}</td>
                   <td class="p-3 text-center" onclick="event.stopPropagation()">
-                    <select onchange="window._alpine_updateDecision(${prod.id}, this.value)"
+                    <select onchange="window._alpine_changeDecision(${prod.id}, this.value)"
                             class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-750 px-1.5 py-1 text-[10px] font-bold uppercase rounded-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
-                      <option value="" ${!prod.decision ? 'selected' : ''}>Select</option>
-                      <option value="go" ${prod.decision === 'go' ? 'selected' : ''}>Go</option>
-                      <option value="not go" ${prod.decision === 'not go' ? 'selected' : ''}>Not Go</option>
+                      <option value="" ${!currentDecision ? 'selected' : ''}>Select</option>
+                      <option value="go" ${currentDecision === 'go' ? 'selected' : ''}>Go</option>
+                      <option value="not go" ${currentDecision === 'not go' ? 'selected' : ''}>Not Go</option>
                     </select>
                   </td>
                   <td class="p-3 text-center">
@@ -1089,7 +1137,10 @@ document.addEventListener('alpine:init', () => {
             // Sync master checkbox check state based on selectable (non-not go) products
             const selectAll = document.getElementById('select-all-spk');
             if (selectAll) {
-                const selectable = this.products.filter(p => p.decision !== 'not go');
+                const selectable = this.products.filter(p => {
+                    const decision = this.unsavedDecisions[p.id] !== undefined ? this.unsavedDecisions[p.id] : p.decision;
+                    return decision !== 'not go';
+                });
                 selectAll.checked = selectable.length > 0 && this.selectedSpkProducts.length === selectable.length;
             }
 
@@ -1431,7 +1482,10 @@ document.addEventListener('alpine:init', () => {
             // Sync master checkbox state
             const selectAll = document.getElementById('select-all-spk');
             if (selectAll) {
-                const selectable = this.products.filter(p => p.decision !== 'not go');
+                const selectable = this.products.filter(p => {
+                    const decision = this.unsavedDecisions[p.id] !== undefined ? this.unsavedDecisions[p.id] : p.decision;
+                    return decision !== 'not go';
+                });
                 selectAll.checked = selectable.length > 0 && this.selectedSpkProducts.length === selectable.length;
             }
             this.renderRows();
@@ -1440,7 +1494,10 @@ document.addEventListener('alpine:init', () => {
         toggleSelectAllSpk(isChecked) {
             if (isChecked) {
                 this.selectedSpkProducts = this.products
-                    .filter(p => p.decision !== 'not go')
+                    .filter(p => {
+                        const decision = this.unsavedDecisions[p.id] !== undefined ? this.unsavedDecisions[p.id] : p.decision;
+                        return decision !== 'not go';
+                    })
                     .map(p => p.id);
             } else {
                 this.selectedSpkProducts = [];
@@ -1486,41 +1543,120 @@ document.addEventListener('alpine:init', () => {
             });
         },
 
-        updateDecision(prodId, decisionValue) {
+        changeDecisionLocal(prodId, decisionValue) {
+            const originalProduct = this.products.find(p => p.id === prodId);
+            const originalDecision = originalProduct ? originalProduct.decision : '';
+            
+            if (decisionValue === (originalDecision || '')) {
+                delete this.unsavedDecisions[prodId];
+            } else {
+                this.unsavedDecisions[prodId] = decisionValue;
+            }
+
+            if (decisionValue === 'not go') {
+                this.selectedSpkProducts = this.selectedSpkProducts.filter(id => id !== prodId);
+            }
+
+            this.renderRows();
+        },
+
+        discardAllChanges() {
+            this.unsavedDecisions = {};
+            if (this.orderDirty) {
+                this.products = JSON.parse(JSON.stringify(this._initialProducts));
+                this.orderDirty = false;
+            }
+            this.renderRows();
+            showToast('All changes discarded.', 'info');
+        },
+
+        saveAllChanges() {
+            const decisionEntries = Object.entries(this.unsavedDecisions);
+            const hasDecisions = decisionEntries.length > 0;
+            const hasOrder = this.orderDirty;
+
+            if (!hasDecisions && !hasOrder) return;
+
             this.loading = true;
-            fetch('{{ url('management/inquiry-product') }}/' + prodId, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    _method: 'PATCH',
-                    decision: decisionValue
-                })
-            })
-            .then(res => res.json())
-            .then(res => {
+            this.savingOrder = true;
+
+            const promises = [];
+
+            // 1. Decisions Promise (Batch request for all decisions)
+            if (hasDecisions) {
+                const payload = {};
+                decisionEntries.forEach(([prodId, decisionValue]) => {
+                    payload[prodId] = decisionValue;
+                });
+                promises.push(
+                    fetch('{{ route('management.inquiry-product.update-decisions-batch') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({ decisions: payload })
+                    })
+                    .then(res => res.json())
+                    .catch(() => ({ success: false }))
+                );
+            }
+
+            // 2. Order Promise
+            if (hasOrder) {
+                const orderedIds = this.products.map(p => p.id);
+                promises.push(
+                    fetch('{{ route('management.inquiry-product.reorder-all') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({ ids: orderedIds })
+                    })
+                    .then(res => res.json())
+                    .catch(() => ({ success: false }))
+                );
+            }
+
+            Promise.all(promises)
+            .then(results => {
                 this.loading = false;
-                if (res.success) {
-                    // Update local list state
-                    const product = this.products.find(p => p.id === prodId);
-                    if (product) {
-                        product.decision = decisionValue;
-                        if (decisionValue === 'not go') {
-                            this.selectedSpkProducts = this.selectedSpkProducts.filter(sid => sid !== prodId);
-                        }
+                this.savingOrder = false;
+
+                const failed = results.filter(r => !r.success);
+                if (failed.length === 0) {
+                    showToast('All changes saved successfully!', 'success');
+                    
+                    // Apply decisions locally
+                    if (hasDecisions) {
+                        decisionEntries.forEach(([prodId, decisionValue]) => {
+                            const product = this.products.find(p => p.id == prodId);
+                            if (product) {
+                                product.decision = decisionValue;
+                                if (decisionValue === 'not go') {
+                                    this.selectedSpkProducts = this.selectedSpkProducts.filter(sid => sid != prodId);
+                                }
+                            }
+                        });
                     }
-                    showToast('Decision updated successfully!', 'success');
+
+                    // Reset tracking flags
+                    this.unsavedDecisions = {};
+                    this.orderDirty = false;
+                    this._initialProducts = JSON.parse(JSON.stringify(this.products));
                     this.renderRows();
                 } else {
-                    showToast(res.message || 'Failed to update decision.', 'error');
+                    showToast('Some changes failed to save. Reloading to sync...', 'error');
+                    setTimeout(() => window.location.reload(), 1500);
                 }
             })
             .catch(() => {
                 this.loading = false;
-                showToast('Network error while updating decision.', 'error');
+                this.savingOrder = false;
+                showToast('Network error while saving changes.', 'error');
             });
         }
     }));
@@ -1537,7 +1673,7 @@ window._alpine_reorder     = (id, dir)    => { const d = _getInquiryData(); if (
 window._alpine_toggleSpk   = (id, checked)=> { const d = _getInquiryData(); if (d) d.toggleSpkSelection(id, checked); };
 window._alpine_toggleSelectAllSpk = (checked)=> { const d = _getInquiryData(); if (d) d.toggleSelectAllSpk(checked); };
 window._alpine_deleteProduct = (id)       => { const d = _getInquiryData(); if (d) d.deleteProduct(id); };
-window._alpine_updateDecision = (id, val) => { const d = _getInquiryData(); if (d) d.updateDecision(id, val); };
+window._alpine_changeDecision = (id, val) => { const d = _getInquiryData(); if (d) d.changeDecisionLocal(id, val); };
 
 // ── SweetAlert2 Confirmation Dialogs (delegates to x-sweetalert component) ──
 function confirmCloseInquiry() {
@@ -1548,7 +1684,11 @@ function confirmCloseInquiry() {
         confirmButtonColor: '#059669', // Emerald 600
         confirmButtonText: 'Yes, close it!',
         cancelButtonText: 'No',
-        onConfirm: () => document.getElementById('close-inquiry-form').submit()
+        onConfirm: () => {
+            const d = _getInquiryData();
+            if (d) d.allowLeaving = true;
+            document.getElementById('close-inquiry-form').submit();
+        }
     });
 }
 
@@ -1560,7 +1700,11 @@ function confirmDeleteInquiry() {
         confirmButtonColor: '#dc2626', // Rose 600
         confirmButtonText: 'Yes, delete it!',
         cancelButtonText: 'No',
-        onConfirm: () => document.getElementById('cancel-inquiry-form').submit()
+        onConfirm: () => {
+            const d = _getInquiryData();
+            if (d) d.allowLeaving = true;
+            document.getElementById('cancel-inquiry-form').submit();
+        }
     });
 }
 </script>

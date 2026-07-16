@@ -25,7 +25,7 @@
         <div class="flex-1 flex flex-wrap lg:flex-nowrap items-center gap-y-3 px-4 py-2 border border-slate-300 dark:border-slate-800 rounded-xs bg-slate-50/40 dark:bg-slate-950/20 mx-2">
             
             {{-- WO Number --}}
-            <div class="flex items-center gap-2.5 min-w-0 w-1/2 lg:w-[15%]">
+            <div class="flex items-center gap-2.5 min-w-0 w-1/2 lg:w-[25%]">
                 <div class="w-8 h-8 flex items-center justify-center rounded-xs bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex-shrink-0">
                     <i class="fa-solid fa-file-invoice text-xs"></i>
                 </div>
@@ -39,7 +39,7 @@
             <div class="hidden lg:block w-px h-8 bg-slate-300 dark:bg-slate-800 self-center flex-shrink-0"></div>
 
             {{-- Customer --}}
-            <div class="flex items-center gap-2.5 min-w-0 w-1/2 lg:w-[45%] lg:px-4">
+            <div class="flex items-center gap-2.5 min-w-0 w-1/2 lg:w-[40%] lg:px-4">
                 <div class="w-8 h-8 flex items-center justify-center rounded-xs bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex-shrink-0">
                     <i class="fa-solid fa-building text-xs"></i>
                 </div>
@@ -72,7 +72,7 @@
             <div class="hidden lg:block w-px h-8 bg-slate-300 dark:bg-slate-800 self-center flex-shrink-0"></div>
 
             {{-- EBD Date --}}
-            <div class="flex items-center gap-2.5 min-w-0 w-1/2 lg:w-[20%] lg:pl-4">
+            <div class="flex items-center gap-2.5 min-w-0 w-1/2 lg:w-[15%] lg:pl-4">
                 <div class="w-8 h-8 flex items-center justify-center rounded-xs bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex-shrink-0">
                     <i class="fa-solid fa-calendar-days text-xs"></i>
                 </div>
@@ -721,12 +721,12 @@
                 <i class="fa-solid fa-xmark text-sm"></i>
             </button>
         </div>
-        <form id="form-part-ebd" enctype="multipart/form-data" class="flex-1 overflow-y-auto">
+        <form id="form-part-ebd" enctype="multipart/form-data" class="flex-1 flex flex-col overflow-hidden">
             @csrf
             <input type="hidden" name="parent_id" id="part-parent-id">
             <input type="hidden" name="item_id" id="part-item-id">
             
-            <div class="px-5 py-4 space-y-5">
+            <div class="flex-1 overflow-y-auto px-5 py-4 space-y-5">
                 <!-- Section 1: Identification -->
                 <div>
                     <h3 class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-2.5 pb-1 border-b border-slate-200 dark:border-slate-700">Part Identification</h3>
@@ -852,7 +852,26 @@
                 <!-- Sketch File Upload -->
                 <div>
                     <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Sketch Image (PNG/JPG)</label>
-                    <input type="file" name="sketch" id="part-input-sketch" accept="image/*" class="w-full text-xs text-slate-500 dark:text-slate-400 file:mr-3 file:py-1 file:px-2.5 file:rounded-xs file:border file:border-slate-300 dark:file:border-slate-600 file:text-[10px] file:font-semibold file:bg-slate-50 dark:file:bg-slate-900 file:text-slate-700 dark:file:text-slate-300 hover:file:bg-slate-100 transition-all cursor-pointer">
+                    <div id="sketch-dropzone" class="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-400 rounded-xs p-4 flex flex-col items-center justify-center transition-colors cursor-pointer bg-slate-50/50 dark:bg-slate-900/50 min-h-[100px] relative">
+                        <input type="file" name="sketch" id="part-input-sketch" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20">
+                        <div class="flex flex-col items-center justify-center gap-1.5 text-center pointer-events-none text-slate-500 dark:text-slate-400" id="sketch-dropzone-prompt">
+                            <i class="fa-solid fa-cloud-arrow-up text-xl text-slate-400 dark:text-slate-500"></i>
+                            <p class="text-xs font-medium">Drag & drop, paste, or click to upload</p>
+                            <p class="text-[9px] text-slate-400">PNG or JPG, max 5MB</p>
+                        </div>
+                        <div class="hidden flex items-center justify-between gap-3 w-full p-1 text-left relative z-30" id="sketch-dropzone-preview">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <img src="" alt="Sketch Preview" id="sketch-preview-img" class="w-12 h-12 rounded-sm border border-slate-300 dark:border-slate-700 object-cover flex-shrink-0">
+                                <div class="min-w-0">
+                                    <p class="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate" id="sketch-file-name">filename.png</p>
+                                    <p class="text-[10px] text-slate-400" id="sketch-file-size">1.2 MB</p>
+                                </div>
+                            </div>
+                            <button type="button" onclick="clearSketchInput(event)" class="w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600 border border-slate-200 hover:border-rose-200 dark:bg-slate-800 dark:hover:bg-rose-950/30 dark:border-slate-700 transition-all pointer-events-auto cursor-pointer" title="Remove image">
+                                <i class="fa-solid fa-xmark text-[10px]"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -1470,11 +1489,100 @@ $(function () {
     });
 
     // =========================================================================
+    // SKETCH DROPZONE & PASTE HANDLERS
+    // =========================================================================
+    const $sketchInput = $('#part-input-sketch');
+    const $sketchDropzone = $('#sketch-dropzone');
+    const $sketchPrompt = $('#sketch-dropzone-prompt');
+    const $sketchPreview = $('#sketch-dropzone-preview');
+    const $sketchPreviewImg = $('#sketch-preview-img');
+    const $sketchFileName = $('#sketch-file-name');
+    const $sketchFileSize = $('#sketch-file-size');
+
+    window.resetSketchDropzone = function() {
+        $sketchInput.val('');
+        $sketchPreview.addClass('hidden');
+        $sketchPrompt.removeClass('hidden');
+        $sketchPreviewImg.attr('src', '');
+        $sketchFileName.text('');
+        $sketchFileSize.text('');
+        $sketchDropzone.removeClass('border-indigo-500 dark:border-indigo-400 bg-indigo-50/20 dark:bg-indigo-950/20');
+    };
+
+    window.clearSketchInput = function(e) {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        resetSketchDropzone();
+    };
+
+    function handleSketchFile(file) {
+        if (!file || !file.type.startsWith('image/')) {
+            showToast('Please select a valid image file (PNG/JPG).', 'warning');
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            showToast('Image size exceeds 5MB limit.', 'warning');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            $sketchPreviewImg.attr('src', e.target.result);
+            $sketchFileName.text(file.name || 'Pasted Image');
+            const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+            $sketchFileSize.text(`${sizeMB} MB`);
+            $sketchPrompt.addClass('hidden');
+            $sketchPreview.removeClass('hidden');
+        };
+        reader.readAsDataURL(file);
+    }
+
+    $sketchInput.on('change', function() {
+        const file = this.files[0];
+        if (file) {
+            handleSketchFile(file);
+        } else {
+            resetSketchDropzone();
+        }
+    });
+
+    $sketchInput.on('dragenter dragover', function() {
+        $sketchDropzone.addClass('border-indigo-500 dark:border-indigo-400 bg-indigo-50/25 dark:bg-indigo-950/25');
+    });
+    $sketchInput.on('dragleave drop', function() {
+        $sketchDropzone.removeClass('border-indigo-500 dark:border-indigo-400 bg-indigo-50/25 dark:bg-indigo-950/25');
+    });
+
+    $(document).on('paste', function(e) {
+        if (!$('#part-modal').is(':visible')) return;
+
+        const clipboardData = e.originalEvent.clipboardData;
+        if (!clipboardData) return;
+
+        const files = clipboardData.files;
+        if (files && files.length > 0) {
+            const file = files[0];
+            if (file.type.startsWith('image/')) {
+                e.preventDefault();
+                
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                $sketchInput[0].files = dt.files;
+                
+                handleSketchFile(file);
+                showToast('Image pasted from clipboard!', 'success');
+            }
+        }
+    });
+
+    // =========================================================================
     // PART MODAL HANDLERS (ADD/EDIT PART)
     // =========================================================================
     function openPartModal(mode, data = {}) {
         $('#form-part-ebd')[0].reset();
-        $('#part-input-sketch').val('');
+        resetSketchDropzone();
         $('#part-modal').removeClass('hidden').addClass('flex');
         
         if (mode === 'edit') {

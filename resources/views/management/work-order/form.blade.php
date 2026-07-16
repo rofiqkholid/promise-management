@@ -59,7 +59,7 @@
     {{-- ── LEFT SIDE: Detail Configuration Form ─────────────────────────── --}}
     @if($isEditable)
         <form id="spkForm" action="{{ isset($workOrder) ? route('management.work-order.update', $workOrder->hashed_id) : route('management.work-order.store') }}" method="POST" 
-              class="w-1/2 h-full flex flex-col overflow-hidden border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 transition-[width] duration-200 ease-in-out" :style="showPreview ? 'width: 50%' : 'width: 100%'">
+              class="w-1/2 h-full flex flex-col overflow-hidden border-r border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 transition-[width] duration-200 ease-in-out" :style="showPreview ? 'width: 50%' : 'width: 100%'">
             @csrf
             @if(isset($workOrder))
                 @method('PUT')
@@ -68,12 +68,12 @@
             @endif
             <input type="hidden" name="department_id" :value="department_id">
     @else
-        <div class="w-1/2 h-full flex flex-col overflow-hidden border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 transition-[width] duration-200 ease-in-out" :style="showPreview ? 'width: 50%' : 'width: 100%'">
+        <div class="w-1/2 h-full flex flex-col overflow-hidden border-r border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 transition-[width] duration-200 ease-in-out" :style="showPreview ? 'width: 50%' : 'width: 100%'">
             <input type="hidden" name="department_id" :value="department_id">
     @endif
         
         {{-- Fixed Header --}}
-        <div class="p-6 pb-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900 z-10 flex-none">
+        <div class="p-6 pb-4 border-b border-slate-300 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900 z-10 flex-none">
             <div class="flex items-center gap-3">
                 <a href="{{ isset($workOrder) ? route('management.work-order.index') : route('management.inquiry.show', $inquiry->hashed_id) }}"
                    class="flex items-center justify-center w-7 h-7 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-500 hover:text-blue-600 hover:border-blue-500 transition-colors text-xs rounded-xs"
@@ -85,6 +85,7 @@
                         <span>{{ isset($workOrder) ? 'Work Order Detail' : 'Create Work Order (SPK)' }}</span>
                         @if(isset($workOrder))
                             <span class="text-xs bg-slate-100 text-slate-800 dark:bg-slate-900/60 dark:text-slate-300 px-2 py-0.5 font-bold uppercase">{{ $workOrder->status }}</span>
+                            <span class="text-xs bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 border border-blue-200 dark:border-blue-800/50 px-2 py-0.5 font-bold rounded-xs">Rev. {{ sprintf('%02d', $workOrder->revision_no ?? 0) }}</span>
                         @endif
                     </h2>
                     <p class="text-[10px] text-slate-400">{{ isset($workOrder) ? 'View SPK specifications, process details, and BOM parts.' : 'Configure SPK details, assign departments, and manage BOM components.' }}</p>
@@ -148,9 +149,9 @@
                         $canActOnThis = $rule ? $rule->canBeApprovedBy($user) : true;
                     }
                 @endphp
-                <div class="border border-slate-200 dark:border-slate-700 rounded-xs overflow-hidden">
+                <div class="border border-slate-300 dark:border-slate-700 rounded-xs overflow-hidden">
                     {{-- Header --}}
-                    <div class="px-4 py-2.5 bg-{{ $workOrder->status === 'Approved' ? 'emerald' : 'amber' }}-50 dark:bg-{{ $workOrder->status === 'Approved' ? 'emerald' : 'amber' }}-950/20 border-b border-slate-200 dark:border-slate-700 flex items-center gap-2">
+                    <div class="px-4 py-2.5 bg-{{ $workOrder->status === 'Approved' ? 'emerald' : 'amber' }}-50 dark:bg-{{ $workOrder->status === 'Approved' ? 'emerald' : 'amber' }}-950/20 border-b border-slate-300 dark:border-slate-700 flex items-center gap-2">
                         <i class="fa-solid fa-{{ $workOrder->status === 'Approved' ? 'circle-check text-emerald-500' : 'clock-rotate-left text-amber-500' }} text-xs"></i>
                         <span class="text-xs font-bold text-slate-800 dark:text-slate-200">Approval Progress</span>
                         <span class="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-xs border
@@ -167,7 +168,7 @@
                                     'Approved' => ['dot' => 'bg-emerald-500', 'text' => 'text-emerald-700 dark:text-emerald-400', 'badge' => 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/30 dark:border-emerald-900 dark:text-emerald-400'],
                                     'Pending'  => ['dot' => 'bg-amber-500 animate-pulse', 'text' => 'text-amber-700 dark:text-amber-400', 'badge' => 'bg-amber-50 border-amber-300 text-amber-700 dark:bg-amber-950/30 dark:border-amber-800 dark:text-amber-400'],
                                     'Rejected' => ['dot' => 'bg-rose-500', 'text' => 'text-rose-600 dark:text-rose-400', 'badge' => 'bg-rose-50 border-rose-200 text-rose-600 dark:bg-rose-950/30 dark:border-rose-900 dark:text-rose-400'],
-                                    default    => ['dot' => 'bg-slate-300 dark:bg-slate-600', 'text' => 'text-slate-400', 'badge' => 'bg-slate-100 border-slate-200 text-slate-400 dark:bg-slate-800 dark:border-slate-700'],
+                                    default    => ['dot' => 'bg-slate-300 dark:bg-slate-600', 'text' => 'text-slate-400', 'badge' => 'bg-slate-100 border-slate-300 text-slate-400 dark:bg-slate-800 dark:border-slate-700'],
                                 };
                             @endphp
                             <div class="px-4 py-3 flex items-start gap-3 {{ $step->status === 'Pending' ? 'bg-amber-50/40 dark:bg-amber-950/10' : '' }}">
@@ -203,7 +204,7 @@
 
                     {{-- Approve / Reject Actions (only for authorized user on pending step, on REVIEW page only) --}}
                     @if($pendingStep && $canActOnThis && Route::currentRouteName() === 'management.work-order.review')
-                        <div class="px-4 py-3 bg-slate-50 dark:bg-slate-900/40 border-t border-slate-200 dark:border-slate-700 flex flex-wrap items-center gap-2">
+                        <div class="px-4 py-3 bg-slate-50 dark:bg-slate-900/40 border-t border-slate-300 dark:border-slate-700 flex flex-wrap items-center gap-2">
                             <span class="text-[10px] text-slate-500 flex-1">Your turn to review as <strong>{{ $pendingStep->approver_position }}</strong>:</span>
                             <form action="{{ route('management.work-order.approve', $workOrder->hashed_id) }}" method="POST" class="flex items-center gap-2">
                                 @csrf
@@ -224,7 +225,7 @@
                             </form>
                         </div>
                     @elseif($pendingStep && !$canActOnThis)
-                        <div class="px-4 py-3 bg-slate-50 dark:bg-slate-900/40 border-t border-slate-200 dark:border-slate-700">
+                        <div class="px-4 py-3 bg-slate-50 dark:bg-slate-900/40 border-t border-slate-300 dark:border-slate-700">
                             <p class="text-[10px] text-slate-400 italic flex items-center gap-1.5">
                                 <i class="fa-solid fa-lock text-[9px]"></i>
                                 Waiting for <strong class="text-slate-500">{{ $pendingStep->approver_position }}</strong> ({{ $pendingStep->department->name ?? '' }}) to approve.
@@ -247,20 +248,20 @@
                     <x-form-input label="WO Release Date" name="released_at" type="date" x-model="released_at" required :disabled="!$isEditable" />
                 </div>
 
-                <div class="grid grid-cols-2 gap-3 border-t border-slate-100 dark:border-slate-800 pt-3">
+                <div class="grid grid-cols-2 gap-3">
                     <x-form-input label="First Sample Date" name="first_sample_date" type="date" x-model="first_sample_date" :disabled="!$isEditable" />
                     <x-form-input label="Due Date (Plan)" name="due_date_plan" type="date" x-model="due_date_plan" required @change="checkPrioritySuggestions();" :disabled="!$isEditable" />
                 </div>
             </div>
 
-            <div class="space-y-2 border-t border-slate-100 dark:border-slate-800 pt-3">
+            <div class="space-y-2 pt-3">
                     <label class="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">Priority <span class="text-rose-500">*</span></label>
                     <div class="grid grid-cols-3 gap-2.5">
                         <button type="button" @click="priority = 'URGENT'" :disabled="!isEditable"
                                 class="flex flex-col items-center justify-center py-2 px-3 border rounded-xs cursor-pointer"
                                 :class="priority === 'URGENT' 
                                     ? 'border-rose-500 bg-rose-50 text-rose-700 dark:bg-rose-950/20 dark:text-rose-400 font-bold' 
-                                    : 'border-slate-200 bg-white text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed'">
+                                    : 'border-slate-300 bg-white text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed'">
                             <span class="text-xs font-bold tracking-wider uppercase">URGENT</span>
                             <span class="text-[10px] opacity-75 mt-0.5">&lt; 10 Working Days</span>
                         </button>
@@ -268,7 +269,7 @@
                                 class="flex flex-col items-center justify-center py-2 px-3 border rounded-xs cursor-pointer"
                                 :class="priority === 'STANDARD' 
                                     ? 'border-amber-500 bg-amber-50 text-amber-700 dark:bg-amber-950/20 dark:text-amber-400 font-bold' 
-                                    : 'border-slate-200 bg-white text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed'">
+                                    : 'border-slate-300 bg-white text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed'">
                             <span class="text-xs font-bold tracking-wider uppercase">STANDARD</span>
                             <span class="text-[10px] opacity-75 mt-0.5">10 - 14 Working Days</span>
                         </button>
@@ -276,7 +277,7 @@
                                 class="flex flex-col items-center justify-center py-2 px-3 border rounded-xs cursor-pointer"
                                 :class="priority === 'LOW' 
                                     ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-950/20 dark:text-blue-400 font-bold' 
-                                    : 'border-slate-200 bg-white text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed'">
+                                    : 'border-slate-300 bg-white text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed'">
                             <span class="text-xs font-bold tracking-wider uppercase">LOW</span>
                             <span class="text-[10px] opacity-75 mt-0.5">&gt; 14 Working Days</span>
                         </button>
@@ -306,7 +307,7 @@
                             <div class="flex flex-col p-3.5 border rounded-xs animate-fadeIn"
                                  :class="isProcessSelected(proc.id) 
                                     ? 'border-slate-300 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/50' 
-                                    : 'border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/50'">
+                                    : 'border-slate-300 bg-white dark:border-slate-800 dark:bg-slate-900/50'">
                                 
                                 {{-- Left Side: Custom Checkbox & Process info --}}
                                 <div class="flex items-center gap-3">
@@ -330,11 +331,11 @@
                                 </div>
                                 
                                 {{-- Assigned Departments checkable badges list --}}
-                                <div x-show="isProcessSelected(proc.id)" class="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+                                <div x-show="isProcessSelected(proc.id)" class="mt-2.5 pt-2 border-t border-slate-300 dark:border-slate-800">
                                     <div class="text-[10px] text-slate-500 uppercase font-medium mb-1.5">Assigned Departments:</div>
                                     <div class="flex flex-wrap gap-1.5">
                                         <template x-for="dept in departmentsList" :key="dept.id">
-                                            <label class="inline-flex items-center gap-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-2 py-0.5 text-[10px] cursor-pointer select-none rounded-xs font-semibold"
+                                            <label class="inline-flex items-center gap-1 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 px-2 py-0.5 text-[10px] cursor-pointer select-none rounded-xs font-semibold"
                                                    :class="process_departments[proc.id] && process_departments[proc.id].map(Number).includes(dept.id) 
                                                         ? 'bg-blue-50 border-blue-300 text-blue-700 dark:bg-blue-950/20 dark:border-blue-800 dark:text-blue-400 font-bold' 
                                                         : 'text-slate-600 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800/50'">
@@ -350,7 +351,7 @@
                                     </div>
                                     
                                     <!-- PIC Selection List -->
-                                    <div class="mt-3 space-y-2 border-t border-slate-100 dark:border-slate-800/60 pt-2"
+                                    <div class="mt-3 space-y-2 border-t border-slate-300 dark:border-slate-800/60 pt-2"
                                          x-show="process_departments[proc.id] && process_departments[proc.id].length > 0">
                                         <div class="text-[10px] text-slate-500 uppercase font-medium">Assign PIC for each department:</div>
                                         <template x-for="deptId in (process_departments[proc.id] || [])" :key="deptId">
@@ -391,7 +392,7 @@
                            :class="{
                                'border-blue-400 bg-blue-50/40 dark:border-blue-700 dark:bg-blue-950/20 shadow-sm': selected_approval_rules.includes(Number(rule.id)) && isSuggestedRule(rule.department_id),
                                'border-slate-300 bg-slate-50/60 dark:border-slate-700 dark:bg-slate-800/30': selected_approval_rules.includes(Number(rule.id)) && !isSuggestedRule(rule.department_id),
-                               'border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/50 opacity-60': !selected_approval_rules.includes(Number(rule.id))
+                               'border-slate-300 bg-white dark:border-slate-800 dark:bg-slate-900/50 opacity-60': !selected_approval_rules.includes(Number(rule.id))
                            }">
                         <input type="checkbox" name="selected_approval_rules[]" :value="rule.id"
                                x-model.number="selected_approval_rules"
@@ -409,7 +410,7 @@
                                 </span>
                                 {{-- Not matching badge --}}
                                 <span x-show="!isSuggestedRule(rule.department_id)"
-                                      class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-semibold bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500 border border-slate-200 dark:border-slate-700 rounded-full">
+                                      class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-semibold bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500 border border-slate-300 dark:border-slate-700 rounded-full">
                                     <i class="fa-solid fa-minus text-[8px]"></i> Other Dept
                                 </span>
                             </div>
@@ -449,10 +450,10 @@
                 @endif
             </x-slot>
             
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto border border-slate-300 dark:border-slate-800 rounded-xs">
                 <table class="w-full text-left text-xs border-collapse">
                     <thead>
-                        <tr class="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/30 text-[10px] font-bold text-center text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                        <tr class="border-b border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/30 text-[10px] font-semibold text-center text-slate-600 dark:text-slate-300 uppercase tracking-wider">
                             @if($isEditable)
                                 <th class="p-2 w-10 text-center">Drag</th>
                             @endif
@@ -478,7 +479,7 @@
                                     }
                                     draggedIndex = null;
                                 "
-                                class="border-b border-slate-100 dark:border-slate-800/60 hover:bg-slate-50/50 dark:hover:bg-slate-800/40 align-middle"
+                                class="border-b border-slate-300 dark:border-slate-800/60 hover:bg-slate-50/50 dark:hover:bg-slate-800/40 align-middle"
                                 :class="isEditable ? 'cursor-grab active:cursor-grabbing' : ''">
                                 @if($isEditable)
                                     <td class="p-2 text-center text-slate-400 select-none">
@@ -497,7 +498,7 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td class="p-2 text-center" x-text="prod.eo"></td>
+                                <td class="p-2 text-center" x-text="prod.eo || '—'"></td>
                                 <td class="p-2 text-center" x-text="prod.class_id"></td>
                                 <td class="p-2 text-center" x-text="prod.uom"></td>
                                 <td class="p-2" x-text="prod.remarks || '—'"></td>
@@ -507,11 +508,9 @@
                                             <button type="button" @click="openEditBom(index)" class="p-1 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/20 rounded-xs cursor-pointer" title="Edit Item">
                                                 <i class="fa-solid fa-pen-to-square text-xs"></i>
                                             </button>
-                                            <template x-if="!prod.inquiry_product_id">
-                                                <button type="button" @click="removeBomItem(index)" class="p-1 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-xs cursor-pointer" title="Remove Item">
-                                                    <i class="fa-solid fa-trash text-xs"></i>
-                                                </button>
-                                            </template>
+                                            <button type="button" @click="removeBomItem(index)" class="p-1 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-xs cursor-pointer" title="Remove Item">
+                                                <i class="fa-solid fa-trash text-xs"></i>
+                                            </button>
                                         @else
                                             <span class="text-[10px] text-slate-400">—</span>
                                         @endif
@@ -529,17 +528,27 @@
         </div> {{-- End Scrollable Container --}}
 
         {{-- Fixed Footer --}}
-        <div class="p-6 pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2.5 bg-slate-50 dark:bg-slate-900/60 z-10 flex-none">
+        <div class="p-6 pt-4 border-t border-slate-300 dark:border-slate-800 flex justify-end gap-2.5 bg-slate-50 dark:bg-slate-900/60 z-10 flex-none">
             <a href="{{ isset($workOrder) ? route('management.work-order.index') : route('management.inquiry.show', $inquiry->hashed_id) }}"
                class="px-4 py-2 text-xs font-bold border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xs transition-colors">
-                {{ isset($workOrder) ? 'Back to SPK List' : 'Back to Inquiry' }}
+                {{ isset($workOrder) ? 'Back to WO List' : 'Back to Inquiry' }}
             </a>
-            @if(isset($workOrder) && $workOrder->status === 'Approved' && $workOrder->is_latest)
-                <form action="{{ route('management.work-order.revise', $workOrder->hashed_id) }}" method="POST" onsubmit="return confirm('Create a new draft revision of this SPK? This will make the current revision read-only.')" class="inline">
+            @if(isset($workOrder) && in_array($workOrder->status, ['Draft', 'Pending Approval']) && ($workOrder->is_latest ?? true))
+                <form id="deleteWoForm" action="{{ route('management.work-order.destroy', $workOrder->hashed_id) }}" method="POST" class="inline">
                     @csrf
-                    <button type="submit"
+                    @method('DELETE')
+                    <button type="button" onclick="confirmDeleteWO()"
+                            class="px-4 py-2 text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white rounded-xs shadow-xs transition-colors cursor-pointer flex items-center gap-1.5">
+                        <i class="fa-solid fa-trash"></i> Delete WO
+                    </button>
+                </form>
+            @endif
+            @if(isset($workOrder) && $workOrder->status === 'Approved' && $workOrder->is_latest)
+                <form id="reviseWoForm" action="{{ route('management.work-order.revise', $workOrder->hashed_id) }}" method="POST" class="inline">
+                    @csrf
+                    <button type="button" onclick="confirmReviseWO()"
                             class="px-4 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xs shadow-xs transition-colors cursor-pointer flex items-center gap-1.5">
-                        <i class="fa-solid fa-code-branch"></i> Revise SPK (New Revision)
+                        <i class="fa-solid fa-code-branch"></i> Revise WO (New Revision)
                     </button>
                 </form>
             @endif
@@ -549,7 +558,7 @@
                     {{ isset($workOrder) ? 'Save Changes' : 'Save Work Order' }}
                 </button>
                 @if(isset($workOrder) && $workOrder->status === 'Draft')
-                    <button type="submit" form="submitApprovalForm"
+                    <button type="button" onclick="confirmSubmitApproval()"
                             class="px-4 py-2 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xs shadow-xs transition-colors cursor-pointer">
                         Submit for Approval
                     </button>
@@ -562,7 +571,7 @@
         </div>
     @endif
 
-    <div class="w-1/2 h-full overflow-y-auto bg-slate-150 dark:bg-slate-800 transition-[width] duration-200 ease-in-out p-8 flex flex-col items-center border-l border-slate-200 dark:border-slate-700"
+    <div class="w-1/2 h-full overflow-y-auto bg-slate-150 dark:bg-slate-800 transition-[width] duration-200 ease-in-out p-8 flex flex-col items-center border-l border-slate-300 dark:border-slate-700"
          x-show="showPreview" :style="showPreview ? 'width: 50%' : 'width: 0%'">
         @include('management.work-order.preview')
     </div>
@@ -576,8 +585,8 @@
 
 {{-- ── MODAL: MASTER PROCESS CHECKLIST ────────────────────────── --}}
 <div id="modal-master-process" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
-    <div class="bg-white dark:bg-slate-800 rounded-xs shadow-2xl w-full max-w-3xl border border-slate-200 dark:border-slate-700 flex flex-col max-h-[85vh]">
-        <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center flex-none">
+    <div class="bg-white dark:bg-slate-800 rounded-xs shadow-2xl w-full max-w-3xl border border-slate-300 dark:border-slate-700 flex flex-col max-h-[85vh]">
+        <div class="p-4 border-b border-slate-300 dark:border-slate-700 flex justify-between items-center flex-none">
             <h3 class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-2">
                 <i class="fa-solid fa-gear text-blue-500"></i> Master Process Checklist
             </h3>
@@ -591,10 +600,10 @@
                 </button>
             </div>
             
-            <div class="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-xs">
+            <div class="overflow-x-auto border border-slate-300 dark:border-slate-700 rounded-xs">
                 <table class="w-full text-left text-xs border-collapse">
                     <thead>
-                        <tr class="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 text-[10px] font-bold text-slate-400 uppercase">
+                        <tr class="bg-slate-50 dark:bg-slate-900 border-b border-slate-300 dark:border-slate-700 text-[10px] font-semibold text-slate-600 dark:text-slate-300 uppercase">
                             <th class="p-2.5 w-24">Code</th>
                             <th class="p-2.5">Process Name</th>
                             <th class="p-2.5">Default Dept(s)</th>
@@ -606,19 +615,25 @@
                         <template x-for="p in processesList" :key="p.id">
                             <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/20">
                                 <td class="p-2.5 font-mono text-slate-750 dark:text-slate-300" x-text="p.process_code"></td>
-                                <td class="p-2.5 font-bold text-slate-800 dark:text-slate-200" x-text="p.process_name"></td>
+                                <td class="p-2.5 font-medium text-slate-800 dark:text-slate-200" x-text="p.process_name"></td>
                                 <td class="p-2.5 text-slate-500 dark:text-slate-400" x-text="getProcessDefaultDeptsLabel(p)"></td>
                                 <td class="p-2.5 text-center">
                                     <template x-if="p.is_active">
-                                        <span class="px-1.5 py-0.5 text-[9px] font-bold bg-emerald-50 dark:bg-emerald-950/20 text-emerald-650 dark:text-emerald-450 border border-emerald-250 dark:border-emerald-900 rounded-xs">Active</span>
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-450 border border-emerald-200 dark:border-emerald-800/50 rounded-full">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                            Active
+                                        </span>
                                     </template>
                                     <template x-if="!p.is_active">
-                                        <span class="px-1.5 py-0.5 text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700 rounded-xs">Inactive</span>
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-450 border border-slate-300 dark:border-slate-700 rounded-full">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-500"></span>
+                                            Inactive
+                                        </span>
                                     </template>
                                 </td>
                                 <td class="p-2.5 text-right">
                                     <div class="flex justify-end items-center gap-2">
-                                        <button type="button" @click="openEditProcessModal(p)" class="p-1.5 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-blue-400 text-slate-600 dark:text-slate-350 hover:text-blue-650 rounded-xs transition-colors flex items-center justify-center w-7 h-7" title="Edit">
+                                        <button type="button" @click="openEditProcessModal(p)" class="p-1.5 bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 hover:border-blue-400 text-slate-600 dark:text-slate-350 hover:text-blue-650 rounded-xs transition-colors flex items-center justify-center w-7 h-7" title="Edit">
                                             <i class="fa-solid fa-pen-to-square text-[11px]"></i>
                                         </button>
                                         <button type="button" @click="deleteProcessAjax(p.id)" class="p-1.5 bg-rose-50 dark:bg-rose-950/20 border border-rose-250 dark:border-rose-900/50 text-rose-600 dark:text-rose-450 hover:border-rose-500 rounded-xs transition-colors flex items-center justify-center w-7 h-7" title="Delete">
@@ -633,7 +648,7 @@
             </div>
         </div>
         
-        <div class="p-4 border-t border-slate-100 dark:border-slate-700 flex justify-end flex-none">
+        <div class="p-4 border-t border-slate-300 dark:border-slate-700 flex justify-end flex-none">
             <button onclick="document.getElementById('modal-master-process').classList.add('hidden')" class="px-4 py-2 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xs font-bold text-xs transition-colors cursor-pointer">Close</button>
         </div>
     </div>
@@ -641,8 +656,8 @@
 
 {{-- ── MODAL: PROCESS CHECKLIST CONFIGURATION (ADD/EDIT) ─────────────── --}}
 <div id="modal-process-config" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
-    <div class="bg-white dark:bg-slate-800 rounded-xs shadow-2xl w-full max-w-md border border-slate-200 dark:border-slate-700">
-        <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+    <div class="bg-white dark:bg-slate-800 rounded-xs shadow-2xl w-full max-w-md border border-slate-300 dark:border-slate-700">
+        <div class="p-4 border-b border-slate-300 dark:border-slate-700 flex justify-between items-center">
             <h3 id="modal-process-title" class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">Add Master Process</h3>
             <button onclick="document.getElementById('modal-process-config').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 text-lg leading-none cursor-pointer">&times;</button>
         </div>
@@ -650,15 +665,15 @@
             @csrf
             <input type="hidden" name="redirect_to" value="{{ request()->fullUrl() }}">
             <div>
-                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Process Code <span class="text-rose-500">*</span></label>
-                <input type="text" name="process_code" id="proc_code" required placeholder="e.g. CUTTING" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
+                <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Process Code <span class="text-rose-500">*</span></label>
+                <input type="text" name="process_code" id="proc_code" required placeholder="e.g. CUTTING" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
             </div>
             <div>
-                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Process Name <span class="text-rose-500">*</span></label>
-                <input type="text" name="process_name" id="proc_name" required placeholder="e.g. Cutting Process" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
+                <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Process Name <span class="text-rose-500">*</span></label>
+                <input type="text" name="process_name" id="proc_name" required placeholder="e.g. Cutting Process" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
             </div>
             <div x-data="approverSelect('proc_dept_select', {{ json_encode($departments->map(fn($d) => ['id' => $d->id, 'label' => $d->name . ' (' . $d->code . ')'])) }}, [])" x-on:set-proc-depts.window="if ($event.detail.target === 'proc_dept_select') setSelected($event.detail.ids)" class="relative">
-                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">
                     Default Department Owner <span class="text-rose-500">*</span>
                 </label>
                 {{-- Hidden native select --}}
@@ -671,12 +686,12 @@
                 <div class="relative">
                     <input type="text" x-model="search" @focus="open = true" @click.outside="open = false" @keydown.escape="open = false"
                            placeholder="Search department..."
-                           class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 pr-8 rounded-xs focus:outline-none focus:border-blue-500">
+                           class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 pr-8 rounded-xs focus:outline-none focus:border-blue-500">
                     <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
                         <i class="fa-solid fa-chevron-down text-[9px]"></i>
                     </span>
                     <div x-show="open" x-transition
-                         class="absolute z-40 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xs shadow-lg max-h-44 overflow-y-auto">
+                         class="absolute z-40 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xs shadow-lg max-h-44 overflow-y-auto">
                         <template x-for="item in filtered" :key="item.id">
                             <div @click="toggle(item)"
                                  :class="selectedIds.includes(item.id) ? 'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50'"
@@ -688,7 +703,7 @@
                     </div>
                 </div>
                 {{-- Tags list --}}
-                <div class="mt-1 flex flex-wrap gap-1 p-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xs min-h-[30px]">
+                <div class="mt-1 flex flex-wrap gap-1 p-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xs min-h-[30px]">
                     <template x-if="selectedIds.length === 0">
                         <span class="text-[9px] text-slate-400 italic self-center">No department selected</span>
                     </template>
@@ -701,14 +716,14 @@
                 </div>
                 
                 {{-- PIC Selection list for default departments --}}
-                <div class="mt-3 space-y-2 border-t border-slate-100 dark:border-slate-800/60 pt-2" x-show="selectedIds.length > 0">
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Default PIC per Department:</label>
+                <div class="mt-3 space-y-2 border-t border-slate-300 dark:border-slate-800/60 pt-2" x-show="selectedIds.length > 0">
+                    <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Default PIC per Department:</label>
                     <template x-for="deptId in selectedIds" :key="deptId">
-                        <div class="flex items-center justify-between gap-2 p-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xs">
+                        <div class="flex items-center justify-between gap-2 p-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xs">
                             <span class="text-[10px] font-bold text-slate-700 dark:text-slate-300" x-text="itemLabel(deptId)"></span>
                             <select :name="'default_pics[' + deptId + ']'"
                                     x-init="setTimeout(() => window.initPicSelect2($el, deptId, defaultPics[deptId], val => { defaultPics[deptId] = val; }), 50)"
-                                    class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-[10px] w-48">
+                                    class="bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-[10px] w-48">
                             </select>
                         </div>
                     </template>
@@ -718,7 +733,7 @@
                 <input type="checkbox" name="is_active" id="proc_active" value="1" checked class="rounded-xs text-blue-600">
                 <label for="proc_active" class="font-semibold text-slate-700 dark:text-slate-350">Active</label>
             </div>
-            <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-750">
+            <div class="flex justify-end gap-2 pt-2 border-t border-slate-300 dark:border-slate-750">
                 <button type="button" onclick="document.getElementById('modal-process-config').classList.add('hidden')" class="px-3.5 py-2 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xs font-bold text-xs transition-colors cursor-pointer">Cancel</button>
                 <button type="submit" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xs text-xs transition-colors cursor-pointer">Save Changes</button>
             </div>
@@ -728,8 +743,8 @@
 
 {{-- ── MODAL: MASTER APPROVAL RULE ────────────────────────────── --}}
 <div id="modal-master-approval" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
-    <div class="bg-white dark:bg-slate-800 rounded-xs shadow-2xl w-full max-w-4xl border border-slate-200 dark:border-slate-700 flex flex-col max-h-[85vh]">
-        <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center flex-none">
+    <div class="bg-white dark:bg-slate-800 rounded-xs shadow-2xl w-full max-w-4xl border border-slate-300 dark:border-slate-700 flex flex-col max-h-[85vh]">
+        <div class="p-4 border-b border-slate-300 dark:border-slate-700 flex justify-between items-center flex-none">
             <h3 class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-2">
                 <i class="fa-solid fa-user-shield text-blue-500"></i> Master Approval Rules (SPK Matrix)
             </h3>
@@ -742,10 +757,10 @@
                     <i class="fa-solid fa-plus text-[9px]"></i> Add Rule
                 </button>
             </div>
-            <div class="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-xs">
+            <div class="overflow-x-auto border border-slate-300 dark:border-slate-700 rounded-xs">
                 <table class="w-full text-left text-xs border-collapse">
                     <thead>
-                        <tr class="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 text-[10px] font-bold text-slate-400 uppercase">
+                        <tr class="bg-slate-50 dark:bg-slate-900 border-b border-slate-300 dark:border-slate-700 text-[10px] font-semibold text-slate-600 dark:text-slate-300 uppercase">
                             <th class="p-2.5 w-16 text-center">Level</th>
                             <th class="p-2.5">Position Label</th>
                             <th class="p-2.5">Action Header</th>
@@ -759,25 +774,31 @@
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-850">
                         <template x-for="rule in approvalRulesListFull" :key="rule.id">
                             <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/20">
-                                <td class="p-2.5 text-center font-bold" x-text="rule.approval_level"></td>
-                                <td class="p-2.5 font-bold text-slate-800 dark:text-slate-200" x-text="rule.position_label"></td>
+                                <td class="p-2.5 text-center font-medium" x-text="rule.approval_level"></td>
+                                <td class="p-2.5 font-medium text-slate-800 dark:text-slate-200" x-text="rule.position_label"></td>
                                 <td class="p-2.5">
-                                    <span class="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-750 border border-slate-200 dark:border-slate-700 text-slate-650 dark:text-slate-300 font-semibold rounded-xs" x-text="rule.action_label || 'Checked'"></span>
+                                    <span class="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-750 border border-slate-300 dark:border-slate-700 text-slate-650 dark:text-slate-300 font-medium rounded-xs" x-text="rule.action_label || 'Checked'"></span>
                                 </td>
-                                <td class="p-2.5 font-semibold text-slate-700 dark:text-slate-350" x-text="rule.department_code || '—'"></td>
+                                <td class="p-2.5 font-medium text-slate-700 dark:text-slate-350" x-text="rule.department_code || '—'"></td>
                                 <td class="p-2.5 text-slate-500 dark:text-slate-400 text-[10px]" x-text="rule.approver_users_list_names || 'Any in Department'"></td>
                                 <td class="p-2.5 text-center font-mono" x-text="rule.sort_order"></td>
                                 <td class="p-2.5 text-center">
                                     <template x-if="rule.is_active">
-                                        <span class="px-1.5 py-0.5 text-[9px] font-bold bg-emerald-50 dark:bg-emerald-950/20 text-emerald-650 dark:text-emerald-450 border border-emerald-250 dark:border-emerald-900 rounded-xs">Active</span>
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-450 border border-emerald-200 dark:border-emerald-800/50 rounded-full">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                            Active
+                                        </span>
                                     </template>
                                     <template x-if="!rule.is_active">
-                                        <span class="px-1.5 py-0.5 text-[9px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700 rounded-xs">Inactive</span>
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-450 border border-slate-300 dark:border-slate-700 rounded-full">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-500"></span>
+                                            Inactive
+                                        </span>
                                     </template>
                                 </td>
                                 <td class="p-2.5 text-right">
                                     <div class="flex justify-end items-center gap-2">
-                                        <button type="button" @click="openEditApprovalModal(rule)" class="p-1.5 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-blue-400 text-slate-600 dark:text-slate-300 hover:text-blue-650 rounded-xs transition-colors flex items-center justify-center w-7 h-7" title="Edit">
+                                        <button type="button" @click="openEditApprovalModal(rule)" class="p-1.5 bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 hover:border-blue-400 text-slate-600 dark:text-slate-300 hover:text-blue-650 rounded-xs transition-colors flex items-center justify-center w-7 h-7" title="Edit">
                                             <i class="fa-solid fa-pen-to-square text-[11px]"></i>
                                         </button>
                                         <button type="button" @click="deleteApprovalAjax(rule.id)" class="p-1.5 bg-rose-50 dark:bg-rose-950/20 border border-rose-250 dark:bg-rose-900/50 text-rose-600 dark:text-rose-450 hover:border-rose-500 rounded-xs transition-colors flex items-center justify-center w-7 h-7" title="Delete">
@@ -792,7 +813,7 @@
             </div>
         </div>
         
-        <div class="p-4 border-t border-slate-100 dark:border-slate-700 flex justify-end flex-none">
+        <div class="p-4 border-t border-slate-300 dark:border-slate-700 flex justify-end flex-none">
             <button onclick="document.getElementById('modal-master-approval').classList.add('hidden')" class="px-4 py-2 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xs font-bold text-xs transition-colors cursor-pointer">Close</button>
         </div>
     </div>
@@ -800,8 +821,8 @@
 
 {{-- ── MODAL: APPROVAL RULE CONFIGURATION (ADD/EDIT) ────────────────── --}}
 <div id="modal-approval-config" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
-    <div class="bg-white dark:bg-slate-800 rounded-xs shadow-2xl w-full max-w-md border border-slate-200 dark:border-slate-700">
-        <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+    <div class="bg-white dark:bg-slate-800 rounded-xs shadow-2xl w-full max-w-md border border-slate-300 dark:border-slate-700">
+        <div class="p-4 border-b border-slate-300 dark:border-slate-700 flex justify-between items-center">
             <h3 id="modal-approval-title" class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">Add Master Approval Rule</h3>
             <button onclick="document.getElementById('modal-approval-config').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 text-lg leading-none cursor-pointer">&times;</button>
         </div>
@@ -810,31 +831,31 @@
             <input type="hidden" name="redirect_to" value="{{ request()->fullUrl() }}">
             <input type="hidden" name="document_type" value="SPK">
             <div>
-                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Approval Level <span class="text-rose-500">*</span></label>
-                <input type="number" name="approval_level" id="app_level" required min="1" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
+                <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Approval Level <span class="text-rose-500">*</span></label>
+                <input type="number" name="approval_level" id="app_level" required min="1" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
             </div>
             <div>
-                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Position Label <span class="text-rose-500">*</span></label>
-                <input type="text" name="position_label" id="app_position" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
+                <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Position Label <span class="text-rose-500">*</span></label>
+                <input type="text" name="position_label" id="app_position" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
             </div>
             <div>
-                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Sign-off Header <span class="text-rose-500">*</span></label>
-                <select name="action_label" id="app_action" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500 cursor-pointer">
+                <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Sign-off Header <span class="text-rose-500">*</span></label>
+                <select name="action_label" id="app_action" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500 cursor-pointer">
                     <option value="Checked">Checked</option>
                     <option value="Approved">Approved</option>
                     <option value="Reviewed">Reviewed</option>
                 </select>
             </div>
             <div>
-                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Responsible Dept <span class="text-rose-500">*</span></label>
-                <select name="department_id" id="app_dept" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500 cursor-pointer select2-department">
+                <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Responsible Dept <span class="text-rose-500">*</span></label>
+                <select name="department_id" id="app_dept" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500 cursor-pointer select2-department">
                     @foreach($departments as $dept)
                         <option value="{{ $dept->id }}">{{ $dept->name }} ({{ $dept->code }})</option>
                     @endforeach
                 </select>
             </div>
             <div>
-                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">
                     Specific Approver(s)
                     <span class="text-slate-300 text-[9px] normal-case font-normal ml-1">(searchable — select multiple)</span>
                 </label>
@@ -844,7 +865,7 @@
                 </select>
                 
                 {{-- Box below to show selected approvers as pills --}}
-                <div id="approver_pills_container" class="mt-2 flex flex-wrap gap-1 p-2 bg-slate-50 dark:bg-slate-900 border border-slate-250 dark:border-slate-750 rounded-xs min-h-[38px] text-xs">
+                <div id="approver_pills_container" class="mt-2 flex flex-wrap gap-1 p-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-750 rounded-xs min-h-[38px] text-xs">
                     <span class="text-[10px] text-slate-400 italic self-center no-pills-placeholder">No approver selected</span>
                 </div>
 
@@ -854,14 +875,14 @@
                 </select>
             </div>
             <div>
-                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Sort Order</label>
-                <input type="number" name="sort_order" id="app_sort" value="0" min="0" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
+                <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Sort Order</label>
+                <input type="number" name="sort_order" id="app_sort" value="0" min="0" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
             </div>
             <div id="app_active_wrapper" class="flex items-center gap-2 py-1">
                 <input type="checkbox" name="is_active" id="app_active" value="1" checked class="rounded-xs text-blue-600">
                 <label for="app_active" class="font-semibold text-slate-700 dark:text-slate-350">Active status</label>
             </div>
-            <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-750">
+            <div class="flex justify-end gap-2 pt-2 border-t border-slate-300 dark:border-slate-750">
                 <button type="button" onclick="document.getElementById('modal-approval-config').classList.add('hidden')" class="px-3.5 py-2 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xs font-bold text-xs transition-colors cursor-pointer">Cancel</button>
                 <button type="submit" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xs text-xs transition-colors cursor-pointer">Save Changes</button>
             </div>
@@ -871,8 +892,8 @@
 
 {{-- ── MODAL: BOM ITEM CONFIGURATION (ADD/EDIT) ────────────────── --}}
 <div id="modal-bom-item" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
-    <div class="bg-white dark:bg-slate-800 rounded-xs shadow-2xl w-full max-w-md border border-slate-200 dark:border-slate-700">
-        <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+    <div class="bg-white dark:bg-slate-800 rounded-xs shadow-2xl w-full max-w-md border border-slate-300 dark:border-slate-700">
+        <div class="p-4 border-b border-slate-300 dark:border-slate-700 flex justify-between items-center">
             <h3 class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">
                 <span x-text="activeBom.index === null ? 'Add' : 'Edit'"></span> BOM Item
             </h3>
@@ -880,37 +901,34 @@
         </div>
         <form @submit.prevent="saveBomItem()" class="p-5 space-y-4 text-xs">
             <div>
-                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Part Number <span class="text-rose-500">*</span></label>
-                <input type="text" x-model="activeBom.customer_part_no" required :disabled="!!activeBom.inquiry_product_id" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
+                <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Part Number <span class="text-rose-500">*</span></label>
+                <input type="text" x-model="activeBom.customer_part_no" required :disabled="!!activeBom.inquiry_product_id" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
             </div>
             <div>
-                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Part Name <span class="text-rose-500">*</span></label>
-                <input type="text" x-model="activeBom.customer_part_name" required :disabled="!!activeBom.inquiry_product_id" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
+                <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Part Name <span class="text-rose-500">*</span></label>
+                <input type="text" x-model="activeBom.customer_part_name" required :disabled="!!activeBom.inquiry_product_id" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
             </div>
             <div>
-                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Parent Item</label>
-                <select x-model="activeBom.parentTempId" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
-                    <option value="">-- None (Top Level) --</option>
-                    <template x-for="parent in products.filter(p => p.tempId !== activeBom.tempId)" :key="parent.tempId">
-                        <option :value="parent.tempId" x-text="(parent.customer_part_no || 'New Item') + ' - ' + (parent.customer_part_name || '')"></option>
-                    </template>
+                <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Parent Item</label>
+                <select id="bom_parent_select" class="w-full">
+                    {{-- Dynamically populated via Select2 --}}
                 </select>
             </div>
             <div class="grid grid-cols-3 gap-2">
                 <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">EO</label>
-                    <input type="text" x-model="activeBom.eo" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
+                    <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">EO</label>
+                    <input type="text" x-model="activeBom.eo" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
                 </div>
                 <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Class ID</label>
-                    <select x-model="activeBom.class_id" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
+                    <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Class ID</label>
+                    <select x-model="activeBom.class_id" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
                         <option value="FG">FG (Finished Good)</option>
                         <option value="RM">RM (Raw Material)</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">UOM</label>
-                    <select x-model="activeBom.uom" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
+                    <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">UOM</label>
+                    <select x-model="activeBom.uom" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
                         <option value="Kg">Kg</option>
                         <option value="Sheet">Sheet</option>
                         <option value="Pcs">Pcs</option>
@@ -918,11 +936,11 @@
                 </div>
             </div>
             <div>
-                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Remarks</label>
-                <textarea x-model="activeBom.remarks" rows="2" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500" placeholder="Remarks..."></textarea>
+                <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Remarks</label>
+                <textarea x-model="activeBom.remarks" rows="2" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500" placeholder="Remarks..."></textarea>
             </div>
-            <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-750">
-                <button type="button" onclick="document.getElementById('modal-bom-item').classList.add('hidden')" class="px-3.5 py-1.5 border border-slate-200 dark:border-slate-750 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-900 rounded-xs font-bold transition-colors cursor-pointer">Cancel</button>
+            <div class="flex justify-end gap-2 pt-2 border-t border-slate-300 dark:border-slate-750">
+                <button type="button" onclick="document.getElementById('modal-bom-item').classList.add('hidden')" class="px-3.5 py-1.5 border border-slate-300 dark:border-slate-750 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-900 rounded-xs font-bold transition-colors cursor-pointer">Cancel</button>
                 <button type="submit" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xs transition-colors cursor-pointer">Save Changes</button>
             </div>
         </form>
@@ -1620,6 +1638,34 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
+        initParentSelect2() {
+            this.$nextTick(() => {
+                const $select = $('#bom_parent_select');
+                $select.empty();
+                $select.append('<option value="">-- None (Top Level) --</option>');
+                
+                this.products.forEach(parent => {
+                    if (parent.tempId !== this.activeBom.tempId) {
+                        const isSelected = parent.tempId === this.activeBom.parentTempId;
+                        const optionText = `${parent.customer_part_no || 'New Item'} - ${parent.customer_part_name || ''}`;
+                        const option = new Option(optionText, parent.tempId, isSelected, isSelected);
+                        $select.append(option);
+                    }
+                });
+
+                if ($select.hasClass("select2-hidden-accessible")) {
+                    $select.select2('destroy');
+                }
+                
+                $select.select2({
+                    dropdownParent: $('#modal-bom-item'),
+                    width: '100%'
+                }).off('change').on('change', (e) => {
+                    this.activeBom.parentTempId = $(e.target).val() || '';
+                });
+            });
+        },
+
         openAddBom() {
             this.activeBom = {
                 index: null,
@@ -1633,6 +1679,7 @@ document.addEventListener('alpine:init', () => {
                 remarks: '',
                 inquiry_product_id: null
             };
+            this.initParentSelect2();
             document.getElementById('modal-bom-item').classList.remove('hidden');
         },
 
@@ -1644,12 +1691,13 @@ document.addEventListener('alpine:init', () => {
                 parentTempId: p.parentTempId || '',
                 customer_part_no: p.customer_part_no,
                 customer_part_name: p.customer_part_name,
-                eo: p.eo || '-',
+                eo: p.eo || '',
                 class_id: p.class_id || 'FG',
                 uom: p.uom || 'Kg',
                 remarks: p.remarks || '',
                 inquiry_product_id: p.inquiry_product_id
             };
+            this.initParentSelect2();
             document.getElementById('modal-bom-item').classList.remove('hidden');
         },
 
@@ -1773,6 +1821,45 @@ document.addEventListener('alpine:init', () => {
 
 @push('scripts')
 <script>
+    window.confirmDeleteWO = function() {
+        confirmDialog({
+            title: 'Delete Work Order',
+            text: 'Are you sure you want to delete this Work Order? This action cannot be undone!',
+            icon: 'warning',
+            confirmButtonText: 'Yes, Delete',
+            confirmButtonColor: '#ef4444',
+            onConfirm: () => {
+                document.getElementById('deleteWoForm').submit();
+            }
+        });
+    };
+
+    window.confirmReviseWO = function() {
+        confirmDialog({
+            title: 'Revise Work Order',
+            text: 'Create a new draft revision of this WO? This will make the current revision read-only.',
+            icon: 'question',
+            confirmButtonText: 'Yes, Revise',
+            confirmButtonColor: '#4f46e5',
+            onConfirm: () => {
+                document.getElementById('reviseWoForm').submit();
+            }
+        });
+    };
+
+    window.confirmSubmitApproval = function() {
+        confirmDialog({
+            title: 'Submit for Approval',
+            text: 'Are you sure you want to submit this Work Order for approval?',
+            icon: 'question',
+            confirmButtonText: 'Yes, Submit',
+            confirmButtonColor: '#059669',
+            onConfirm: () => {
+                document.getElementById('submitApprovalForm').submit();
+            }
+        });
+    };
+
     window.initPicSelect2 = function(el, deptId, initialValue, onChangeCallback, isDisabled = false) {
         $(el).select2({
             placeholder: '-- Choose PIC --',

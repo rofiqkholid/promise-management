@@ -434,7 +434,7 @@ class InquiryController extends Controller
         }
     }
 
-    public function saveAssessment(Request $request, $productId)
+    public function assessProduct(Request $request, $productId)
     {
         $validated = $request->validate([
             'selections' => 'required|array',
@@ -492,6 +492,33 @@ class InquiryController extends Controller
         try {
             $this->inquiryService->updateProductsOrder($request->input('ids'));
             return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 422);
+        }
+    }
+
+    public function updateDecisionsBatch(Request $request)
+    {
+        $validated = $request->validate([
+            'decisions' => 'required|array',
+            'decisions.*' => 'nullable|string|max:50'
+        ]);
+
+        try {
+            \Illuminate\Support\Facades\DB::transaction(function () use ($validated) {
+                foreach ($validated['decisions'] as $id => $decision) {
+                    $product = \App\Models\InquiryProduct::findOrFail($id);
+                    $product->update(['decision' => $decision]);
+                }
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Decisions updated successfully.'
+            ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

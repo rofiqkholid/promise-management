@@ -189,9 +189,19 @@ class WorkOrderService
     {
         return DB::transaction(function () use ($id) {
             $workOrder = $this->workOrderRepo->findById($id);
-            if ($workOrder->status !== 'Draft') {
-                throw new \Exception('Only Draft Work Orders can be deleted.');
+            if (!in_array($workOrder->status, ['Draft', 'Pending Approval'])) {
+                throw new \Exception('Only Draft or Pending Approval Work Orders can be deleted.');
             }
+            
+            // Restore previous revision's is_latest status if applicable
+            if ($workOrder->revised_from_id) {
+                $previousWo = WorkOrder::find($workOrder->revised_from_id);
+                if ($previousWo) {
+                    $previousWo->is_latest = true;
+                    $previousWo->save();
+                }
+            }
+
             return $workOrder->delete();
         });
     }
@@ -403,19 +413,14 @@ class WorkOrderService
             foreach ($original->processes as $proc) {
                 $newRevision->processes()->attach($proc->id, [
                     'assigned_departments' => $proc->pivot->assigned_departments,
-                    'created_at' => now(),
-                    'updated_at' => now()
                 ]);
             }
 
             // Clone products
             foreach ($original->products as $prod) {
-                DB::table('mng_wo_products')->insert([
-                    'work_order_id' => $newRevision->id,
-                    'inquiry_product_id' => $prod->inquiry_product_id,
-                    'created_at' => now(),
-                    'updated_at' => now()
-                ]);
+                $newProd = $prod->replicate(['work_order_id', 'created_at', 'updated_at']);
+                $newProd->work_order_id = $newRevision->id;
+                $newProd->save();
             }
 
 

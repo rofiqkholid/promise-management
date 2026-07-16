@@ -227,14 +227,17 @@
         border-color: var(--sa-info-bg) !important;
     }
 
-    /* Thin colored left accent, softer than before */
+    /* Clean, thin subtle border surrounding the toast instead of thick left border */
     .swal2-popup.swal2-toast {
-        border-left: 10px solid transparent !important;
+        border: 1px solid rgba(15, 23, 42, 0.08) !important;
     }
-    .swal2-popup.swal2-toast.swal2-icon-success { border-left-color: var(--sa-success) !important; }
-    .swal2-popup.swal2-toast.swal2-icon-error   { border-left-color: var(--sa-error) !important; }
-    .swal2-popup.swal2-toast.swal2-icon-warning { border-left-color: var(--sa-warning) !important; }
-    .swal2-popup.swal2-toast.swal2-icon-info    { border-left-color: var(--sa-info) !important; }
+    .dark .swal2-popup.swal2-toast {
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    }
+    .swal2-popup.swal2-toast.swal2-icon-success { border-color: rgba(71, 215, 100, 0.25) !important; }
+    .swal2-popup.swal2-toast.swal2-icon-error   { border-color: rgba(255, 53, 91, 0.25) !important; }
+    .swal2-popup.swal2-toast.swal2-icon-warning { border-color: rgba(255, 192, 33, 0.25) !important; }
+    .swal2-popup.swal2-toast.swal2-icon-info    { border-color: rgba(47, 134, 235, 0.25) !important; }
 
     /* Toast text */
     .swal2-popup.swal2-toast .swal2-title {

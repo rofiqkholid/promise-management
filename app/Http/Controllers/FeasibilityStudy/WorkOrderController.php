@@ -202,7 +202,7 @@ class WorkOrderController extends Controller
 
         // Reset counter per year based on created_at year
         $currentYear = now()->year;
-        $count = WorkOrder::whereYear('created_at', $currentYear)->count() + 1;
+        $count = WorkOrder::whereYear('created_at', $currentYear)->where('revision_no', 0)->count() + 1;
         $romans = [
             1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV', 5 => 'V', 6 => 'VI',
             7 => 'VII', 8 => 'VIII', 9 => 'IX', 10 => 'X', 11 => 'XI', 12 => 'XII'

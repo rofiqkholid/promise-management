@@ -60,6 +60,7 @@ Route::middleware('auth')->prefix('management')->name('management.')->group(func
         Route::post('inquiry-product/{id}/assess', [InquiryController::class, 'assessProduct'])->name('inquiry-product.assess');
         Route::get('inquiry-product/{id}', [InquiryController::class, 'showProduct'])->name('inquiry-product.show');
         Route::patch('inquiry-product/{id}', [InquiryController::class, 'updateProduct'])->name('inquiry-product.update');
+        Route::post('inquiry-product/update-decisions-batch', [InquiryController::class, 'updateDecisionsBatch'])->name('inquiry-product.update-decisions-batch');
         Route::delete('inquiry-product/{id}', [InquiryController::class, 'deleteProduct'])->name('inquiry-product.delete');
         Route::get('inquiry-product/{productId}/chats', [\App\Http\Controllers\Management\InquiryProductChatController::class, 'index'])->name('inquiry-product.chats.index');
         Route::post('inquiry-product/{productId}/chats', [\App\Http\Controllers\Management\InquiryProductChatController::class, 'store'])->name('inquiry-product.chats.store');
