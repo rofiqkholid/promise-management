@@ -6,7 +6,10 @@ use App\Repositories\FeasibilityStudy\WorkOrderRepository;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderApproval;
 use App\Models\ApprovalConfig;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\WorkOrderSubmittedMail;
 
 class WorkOrderService
 {
@@ -208,7 +211,7 @@ class WorkOrderService
 
     public function submitWorkOrder($id)
     {
-        return DB::transaction(function () use ($id) {
+        $workOrder = DB::transaction(function () use ($id) {
             $workOrder = $this->workOrderRepo->findById($id);
             if ($workOrder->status !== 'Draft') {
                 throw new \Exception('Only Draft Work Orders can be submitted.');
@@ -250,6 +253,71 @@ class WorkOrderService
 
             return $workOrder;
         });
+
+        // Dispatch notification emails to involved people outside transaction
+        try {
+            // 1. Send to currently pending level approvers
+            $pendingApprovals = $workOrder->approvals()->where('status', 'Pending')->get();
+            foreach ($pendingApprovals as $approval) {
+                $rule = ApprovalConfig::activeFor('SPK')
+                    ->where('approval_level', $approval->approval_level)
+                    ->where('department_id', $approval->department_id)
+                    ->first();
+                if ($rule) {
+                    $approverUsers = $rule->approver_users;
+                    if ($approverUsers->isEmpty()) {
+                        // If no specific users, get all active users in that department
+                        $approverUsers = User::where('id_dept', $rule->department_id)
+                            ->where('is_active', true)
+                            ->get();
+                    }
+                    foreach ($approverUsers as $approver) {
+                        if (!empty($approver->email) && $approver->is_active) {
+                            try {
+                                Mail::to($approver->email)->send(new WorkOrderSubmittedMail($workOrder, 'approver', $approver->name));
+                            } catch (\Exception $e) {
+                                \Illuminate\Support\Facades\Log::error("Failed to send Work Order approval email to {$approver->email}: " . $e->getMessage());
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 2. Send to PICs (assigned departments / process progress checklist)
+            $picAssignments = []; // pic_user_id => [process names]
+            $picUsersMap = [];    // pic_user_id => User model
+            foreach ($workOrder->processes as $process) {
+                $depts = json_decode($process->pivot->assigned_departments ?? '[]', true) ?: [];
+                foreach ($depts as $dept) {
+                    $picUserId = isset($dept['pic_user_id']) ? (int)$dept['pic_user_id'] : null;
+                    if ($picUserId) {
+                        if (!isset($picAssignments[$picUserId])) {
+                            $picAssignments[$picUserId] = [];
+                        }
+                        $picAssignments[$picUserId][] = $process->process_name;
+                        
+                        if (!isset($picUsersMap[$picUserId])) {
+                            $picUsersMap[$picUserId] = User::find($picUserId);
+                        }
+                    }
+                }
+            }
+
+            foreach ($picAssignments as $picUserId => $processesList) {
+                $picUser = $picUsersMap[$picUserId] ?? null;
+                if ($picUser && !empty($picUser->email) && $picUser->is_active) {
+                    try {
+                        Mail::to($picUser->email)->send(new WorkOrderSubmittedMail($workOrder, 'pic', $picUser->name, array_unique($processesList)));
+                    } catch (\Exception $e) {
+                        \Illuminate\Support\Facades\Log::error("Failed to send Work Order PIC email to {$picUser->email}: " . $e->getMessage());
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('General error during Work Order submission email dispatch: ' . $e->getMessage());
+        }
+
+        return $workOrder;
     }
 
     public function approveWorkOrder($id, $remarks, $user)

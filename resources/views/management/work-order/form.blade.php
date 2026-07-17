@@ -77,7 +77,7 @@
             <div class="flex items-center gap-3">
                 <a href="{{ isset($workOrder) ? route('management.work-order.index') : route('management.inquiry.show', $inquiry->hashed_id) }}"
                    class="flex items-center justify-center w-7 h-7 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-500 hover:text-blue-600 hover:border-blue-500 transition-colors text-xs rounded-xs"
-                   title="{{ isset($workOrder) ? 'Back to SPK List' : 'Back to Inquiry' }}">
+                   title="{{ isset($workOrder) ? 'Back to WO List' : 'Back to Inquiry' }}">
                     <i class="fa-solid fa-arrow-left"></i>
                 </a>
                 <div>
@@ -88,7 +88,7 @@
                             <span class="text-xs bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 border border-blue-200 dark:border-blue-800/50 px-2 py-0.5 font-bold rounded-xs">Rev. {{ sprintf('%02d', $workOrder->revision_no ?? 0) }}</span>
                         @endif
                     </h2>
-                    <p class="text-[10px] text-slate-400">{{ isset($workOrder) ? 'View SPK specifications, process details, and BOM parts.' : 'Configure SPK details, assign departments, and manage BOM components.' }}</p>
+                    <p class="text-[10px] text-slate-400">{{ isset($workOrder) ? 'View WO specifications, process details, and BOM parts.' : 'Configure WO details, assign departments, and manage BOM components.' }}</p>
                 </div>
             </div>
             
@@ -115,7 +115,7 @@
                 <div class="p-3.5 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 text-amber-800 dark:text-amber-400 text-xs flex items-center justify-between">
                     <span>
                         <i class="fa-solid fa-triangle-exclamation mr-1.5"></i>
-                        This is an outdated revision (Rev. {{ sprintf('%02d', $workOrder->revision_no) }}). A newer revision of this SPK exists.
+                        This is an outdated revision (Rev. {{ sprintf('%02d', $workOrder->revision_no) }}). A newer revision of this WO exists.
                     </span>
                     <a href="{{ route('management.work-order.show', \App\Models\WorkOrder::where('wo_number', $workOrder->wo_number)->where('is_latest', true)->first()->hashed_id ?? $workOrder->hashed_id) }}" 
                        class="font-bold underline hover:text-amber-600 dark:hover:text-amber-300 ml-3">
@@ -161,7 +161,10 @@
                     </div>
 
                     {{-- Sequential Steps --}}
-                    <div class="divide-y divide-slate-100 dark:divide-slate-700/50">
+                    <div class="p-3 space-y-1.5 relative bg-white dark:bg-slate-900">
+                        {{-- Continuous Timeline Line --}}
+                        <div class="absolute left-[25px] top-6 bottom-8 w-[1.5px] bg-slate-200 dark:bg-slate-700 z-0"></div>
+
                         @foreach($approvals as $step)
                             @php
                                 $stepColor = match($step->status) {
@@ -171,15 +174,18 @@
                                     default    => ['dot' => 'bg-slate-300 dark:bg-slate-600', 'text' => 'text-slate-400', 'badge' => 'bg-slate-100 border-slate-300 text-slate-400 dark:bg-slate-800 dark:border-slate-700'],
                                 };
                             @endphp
-                            <div class="px-4 py-3 flex items-start gap-3 {{ $step->status === 'Pending' ? 'bg-amber-50/40 dark:bg-amber-950/10' : '' }}">
-                                <div class="flex flex-col items-center gap-1 pt-0.5">
-                                    <span class="w-2.5 h-2.5 rounded-full flex-shrink-0 {{ $stepColor['dot'] }}"></span>
-                                    <span class="text-[9px] font-black text-slate-400">L{{ $step->approval_level }}</span>
+                            <div class="flex items-start gap-2.5 relative z-10">
+                                <div class="flex flex-col items-center pt-2.5 flex-shrink-0" style="width: 24px;">
+                                    <span class="w-2 h-2 rounded-full flex-shrink-0 z-10 {{ $stepColor['dot'] }} ring-4 ring-white dark:ring-slate-900"></span>
                                 </div>
-                                <div class="flex-1 min-w-0">
+                                <div class="flex-1 min-w-0 p-1.5 px-2.5 rounded-sm border transition-all duration-200
+                                    {{ $step->status === 'Pending' 
+                                       ? 'bg-amber-50/40 border-amber-200/60 dark:bg-amber-950/20 dark:border-amber-900/50 shadow-2xs' 
+                                       : 'bg-transparent border-transparent' }}">
                                     <div class="flex items-center justify-between gap-2">
                                         <div>
-                                            <span class="text-xs font-bold text-slate-700 dark:text-slate-200">{{ $step->approver_position }}</span>
+                                            <span class="inline-block px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-sm bg-slate-100 dark:bg-slate-800 text-slate-650 dark:text-slate-400 border border-slate-200 dark:border-slate-700 mr-1.5">L{{ $step->approval_level }}</span>
+                                            <span class="text-xs font-bold text-slate-750 dark:text-slate-200">{{ $step->approver_position }}</span>
                                             <span class="text-[10px] text-slate-400 ml-1.5">({{ $step->department->name ?? '—' }})</span>
                                         </div>
                                         <span class="text-[10px] font-bold px-2 py-0.5 rounded-xs border {{ $stepColor['badge'] }}">
@@ -195,7 +201,47 @@
                                         </div>
                                     @endif
                                     @if($step->remarks)
-                                        <div class="text-[10px] italic text-slate-400 mt-0.5">"{{ $step->remarks }}"</div>
+                                        <div class="text-[10px] italic text-slate-400 mt-0.5 font-medium">"{{ $step->remarks }}"</div>
+                                    @endif
+
+                                    {{-- Approver Emails & Resend Button --}}
+                                    @php
+                                        $rule = \App\Models\ApprovalConfig::activeFor('SPK')
+                                            ->where('approval_level', $step->approval_level)
+                                            ->where('department_id', $step->department_id)
+                                            ->first();
+                                        $stepApprovers = [];
+                                        if ($rule) {
+                                            $approverUsers = $rule->approver_users;
+                                            if ($approverUsers->isEmpty()) {
+                                                $approverUsers = \App\Models\User::where('id_dept', $rule->department_id)->where('is_active', true)->get();
+                                            }
+                                            foreach ($approverUsers as $ap) {
+                                                if (!empty($ap->email) && $ap->is_active) {
+                                                    $stepApprovers[] = [
+                                                        'email' => $ap->email,
+                                                        'name' => $ap->name
+                                                    ];
+                                                }
+                                            }
+                                        }
+                                    @endphp
+                                    @if(!empty($stepApprovers))
+                                        <div class="mt-1.5 flex flex-wrap gap-1.5 select-none pt-1">
+                                            @foreach($stepApprovers as $apData)
+                                                <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-750 dark:text-slate-200 text-[10px]" title="{{ $apData['email'] }}">
+                                                    <span class="font-semibold">{{ $apData['name'] }}</span>
+                                                    <span class="text-slate-500 dark:text-slate-450 font-mono text-[9px]">({{ $apData['email'] }})</span>
+                                                    <button type="button" 
+                                                            onclick="resendEmail('{{ $workOrder->hashed_id }}', '{{ $apData['email'] }}', '{{ $apData['name'] }}', 'approver', this)"
+                                                            class="ml-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-xs bg-blue-600 hover:bg-blue-700 text-white font-bold transition-all cursor-pointer text-[9px] shadow-xs"
+                                                            title="Resend email">
+                                                        <i class="fa-solid fa-paper-plane text-[8px]"></i>
+                                                        <span>Resend</span>
+                                                    </button>
+                                                </span>
+                                            @endforeach
+                                        </div>
                                     @endif
                                 </div>
                             </div>
@@ -746,7 +792,7 @@
     <div class="bg-white dark:bg-slate-800 rounded-xs shadow-2xl w-full max-w-4xl border border-slate-300 dark:border-slate-700 flex flex-col max-h-[85vh]">
         <div class="p-4 border-b border-slate-300 dark:border-slate-700 flex justify-between items-center flex-none">
             <h3 class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                <i class="fa-solid fa-user-shield text-blue-500"></i> Master Approval Rules (SPK Matrix)
+                <i class="fa-solid fa-user-shield text-blue-500"></i> Master Approval Rules (WO Matrix)
             </h3>
             <button onclick="document.getElementById('modal-master-approval').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 text-lg leading-none cursor-pointer">&times;</button>
         </div>
@@ -844,6 +890,7 @@
                     <option value="Checked">Checked</option>
                     <option value="Approved">Approved</option>
                     <option value="Reviewed">Reviewed</option>
+                    <option value="Received">Received</option>
                 </select>
             </div>
             <div>
@@ -854,25 +901,49 @@
                     @endforeach
                 </select>
             </div>
-            <div>
+            <div x-data="approverSelect('master_approver_user_ids', [], [])" x-on:set-approvers.window="if ($event.detail.target === 'master_approver_user_ids') setSelected($event.detail.ids)" class="relative">
                 <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">
                     Specific Approver(s)
                     <span class="text-slate-300 text-[9px] normal-case font-normal ml-1">(searchable — select multiple)</span>
                 </label>
-                {{-- Select2 Search input (single selection, resets on select) --}}
-                <select id="select2_approver_search" class="w-full">
-                    {{-- Dynamically populated --}}
-                </select>
-                
-                {{-- Box below to show selected approvers as pills --}}
-                <div id="approver_pills_container" class="mt-2 flex flex-wrap gap-1 p-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-750 rounded-xs min-h-[38px] text-xs">
-                    <span class="text-[10px] text-slate-400 italic self-center no-pills-placeholder">No approver selected</span>
-                </div>
-
                 {{-- Hidden select that actually submits the array of IDs --}}
                 <select name="approver_user_ids[]" id="master_approver_user_ids" multiple class="hidden">
-                    {{-- Populated dynamically --}}
                 </select>
+                {{-- Search input --}}
+                <div class="relative">
+                    <input type="text" x-model="search" @focus="open = true" @click.outside="open = false" @keydown.escape="open = false"
+                           placeholder="Search approver..."
+                           class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 pr-8 rounded-xs focus:outline-none focus:border-blue-500">
+                    <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                        <i class="fa-solid fa-chevron-down text-[9px]"></i>
+                    </span>
+                    <div x-show="open" x-transition
+                         class="absolute z-40 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xs shadow-lg max-h-44 overflow-y-auto">
+                        <template x-for="item in filtered" :key="item.id">
+                            <div @click="toggle(item)"
+                                 :class="selectedIds.includes(item.id) ? 'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50'"
+                                 class="flex items-center justify-between px-3 py-1.5 text-xs cursor-pointer">
+                                <span x-text="item.label"></span>
+                                <i x-show="selectedIds.includes(item.id)" class="fa-solid fa-check text-[9px] text-blue-500"></i>
+                            </div>
+                        </template>
+                        <template x-if="filtered.length === 0">
+                            <div class="px-3 py-2 text-slate-400 italic text-[11px]">No users found for this department</div>
+                        </template>
+                    </div>
+                </div>
+                {{-- Tags list --}}
+                <div class="mt-1 flex flex-wrap gap-1 p-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xs min-h-[30px]">
+                    <template x-if="selectedIds.length === 0">
+                        <span class="text-[9px] text-slate-400 italic self-center">No approver selected</span>
+                    </template>
+                    <template x-for="item in selectedItems" :key="item.id">
+                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 text-[9px] font-semibold rounded-full border border-blue-200 dark:border-blue-800">
+                            <span x-text="item.label"></span>
+                            <button type="button" @click="remove(item.id)" class="hover:text-blue-950 dark:hover:text-white">&times;</button>
+                        </span>
+                    </template>
+                </div>
             </div>
             <div>
                 <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Sort Order</label>
@@ -1000,14 +1071,14 @@ function openAddApprovalModal() {
     document.getElementById('app_active').checked = true;
     document.getElementById('app_active_wrapper').classList.add('hidden'); // hide active check on add
 
-    // Reset selected approvers pills
-    window.selectedApprovers = [];
-    if (typeof window.renderApproverPills === 'function') {
-        window.renderApproverPills();
-    }
+    // Reset selected approvers list in Alpine custom component
+    window.dispatchEvent(new CustomEvent('update-selected-approvers', {
+        detail: {
+            target: 'master_approver_user_ids',
+            ids: []
+        }
+    }));
     
-    // Clear Select2 search value
-    $('#select2_approver_search').val(null).trigger('change');
     document.getElementById('modal-approval-config').classList.remove('hidden');
 }
 
@@ -1022,33 +1093,19 @@ function openEditApprovalModal(rule) {
     document.getElementById('app_active').checked = rule.is_active;
     document.getElementById('app_active_wrapper').classList.remove('hidden'); // show active check on edit
 
-    // Clear Select2 search value
-    $('#select2_approver_search').val(null).trigger('change');
-
-    // Populate selected approvers pills dynamically
-    window.selectedApprovers = [];
+    // Populate selected approvers list in Alpine custom component
+    let userIds = [];
     if (rule.approver_users && rule.approver_users.length > 0) {
-        rule.approver_users.forEach(u => {
-            window.selectedApprovers.push({
-                id: u.id,
-                name: u.name
-            });
-        });
+        userIds = rule.approver_users.map(u => u.id);
     } else {
-        let userIds = (rule.approver_user_ids || []).map(Number);
-        userIds.forEach(id => {
-            let u = window.allUsersList.find(user => user.id == id);
-            let name = u ? u.name : 'User ID ' + id;
-            window.selectedApprovers.push({
-                id: id,
-                name: name
-            });
-        });
+        userIds = (rule.approver_user_ids || []).map(Number);
     }
-
-    if (typeof window.renderApproverPills === 'function') {
-        window.renderApproverPills();
-    }
+    window.dispatchEvent(new CustomEvent('update-selected-approvers', {
+        detail: {
+            target: 'master_approver_user_ids',
+            ids: userIds
+        }
+    }));
 
     document.getElementById('modal-approval-config').classList.remove('hidden');
 }
@@ -1079,7 +1136,7 @@ function openEditApprovalModal(rule) {
 
     // Query only the names of the user IDs present in $procPicsData (assigned PICs)
     $assignedUserIds = array_unique(array_filter(array_values($procPicsData)));
-    $assignedUsersMap = \App\Models\User::whereIn('id', $assignedUserIds)->get()->pluck('name', 'id');
+    $assignedUsersMap = \App\Models\User::whereIn('id', $assignedUserIds)->get()->mapWithKeys(fn($u) => [$u->id => ['name' => $u->name, 'email' => $u->email]]);
 
     $dueDatesClosedData = [];
     if (isset($workOrder)) {
@@ -1136,7 +1193,8 @@ function openEditApprovalModal(rule) {
         'approver_user_ids' => $r->approver_user_ids ?? [],
         'sort_order' => $r->sort_order,
         'is_active' => $r->is_active,
-        'approver_users_list_names' => $r->approver_users->pluck('name')->implode(', ')
+        'approver_users_list_names' => $r->approver_users->pluck('name')->implode(', '),
+        'approver_users_list_emails' => $r->approver_users->pluck('email')->filter()->implode(', ')
     ])->values()->toArray();
 @endphp
 
@@ -1305,7 +1363,7 @@ document.addEventListener('alpine:init', () => {
                     window.dispatchEvent(new CustomEvent('update-all-items', {
                         detail: {
                             target: 'master_approver_user_ids',
-                            items: data.map(u => ({ id: u.id, label: u.name }))
+                            items: data.map(u => ({ id: u.id, label: u.name, id_dept: u.id_dept }))
                         }
                     }));
                 }
@@ -1848,13 +1906,99 @@ document.addEventListener('alpine:init', () => {
     };
 
     window.confirmSubmitApproval = function() {
-        confirmDialog({
+        // Access Alpine component data
+        const formEl = document.getElementById('spkForm');
+        const alpine = formEl ? Alpine.$data(formEl) : null;
+
+        let approverHtml = '';
+        let picHtml = '';
+
+        if (alpine) {
+            // 1. Build approver list from selected rules
+            const selectedRules = alpine.selected_approval_rules || [];
+            const activeApprovers = alpine.approvalRulesListFull
+                .filter(r => r.is_active && selectedRules.includes(r.id))
+                .sort((a, b) => a.approval_level - b.approval_level);
+
+            if (activeApprovers.length > 0) {
+                approverHtml = '<div style="text-align:left;margin-bottom:12px;">' +
+                    '<div style="font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;border-bottom:1px solid #e2e8f0;padding-bottom:4px;">Approval Signatories</div>';
+                activeApprovers.forEach(rule => {
+                    const names = rule.approver_users_list_names || 'All users in dept';
+                    const emails = rule.approver_users_list_emails || '—';
+                    approverHtml += '<div style="padding:6px 0;border-bottom:1px dashed #f1f5f9;">' +
+                        '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+                        '<div><span style="font-size:12px;font-weight:700;color:#0f172a;">' + (rule.position_label || rule.action_label) + '</span>' +
+                        '<span style="font-size:10px;color:#94a3b8;margin-left:6px;">Lv.' + rule.approval_level + '</span></div>' +
+                        '<span style="font-size:10px;font-weight:600;color:#475569;">' + (rule.department_name || '—') + '</span></div>' +
+                        '<div style="margin-top:2px;"><span style="font-size:10px;color:#64748b;"><i class="fa-solid fa-user" style="margin-right:3px;"></i>' + names + '</span></div>' +
+                        '<div style="margin-top:1px;"><span style="font-size:10px;color:#3b82f6;"><i class="fa-solid fa-envelope" style="margin-right:3px;"></i>' + emails + '</span></div>' +
+                        '</div>';
+                });
+                approverHtml += '</div>';
+            }
+
+            // 2. Build PIC list from process_pics
+            const processPics = alpine.process_pics || {};
+            const picEntries = Object.entries(processPics).filter(([k, v]) => v);
+            if (picEntries.length > 0) {
+                // Group by user
+                const userProcessMap = {};
+                picEntries.forEach(([key, userId]) => {
+                    const [procId] = key.split('_');
+                    const proc = alpine.processesList.find(p => p.id == procId);
+                    const procName = proc ? proc.process_name : ('Process #' + procId);
+                    if (!userProcessMap[userId]) userProcessMap[userId] = { name: null, processes: [] };
+                    userProcessMap[userId].processes.push(procName);
+                });
+                // Resolve names
+                const usersMap = window.assignedUsersMap || {};
+                Object.keys(userProcessMap).forEach(uid => {
+                    if (usersMap[uid]) {
+                        userProcessMap[uid].name = usersMap[uid].name || usersMap[uid];
+                        userProcessMap[uid].email = usersMap[uid].email || '—';
+                    } else {
+                        const allU = window.allUsersList || [];
+                        const found = allU.find(u => u.id == uid);
+                        userProcessMap[uid].name = found ? found.text : ('User #' + uid);
+                        userProcessMap[uid].email = '—';
+                    }
+                });
+
+                picHtml = '<div style="text-align:left;margin-bottom:4px;">' +
+                    '<div style="font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;border-bottom:1px solid #e2e8f0;padding-bottom:4px;">Process Checklist PICs</div>';
+                Object.entries(userProcessMap).forEach(([uid, info]) => {
+                    picHtml += '<div style="padding:6px 0;border-bottom:1px dashed #f1f5f9;">' +
+                        '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+                        '<span style="font-size:12px;font-weight:700;color:#0f172a;">' + (info.name || '—') + '</span>' +
+                        '<span style="font-size:10px;color:#64748b;text-align:right;">' + [...new Set(info.processes)].join(', ') + '</span></div>' +
+                        '<div style="margin-top:1px;"><span style="font-size:10px;color:#3b82f6;"><i class="fa-solid fa-envelope" style="margin-right:3px;"></i>' + (info.email || '—') + '</span></div>' +
+                        '</div>';
+                });
+                picHtml += '</div>';
+            }
+        }
+
+        const summaryHtml = (approverHtml || picHtml) ?
+            '<p style="font-size:13px;color:#475569;margin-bottom:14px;">Submitting this Work Order will send <strong>email notifications</strong> to the following people:</p>' +
+            '<div style="max-height:280px;overflow-y:auto;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;margin-bottom:8px;">' +
+            approverHtml + picHtml + '</div>' +
+            '<p style="font-size:11px;color:#94a3b8;margin-top:6px;">Are you sure you want to proceed?</p>'
+            : '<p style="font-size:13px;color:#475569;">Are you sure you want to submit this Work Order for approval?</p>';
+
+        Swal.fire({
             title: 'Submit for Approval',
-            text: 'Are you sure you want to submit this Work Order for approval?',
+            html: summaryHtml,
             icon: 'question',
+            showCancelButton: true,
             confirmButtonText: 'Yes, Submit',
+            cancelButtonText: 'Cancel',
             confirmButtonColor: '#059669',
-            onConfirm: () => {
+            cancelButtonColor: '#64748b',
+            width: '520px',
+            customClass: { popup: 'text-sm' }
+        }).then((result) => {
+            if (result.isConfirmed) {
                 document.getElementById('submitApprovalForm').submit();
             }
         });
@@ -1891,7 +2035,7 @@ document.addEventListener('alpine:init', () => {
         if (initialValue) {
             let name = 'User ID ' + initialValue;
             if (window.assignedUsersMap && window.assignedUsersMap[initialValue]) {
-                name = window.assignedUsersMap[initialValue];
+                name = window.assignedUsersMap[initialValue].name || window.assignedUsersMap[initialValue];
             } else if (window.allUsersList && window.allUsersList.length > 0) {
                 let u = window.allUsersList.find(user => user.id == initialValue);
                 if (u) name = u.name;
@@ -1905,82 +2049,15 @@ document.addEventListener('alpine:init', () => {
         $('.select2-department').select2({
             placeholder: "-- Choose Department --",
             width: '100%'
-        });
-
-        // Specific Approver(s) Pills and Search Select2 Setup
-        window.selectedApprovers = [];
-
-        window.renderApproverPills = function() {
-            let container = $('#approver_pills_container');
-            container.empty();
-            
-            let hiddenSelect = $('#master_approver_user_ids');
-            hiddenSelect.empty();
-
-            if (window.selectedApprovers.length === 0) {
-                container.append('<span class="text-[10px] text-slate-400 italic self-center no-pills-placeholder">No approver selected</span>');
-                return;
-            }
-
-            window.selectedApprovers.forEach(user => {
-                let pill = $(`
-                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 text-[11px] font-semibold rounded-sm border border-blue-200 dark:border-blue-800">
-                        <span>${user.name}</span>
-                        <button type="button" class="remove-approver-pill font-bold hover:text-blue-900 dark:hover:text-white" data-id="${user.id}">&times;</button>
-                    </span>
-                `);
-                container.append(pill);
-
-                // Add option to hidden multiple select
-                let opt = $('<option selected></option>').val(user.id).text(user.name);
-                hiddenSelect.append(opt);
-            });
-        };
-
-        // Handle pill removal
-        $(document).on('click', '.remove-approver-pill', function() {
-            let id = $(this).data('id');
-            window.selectedApprovers = window.selectedApprovers.filter(u => u.id != id);
-            window.renderApproverPills();
-        });
-
-        // Initialize Select2 with AJAX for searching and selecting approvers
-        $('#select2_approver_search').select2({
-            placeholder: "Search & select approver...",
-            width: '100%',
-            minimumInputLength: 0,
-            ajax: {
-                url: '{{ route("management.api.users") }}',
-                dataType: 'json',
-                delay: 250,
-                data: function(params) {
-                    return {
-                        select2: 1,
-                        q: params.term,
-                        id_dept: $('#app_dept').val()
-                    };
-                },
-                processResults: function(data) {
-                    return {
-                        results: data.results
-                    };
-                },
-                cache: true
-            }
-        }).on('select2:select', function(e) {
-            let data = e.params.data;
-            if (data.id) {
-                if (!window.selectedApprovers.some(u => u.id == data.id)) {
-                    window.selectedApprovers.push({
-                        id: parseInt(data.id),
-                        name: data.text
-                    });
-                    window.renderApproverPills();
+        }).on('change', function() {
+            window.dispatchEvent(new CustomEvent('update-approver-dept', {
+                detail: {
+                    deptId: $(this).val()
                 }
-                // Reset select2 value
-                $(this).val(null).trigger('change');
-            }
+            }));
         });
+
+
 
         // Initialize select2 for each process department selection
         $('.select2-process-depts').select2({
@@ -1991,7 +2068,7 @@ document.addEventListener('alpine:init', () => {
             let procId = $(this).data('process-id');
             let selectedValues = $(this).val() || [];
             
-            let formEl = document.getElementById('spkFormContainer');
+            let formEl = document.getElementById('spkFormWrapper');
             if (formEl) {
                 let alpineData = Alpine.$data(formEl);
                 alpineData.process_departments[procId] = selectedValues.map(id => parseInt(id));
@@ -2001,7 +2078,7 @@ document.addEventListener('alpine:init', () => {
 
         // Initialize state mapping on load (especially for edit/revision screen)
         setTimeout(() => {
-            let formEl = document.getElementById('spkFormContainer');
+            let formEl = document.getElementById('spkFormWrapper');
             if (formEl) {
                 let alpineData = Alpine.$data(formEl);
                 $('.select2-process-depts').each(function() {
@@ -2019,7 +2096,7 @@ document.addEventListener('alpine:init', () => {
             e.preventDefault();
             let $form = $(this);
             let url = $form.attr('action');
-            let formEl = document.getElementById('spkFormContainer');
+            let formEl = document.getElementById('spkFormWrapper');
             let alpine = formEl ? Alpine.$data(formEl) : {};
 
             // Collect selected processes from checked checkboxes
@@ -2119,7 +2196,7 @@ document.addEventListener('alpine:init', () => {
                     showToast(response.message || 'Successfully saved process!', 'success');
                     document.getElementById('modal-process-config').classList.add('hidden');
                     
-                    let formEl = document.getElementById('spkFormContainer');
+                    let formEl = document.getElementById('spkFormWrapper');
                     if (formEl) {
                         Alpine.$data(formEl).refreshProcesses();
                     }
@@ -2151,7 +2228,7 @@ document.addEventListener('alpine:init', () => {
                     showToast(response.message || 'Successfully saved approval rule!', 'success');
                     document.getElementById('modal-approval-config').classList.add('hidden');
                     
-                    let formEl = document.getElementById('spkFormContainer');
+                    let formEl = document.getElementById('spkFormWrapper');
                     if (formEl) {
                         Alpine.$data(formEl).refreshApprovalRules();
                     }
@@ -2177,7 +2254,7 @@ document.addEventListener('alpine:init', () => {
                 },
                 success: function(response) {
                     showToast(response.message || 'Deleted successfully!', 'success');
-                    let formEl = document.getElementById('spkFormContainer');
+                    let formEl = document.getElementById('spkFormWrapper');
                     if (formEl) {
                         Alpine.$data(formEl).refreshProcesses();
                     }
@@ -2198,13 +2275,44 @@ document.addEventListener('alpine:init', () => {
                 },
                 success: function(response) {
                     showToast(response.message || 'Deleted successfully!', 'success');
-                    let formEl = document.getElementById('spkFormContainer');
+                    let formEl = document.getElementById('spkFormWrapper');
                     if (formEl) {
                         Alpine.$data(formEl).refreshApprovalRules();
                     }
                 },
                 error: function(xhr) {
                     showToast('Failed to delete approval rule', 'error');
+                }
+            });
+        };
+
+        window.resendEmail = function(hashedId, email, name, role, btnEl) {
+            let $btn = $(btnEl);
+            let originalHtml = $btn.html();
+            $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin text-[8px]"></i> Sending...');
+            
+            $.ajax({
+                url: '{{ url("management/work-order") }}/' + hashedId + '/resend-email',
+                type: 'POST',
+                data: {
+                    _token: $('meta[name="csrf-token"]').attr('content'),
+                    email: email,
+                    name: name,
+                    role: role
+                },
+                success: function(response) {
+                    showToast(response.message || 'Email successfully resent!', 'success');
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 1200);
+                },
+                error: function(xhr) {
+                    let msg = 'Failed to resend email';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        msg += ': ' + xhr.responseJSON.message;
+                    }
+                    showToast(msg, 'error');
+                    $btn.prop('disabled', false).html(originalHtml);
                 }
             });
         };
@@ -2231,11 +2339,28 @@ document.addEventListener('alpine:init', () => {
                         this.syncNativeSelect();
                     }
                 });
+                window.addEventListener('update-selected-approvers', (e) => {
+                    if (e.detail.target === nativeId) {
+                        this.setSelected(e.detail.ids || []);
+                    }
+                });
+                window.addEventListener('update-approver-dept', (e) => {
+                    if (nativeId === 'master_approver_user_ids') {
+                        this.deptId = e.detail.deptId;
+                    }
+                });
             },
 
             get filtered() {
                 const q = this.search.toLowerCase();
-                return this.allItems.filter(i => i.label.toLowerCase().includes(q));
+                let items = this.allItems;
+                if (nativeId === 'master_approver_user_ids') {
+                    let deptId = this.deptId || document.getElementById('app_dept')?.value;
+                    if (deptId) {
+                        items = this.allItems.filter(i => i.id_dept == deptId);
+                    }
+                }
+                return items.filter(i => i.label.toLowerCase().includes(q));
             },
 
             get selectedItems() {

@@ -16,7 +16,7 @@ Route::get('/login', function () {
     if (request()->has('redirect')) {
         session()->put('url.intended', request()->get('redirect'));
     }
-    return redirect(env('PORTAL_LOGIN_URL', 'http://localhost:8080/login'));
+    return redirect(env('PORTAL_LOGIN_URL', 'https://promise.summitadyawinsa.co.id/login'));
 })->name('login');
 
 Route::get('/', function () {
@@ -38,7 +38,7 @@ Route::post('/login', function () {
 Route::post('/logout', function () {
     Auth::logout();
     session()->invalidate();
-    return redirect(env('PORTAL_LOGIN_URL', 'http://localhost:8080/login'));
+    return redirect(env('PORTAL_LOGIN_URL', 'https://promise.summitadyawinsa.co.id/login'));
 })->name('logout');
 
 Route::get('/dashboard', function () {
@@ -79,6 +79,7 @@ Route::middleware('auth')->prefix('management')->name('management.')->group(func
     // Work Order Public API Routes (accessible by any authenticated user on work order screen)
     Route::get('work-order/{id}/ajax-details', [WorkOrderController::class, 'apiGetDetails'])->name('work-order.api-details');
     Route::get('work-order-global-progress', [WorkOrderController::class, 'apiGetGlobalProgress'])->name('work-order.api-global-progress');
+    Route::post('work-order/{id}/resend-email', [WorkOrderController::class, 'resendEmail'])->name('work-order.resend-email');
 
     // Work Order Approval Inbox (accessible by users with approval menu permission)
     Route::middleware('check.menu:management.work-order.approval-inbox')->group(function () {

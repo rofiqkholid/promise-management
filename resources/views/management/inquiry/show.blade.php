@@ -272,10 +272,14 @@
                 'forex'              => $p->forex,
                 'material_condition' => $p->material_condition,
                 'decision'           => $p->decision,
+                'reviewed_product_id'=> $p->reviewed_product_id,
             ];
         });
     @endphp
-    <script>window.__inquiryProducts = @json($productsForJs);</script>
+    <script>
+        window.__inquiryProducts = @json($productsForJs);
+        window.__reviewedProductsList = @json($reviewedProductsList);
+    </script>
 
     <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 shadow-sm mt-4">
 
@@ -319,6 +323,7 @@
                                 <th class="p-3 bg-slate-50/50 dark:bg-slate-900/50">Category</th>
                                 <th class="p-3 text-right bg-slate-50/50 dark:bg-slate-900/50">Ann. Vol.</th>
                                 <th class="p-3 text-center bg-slate-50/50 dark:bg-slate-900/50 w-28">Decision</th>
+                                <th class="p-3 text-center bg-slate-50/50 dark:bg-slate-900/50 w-36">Reviewed</th>
                                 <th class="p-3 text-center w-20 bg-slate-50/50 dark:bg-slate-900/50">Score</th>
                                 <th class="p-3 text-center w-16 bg-slate-50/50 dark:bg-slate-900/50">Rank</th>
                                 <th class="p-3 text-center w-32 bg-slate-50/50 dark:bg-slate-900/50">Priority</th>
@@ -504,6 +509,16 @@
                                     <option value="">Select Decision</option>
                                     <option value="go">Go</option>
                                     <option value="not go">Not Go</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Reviewed By</label>
+                                <select x-model="productForm.reviewed_product_id"
+                                        class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-3 py-1.5 text-xs focus:outline-none focus:border-blue-500 text-slate-800 dark:text-slate-100">
+                                    <option value="">Select Reviewer</option>
+                                    <template x-for="r in (window.__reviewedProductsList || [])" :key="r.id">
+                                        <option :value="r.id" x-text="r.reviewer" :selected="productForm.reviewed_product_id == r.id"></option>
+                                    </template>
                                 </select>
                             </div>
                         </div>
@@ -697,7 +712,7 @@
     @include('management.inquiry.assessment-config-modal')
 
     {{-- ── Floating Actions & Save Order Bar ──────────────────────────────── --}}
-    <div x-show="selectedSpkProducts.length > 0 || orderDirty || Object.keys(unsavedDecisions).length > 0" x-cloak
+    <div x-show="selectedSpkProducts.length > 0 || orderDirty || Object.keys(unsavedDecisions).length > 0 || Object.keys(unsavedReviewed).length > 0" x-cloak
          x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="translate-y-20 opacity-0"
          x-transition:enter-end="translate-y-0 opacity-100"
@@ -737,19 +752,19 @@
          </template>
 
           {{-- Divider if items are selected AND there are unsaved changes (order or decisions) --}}
-          <template x-if="selectedSpkProducts.length > 0 && (orderDirty || Object.keys(unsavedDecisions).length > 0)">
+          <template x-if="selectedSpkProducts.length > 0 && (orderDirty || Object.keys(unsavedDecisions).length > 0 || Object.keys(unsavedReviewed).length > 0)">
               <div class="h-5 w-[1px] bg-slate-200 dark:bg-slate-700"></div>
           </template>
 
           {{-- PART 2: Combined Unsaved Changes Actions --}}
-          <template x-if="orderDirty || Object.keys(unsavedDecisions).length > 0">
+          <template x-if="orderDirty || Object.keys(unsavedDecisions).length > 0 || Object.keys(unsavedReviewed).length > 0">
               <div class="flex items-center gap-3">
                   <div class="flex items-center gap-1.5 text-xs font-bold text-amber-600 dark:text-amber-400 whitespace-nowrap">
                       <span class="relative flex h-2 w-2">
                           <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
                           <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
                       </span>
-                      <span x-text="orderDirty && Object.keys(unsavedDecisions).length > 0 ? 'Unsaved Order & Decisions' : (orderDirty ? 'Unsaved Order' : 'Unsaved Decisions')"></span>
+                      <span x-text="orderDirty && (Object.keys(unsavedDecisions).length > 0 || Object.keys(unsavedReviewed).length > 0) ? 'Unsaved Order & Product Updates' : (orderDirty ? 'Unsaved Order' : 'Unsaved Updates')"></span>
                   </div>
                   <button @click="saveAllChanges()"
                           :disabled="savingOrder"
@@ -787,8 +802,8 @@
                      <input type="hidden" name="products[]" :value="products.find(p => p.id === id)?.hashed_id || id">
                  </template>
                  <button type="submit"
-                          :disabled="orderDirty || Object.keys(unsavedDecisions).length > 0 || creatingWo"
-                          :title="orderDirty || Object.keys(unsavedDecisions).length > 0 ? 'Please save your changes before creating a Work Order.' : ''"
+                          :disabled="orderDirty || Object.keys(unsavedDecisions).length > 0 || Object.keys(unsavedReviewed).length > 0 || creatingWo"
+                          :title="orderDirty || Object.keys(unsavedDecisions).length > 0 || Object.keys(unsavedReviewed).length > 0 ? 'Please save your changes before creating a Work Order.' : ''"
                           class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 dark:disabled:bg-slate-700 disabled:text-slate-450 dark:disabled:text-slate-500 disabled:cursor-not-allowed text-white text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 rounded-xs border-0 whitespace-nowrap">
                      <template x-if="!creatingWo">
                           <span class="flex items-center gap-1.5">
@@ -871,6 +886,7 @@ document.addEventListener('alpine:init', () => {
         creatingWo: false,
         selectedSpkProducts: [],
         unsavedDecisions: {},
+        unsavedReviewed: {},
         showAssessmentDrawer: false,
         activeProduct: null,
         assessmentForm: {
@@ -1027,7 +1043,7 @@ document.addEventListener('alpine:init', () => {
                 const emptyMsg = this.searchQuery 
                     ? 'No records found matching your search.'
                     : 'No products have been added yet.';
-                tbody.innerHTML = `<tr><td colspan="13" class="py-16 text-center">
+                tbody.innerHTML = `<tr><td colspan="14" class="py-16 text-center">
                     <i class="fa-solid fa-folder-open text-4xl text-slate-300 block mb-3"></i>
                     <p class="text-sm font-semibold text-slate-400">${emptyMsg}</p>
                 </td></tr>`;
@@ -1068,6 +1084,7 @@ document.addEventListener('alpine:init', () => {
 
                 // Background calculation: blue highlight when selected, otherwise alternate zebra striping
                 const currentDecision = this.unsavedDecisions[prod.id] !== undefined ? this.unsavedDecisions[prod.id] : prod.decision;
+                const currentReviewed = this.unsavedReviewed[prod.id] !== undefined ? this.unsavedReviewed[prod.id] : prod.reviewed_product_id;
                 const isNotGo = currentDecision === 'not go';
                 const disabledAttr = isNotGo ? 'disabled' : '';
                 const cursorClass = isNotGo ? 'cursor-not-allowed opacity-30' : 'cursor-pointer';
@@ -1111,10 +1128,20 @@ document.addEventListener('alpine:init', () => {
                   <td class="p-3 text-right font-mono ${isNotGo ? 'text-slate-400 dark:text-slate-500' : 'text-slate-700 dark:text-slate-300'}">${vol}</td>
                   <td class="p-3 text-center" onclick="event.stopPropagation()">
                     <select onchange="window._alpine_changeDecision(${prod.id}, this.value)"
-                            class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-750 px-1.5 py-1 text-[10px] font-bold uppercase rounded-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+                            class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-750 px-1.5 py-1.5 text-[10px] font-semibold uppercase rounded-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
                       <option value="" ${!currentDecision ? 'selected' : ''}>Select</option>
                       <option value="go" ${currentDecision === 'go' ? 'selected' : ''}>Go</option>
                       <option value="not go" ${currentDecision === 'not go' ? 'selected' : ''}>Not Go</option>
+                    </select>
+                  </td>
+                  <td class="p-3 text-center" onclick="event.stopPropagation()">
+                    <select onchange="window._alpine_changeReviewed(${prod.id}, this.value)"
+                            class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-750 px-1.5 py-1.5 text-[10px] font-semibold uppercase rounded-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer w-full max-w-[120px]">
+                      <option value="" ${!currentReviewed ? 'selected' : ''}>Select</option>
+                      ${(window.__reviewedProductsList || []).map(r => {
+                          const isSel = currentReviewed == r.id ? 'selected' : '';
+                          return `<option value="${r.id}" ${isSel}>${r.reviewer}</option>`;
+                      }).join('')}
                     </select>
                   </td>
                   <td class="p-3 text-center">
@@ -1200,7 +1227,7 @@ document.addEventListener('alpine:init', () => {
                  part_category: '', destination: '', sop_date: '', eol_date: '',
                  model_life: '', annual_volume: '',
                  has_2d_data: false, has_3d_data: false, has_tech_doc: false, variant: '', remarks: '',
-                 forex: '', material_condition: '', decision: ''
+                 forex: '', material_condition: '', decision: '', reviewed_product_id: ''
              };
              this.assessmentForm.selections = {};
              this.assessmentForm.remarks = '';
@@ -1236,7 +1263,8 @@ document.addEventListener('alpine:init', () => {
                      remarks:             prod.remarks || '',
                      forex:               prod.forex || '',
                      material_condition:  prod.material_condition || '',
-                     decision:            prod.decision || ''
+                     decision:            prod.decision || '',
+                      reviewed_product_id: prod.reviewed_product_id || ''
                  };
                 this.assessmentForm.remarks = (prod.assessment && prod.assessment.remarks) ? prod.assessment.remarks : '';
                 this.assessmentForm.selections = {};
@@ -1560,8 +1588,22 @@ document.addEventListener('alpine:init', () => {
             this.renderRows();
         },
 
+        changeReviewedLocal(prodId, reviewedValue) {
+            const originalProduct = this.products.find(p => p.id === prodId);
+            const originalReviewed = originalProduct ? originalProduct.reviewed_product_id : '';
+            
+            if (reviewedValue === (originalReviewed || '')) {
+                delete this.unsavedReviewed[prodId];
+            } else {
+                this.unsavedReviewed[prodId] = reviewedValue ? parseInt(reviewedValue) : null;
+            }
+
+            this.renderRows();
+        },
+
         discardAllChanges() {
             this.unsavedDecisions = {};
+            this.unsavedReviewed = {};
             if (this.orderDirty) {
                 this.products = JSON.parse(JSON.stringify(this._initialProducts));
                 this.orderDirty = false;
@@ -1572,21 +1614,27 @@ document.addEventListener('alpine:init', () => {
 
         saveAllChanges() {
             const decisionEntries = Object.entries(this.unsavedDecisions);
+            const reviewedEntries = Object.entries(this.unsavedReviewed);
             const hasDecisions = decisionEntries.length > 0;
+            const hasReviewed = reviewedEntries.length > 0;
             const hasOrder = this.orderDirty;
 
-            if (!hasDecisions && !hasOrder) return;
+            if (!hasDecisions && !hasReviewed && !hasOrder) return;
 
             this.loading = true;
             this.savingOrder = true;
 
             const promises = [];
 
-            // 1. Decisions Promise (Batch request for all decisions)
-            if (hasDecisions) {
-                const payload = {};
+            // 1. Decisions & Reviewed Promise (Batch request for all decisions and reviewed products)
+            if (hasDecisions || hasReviewed) {
+                const decisionsPayload = {};
                 decisionEntries.forEach(([prodId, decisionValue]) => {
-                    payload[prodId] = decisionValue;
+                    decisionsPayload[prodId] = decisionValue;
+                });
+                const reviewedPayload = {};
+                reviewedEntries.forEach(([prodId, reviewedValue]) => {
+                    reviewedPayload[prodId] = reviewedValue;
                 });
                 promises.push(
                     fetch('{{ route('management.inquiry-product.update-decisions-batch') }}', {
@@ -1596,7 +1644,10 @@ document.addEventListener('alpine:init', () => {
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
                             'Accept': 'application/json'
                         },
-                        body: JSON.stringify({ decisions: payload })
+                        body: JSON.stringify({ 
+                            decisions: decisionsPayload,
+                            reviewed: reviewedPayload
+                        })
                     })
                     .then(res => res.json())
                     .catch(() => ({ success: false }))
@@ -1643,8 +1694,19 @@ document.addEventListener('alpine:init', () => {
                         });
                     }
 
+                    // Apply reviewed status locally
+                    if (hasReviewed) {
+                        reviewedEntries.forEach(([prodId, reviewedValue]) => {
+                            const product = this.products.find(p => p.id == prodId);
+                            if (product) {
+                                product.reviewed_product_id = reviewedValue;
+                            }
+                        });
+                    }
+
                     // Reset tracking flags
                     this.unsavedDecisions = {};
+                    this.unsavedReviewed = {};
                     this.orderDirty = false;
                     this._initialProducts = JSON.parse(JSON.stringify(this.products));
                     this.renderRows();
@@ -1674,6 +1736,7 @@ window._alpine_toggleSpk   = (id, checked)=> { const d = _getInquiryData(); if (
 window._alpine_toggleSelectAllSpk = (checked)=> { const d = _getInquiryData(); if (d) d.toggleSelectAllSpk(checked); };
 window._alpine_deleteProduct = (id)       => { const d = _getInquiryData(); if (d) d.deleteProduct(id); };
 window._alpine_changeDecision = (id, val) => { const d = _getInquiryData(); if (d) d.changeDecisionLocal(id, val); };
+window._alpine_changeReviewed = (id, val) => { const d = _getInquiryData(); if (d) d.changeReviewedLocal(id, val); };
 
 // ── SweetAlert2 Confirmation Dialogs (delegates to x-sweetalert component) ──
 function confirmCloseInquiry() {

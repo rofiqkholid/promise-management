@@ -68,7 +68,7 @@ class WorkOrder extends Model
 
     public function products()
     {
-        return $this->hasMany(WorkOrderProduct::class, 'work_order_id', 'id');
+        return $this->hasMany(WorkOrderProduct::class, 'work_order_id', 'id')->orderBy('sort_order', 'asc');
     }
 
     public function attachments()

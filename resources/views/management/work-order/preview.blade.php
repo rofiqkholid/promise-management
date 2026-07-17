@@ -217,7 +217,7 @@
                 <div class="table-cell p-1.5 border-r border-slate-900 last:border-r-0 align-top" :style="{ width: (100 / (1 + approvals.length)) + '%' }">
                     <div class="flex flex-col justify-between items-center h-20 w-full">
                         <div class="flex flex-col items-center">
-                            <div class="inline-block border-2 border-emerald-600 text-emerald-600 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-xs transform -rotate-3 select-none origin-center">APPROVED</div>
+                            <div class="inline-block border-2 border-emerald-600 text-emerald-600 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-xs transform -rotate-3 select-none origin-center">PREPARED</div>
                             <div class="text-[8.5px] text-slate-500 mt-0.5" x-text="formatDateStr(created_at)"></div>
                         </div>
                         <div class="mt-auto">
@@ -233,7 +233,7 @@
                             <div class="flex flex-col items-center w-full">
                                 <template x-if="step.status === 'Approved'">
                                     <div class="flex flex-col items-center">
-                                        <div class="inline-block border-2 border-emerald-600 text-emerald-600 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-xs transform -rotate-3 select-none origin-center">APPROVED</div>
+                                        <div class="inline-block border-2 border-emerald-600 text-emerald-600 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-xs transform -rotate-3 select-none origin-center" x-text="(step.action_label || 'Checked').toUpperCase()"></div>
                                         <div class="text-[8.5px] text-slate-500 mt-0.5" x-text="step.approved_at"></div>
                                         <div x-show="step.due_date_closed" class="text-[8.5px] text-rose-600 font-bold mt-0.5">
                                             Due Close: <span x-text="formatDateStr(step.due_date_closed)"></span>

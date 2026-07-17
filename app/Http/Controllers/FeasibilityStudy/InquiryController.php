@@ -172,8 +172,9 @@ class InquiryController extends Controller
         
         $categories = \App\Models\ScoreCategory::with('options')->orderBy('sort_order', 'asc')->get();
         $rankings = \App\Models\AssessmentRanking::orderBy('sort_order', 'asc')->get();
+        $reviewedProductsList = \App\Models\InqReviewedProduct::orderBy('reviewer', 'asc')->get();
         
-        return view('management.inquiry.show', compact('inquiry', 'scoreCategories', 'customers', 'models', 'categories', 'rankings'));
+        return view('management.inquiry.show', compact('inquiry', 'scoreCategories', 'customers', 'models', 'categories', 'rankings', 'reviewedProductsList'));
     }
 
     public function edit($id)
@@ -351,6 +352,7 @@ class InquiryController extends Controller
             'forex'              => 'nullable|string|max:100',
             'material_condition' => 'nullable|string|max:100',
             'decision'           => 'nullable|string|max:50',
+            'reviewed_product_id'=> 'nullable|integer',
         ]);
 
         try {
@@ -401,6 +403,7 @@ class InquiryController extends Controller
             'forex'              => 'nullable|string|max:100',
             'material_condition' => 'nullable|string|max:100',
             'decision'           => 'nullable|string|max:50',
+            'reviewed_product_id'=> 'nullable|integer',
         ]);
 
         try {
@@ -503,21 +506,31 @@ class InquiryController extends Controller
     public function updateDecisionsBatch(Request $request)
     {
         $validated = $request->validate([
-            'decisions' => 'required|array',
-            'decisions.*' => 'nullable|string|max:50'
+            'decisions' => 'nullable|array',
+            'decisions.*' => 'nullable|string|max:50',
+            'reviewed' => 'nullable|array',
+            'reviewed.*' => 'nullable|integer'
         ]);
 
         try {
             \Illuminate\Support\Facades\DB::transaction(function () use ($validated) {
-                foreach ($validated['decisions'] as $id => $decision) {
-                    $product = \App\Models\InquiryProduct::findOrFail($id);
-                    $product->update(['decision' => $decision]);
+                if (!empty($validated['decisions'])) {
+                    foreach ($validated['decisions'] as $id => $decision) {
+                        $product = \App\Models\InquiryProduct::findOrFail($id);
+                        $product->update(['decision' => $decision]);
+                    }
+                }
+                if (!empty($validated['reviewed'])) {
+                    foreach ($validated['reviewed'] as $id => $reviewedId) {
+                        $product = \App\Models\InquiryProduct::findOrFail($id);
+                        $product->update(['reviewed_product_id' => $reviewedId ?: null]);
+                    }
                 }
             });
 
             return response()->json([
                 'success' => true,
-                'message' => 'Decisions updated successfully.'
+                'message' => 'Product updates saved successfully.'
             ]);
         } catch (\Exception $e) {
             return response()->json([

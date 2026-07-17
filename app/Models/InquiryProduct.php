@@ -33,6 +33,7 @@ class InquiryProduct extends Model
         'forex',
         'material_condition',
         'decision',
+        'reviewed_product_id',
     ];
 
     protected $casts = [
@@ -66,6 +67,11 @@ class InquiryProduct extends Model
     public function chats()
     {
         return $this->hasMany(InquiryProductChat::class, 'inquiry_product_id', 'id');
+    }
+
+    public function reviewedProduct()
+    {
+        return $this->belongsTo(InqReviewedProduct::class, 'reviewed_product_id', 'id');
     }
 }
 

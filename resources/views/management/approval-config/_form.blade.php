@@ -22,6 +22,7 @@
         <option value="Checked" {{ isset($rule) && ($rule->action_label ?? 'Checked') == 'Checked' ? 'selected' : '' }}>Checked</option>
         <option value="Approved" {{ isset($rule) && ($rule->action_label ?? '') == 'Approved' ? 'selected' : '' }}>Approved</option>
         <option value="Reviewed" {{ isset($rule) && ($rule->action_label ?? '') == 'Reviewed' ? 'selected' : '' }}>Reviewed</option>
+        <option value="Received" {{ isset($rule) && ($rule->action_label ?? '') == 'Received' ? 'selected' : '' }}>Received</option>
     </select>
     <p class="text-[10px] text-slate-400 mt-1">Header printed at the top of the signature column on the document.</p>
 </div>

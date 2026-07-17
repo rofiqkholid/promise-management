@@ -115,6 +115,7 @@
                     <option value="Checked">Checked</option>
                     <option value="Approved">Approved</option>
                     <option value="Reviewed">Reviewed</option>
+                    <option value="Received">Received</option>
                 </select>
                 <p class="text-[10px] text-slate-400 mt-1">Header printed at the top of the signature column on the document.</p>
             </div>

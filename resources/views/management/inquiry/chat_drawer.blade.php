@@ -19,8 +19,8 @@
                 <i class="fa-solid fa-comments"></i>
             </span>
             <div>
-                <h3 class="text-sm font-extrabold text-slate-800 dark:text-white" x-text="chatProductDetail?.customer_part_name || 'Item Detail & Chat'"></h3>
-                <p class="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider mt-0.5" x-text="chatProductDetail?.customer_part_no"></p>
+                <h3 class="text-sm font-extrabold text-slate-800 dark:text-white" x-text="chatProductDetail?.customer_part_no || '—'"></h3>
+                <p class="text-[10px] text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider mt-0.5" x-text="chatProductDetail?.customer_part_name || 'Item Detail & Chat'"></p>
             </div>
         </div>
         <button @click="closeChatDrawer()" 
@@ -35,7 +35,7 @@
         <!-- Left Panel: Detailed Information of Selected Item -->
         <div class="w-full md:w-[32%] p-5 bg-slate-50/50 dark:bg-slate-900/30 border-r border-slate-200 dark:border-slate-700/80 overflow-y-auto space-y-5 h-full">
             <div class="border-b border-slate-200 dark:border-slate-700 pb-2">
-                <h4 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Item Specifications</h4>
+                <h4 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Item Specifications</h4>
             </div>
 
             <template x-if="!chatProductDetail">
@@ -76,58 +76,62 @@
                 <div class="space-y-5">
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <span class="block text-[10px] font-medium text-slate-400 uppercase">Model Name</span>
+                            <span class="block text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase">Model Name</span>
                             <span class="text-xs font-semibold text-slate-800 dark:text-slate-100" x-text="chatProductDetail?.model_name || '—'"></span>
                         </div>
                         <div>
-                            <span class="block text-[10px] font-medium text-slate-400 uppercase">Part Number</span>
+                            <span class="block text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase">Part Number</span>
                             <span class="text-xs font-semibold text-slate-800 dark:text-slate-100" x-text="chatProductDetail?.customer_part_no || '—'"></span>
                         </div>
                         <div>
-                            <span class="block text-[10px] font-medium text-slate-400 uppercase">Part Name</span>
+                            <span class="block text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase">Part Name</span>
                             <span class="text-xs font-semibold text-slate-800 dark:text-slate-100" x-text="chatProductDetail?.customer_part_name || '—'"></span>
                         </div>
                         <div>
-                            <span class="block text-[10px] font-medium text-slate-400 uppercase">Variant</span>
+                            <span class="block text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase">Variant</span>
                             <span class="text-xs font-semibold text-slate-800 dark:text-slate-100" x-text="chatProductDetail?.variant || '—'"></span>
                         </div>
                         <div>
-                            <span class="block text-[10px] font-medium text-slate-400 uppercase">Category</span>
+                            <span class="block text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase">Category</span>
                             <span class="text-xs font-semibold text-slate-800 dark:text-slate-100" x-text="chatProductDetail?.part_category || '—'"></span>
                         </div>
                         <div>
-                            <span class="block text-[10px] font-medium text-slate-400 uppercase">Destination</span>
+                            <span class="block text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase">Destination</span>
                             <span class="text-xs font-semibold text-slate-800 dark:text-slate-100" x-text="chatProductDetail?.destination || '—'"></span>
                         </div>
                         <div>
-                            <span class="block text-[10px] font-medium text-slate-400 uppercase">Annual Volume</span>
+                            <span class="block text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase">Annual Volume</span>
                             <span class="text-xs font-semibold text-slate-800 dark:text-slate-100" x-text="chatProductDetail?.annual_volume ? Number(chatProductDetail.annual_volume).toLocaleString() : '—'"></span>
                         </div>
                         <div>
-                            <span class="block text-[10px] font-medium text-slate-400 uppercase">SOP Date</span>
+                            <span class="block text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase">SOP Date</span>
                             <span class="text-xs font-semibold text-slate-800 dark:text-slate-100" x-text="formatDate(chatProductDetail?.sop_date)"></span>
                         </div>
                         <div>
-                            <span class="block text-[10px] font-medium text-slate-400 uppercase">EOL Date</span>
+                            <span class="block text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase">EOL Date</span>
                             <span class="text-xs font-semibold text-slate-800 dark:text-slate-100" x-text="formatDate(chatProductDetail?.eol_date)"></span>
                         </div>
                         <div>
-                            <span class="block text-[10px] font-medium text-slate-400 uppercase">Model Life</span>
+                            <span class="block text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase">Model Life</span>
                             <span class="text-xs font-semibold text-slate-800 dark:text-slate-100" x-text="chatProductDetail?.model_life ? chatProductDetail.model_life + ' months' : '—'"></span>
                         </div>
                         <div>
-                            <span class="block text-[10px] font-medium text-slate-400 uppercase">Forex</span>
+                            <span class="block text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase">Forex</span>
                             <span class="text-xs font-semibold text-slate-800 dark:text-slate-100" x-text="chatProductDetail?.forex || '—'"></span>
                         </div>
                         <div>
-                            <span class="block text-[10px] font-medium text-slate-400 uppercase">Material Condition</span>
+                            <span class="block text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase">Material Condition</span>
                             <span class="text-xs font-semibold text-slate-800 dark:text-slate-100" x-text="chatProductDetail?.material_condition || '—'"></span>
                         </div>
                         <div>
-                            <span class="block text-[10px] font-medium text-slate-400 uppercase">Decision</span>
+                            <span class="block text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase">Decision</span>
                             <span class="text-xs font-bold uppercase"
                                   :class="chatProductDetail?.decision === 'go' ? 'text-emerald-600 dark:text-emerald-450' : chatProductDetail?.decision === 'not go' ? 'text-rose-600 dark:text-rose-450' : 'text-slate-500'"
                                   x-text="chatProductDetail?.decision || 'Pending'"></span>
+                        </div>
+                        <div>
+                            <span class="block text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase">Reviewed By</span>
+                            <span class="text-xs font-semibold text-slate-800 dark:text-slate-100" x-text="chatProductDetail?.reviewed_product?.reviewer || '—'"></span>
                         </div>
                     </div>
 
@@ -137,7 +141,7 @@
                     </div>
 
                     <div class="border-t border-slate-200 dark:border-slate-700/80 pt-4 space-y-2">
-                        <span class="block text-[10px] font-medium text-slate-400 uppercase">Available Design Data</span>
+                        <span class="block text-[10px] font-medium text-slate-550 dark:text-slate-400 uppercase">Available Design Data</span>
                         <div class="flex gap-4">
                             <span class="inline-flex items-center gap-1.5 text-xs" :class="chatProductDetail?.has_2d_data ? 'text-emerald-600 dark:text-emerald-450 font-semibold' : 'text-slate-400 dark:text-slate-600'">
                                 <i class="fa-solid" :class="chatProductDetail?.has_2d_data ? 'fa-square-check' : 'fa-square'"></i> 2D Drawing
@@ -152,18 +156,18 @@
                     </div>
 
                     <div class="border-t border-slate-200 dark:border-slate-700/80 pt-4 space-y-3">
-                        <span class="block text-[10px] font-medium text-slate-400 uppercase">Feasibility Scoring</span>
+                        <span class="block text-[10px] font-medium text-slate-550 dark:text-slate-400 uppercase">Feasibility Scoring</span>
                         
                         <div class="flex items-center justify-between p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                             <div>
-                                <span class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Total Score</span>
+                                <span class="block text-[10px] font-bold text-slate-500 dark:text-slate-450 uppercase tracking-wider">Total Score</span>
                                 <div class="flex items-baseline gap-1 mt-0.5">
                                     <span class="text-xl font-bold text-slate-800 dark:text-white" x-text="chatProductDetail?.assessment?.total_score || 0"></span>
                                     <span class="text-[10px] text-slate-400 font-medium">/100</span>
                                 </div>
                             </div>
                             <div>
-                                <span class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider text-right">Priority</span>
+                                <span class="block text-[10px] font-bold text-slate-550 dark:text-slate-450 uppercase tracking-wider text-right">Priority</span>
                                 <span class="inline-block mt-1 px-2.5 py-0.5 text-[10px] font-bold border"
                                       :class="chatProductDetail?.assessment?.ranking?.priority_label === 'Review Now' ? 'bg-rose-50 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-900/30' :
                                               chatProductDetail?.assessment?.ranking?.priority_label === 'Review Next' ? 'bg-amber-50 dark:bg-amber-955/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-900/30' :

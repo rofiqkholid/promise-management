@@ -188,6 +188,7 @@ class WorkOrderController extends Controller
                 }, $rawIds);
                 $q->whereIn('id', array_filter($decryptedIds));
             }
+            $q->orderBy('sort_order', 'asc')->orderBy('id', 'asc');
         }, 'products.assessment.ranking'])->findOrFail($decryptedInquiryId);
 
         if ($inquiry->products->isEmpty()) {
@@ -315,7 +316,7 @@ class WorkOrderController extends Controller
         try {
             $workOrder = $this->workOrderService->submitWorkOrder($decryptedId);
             return redirect()->route('management.work-order.show', $this->encryptId($workOrder->id))
-                ->with('success', 'SPK successfully submitted for approval!');
+                ->with('success', 'Work Order successfully submitted for approval!');
         } catch (\Exception $e) {
             Log::error('Failed to submit work order', ['error' => $e->getMessage()]);
             return redirect()->back()->with('error', 'Failed to submit: ' . $e->getMessage());
@@ -370,6 +371,16 @@ class WorkOrderController extends Controller
     {
         $user = auth()->user();
 
+        // Get all active approval rules where the current user is authorized to approve
+        $myActiveRules = \App\Models\ApprovalConfig::activeFor('SPK')
+            ->get()
+            ->filter(fn($rule) => $rule->canBeApprovedBy($user));
+            
+        $myLevelsAndDepts = $myActiveRules->map(fn($rule) => [
+            'level' => $rule->approval_level,
+            'dept_id' => $rule->department_id
+        ]);
+
         // 1. Recent (Pending Approval assigned to me)
         $pendingSPKs = $this->workOrderService->paginateWorkOrders(1000, ['status' => 'Pending Approval']);
         $recent = $pendingSPKs->filter(function($wo) use ($user) {
@@ -385,16 +396,92 @@ class WorkOrderController extends Controller
         // 4. My Tasks (assigned as PIC in any process)
         $myTasks = $this->workOrderService->getWorkOrdersTasksForUser($user->id);
 
-        // 5. All (Recent + Approved + Rejected + My Tasks)
+        // 5. All (Recent + Approved + Rejected + My Tasks + Future Approvals)
         $all = WorkOrder::with(['inquiry', 'ownerDepartment'])
-            ->where(function($q) use ($user, $recent) {
+            ->where(function($q) use ($user, $recent, $myLevelsAndDepts) {
                 $q->whereIn('id', $recent->pluck('id'))
                   ->orWhereHas('approvals', function($sub) use ($user) {
                       $sub->where('approver_name', $user->name);
                   });
+                  
+                if ($myLevelsAndDepts->isNotEmpty()) {
+                    $q->orWhereHas('approvals', function($sub) use ($myLevelsAndDepts) {
+                        $sub->where(function($inner) use ($myLevelsAndDepts) {
+                            foreach ($myLevelsAndDepts as $idx => $rd) {
+                                if ($idx === 0) {
+                                    $inner->where('approval_level', $rd['level'])
+                                          ->where('department_id', $rd['dept_id']);
+                                } else {
+                                    $inner->orWhere(function($subInner) use ($rd) {
+                                        $subInner->where('approval_level', $rd['level'])
+                                                 ->where('department_id', $rd['dept_id']);
+                                    });
+                                }
+                            }
+                        });
+                    });
+                }
             })
             ->orderBy('updated_at', 'desc')
             ->get();
+
+        // If a specific Work Order is selected from URL, ensure it is in the $all collection ONLY if user is related to it
+        $selectedId = null;
+        $selectHashedId = request()->input('select');
+        if ($selectHashedId) {
+            $selectId = $this->decryptId($selectHashedId);
+            if ($selectId) {
+                $selectWo = WorkOrder::with(['inquiry.customer', 'inquiry.projectModel', 'ownerDepartment'])->find($selectId);
+                if ($selectWo) {
+                    $isRelated = false;
+                    
+                    // 1. Is creator
+                    if ($selectWo->created_by === $user->name || $selectWo->created_by === $user->username) {
+                        $isRelated = true;
+                    }
+                    
+                    // 2. Is in recent (current active approver), approved, rejected, or PIC tasks
+                    if (!$isRelated && (
+                        $recent->contains('id', $selectWo->id) ||
+                        $approved->contains('id', $selectWo->id) ||
+                        $rejected->contains('id', $selectWo->id) ||
+                        $myTasks->contains('id', $selectWo->id)
+                    )) {
+                        $isRelated = true;
+                    }
+                    
+                    // 3. Is in future approval steps
+                    if (!$isRelated && $myLevelsAndDepts->isNotEmpty()) {
+                        $hasStep = $selectWo->approvals()->where(function($sub) use ($myLevelsAndDepts) {
+                            $sub->where(function($inner) use ($myLevelsAndDepts) {
+                                foreach ($myLevelsAndDepts as $idx => $rd) {
+                                    if ($idx === 0) {
+                                        $inner->where('approval_level', $rd['level'])
+                                              ->where('department_id', $rd['dept_id']);
+                                    } else {
+                                        $inner->orWhere(function($subInner) use ($rd) {
+                                            $subInner->where('approval_level', $rd['level'])
+                                                     ->where('department_id', $rd['dept_id']);
+                                        });
+                                    }
+                                }
+                            });
+                        })->exists();
+                        if ($hasStep) {
+                            $isRelated = true;
+                        }
+                    }
+                    
+                    // Only push if related
+                    if ($isRelated) {
+                        $selectedId = $selectWo->id;
+                        if (!$all->contains('id', $selectWo->id)) {
+                            $all->push($selectWo);
+                        }
+                    }
+                }
+            }
+        }
 
         $recent->load(['inquiry.customer', 'inquiry.projectModel', 'products', 'ownerDepartment', 'processes']);
         $approved->load(['inquiry.customer', 'inquiry.projectModel', 'products', 'ownerDepartment', 'processes']);
@@ -403,7 +490,7 @@ class WorkOrderController extends Controller
         $all->load(['inquiry.customer', 'inquiry.projectModel', 'products', 'ownerDepartment', 'processes']);
         $approvalRules = ApprovalConfig::activeFor('SPK')->get();
 
-        return view('management.work-order.inbox', compact('recent', 'approved', 'rejected', 'myTasks', 'all', 'approvalRules'));
+        return view('management.work-order.inbox', compact('recent', 'approved', 'rejected', 'myTasks', 'all', 'approvalRules', 'selectedId'));
     }
 
     public function reviewPage($id)
@@ -449,6 +536,48 @@ class WorkOrderController extends Controller
         try {
             $decryptedId = $this->decryptId($id);
             $workOrder = $this->workOrderService->getWorkOrderDetails($decryptedId);
+            
+            // Authorization Check
+            $user = auth()->user();
+            $allowedMenus = session('allowed_menus', []);
+            $hasMasterAccess = in_array('management.work-order.index', $allowedMenus);
+            
+            if (!$hasMasterAccess) {
+                $isRelated = false;
+                
+                // 1. Is creator
+                if ($workOrder->created_by === $user->name || $workOrder->created_by === $user->username) {
+                    $isRelated = true;
+                }
+                
+                // 2. Is approver (past, present, or future)
+                if (!$isRelated) {
+                    $isApprover = $workOrder->approvals()
+                        ->where(function($q) use ($user) {
+                            $q->where('approver_name', $user->name)
+                              ->orWhere('department_id', $user->id_dept);
+                        })
+                        ->exists();
+                    if ($isApprover) {
+                        $isRelated = true;
+                    }
+                }
+                
+                // 3. Is PIC in processes
+                if (!$isRelated) {
+                    $myTasks = $this->workOrderService->getWorkOrdersTasksForUser($user->id);
+                    if ($myTasks->contains('id', $workOrder->id)) {
+                        $isRelated = true;
+                    }
+                }
+                
+                if (!$isRelated) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'You do not have access to view this Work Order details.'
+                    ], 403);
+                }
+            }
             
             // Compute target departments
             $deptCodes = collect();
@@ -797,7 +926,36 @@ class WorkOrderController extends Controller
 
     public function apiGetProcesses()
     {
-        $processes = \App\Models\WorkOrderProcess::orderBy('process_name')->get();
+        $processes = \App\Models\WorkOrderProcess::orderBy('id', 'asc')->get();
         return response()->json($processes);
+    }
+
+    public function resendEmail(Request $request, $id)
+    {
+        $decryptedId = $this->decryptId($id);
+        $email = $request->input('email');
+        $name = $request->input('name');
+        $role = $request->input('role');
+        $processes = $request->input('processes', []);
+        
+        $workOrder = WorkOrder::findOrFail($decryptedId);
+        
+        try {
+            if ($role === 'approver') {
+                \Illuminate\Support\Facades\Mail::to($email)->send(new \App\Mail\WorkOrderSubmittedMail($workOrder, 'approver', $name));
+            } else {
+                \Illuminate\Support\Facades\Mail::to($email)->send(new \App\Mail\WorkOrderSubmittedMail($workOrder, 'pic', $name, $processes));
+            }
+            
+            return response()->json([
+                'success' => true,
+                'message' => "Email successfully resent to {$email}!"
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => "Failed to resend email: " . $e->getMessage()
+            ], 422);
+        }
     }
 }

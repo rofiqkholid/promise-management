@@ -93,7 +93,7 @@
                 <template x-for="item in filteredList" :key="item.id">
                     <div @click="selectWo(item.hashed_id)" 
                          class="px-4 py-3 cursor-pointer transition-all flex flex-col border-l-4 border-y border-transparent"
-                         :class="selectedHashedId === item.hashed_id ? 'bg-blue-50/70 dark:bg-blue-950/20 border-l-[#0c4da2] dark:border-l-blue-500 border-y-blue-100 dark:border-y-blue-900/30 relative z-10' : 'hover:bg-gray-50/50 dark:hover:bg-slate-800/40'">
+                         :class="(selectedHashedId === item.hashed_id || (selectedWoId && selectedWoId === item.id)) ? 'bg-blue-50/70 dark:bg-blue-950/20 border-l-[#0c4da2] dark:border-l-blue-500 border-y-blue-100 dark:border-y-blue-900/30 relative z-10' : 'hover:bg-gray-50/50 dark:hover:bg-slate-800/40'">
                         
                         <div class="flex justify-between items-start gap-2 select-none">
                             <span class="text-sm font-bold text-slate-800 dark:text-slate-200" x-text="item.wo_number"></span>
@@ -391,6 +391,7 @@ function outlookInbox() {
         activeFilter: 'all',
         searchQuery: '',
         selectedHashedId: null,
+        selectedWoId: @json($selectedId),
         loadingDetail: false,
         activeRightTab: 'doc',
         approvalRemarks: '',
@@ -530,6 +531,14 @@ function outlookInbox() {
 
         selectWo(hashedId) {
             this.selectedHashedId = hashedId;
+            const found = this.allList.find(x => x.hashed_id === hashedId)
+                       || this.recentList.find(x => x.hashed_id === hashedId)
+                       || this.approvedList.find(x => x.hashed_id === hashedId)
+                       || this.rejectedList.find(x => x.hashed_id === hashedId)
+                       || this.myTasksList.find(x => x.hashed_id === hashedId);
+            if (found) {
+                this.selectedWoId = found.id;
+            }
             this.loadingDetail = true;
             this.approvalRemarks = '';
             this.dueDateClosed = '';

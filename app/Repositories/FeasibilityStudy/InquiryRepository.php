@@ -41,7 +41,7 @@ class InquiryRepository
 
     public function findById($id)
     {
-        $inquiry = ProjectInquiry::with(['customer', 'projectModel', 'products.assessment.ranking'])->findOrFail($id);
+        $inquiry = ProjectInquiry::with(['customer', 'projectModel', 'products.assessment.ranking', 'products.reviewedProduct'])->findOrFail($id);
         
         $sortedProducts = $inquiry->products->sort(function ($a, $b) {
             $sortA = $a->sort_order;
@@ -101,7 +101,7 @@ class InquiryRepository
 
     public function findProductById($productId)
     {
-        return InquiryProduct::with('assessment.details')->findOrFail($productId);
+        return InquiryProduct::with(['assessment.details', 'reviewedProduct'])->findOrFail($productId);
     }
 
     public function updateProduct($productId, array $productData)
