@@ -460,12 +460,18 @@
                                     <i class="fa-solid fa-minus text-[8px]"></i> Other Dept
                                 </span>
                             </div>
-                            <span class="text-[10px] text-slate-500 dark:text-slate-300 block mt-0.5">
-                                Dept: <span x-text="rule.department_name"></span>
+                            <div class="flex flex-wrap items-center gap-1.5 mt-1.5">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-xs text-[10px] font-medium bg-slate-100/80 dark:bg-slate-800/85 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600">
+                                    <span class="font-bold text-slate-400 dark:text-slate-500 mr-1">Dept:</span>
+                                    <span x-text="rule.department_name" class="font-bold text-slate-800 dark:text-slate-100"></span>
+                                </span>
                                 <template x-if="rule.approver_users_list_names">
-                                    <span> · Approver: <span x-text="rule.approver_users_list_names"></span></span>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-xs text-[10px] font-medium bg-blue-50/50 dark:bg-blue-950/20 text-blue-800 dark:text-blue-200 border border-blue-300 dark:border-blue-700">
+                                        <span class="font-bold text-slate-400 dark:text-slate-500 mr-1">Approver:</span>
+                                        <span x-text="rule.approver_users_list_names" class="font-bold text-blue-900 dark:text-blue-100"></span>
+                                    </span>
                                 </template>
-                            </span>
+                            </div>
                         </div>
                     </label>
                 </template>
@@ -1178,7 +1184,9 @@ function openEditApprovalModal(rule) {
     $approvalRulesListMapped = $approvalRules->map(fn($r) => [
         'id' => $r->id,
         'department_id' => $r->department_id,
-        'dept_code' => $r->department->code ?? $r->department->name ?? ''
+        'dept_code' => $r->department->code ?? $r->department->name ?? '',
+        'approval_level' => $r->approval_level,
+        'position_label' => $r->position_label
     ])->values()->toArray();
 
     $approvalRulesListFullMapped = $approvalRules->map(fn($r) => [
@@ -1239,7 +1247,7 @@ document.addEventListener('alpine:init', () => {
                     let ruleFull = this.approvalRulesListFull.find(r => r.id == rule.id);
                     list.push({
                         approval_level: rule.approval_level,
-                        approver_position: rule.dept_code + ' Leader',
+                        approver_position: rule.position_label,
                         action_label: ruleFull ? ruleFull.action_label : 'Checked',
                         status: 'Waiting',
                         approver_name: '',

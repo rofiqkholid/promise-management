@@ -206,10 +206,10 @@
     {{-- Signature Table (Approval Workflow) using Div Table to bypass browser template hoisting bugs --}}
     <div class="table w-full border border-slate-900 text-[9.5px] text-slate-900 text-center">
         <div class="table-row-group">
-            <div class="table-row font-bold bg-slate-50 border-b border-slate-900">
-                <div class="table-cell p-1 border-r border-slate-900 last:border-r-0" :style="{ width: (100 / (1 + approvals.length)) + '%' }">Prepared</div>
+            <div class="table-row font-bold">
+                <div class="table-cell p-1 border-r border-b border-slate-900 last:border-r-0" :style="{ width: (100 / (1 + approvals.length)) + '%' }">Prepared</div>
                 <template x-for="(step, idx) in approvals" :key="idx">
-                    <div class="table-cell p-1 border-r border-slate-900 last:border-r-0" x-text="step.action_label" :style="{ width: (100 / (1 + approvals.length)) + '%' }"></div>
+                    <div class="table-cell p-1 border-r border-b border-slate-900 last:border-r-0" x-text="step.action_label" :style="{ width: (100 / (1 + approvals.length)) + '%' }"></div>
                 </template>
             </div>
             <div class="table-row">
