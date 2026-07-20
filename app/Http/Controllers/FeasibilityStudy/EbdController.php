@@ -132,7 +132,7 @@ class EbdController extends Controller
     {
         // 1. Validate form input
         $request->validate([
-            'file_ebd'    => 'required|file|max:20480', // Relax mimes check to prevent local server MIME detection issues
+            'file_ebd'    => ['required', 'file', 'max:20480', new \App\Rules\SecureFileExtension('excel')],
             'wo_id'       => 'nullable|integer',
             'customer_id' => 'required|integer',
             'model_id'    => 'required|integer',

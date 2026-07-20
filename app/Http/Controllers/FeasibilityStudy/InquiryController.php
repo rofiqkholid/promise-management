@@ -300,7 +300,7 @@ class InquiryController extends Controller
     public function import(Request $request, $id)
     {
         $request->validate([
-            'excel_file' => 'required|file|mimes:xlsx,xls|max:10240',
+            'excel_file' => ['required', 'file', 'max:10240', new \App\Rules\SecureFileExtension('excel')],
         ]);
 
         try {

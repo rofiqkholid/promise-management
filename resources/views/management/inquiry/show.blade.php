@@ -1091,15 +1091,21 @@ document.addEventListener('alpine:init', () => {
                 const draggable = !isLocked && !isNotGo ? 'true' : 'false';
                 
                 let rowBg = '';
+                let hoverClass = 'hover:bg-slate-100 dark:hover:bg-slate-700/60';
                 if (isNotGo) {
                     rowBg = 'bg-slate-200/50 dark:bg-slate-900/60';
+                    hoverClass = 'hover:bg-slate-200/80 dark:hover:bg-slate-850';
+                } else if (currentDecision === 'go') {
+                    rowBg = 'bg-emerald-100/50 dark:bg-emerald-950/25';
+                    hoverClass = 'hover:bg-emerald-100/80 dark:hover:bg-emerald-900/40';
                 } else if (isSelected) {
                     rowBg = 'bg-blue-50/70 dark:bg-blue-950/20 text-blue-900 dark:text-blue-100';
+                    hoverClass = 'hover:bg-blue-100/70 dark:hover:bg-blue-900/40';
                 } else {
                     rowBg = index % 2 === 0 ? 'bg-white dark:bg-slate-800' : 'bg-slate-100/40 dark:bg-slate-900/30';
                 }
 
-                const trClass = `border-b border-slate-200 dark:border-slate-700 ${rowBg} hover:bg-blue-50/30 dark:hover:bg-slate-750 transition-colors duration-150 ${!isLocked && !isNotGo ? 'cursor-move' : ''}`;
+                const trClass = `border-b border-slate-200 dark:border-slate-700 ${rowBg} ${hoverClass} transition-colors duration-150 ${!isLocked && !isNotGo ? 'cursor-move' : ''}`;
 
                 const textMuteClass = isNotGo ? 'text-slate-400 dark:text-slate-500 italic' : 'text-slate-650 dark:text-slate-300';
                 const textMuteModel = isNotGo ? 'text-slate-400 dark:text-slate-500 italic' : 'text-slate-650 dark:text-slate-100';

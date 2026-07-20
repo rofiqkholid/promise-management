@@ -61,7 +61,12 @@ class InquiryProductChatController extends Controller
     {
         $request->validate([
             'message' => 'nullable|string',
-            'file' => 'nullable|file|max:10240', // 10MB Limit
+            'file' => [
+                'nullable',
+                'file',
+                'max:10240', // 10MB Limit
+                new \App\Rules\SecureFileExtension('attachment')
+            ],
         ]);
 
         if (!$request->input('message') && !$request->hasFile('file')) {
