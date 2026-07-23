@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FeasibilityStudy\InquiryController;
 use App\Http\Controllers\Management\AssessmentConfigController;
 use App\Http\Controllers\FeasibilityStudy\WorkOrderController;
+use App\Http\Controllers\FeasibilityStudy\WorkOrderToolingController;
 use App\Http\Controllers\Management\ApprovalConfigController;
 use App\Http\Controllers\Management\CalendarController;
 use App\Http\Controllers\FeasibilityStudy\EbdController;
@@ -99,6 +100,11 @@ Route::middleware('auth')->prefix('management')->name('management.')->group(func
         Route::post('process-checklist/{id}/delete', [WorkOrderController::class, 'destroyProcess'])->name('process-checklist.destroy');
         Route::match(['get', 'post'], 'work-order/create', [WorkOrderController::class, 'create'])->name('work-order.create');
         Route::resource('work-order', WorkOrderController::class)->parameters(['work-order' => 'id'])->except(['create']);
+
+        // Work Order SPK 2 Tooling Cost Routes
+        Route::get('work-order-tooling/{id}/quotation', [WorkOrderToolingController::class, 'exportQuotation'])->name('work-order-tooling.quotation');
+        Route::match(['get', 'post'], 'work-order-tooling/create', [WorkOrderToolingController::class, 'create'])->name('work-order-tooling.create');
+        Route::resource('work-order-tooling', WorkOrderToolingController::class)->parameters(['work-order-tooling' => 'id'])->except(['create']);
     });
 
     // Assessment Configuration Routes

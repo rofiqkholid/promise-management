@@ -332,6 +332,7 @@ class EbdController extends Controller
                 'mat_weight_pcs'  => (float) $request->input('mat_weight_pcs', 0),
                 'mat_yield_ratio' => (float) $request->input('mat_yield_ratio', 0),
                 'std_part_no'     => $request->input('std_part_no'),
+                'std_part_name'   => $request->input('std_part_name'),
                 'std_qty'         => (int) $request->input('std_qty', 0),
                 'std_uom'         => $request->input('std_uom'),
                 'packing_type'    => $request->input('packing_type'),
@@ -394,6 +395,7 @@ class EbdController extends Controller
                 'mat_weight_pcs'  => (float) $request->input('mat_weight_pcs', 0),
                 'mat_yield_ratio' => (float) $request->input('mat_yield_ratio', 0),
                 'std_part_no'     => $request->input('std_part_no'),
+                'std_part_name'   => $request->input('std_part_name'),
                 'std_qty'         => (int) $request->input('std_qty', 0),
                 'std_uom'         => $request->input('std_uom'),
                 'packing_type'    => $request->input('packing_type'),
@@ -463,7 +465,7 @@ class EbdController extends Controller
     {
         $request->validate([
             'process_name' => 'required|string|max:255',
-            'op'           => 'required|string|max:50',
+            'op'           => 'nullable|integer',
         ]);
 
         try {
@@ -471,12 +473,13 @@ class EbdController extends Controller
                 'ebd_item_id'    => $itemId,
                 'tool_rank'      => $request->input('tool_rank'),
                 'category'       => $request->input('category'),
-                'op'             => $request->input('op'),
+                'op'             => $request->filled('op') ? (int) $request->input('op') : null,
                 'process_name'   => $request->input('process_name'),
                 'prod_homeline'  => $request->input('prod_homeline'),
                 'tonnage'        => $request->input('tonnage') ? (int) $request->input('tonnage') : null,
                 'die_height'     => $request->input('die_height') ? (float) $request->input('die_height') : null,
-                'cavity'         => (int) $request->input('cavity', 1),
+                'output'         => $request->filled('output') ? (int) $request->input('output') : null,
+                'output_type'    => $request->input('output_type') ?: null,
                 'qty'            => (int) $request->input('qty', 1),
                 'price_idr'      => $request->input('price_idr') ? (float) str_replace('.', '', $request->input('price_idr')) : null,
                 'tooling_status' => $request->input('tooling_status'),
@@ -499,7 +502,7 @@ class EbdController extends Controller
     {
         $request->validate([
             'process_name' => 'required|string|max:255',
-            'op'           => 'required|string|max:50',
+            'op'           => 'nullable|integer',
         ]);
 
         try {
@@ -507,12 +510,13 @@ class EbdController extends Controller
             $tp->update([
                 'tool_rank'      => $request->input('tool_rank'),
                 'category'       => $request->input('category'),
-                'op'             => $request->input('op'),
+                'op'             => $request->filled('op') ? (int) $request->input('op') : null,
                 'process_name'   => $request->input('process_name'),
                 'prod_homeline'  => $request->input('prod_homeline'),
                 'tonnage'        => $request->input('tonnage') ? (int) $request->input('tonnage') : null,
                 'die_height'     => $request->input('die_height') ? (float) $request->input('die_height') : null,
-                'cavity'         => (int) $request->input('cavity', 1),
+                'output'         => $request->filled('output') ? (int) $request->input('output') : null,
+                'output_type'    => $request->input('output_type') ?: null,
                 'qty'            => (int) $request->input('qty', 1),
                 'price_idr'      => $request->input('price_idr') ? (float) str_replace('.', '', $request->input('price_idr')) : null,
                 'tooling_status' => $request->input('tooling_status'),

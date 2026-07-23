@@ -54,30 +54,31 @@
 </style>
 
 <div x-data="spkForm" id="spkFormWrapper">
-<div class="flex h-[calc(100vh-64px)] mt-16 overflow-hidden bg-slate-50 dark:bg-slate-900" id="spkFormContainer">
+<div class="split-container flex h-[calc(100vh-64px)] mt-16 overflow-hidden bg-slate-50 dark:bg-slate-900" id="spkFormContainer">
     
     {{-- ── LEFT SIDE: Detail Configuration Form ─────────────────────────── --}}
     @if($isEditable)
-        <form id="spkForm" action="{{ isset($workOrder) ? route('management.work-order.update', $workOrder->hashed_id) : route('management.work-order.store') }}" method="POST" 
-              class="w-1/2 h-full flex flex-col overflow-hidden border-r border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 transition-[width] duration-200 ease-in-out" :style="showPreview ? 'width: 50%' : 'width: 100%'">
+        <form id="spkForm" action="{{ isset($workOrder) ? route('management.work-order-tooling.update', $workOrder->hashed_id) : route('management.work-order-tooling.store') }}" method="POST" 
+              class="wo-form-panel w-1/2 h-full flex flex-col overflow-hidden border-r border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 transition-[width] duration-200 ease-in-out" :style="showPreview ? 'width: 50%' : 'width: 100%'">
             @csrf
             @if(isset($workOrder))
                 @method('PUT')
             @else
                 <input type="hidden" name="inquiry_id" value="{{ $inquiry->hashed_id }}">
+                <input type="hidden" name="ebd_header_id" value="{{ $ebdHeader->hashed_id ?? '' }}">
             @endif
             <input type="hidden" name="department_id" :value="department_id">
     @else
-        <div class="w-1/2 h-full flex flex-col overflow-hidden border-r border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 transition-[width] duration-200 ease-in-out" :style="showPreview ? 'width: 50%' : 'width: 100%'">
+        <div class="wo-form-panel w-1/2 h-full flex flex-col overflow-hidden border-r border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 transition-[width] duration-200 ease-in-out" :style="showPreview ? 'width: 50%' : 'width: 100%'">
             <input type="hidden" name="department_id" :value="department_id">
     @endif
         
         {{-- Fixed Header --}}
         <div class="p-6 pb-4 border-b border-slate-300 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900 z-10 flex-none">
             <div class="flex items-center gap-3">
-                <a href="{{ isset($workOrder) ? route('management.work-order.index') : route('management.inquiry.show', $inquiry->hashed_id) }}"
+                <a href="{{ route('management.work-order-tooling.index') }}"
                    class="flex items-center justify-center w-7 h-7 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-500 hover:text-blue-600 hover:border-blue-500 transition-colors text-xs rounded-xs"
-                   title="{{ isset($workOrder) ? 'Back to WO List' : 'Back to Inquiry' }}">
+                   title="Back to SPK 2 Tooling List">
                     <i class="fa-solid fa-arrow-left"></i>
                 </a>
                 <div>
@@ -100,6 +101,11 @@
                     <span x-text="showPreview ? 'Hide' : 'Preview'"></span>
                 </button>
                 @if(isset($workOrder))
+                    <a href="{{ route('management.work-order-tooling.quotation', [$workOrder->hashed_id, 'download' => 1]) }}" target="_blank"
+                       class="flex items-center gap-1.5 px-2.5 h-7 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-xs transition-colors"
+                       title="Download Quotation Tooling Excel Attachment">
+                        <i class="fa-solid fa-file-excel"></i> Quotation
+                    </a>
                     <button type="button" onclick="window.print()"
                             class="w-7 h-7 bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center text-xs shadow-xs transition-colors cursor-pointer rounded-xs"
                             title="Print SPK">
@@ -250,25 +256,45 @@
 
                     {{-- Approve / Reject Actions (only for authorized user on pending step, on REVIEW page only) --}}
                     @if($pendingStep && $canActOnThis && Route::currentRouteName() === 'management.work-order.review')
-                        <div class="px-4 py-3 bg-slate-50 dark:bg-slate-900/40 border-t border-slate-300 dark:border-slate-700 flex flex-wrap items-center gap-2">
-                            <span class="text-[10px] text-slate-500 flex-1">Your turn to review as <strong>{{ $pendingStep->approver_position }}</strong>:</span>
-                            <form action="{{ route('management.work-order.approve', $workOrder->hashed_id) }}" method="POST" class="flex items-center gap-2">
-                                @csrf
-                                <input type="text" name="remarks" placeholder="Optional comments..."
-                                       class="px-2.5 py-1.5 text-[10px] border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-xs w-40 focus:outline-none focus:border-blue-400">
-                                <button type="submit"
-                                        class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] rounded-xs transition-colors cursor-pointer flex items-center gap-1.5">
-                                    <i class="fa-solid fa-check text-[9px]"></i> Approve
-                                </button>
-                            </form>
-                            <form action="{{ route('management.work-order.reject', $workOrder->hashed_id) }}" method="POST"
-                                  onsubmit="return confirm('Reject this SPK? It will be returned to Draft.')">
-                                @csrf
-                                <button type="submit"
-                                        class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-[10px] rounded-xs transition-colors cursor-pointer flex items-center gap-1.5">
-                                    <i class="fa-solid fa-xmark text-[9px]"></i> Reject
-                                </button>
-                            </form>
+                        @php
+                            $isMarketingGMStep = $workOrder->priority === 'URGENT' && 
+                                (str_contains(strtolower($pendingStep->approver_position), 'gm') || 
+                                 str_contains(strtolower($pendingStep->approver_position), 'general manager') ||
+                                 ($pendingStep->department->code ?? '') === 'MKT');
+                        @endphp
+                        <div class="px-4 py-3 bg-slate-50 dark:bg-slate-900/40 border-t border-slate-300 dark:border-slate-700 space-y-2.5">
+                            @if($isMarketingGMStep)
+                                <div class="p-2.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-800 rounded-xs space-y-1.5">
+                                    <label class="block text-[11px] font-bold text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-triangle-exclamation text-amber-600"></i>
+                                        Marketing GM Urgent Confirmation & Reason (Required):
+                                    </label>
+                                    <textarea name="urgent_reason" required rows="2" form="approve-spk-form" placeholder="Tuliskan alasan / catatan konfirmasi mengapa SPK ini URGENT..."
+                                              x-model="urgent_reason"
+                                              class="w-full p-2 text-xs border border-amber-300 dark:border-amber-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-xs focus:outline-none focus:border-amber-500">{{ old('urgent_reason', $workOrder->urgent_reason) }}</textarea>
+                                </div>
+                            @endif
+
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="text-[10px] text-slate-500 flex-1">Your turn to review as <strong>{{ $pendingStep->approver_position }}</strong>:</span>
+                                <form id="approve-spk-form" action="{{ route('management.work-order.approve', $workOrder->hashed_id) }}" method="POST" class="flex items-center gap-2">
+                                    @csrf
+                                    <input type="text" name="remarks" placeholder="Optional general comments..."
+                                           class="px-2.5 py-1.5 text-[10px] border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-xs w-48 focus:outline-none focus:border-blue-400">
+                                    <button type="submit"
+                                            class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] rounded-xs transition-colors cursor-pointer flex items-center gap-1.5">
+                                        <i class="fa-solid fa-check text-[9px]"></i> Approve
+                                    </button>
+                                </form>
+                                <form action="{{ route('management.work-order.reject', $workOrder->hashed_id) }}" method="POST"
+                                      onsubmit="return confirm('Reject this SPK? It will be returned to Draft.')">
+                                    @csrf
+                                    <button type="submit"
+                                            class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-[10px] rounded-xs transition-colors cursor-pointer flex items-center gap-1.5">
+                                        <i class="fa-solid fa-xmark text-[9px]"></i> Reject
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     @elseif($pendingStep && !$canActOnThis)
                         <div class="px-4 py-3 bg-slate-50 dark:bg-slate-900/40 border-t border-slate-300 dark:border-slate-700">
@@ -510,9 +536,6 @@
                                 <th class="p-2 w-10 text-center">Drag</th>
                             @endif
                             <th class="p-2 min-w-48 text-left">Part Number / Name</th>
-                            <th class="p-2 w-20">EO</th>
-                            <th class="p-2 w-28">Class ID</th>
-                            <th class="p-2 w-20">UOM</th>
                             <th class="p-2">Remarks</th>
                             <th class="p-2 w-20 text-center">Action</th>
                         </tr>
@@ -550,9 +573,6 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td class="p-2 text-center" x-text="prod.eo || '—'"></td>
-                                <td class="p-2 text-center" x-text="prod.class_id"></td>
-                                <td class="p-2 text-center" x-text="prod.uom"></td>
                                 <td class="p-2" x-text="prod.remarks || '—'"></td>
                                 <td class="p-2 text-center">
                                     <div class="flex justify-center gap-1">
@@ -581,28 +601,21 @@
 
         {{-- Fixed Footer --}}
         <div class="p-6 pt-4 border-t border-slate-300 dark:border-slate-800 flex justify-end gap-2.5 bg-slate-50 dark:bg-slate-900/60 z-10 flex-none">
-            <a href="{{ isset($workOrder) ? route('management.work-order.index') : route('management.inquiry.show', $inquiry->hashed_id) }}"
+            <a href="{{ isset($workOrder) ? route('management.work-order-tooling.index') : route('management.inquiry.show', $inquiry->hashed_id) }}"
                class="px-4 py-2 text-xs font-bold border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xs transition-colors">
                 {{ isset($workOrder) ? 'Back to WO List' : 'Back to Inquiry' }}
             </a>
             @if(isset($workOrder) && in_array($workOrder->status, ['Draft', 'Pending Approval']) && ($workOrder->is_latest ?? true))
-                <form id="deleteWoForm" action="{{ route('management.work-order.destroy', $workOrder->hashed_id) }}" method="POST" class="inline">
-                    @csrf
-                    @method('DELETE')
-                    <button type="button" onclick="confirmDeleteWO()"
-                            class="px-4 py-2 text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white rounded-xs shadow-xs transition-colors cursor-pointer flex items-center gap-1.5">
-                        <i class="fa-solid fa-trash"></i> Delete WO
-                    </button>
-                </form>
+                <button type="button" onclick="confirmDeleteWO()"
+                        class="px-4 py-2 text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white rounded-xs shadow-xs transition-colors cursor-pointer flex items-center gap-1.5">
+                    <i class="fa-solid fa-trash"></i> Delete WO
+                </button>
             @endif
             @if(isset($workOrder) && $workOrder->status === 'Approved' && $workOrder->is_latest)
-                <form id="reviseWoForm" action="{{ route('management.work-order.revise', $workOrder->hashed_id) }}" method="POST" class="inline">
-                    @csrf
-                    <button type="button" onclick="confirmReviseWO()"
-                            class="px-4 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xs shadow-xs transition-colors cursor-pointer flex items-center gap-1.5">
-                        <i class="fa-solid fa-code-branch"></i> Revise WO (New Revision)
-                    </button>
-                </form>
+                <button type="button" onclick="confirmReviseWO()"
+                        class="px-4 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xs shadow-xs transition-colors cursor-pointer flex items-center gap-1.5">
+                    <i class="fa-solid fa-code-branch"></i> Revise WO (New Revision)
+                </button>
             @endif
             @if($isEditable)
                 <button type="submit"
@@ -623,15 +636,28 @@
         </div>
     @endif
 
-    <div class="w-1/2 h-full overflow-y-auto bg-slate-150 dark:bg-slate-800 transition-[width] duration-200 ease-in-out p-8 flex flex-col items-center border-l border-slate-300 dark:border-slate-700"
+    <div class="wo-preview-panel w-1/2 h-full overflow-auto bg-slate-150 dark:bg-slate-800 transition-[width] duration-200 ease-in-out p-8 flex flex-col items-center border-l border-slate-300 dark:border-slate-700"
          x-show="showPreview" :style="showPreview ? 'width: 50%' : 'width: 0%'">
-        @include('management.work-order.preview')
+        @include('management.work-order.wo2-tooling.preview')
     </div>
     
-    @if(isset($workOrder) && $workOrder->status === 'Draft')
-        <form id="submitApprovalForm" action="{{ route('management.work-order.submit', $workOrder->hashed_id) }}" method="POST" class="hidden">
-            @csrf
-        </form>
+    @if(isset($workOrder))
+        @if(in_array($workOrder->status, ['Draft', 'Pending Approval']) && ($workOrder->is_latest ?? true))
+            <form id="deleteWoForm" action="{{ route('management.work-order-tooling.destroy', $workOrder->hashed_id) }}" method="POST" class="hidden">
+                @csrf
+                @method('DELETE')
+            </form>
+        @endif
+        @if($workOrder->status === 'Approved' && $workOrder->is_latest)
+            <form id="reviseWoForm" action="{{ route('management.work-order.revise', $workOrder->hashed_id) }}" method="POST" class="hidden">
+                @csrf
+            </form>
+        @endif
+        @if($workOrder->status === 'Draft')
+            <form id="submitApprovalForm" action="{{ route('management.work-order.submit', $workOrder->hashed_id) }}" method="POST" class="hidden">
+                @csrf
+            </form>
+        @endif
     @endif
 </div>
 
@@ -991,27 +1017,7 @@
                     {{-- Dynamically populated via Select2 --}}
                 </select>
             </div>
-            <div class="grid grid-cols-3 gap-2">
-                <div>
-                    <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">EO</label>
-                    <input type="text" x-model="activeBom.eo" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
-                </div>
-                <div>
-                    <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Class ID</label>
-                    <select x-model="activeBom.class_id" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
-                        <option value="FG">FG (Finished Good)</option>
-                        <option value="RM">RM (Raw Material)</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">UOM</label>
-                    <select x-model="activeBom.uom" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
-                        <option value="Kg">Kg</option>
-                        <option value="Sheet">Sheet</option>
-                        <option value="Pcs">Pcs</option>
-                    </select>
-                </div>
-            </div>
+
             <div>
                 <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Remarks</label>
                 <textarea x-model="activeBom.remarks" rows="2" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500" placeholder="Remarks..."></textarea>
@@ -1216,6 +1222,9 @@ document.addEventListener('alpine:init', () => {
         subject: @json(isset($workOrder) ? $workOrder->subject : "Pekerjaan New 5P45"),
         department_id: '{{ isset($workOrder) ? $workOrder->department_id : ($departments->first()->id ?? 1) }}',
         priority: '{{ isset($workOrder) ? ($workOrder->priority ?: "STANDARD") : "STANDARD" }}',
+        urgent_reason: @json(isset($workOrder) ? $workOrder->urgent_reason : ''),
+        urgent_confirmed_by: @json(isset($workOrder) ? $workOrder->urgent_confirmed_by : ''),
+        urgent_confirmed_at: @json(isset($workOrder) ? ($workOrder->urgent_confirmed_at ? (is_string($workOrder->urgent_confirmed_at) ? $workOrder->urgent_confirmed_at : $workOrder->urgent_confirmed_at->format('Y-m-d H:i')) : '') : ''),
         selected_processes: @json(isset($workOrder) ? $workOrder->processes->pluck('id') : []),
         process_departments: @json($procDeptsData),
         process_pics: @json((object)$procPicsData),
@@ -1289,17 +1298,18 @@ document.addEventListener('alpine:init', () => {
         usersList: [],
         
         // Pre-populated selected products
-        products: @json(isset($workOrder) ? $workOrder->products->sortBy('sort_order')->values() : $inquiry->products).map(p => ({
+        products: @json(isset($workOrder) ? $workOrder->products->sortBy('sort_order')->values() : (isset($itemsData) ? $itemsData : ($inquiry->products ?? []))).map(p => ({
             id: p.id ?? null,
+            ebd_item_id: p.ebd_item_id ?? null,
             tempId: 'prod_' + Math.random().toString(36).substr(2, 9),
             parent_id: p.parent_id ?? null,
             parentTempId: null,
-            work_order_product_id: p.id ?? null, // WO product PK (null for new WO)
-            inquiry_product_id: @json(isset($workOrder)) ? p.inquiry_product_id : p.id, // FK to mng_inquiry_products
-            customer_code: '{{ isset($workOrder) ? ($workOrder->inquiry->customer->code ?? "") : ($inquiry->customer->code ?? "") }}',
-            model_name: '{{ isset($workOrder) ? ($workOrder->inquiry->projectModel->name ?? "") : ($inquiry->projectModel->name ?? "") }}',
-            customer_part_no: p.customer_part_no ?? '',
-            customer_part_name: p.customer_part_name ?? '',
+            work_order_product_id: p.id ?? null,
+            inquiry_product_id: p.inquiry_product_id ?? null,
+            customer_code: '{{ isset($workOrder) ? ($workOrder->inquiry->customer->code ?? "") : ($ebdHeader->customer->code ?? $inquiry->customer->code ?? "") }}',
+            model_name: '{{ isset($workOrder) ? ($workOrder->inquiry->projectModel->name ?? "") : ($ebdHeader->projectModel->name ?? $inquiry->projectModel->name ?? "") }}',
+            customer_part_no: p.customer_part_no ?? p.part_no ?? '',
+            customer_part_name: p.customer_part_name ?? p.part_name ?? '',
             destination: p.destination ?? '',
             sop_date: p.sop_date ? (typeof p.sop_date === 'string' ? p.sop_date.substring(0, 10) : p.sop_date) : '',
             eol_date: p.eol_date ? (typeof p.eol_date === 'string' ? p.eol_date.substring(0, 10) : p.eol_date) : '',
@@ -1307,11 +1317,11 @@ document.addEventListener('alpine:init', () => {
             annual_volume: p.annual_volume ?? '',
             eo: p.eo ?? '',
             class_id: p.class_id ?? 'FG',
-            uom: p.uom ?? 'Kg',
+            uom: p.uom ?? 'Pcs',
             variant: p.variant ?? '',
-            has_2d_data: p.has_2d_data ?? (p.inquiry_product ? p.inquiry_product.has_2d_data : false),
-            has_3d_data: p.has_3d_data ?? (p.inquiry_product ? p.inquiry_product.has_3d_data : false),
-            has_tech_doc: p.has_tech_doc ?? (p.inquiry_product ? p.inquiry_product.has_tech_doc : false),
+            has_2d_data: Boolean(p.has_2d_data),
+            has_3d_data: Boolean(p.has_3d_data),
+            has_tech_doc: Boolean(p.has_tech_doc),
             remarks: p.remarks ?? ''
         })),
 
@@ -2118,6 +2128,8 @@ document.addEventListener('alpine:init', () => {
                 _token: $('meta[name="csrf-token"]').attr('content'),
                 _method: $form.find('input[name="_method"]').val() || 'POST',
                 inquiry_id: $form.find('input[name="inquiry_id"]').val() || null,
+                ebd_header_id: $form.find('input[name="ebd_header_id"]').val() || null,
+                header_id: $form.find('input[name="header_id"]').val() || 1,
                 department_id: alpine.department_id || '',
                 wo_number: alpine.work_order_no || '',
                 released_at: alpine.released_at || '',
@@ -2132,6 +2144,7 @@ document.addEventListener('alpine:init', () => {
                     return {
                         work_order_product_id: p.work_order_product_id || null,
                         inquiry_product_id: p.inquiry_product_id || null,
+                        ebd_item_id: p.ebd_item_id || null,
                         tempId: p.tempId || '',
                         parentTempId: p.parentTempId || '',
                         customer_part_no: p.customer_part_no || '',
@@ -2151,6 +2164,7 @@ document.addEventListener('alpine:init', () => {
                         has_tech_doc: p.has_tech_doc || false
                     };
                 }),
+                process_departments: alpine.process_departments || {},
                 process_pics: alpine.process_pics || {}
             };
 

@@ -36,7 +36,9 @@ class WorkOrderController extends Controller
             $status = $request->input('status');
             $search = $request->input('search.value');
             
-            $query = WorkOrder::with(['inquiry.customer', 'inquiry.projectModel', 'ownerDepartment', 'processes', 'products', 'approvals']);
+            $query = WorkOrder::where(function($q) {
+                $q->whereNull('wo_type')->orWhere('wo_type', 'SPK_1');
+            })->with(['inquiry.customer', 'inquiry.projectModel', 'ownerDepartment', 'processes', 'products', 'approvals']);
             
             // Apply priority filter
             if ($priority) {
@@ -160,7 +162,7 @@ class WorkOrderController extends Controller
         $finishedCount = $allWorkOrders->filter(fn($w) => in_array($w->status, ['Approved', 'Released']))->count();
         $completionRate = $totalWo > 0 ? round(($finishedCount / $totalWo) * 100) : 0;
         
-        return view('management.work-order.index', compact(
+        return view('management.work-order.wo1.index', compact(
             'totalWo', 'urgentWo', 'standardWo', 'lowWo', 'completionRate'
         ));
     }
@@ -214,7 +216,7 @@ class WorkOrderController extends Controller
         // Fetch master QEMS header
         $woHeader = DB::table('mng_wo_doc_format')->where('is_current', true)->first() ?: DB::table('mng_wo_doc_format')->first();
 
-        return view('management.work-order.form', compact('inquiry', 'departments', 'processes', 'defaultSpkNo', 'approvalRules', 'woHeader', 'users'));
+        return view('management.work-order.wo1.form', compact('inquiry', 'departments', 'processes', 'defaultSpkNo', 'approvalRules', 'woHeader', 'users'));
     }
 
     public function store(WorkOrderRequest $request)
@@ -267,7 +269,7 @@ class WorkOrderController extends Controller
         $users = User::orderBy('name', 'asc')->get();
         $woHeader = $workOrder->docFormat;
 
-        return view('management.work-order.form', compact('workOrder', 'inquiry', 'departments', 'processes', 'approvalRules', 'woHeader', 'users'));
+        return view('management.work-order.wo1.form', compact('workOrder', 'inquiry', 'departments', 'processes', 'approvalRules', 'woHeader', 'users'));
     }
 
     public function edit($id)
@@ -398,8 +400,9 @@ class WorkOrderController extends Controller
 
         // 5. All (Recent + Approved + Rejected + My Tasks + Future Approvals)
         $all = WorkOrder::with(['inquiry', 'ownerDepartment'])
-            ->where(function($q) use ($user, $recent, $myLevelsAndDepts) {
+            ->where(function($q) use ($user, $recent, $myLevelsAndDepts, $myTasks) {
                 $q->whereIn('id', $recent->pluck('id'))
+                  ->orWhereIn('id', $myTasks->pluck('id'))
                   ->orWhereHas('approvals', function($sub) use ($user) {
                       $sub->where('approver_name', $user->name);
                   });
@@ -680,6 +683,7 @@ class WorkOrderController extends Controller
                 'data' => [
                     'id' => $workOrder->id,
                     'hashed_id' => $workOrder->hashed_id,
+                    'wo_type' => $workOrder->wo_type ?? 'SPK_1',
                     'wo_number' => $workOrder->wo_number,
                     'subject' => $workOrder->subject,
                     'status' => $workOrder->status,
@@ -702,19 +706,56 @@ class WorkOrderController extends Controller
                     'due_date_plan' => $workOrder->due_date_plan ? $workOrder->due_date_plan->format('Y-m-d') : '',
                     'due_dates_closed' => (object)$dueDatesClosedData,
                     'remarks' => $workOrder->remarks ?? '',
+                    'urgent_reason' => $workOrder->urgent_reason ?? '',
+                    'urgent_confirmed_by' => $workOrder->urgent_confirmed_by ?? '',
+                    'urgent_confirmed_at' => $workOrder->urgent_confirmed_at ? $workOrder->urgent_confirmed_at->format('d-M-Y H:i') : '',
                     'selected_approval_rule_ids' => $workOrder->selected_approval_rule_ids ?: [],
                     'created_by' => $workOrder->created_by,
                     'created_at' => $workOrder->created_at->format('d-M-Y H:i'),
                     'can_approve' => (function() use ($workOrder) {
                         if ($workOrder->status !== 'Pending Approval') return false;
-                        $pending = $workOrder->approvals()->where('status', 'Pending')->get();
-                        foreach ($pending as $approval) {
+                        $minPendingLevel = $workOrder->approvals()->where('status', 'Pending')->min('approval_level');
+                        if (!$minPendingLevel) return false;
+
+                        $activePending = $workOrder->approvals()
+                            ->where('status', 'Pending')
+                            ->where('approval_level', $minPendingLevel)
+                            ->get();
+
+                        foreach ($activePending as $approval) {
                             $rule = \App\Models\ApprovalConfig::activeFor('SPK')
                                 ->where('approval_level', $approval->approval_level)
                                 ->where('department_id', $approval->department_id)
                                 ->first();
                             if ($rule && $rule->canBeApprovedBy(auth()->user())) {
                                 return true;
+                            }
+                        }
+                        return false;
+                    })(),
+                    'is_marketing_gm_step' => (function() use ($workOrder) {
+                        if ($workOrder->status !== 'Pending Approval' || $workOrder->priority !== 'URGENT') return false;
+                        if (!empty($workOrder->urgent_reason)) return false;
+
+                        $minPendingLevel = $workOrder->approvals()->where('status', 'Pending')->min('approval_level');
+                        if (!$minPendingLevel) return false;
+
+                        $activePending = $workOrder->approvals()
+                            ->where('status', 'Pending')
+                            ->where('approval_level', $minPendingLevel)
+                            ->get();
+
+                        foreach ($activePending as $approval) {
+                            $rule = \App\Models\ApprovalConfig::activeFor('SPK')
+                                ->where('approval_level', $approval->approval_level)
+                                ->where('department_id', $approval->department_id)
+                                ->first();
+                            if ($rule && $rule->canBeApprovedBy(auth()->user())) {
+                                $pos = strtolower($rule->position_label ?? '');
+                                $dept = strtolower($rule->department->code ?? $rule->department->name ?? '');
+                                if (str_contains($pos, 'gm') || str_contains($pos, 'general manager') || str_contains($pos, 'marketing gm') || str_contains($dept, 'mkt') || str_contains($dept, 'marketing')) {
+                                    return true;
+                                }
                             }
                         }
                         return false;

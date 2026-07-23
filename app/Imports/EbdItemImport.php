@@ -146,6 +146,14 @@ class EbdItemImport
                         $parentId = $activeIds[$detectedLevel - 1] ?? null;
                     }
 
+                    $rawYield = $this->val($rawRow, $map, 'mat_yield_ratio');
+                    $yieldRatio = 0;
+                    if ($rawYield !== null && $rawYield !== '') {
+                        $vf = (float) str_replace(['%', ' '], '', $rawYield);
+                        $yieldRatio = ($vf > 0 && $vf <= 1.0) ? $vf * 100 : $vf;
+                        $yieldRatio = (float) round($yieldRatio);
+                    }
+
                     $partData = [
                         'ebd_header_id'   => $this->ebdHeaderId,
                         'parent_id'       => $parentId,
@@ -171,10 +179,11 @@ class EbdItemImport
                         'mat_length'      => (float) ($this->val($rawRow, $map, 'mat_length') ?? 0),
                         'mat_pcs_sheet'   => (int) ($this->val($rawRow, $map, 'mat_pcs_sheet') ?? 0),
                         'mat_weight_pcs'  => (float) ($this->val($rawRow, $map, 'mat_weight_pcs') ?? 0),
-                        'mat_yield_ratio' => (float) ($this->val($rawRow, $map, 'mat_yield_ratio') ?? 0),
+                        'mat_yield_ratio' => $yieldRatio,
 
                         // Standard Part
                         'std_part_no'     => $this->val($rawRow, $map, 'std_part_no'),
+                        'std_part_name'   => $this->val($rawRow, $map, 'std_part_name'),
                         'std_qty'         => (int) ($this->val($rawRow, $map, 'std_qty') ?? 0),
                         'std_uom'         => $this->val($rawRow, $map, 'std_uom'),
 
@@ -208,12 +217,14 @@ class EbdItemImport
                         $updateData = [];
 
                         // Standard Part — may appear on a separate sub-row
-                        $stdPartNo = $this->val($rawRow, $map, 'std_part_no');
-                        $stdQty    = $this->val($rawRow, $map, 'std_qty');
-                        $stdUom    = $this->val($rawRow, $map, 'std_uom');
-                        if ($stdPartNo !== null && $stdPartNo !== '') $updateData['std_part_no'] = $stdPartNo;
-                        if ($stdQty    !== null && $stdQty    !== '') $updateData['std_qty']     = (int) $stdQty;
-                        if ($stdUom    !== null && $stdUom    !== '') $updateData['std_uom']     = $stdUom;
+                        $stdPartNo   = $this->val($rawRow, $map, 'std_part_no');
+                        $stdPartName = $this->val($rawRow, $map, 'std_part_name');
+                        $stdQty      = $this->val($rawRow, $map, 'std_qty');
+                        $stdUom      = $this->val($rawRow, $map, 'std_uom');
+                        if ($stdPartNo   !== null && $stdPartNo   !== '') $updateData['std_part_no']   = $stdPartNo;
+                        if ($stdPartName !== null && $stdPartName !== '') $updateData['std_part_name'] = $stdPartName;
+                        if ($stdQty      !== null && $stdQty      !== '') $updateData['std_qty']       = (int) $stdQty;
+                        if ($stdUom      !== null && $stdUom      !== '') $updateData['std_uom']       = $stdUom;
 
                         // Sketch — may appear on a continuation row
                         $sketch = $this->val($rawRow, $map, 'sketch');
@@ -246,12 +257,13 @@ class EbdItemImport
                         'ebd_item_id'    => $activePartId,
                         'tool_rank'      => $this->val($rawRow, $map, 'tool_rank'),
                         'category'       => $this->val($rawRow, $map, 'tool_category'),
-                        'op'             => $this->val($rawRow, $map, 'tool_op'),
+                        'op'             => $this->val($rawRow, $map, 'tool_op') !== null ? (int) $this->val($rawRow, $map, 'tool_op') : null,
                         'process_name'   => $toolProcessName,
                         'prod_homeline'  => $this->val($rawRow, $map, 'tool_prod_homeline'),
                         'tonnage'        => ($isLevel1 || $isCfOrJig) ? null : (int) ($this->val($rawRow, $map, 'tool_tonnage') ?? 0),
                         'die_height'     => ($isLevel1 || $isCfOrJig) ? null : (float) ($this->val($rawRow, $map, 'tool_die_height') ?? 0),
-                        'cavity'         => (int) ($this->val($rawRow, $map, 'tool_cavity') ?? 1),
+                        'output'         => $this->val($rawRow, $map, 'tool_output') !== null ? (int) $this->val($rawRow, $map, 'tool_output') : null,
+                        'output_type'    => $this->val($rawRow, $map, 'tool_output_type'),
                         'qty'            => (int) ($this->val($rawRow, $map, 'tool_qty') ?? 1),
                         'price_idr'      => (float) ($this->val($rawRow, $map, 'tool_price_idr') ?? 0),
                         'tooling_status' => $this->val($rawRow, $map, 'tooling_status'),

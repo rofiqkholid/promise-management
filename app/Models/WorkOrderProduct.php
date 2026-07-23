@@ -32,6 +32,7 @@ class WorkOrderProduct extends Model
         'has_3d_data',
         'has_tech_doc',
         'remarks',
+        'ebd_item_id',
     ];
 
     protected $casts = [
@@ -50,5 +51,10 @@ class WorkOrderProduct extends Model
     public function inquiryProduct()
     {
         return $this->belongsTo(InquiryProduct::class, 'inquiry_product_id', 'id');
+    }
+
+    public function ebdItem()
+    {
+        return $this->belongsTo(MngEbdItem::class, 'ebd_item_id', 'id');
     }
 }

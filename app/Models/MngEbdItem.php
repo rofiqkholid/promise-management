@@ -38,6 +38,7 @@ class MngEbdItem extends Model
         'mat_yield_ratio',
         // Standard part
         'std_part_no',
+        'std_part_name',
         'std_qty',
         'std_uom',
         // Packing

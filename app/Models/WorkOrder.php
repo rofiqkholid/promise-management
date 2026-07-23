@@ -11,6 +11,17 @@ class WorkOrder extends Model
 {
     use HasFactory, SoftDeletes, HasEncryptedId;
 
+    protected static function booted()
+    {
+        static::deleting(function ($workOrder) {
+            if (method_exists($workOrder, 'isForceDeleting') && !$workOrder->isForceDeleting()) {
+                $suffix = '-DELETED-' . time();
+                $workOrder->wo_number = substr($workOrder->wo_number, 0, 100 - strlen($suffix)) . $suffix;
+                $workOrder->save();
+            }
+        });
+    }
+
     protected $table = 'mng_work_orders';
 
     protected $fillable = [
@@ -32,6 +43,11 @@ class WorkOrder extends Model
         'due_dates_closed',
         'selected_approval_rule_ids',
         'released_at',
+        'urgent_reason',
+        'urgent_confirmed_by',
+        'urgent_confirmed_at',
+        'wo_type',
+        'ebd_header_id',
     ];
 
     protected $casts = [
@@ -43,6 +59,7 @@ class WorkOrder extends Model
         'due_dates_closed' => 'array',
         'selected_approval_rule_ids' => 'array',
         'released_at' => 'datetime',
+        'urgent_confirmed_at' => 'datetime',
     ];
 
     public function inquiry()
@@ -190,6 +207,11 @@ class WorkOrder extends Model
     }
 
 
+
+    public function ebdHeader()
+    {
+        return $this->belongsTo(MngEbdHeader::class, 'ebd_header_id', 'id');
+    }
 
     public function isApprover($user): bool
     {

@@ -63,13 +63,14 @@ class WorkOrderRepository
         $workOrder->processes()->detach();
 
         foreach ($processes as $procId) {
-            $picsForProc = $assignedPics[$procId] ?? [];
+            $deptsForProc = $assignedPics[$procId] ?? [];
             $assignedDepts = [];
-            foreach ($picsForProc as $deptId => $picUserId) {
-                if ($picUserId) {
+            
+            if (is_array($deptsForProc)) {
+                foreach ($deptsForProc as $deptId => $picUserId) {
                     $assignedDepts[] = [
                         'department_id' => (int)$deptId,
-                        'pic_user_id' => (int)$picUserId,
+                        'pic_user_id' => $picUserId ? (int)$picUserId : null,
                         'checked_product_ids' => []
                     ];
                 }

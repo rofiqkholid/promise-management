@@ -53,6 +53,10 @@ class WorkOrderService
             $data['revision_no'] = 0;
             $data['created_by'] = auth()->user() ? auth()->user()->name : 'System';
 
+            if (empty($data['inquiry_id']) || $data['inquiry_id'] == 0 || $data['inquiry_id'] === '0') {
+                $data['inquiry_id'] = null;
+            }
+
             $workOrder = $this->workOrderRepo->create($data);
             
             $this->workOrderRepo->attachProcessesAndPics($workOrder->id, $processes, $assignedPics);
@@ -63,7 +67,8 @@ class WorkOrderService
                 $insertedIds = []; // tempId => database ID
                 
                 foreach ($reqProducts as $idx => $rp) {
-                    $inqProductId = isset($rp['inquiry_product_id']) && is_numeric($rp['inquiry_product_id']) ? (int)$rp['inquiry_product_id'] : null;
+                    $inqProductId = isset($rp['inquiry_product_id']) && is_numeric($rp['inquiry_product_id']) && $rp['inquiry_product_id'] > 0 ? (int)$rp['inquiry_product_id'] : null;
+                    $ebdItemId = isset($rp['ebd_item_id']) && is_numeric($rp['ebd_item_id']) && $rp['ebd_item_id'] > 0 ? (int)$rp['ebd_item_id'] : null;
                     
                     $inqProduct = null;
                     if ($inqProductId) {
@@ -73,8 +78,9 @@ class WorkOrderService
                     $insertData = [
                         'work_order_id' => $workOrder->id,
                         'inquiry_product_id' => $inqProductId,
-                        'customer_name' => $workOrder->inquiry->customer->name ?? '',
-                        'model_name' => $inqProduct->variant ?? $workOrder->inquiry->projectModel->name ?? '',
+                        'ebd_item_id' => $ebdItemId,
+                        'customer_name' => !empty($rp['customer_code']) ? $rp['customer_code'] : ($workOrder->inquiry->customer->code ?? $workOrder->ebdHeader->customer->code ?? ''),
+                        'model_name' => $rp['model_name'] ?? $inqProduct->variant ?? $workOrder->inquiry->projectModel->name ?? $workOrder->ebdHeader->projectModel->name ?? '',
                         'variant' => $inqProduct->variant ?? $rp['variant'] ?? '',
                         'customer_part_no' => $inqProduct->customer_part_no ?? $rp['customer_part_no'] ?? '',
                         'customer_part_name' => $inqProduct->customer_part_name ?? $rp['customer_part_name'] ?? '',
@@ -361,6 +367,14 @@ class WorkOrderService
             }
 
             $pendingApproval->update($updateData);
+
+            if (request()->filled('urgent_reason') && $workOrder->priority === 'URGENT') {
+                $workOrder->update([
+                    'urgent_reason' => request()->input('urgent_reason'),
+                    'urgent_confirmed_by' => $user->name,
+                    'urgent_confirmed_at' => now(),
+                ]);
+            }
 
             // Re-fetch pending approvals at the current level to see if any are left
             $remainingPendingAtCurrentLevel = $workOrder->approvals()

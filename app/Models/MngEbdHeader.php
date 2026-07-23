@@ -6,9 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+use App\Traits\HasEncryptedId;
+
 class MngEbdHeader extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, HasEncryptedId;
 
     protected $table = 'mng_ebd_headers';
 
@@ -33,6 +35,18 @@ class MngEbdHeader extends Model
     public function workOrder()
     {
         return $this->belongsTo(WorkOrder::class, 'wo_id', 'id');
+    }
+
+    public function inquiry()
+    {
+        return $this->hasOneThrough(
+            ProjectInquiry::class,
+            WorkOrder::class,
+            'id',
+            'id',
+            'wo_id',
+            'inquiry_id'
+        );
     }
 
     public function customer()

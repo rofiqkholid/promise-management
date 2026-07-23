@@ -20,7 +20,8 @@ class MngEbdToolingProcess extends Model
         'prod_homeline',
         'tonnage',
         'die_height',
-        'cavity',
+        'output',
+        'output_type',
         'qty',
         'price_idr',
         'tooling_status',
@@ -28,9 +29,10 @@ class MngEbdToolingProcess extends Model
     ];
 
     protected $casts = [
+        'op'         => 'integer',
         'tonnage'    => 'integer',
         'die_height' => 'decimal:2',
-        'cavity'     => 'integer',
+        'output'     => 'integer',
         'qty'        => 'integer',
         'price_idr'  => 'decimal:2',
     ];

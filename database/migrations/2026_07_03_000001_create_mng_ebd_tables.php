@@ -71,6 +71,8 @@ return new class extends Migration
             // Standard Part (merged into master item table)
             $table->string('std_part_no', 100)->nullable()
                 ->comment('Part No for standard/buy-out components');
+            $table->string('std_part_name', 255)->nullable()
+                ->comment('Name for standard/buy-out components');
             $table->integer('std_qty')->nullable()
                 ->comment('Required quantity for standard components');
             $table->string('std_uom', 50)->nullable()
@@ -105,14 +107,15 @@ return new class extends Migration
 
             $table->string('tool_rank', 10)->nullable();
             $table->string('category', 50)->nullable();
-            $table->string('op', 20)->nullable();
+            $table->integer('op')->nullable();
             $table->string('process_name', 100)->nullable();
             $table->string('prod_homeline', 50)->nullable();
             $table->integer('tonnage')->nullable()
                 ->comment('Null if Level 1 or CF/Jig process');
             $table->decimal('die_height', 10, 2)->nullable()
                 ->comment('Null if Level 1 or CF/Jig process');
-            $table->integer('cavity')->nullable();
+            $table->integer('output')->nullable();
+            $table->string('output_type', 50)->nullable();
             $table->integer('qty')->nullable();
             $table->decimal('price_idr', 15, 2)->nullable();
             $table->string('tooling_status', 50)->nullable();

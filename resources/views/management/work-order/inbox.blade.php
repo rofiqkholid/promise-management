@@ -171,10 +171,11 @@
                     </div>
                     
                     {{-- Scrollable preview content --}}
-                    <div class="flex-1 overflow-y-auto p-4 bg-slate-100 dark:bg-slate-950 flex flex-col items-center min-h-0">
+                    <div class="flex-1 overflow-auto p-4 bg-slate-100 dark:bg-slate-950 flex flex-col items-center min-h-0">
                         {{-- Tab 1: WO Document Preview --}}
                         <div x-show="activeRightTab === 'doc'" class="w-full max-w-[760px]" :key="selectedHashedId" 
                              x-data="{ 
+                                 get wo_type() { return detailData.wo_type; },
                                  get document_no() { return detailData.document_no; },
                                  get doc_department() { return detailData.doc_department; },
                                  get doc_publish_date() { return detailData.doc_publish_date; },
@@ -182,6 +183,9 @@
                                  get page_hal() { return detailData.page_hal; },
                                  get work_order_no() { return detailData.wo_number; },
                                  get priority() { return detailData.priority; },
+                                 get urgent_reason() { return detailData.urgent_reason; },
+                                 get urgent_confirmed_by() { return detailData.urgent_confirmed_by; },
+                                 get urgent_confirmed_at() { return detailData.urgent_confirmed_at; },
                                  get products() { return detailData.products; },
                                  get first_sample_date() { return detailData.first_sample_date; },
                                  get due_date_plan() { return detailData.due_date_plan; },
@@ -198,7 +202,12 @@
                                  },
                                  computedDocRevisionNo() { return String(this.doc_revision_no).padStart(2, '0'); }
                              }">
-                            @include('management.work-order.preview')
+                            <div x-show="detailData && detailData.wo_type === 'SPK_2_TOOLING'">
+                                @include('management.work-order.wo2-tooling.preview')
+                            </div>
+                            <div x-show="!detailData || detailData.wo_type !== 'SPK_2_TOOLING'">
+                                @include('management.work-order.wo1.preview')
+                            </div>
                         </div>
                                     {{-- Tab 2: PIC Checklist --}}
                         <div x-show="activeRightTab === 'checklist'" class="w-full max-w-[760px] space-y-4">
@@ -313,29 +322,49 @@
                     <div class="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 flex-none select-none shadow-lg">
                         {{-- 1. Document / Approval Tab Footer --}}
                         <template x-if="activeRightTab === 'doc' && detailData.can_approve">
-                            <div class="flex items-end gap-2 w-full">
-                                {{-- Remarks --}}
-                                <div class="flex flex-col gap-1 flex-1">
-                                    <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Remarks</span>
-                                    <input type="text" x-model="approvalRemarks" placeholder="Add approval comments/remarks here..."
-                                           class="w-full px-2.5 py-1.5 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-xs focus:outline-none focus:border-[#0c4da2] dark:focus:border-blue-500">
-                                </div>
-                                {{-- Due Date Closed --}}
-                                <div class="flex flex-col gap-1 shrink-0" x-show="isLastApprovalLevel()">
-                                    <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Due Date Closed</span>
-                                    <input type="date" x-model="dueDateClosed"
-                                           class="px-2.5 py-1.5 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-xs focus:outline-none focus:border-[#0c4da2] dark:focus:border-blue-500">
-                                </div>
-                                {{-- Action Buttons --}}
-                                <div class="flex items-center gap-1.5 shrink-0">
-                                    <button type="button" @click="submitApproval('approve')"
-                                            class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xs cursor-pointer flex items-center gap-1.5 transition-colors">
-                                        <i class="fa-solid fa-check"></i> Approve
-                                    </button>
-                                    <button type="button" @click="submitApproval('reject')"
-                                            class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xs cursor-pointer flex items-center gap-1.5 transition-colors">
-                                        <i class="fa-solid fa-xmark"></i> Reject
-                                    </button>
+                            <div class="flex flex-col gap-2.5 w-full">
+                                {{-- Redesigned Premium Urgent Priority Confirmation for Marketing GM --}}
+                                <template x-if="detailData.is_marketing_gm_step">
+                                    <div class="p-3 bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/80 rounded-xs space-y-2 w-full">
+                                        <div class="flex items-center justify-between text-xs">
+                                            <label class="flex items-center gap-2 font-bold text-rose-900 dark:text-rose-300 cursor-pointer select-none">
+                                                <input type="checkbox" x-model="urgentConfirmed" class="w-4 h-4 text-rose-600 focus:ring-rose-500 rounded-xs cursor-pointer accent-rose-600">
+                                                <span>I confirm this Work Order is URGENT</span>
+                                            </label>
+                                            <span class="text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider">Marketing GM Confirmation</span>
+                                        </div>
+                                        <div class="flex flex-col gap-1">
+                                            <span class="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Urgent Reason / Note <span class="text-rose-500">*</span></span>
+                                            <input type="text" x-model="urgentReason" placeholder="Enter reason why this SPK is urgent..."
+                                                   class="w-full px-2.5 py-1.5 text-xs border border-rose-300 dark:border-rose-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-xs focus:outline-none focus:border-rose-500">
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <div class="flex items-end gap-2 w-full">
+                                    {{-- Remarks --}}
+                                    <div class="flex flex-col gap-1 flex-1">
+                                        <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Remarks</span>
+                                        <input type="text" x-model="approvalRemarks" placeholder="Add approval comments/remarks here..."
+                                               class="w-full px-2.5 py-1.5 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-xs focus:outline-none focus:border-[#0c4da2] dark:focus:border-blue-500">
+                                    </div>
+                                    {{-- Due Date Closed --}}
+                                    <div class="flex flex-col gap-1 shrink-0" x-show="isLastApprovalLevel()">
+                                        <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Due Date Closed</span>
+                                        <input type="date" x-model="dueDateClosed"
+                                               class="px-2.5 py-1.5 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-xs focus:outline-none focus:border-[#0c4da2] dark:focus:border-blue-500">
+                                    </div>
+                                    {{-- Action Buttons --}}
+                                    <div class="flex items-center gap-1.5 shrink-0">
+                                        <button type="button" @click="submitApproval('approve')"
+                                                class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xs cursor-pointer flex items-center gap-1.5 transition-colors">
+                                            <i class="fa-solid fa-check"></i> Approve
+                                        </button>
+                                        <button type="button" @click="submitApproval('reject')"
+                                                class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xs cursor-pointer flex items-center gap-1.5 transition-colors">
+                                            <i class="fa-solid fa-xmark"></i> Reject
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </template>
@@ -373,6 +402,23 @@
                                 You do not have any active PIC tasks on this Work Order.
                             </div>
                         </template>
+
+                        {{-- 3. Quotation Tooling Download (Visible in Footer ONLY when Approval is Finished) --}}
+                        <template x-if="detailData && detailData.wo_type === 'SPK_2_TOOLING' && (detailData.status === 'Approved' || detailData.status === 'Released' || (detailData.approvals && detailData.approvals.length > 0 && detailData.approvals.every(a => a.status === 'Approved')))">
+                            <div class="flex items-center justify-between gap-3 pt-2.5 mt-2.5 border-t border-slate-200 dark:border-slate-700/80 w-full">
+                                <span class="text-xs font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-circle-check text-sm"></i>
+                                    <span>Approval Completed — Attachment Ready</span>
+                                </span>
+                                <a :href="WO_BASE_URL + '/work-order-tooling/' + selectedHashedId + '/quotation'"
+                                   target="_blank"
+                                   class="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xs shadow-xs hover:shadow transition-all shrink-0"
+                                   title="Download Quotation Tooling Attachment">
+                                    <i class="fa-solid fa-file-excel text-base"></i>
+                                    <span>Download Quotation Tooling</span>
+                                </a>
+                            </div>
+                        </template>
                     </div>
                 </div>
             </template>
@@ -395,6 +441,8 @@ function outlookInbox() {
         loadingDetail: false,
         activeRightTab: 'doc',
         approvalRemarks: '',
+        urgentConfirmed: false,
+        urgentReason: '',
         dueDateClosed: '',
         expandedDepts: {},
         checklistSearchQuery: '',
@@ -515,7 +563,8 @@ function outlookInbox() {
                 'Draft': 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-450 border border-blue-200 dark:border-blue-800/80',
                 'Pending Approval': 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-450 border border-amber-200 dark:border-amber-800/80',
                 'Approved': 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-450 border border-emerald-200 dark:border-emerald-800/80',
-                'Released': 'bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-450 border border-sky-200 dark:border-sky-800/80'
+                'Released': 'bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-450 border border-sky-200 dark:border-sky-800/80',
+                'Rejected': 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-450 border border-rose-200 dark:border-rose-800/80'
             }[status] || 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-455 border border-slate-200 dark:border-slate-700';
         },
         
@@ -549,6 +598,8 @@ function outlookInbox() {
                     this.loadingDetail = false;
                     if (json.success) {
                         this.detailData = json.data;
+                        this.urgentReason = this.detailData.urgent_reason || '';
+                        this.urgentConfirmed = !!(this.detailData.urgent_reason || this.detailData.urgent_confirmed_by);
                         this.activeRightTab = 'doc'; // Default tab always display WO document
                         
                         // Sort departments (my task first) and set default expanded state
@@ -622,6 +673,16 @@ function outlookInbox() {
         },
         
         submitApproval(action) {
+            if (action === 'approve' && this.detailData.is_marketing_gm_step) {
+                if (!this.urgentConfirmed) {
+                    this.showToast('Please check "Confirm Priority" before approving.', 'error');
+                    return;
+                }
+                if (!this.urgentReason.trim()) {
+                    this.showToast('Please enter the urgent confirmation note.', 'error');
+                    return;
+                }
+            }
             const actionText = action === 'approve' ? 'approve' : 'reject';
             const actionCapitalized = action === 'approve' ? 'Approve' : 'Reject';
             const confirmColor = action === 'approve' ? '#10b981' : '#ef4444'; // Emerald for approve, Rose for reject
@@ -639,6 +700,9 @@ function outlookInbox() {
                     fd.append('remarks', this.approvalRemarks);
                     if (action === 'approve') {
                         fd.append('due_date_closed', this.dueDateClosed);
+                        if (this.urgentReason) {
+                            fd.append('urgent_reason', this.urgentReason);
+                        }
                     }
                     
                     fetch(url, {

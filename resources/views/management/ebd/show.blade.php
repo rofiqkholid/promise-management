@@ -235,6 +235,10 @@
                             class="card-tab-btn py-2.5 text-xs font-semibold border-b-2 border-transparent text-slate-650 hover:text-slate-800 dark:hover:text-slate-300 -mb-px transition-all">
                         Add Process (<span id="addprocess-badge-count">0</span>)
                     </button>
+                    <button type="button" data-tab="stdpart"
+                            class="card-tab-btn py-2.5 text-xs font-semibold border-b-2 border-transparent text-slate-650 hover:text-slate-800 dark:hover:text-slate-300 -mb-px transition-all">
+                        Standard Parts
+                    </button>
                     <button type="button" data-tab="packing"
                             class="card-tab-btn py-2.5 text-xs font-semibold border-b-2 border-transparent text-slate-650 hover:text-slate-800 dark:hover:text-slate-300 -mb-px transition-all">
                         Packing & Transport
@@ -258,7 +262,7 @@
                             {{-- Part Specs Grid --}}
                             <div>
                                 <h4 class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3 border-b border-slate-300 dark:border-slate-600 pb-1.5">Part Dimensions & Quantities</h4>
-                                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs">
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
                                     <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-xs">
                                         <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">PART RANK</span>
                                         <span id="info-part-rank" class="font-medium text-slate-900 dark:text-slate-100 text-sm">—</span>
@@ -275,13 +279,21 @@
                                         <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">PCS/MONTH</span>
                                         <span id="spec-pcs-month" class="font-medium text-slate-900 dark:text-slate-100 text-sm">—</span>
                                     </div>
-                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-xs col-span-2 sm:col-span-1">
-                                        <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">DIMENSIONS (W×L×H mm)</span>
-                                        <span id="spec-dimensions" class="font-medium text-slate-900 dark:text-slate-100 text-sm">—</span>
+                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-xs">
+                                        <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">WIDTH (mm)</span>
+                                        <span id="spec-width" class="font-medium text-slate-900 dark:text-slate-100 text-sm font-mono">—</span>
+                                    </div>
+                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-xs">
+                                        <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">LENGTH (mm)</span>
+                                        <span id="spec-length" class="font-medium text-slate-900 dark:text-slate-100 text-sm font-mono">—</span>
+                                    </div>
+                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-xs">
+                                        <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">HEIGHT (mm)</span>
+                                        <span id="spec-height" class="font-medium text-slate-900 dark:text-slate-100 text-sm font-mono">—</span>
                                     </div>
                                     <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-xs">
                                         <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">WEIGHT (kg)</span>
-                                        <span id="spec-weight" class="font-medium text-slate-900 dark:text-slate-100 text-sm">—</span>
+                                        <span id="spec-weight" class="font-medium text-slate-900 dark:text-slate-100 text-sm font-mono">—</span>
                                     </div>
                                 </div>
                             </div>
@@ -289,7 +301,7 @@
                             {{-- Material Specifications --}}
                             <div>
                                 <h4 class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3 border-b border-slate-300 dark:border-slate-600 pb-1.5">Material Details</h4>
-                                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs">
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
                                     <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-xs">
                                         <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">MATERIAL SPEC</span>
                                         <span id="mat-spec" class="font-semibold text-emerald-700 dark:text-emerald-300 text-sm">—</span>
@@ -299,8 +311,12 @@
                                         <span id="mat-thick" class="font-medium text-slate-900 dark:text-slate-100 text-sm font-mono">—</span>
                                     </div>
                                     <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-xs">
-                                        <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">SHEET WIDTH × LENGTH</span>
-                                        <span id="mat-size" class="font-medium text-slate-900 dark:text-slate-100 text-sm font-mono">—</span>
+                                        <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">SHEET WIDTH (mm)</span>
+                                        <span id="mat-width" class="font-medium text-slate-900 dark:text-slate-100 text-sm font-mono">—</span>
+                                    </div>
+                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-xs">
+                                        <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">SHEET LENGTH (mm)</span>
+                                        <span id="mat-length" class="font-medium text-slate-900 dark:text-slate-100 text-sm font-mono">—</span>
                                     </div>
                                     <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-xs">
                                         <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">PCS/SHEET</span>
@@ -313,21 +329,6 @@
                                     <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-xs">
                                         <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">YIELD RATIO</span>
                                         <span id="mat-yield" class="font-semibold text-indigo-600 dark:text-indigo-400 text-sm">—</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {{-- Standard Parts --}}
-                            <div>
-                                <h4 class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3 border-b border-slate-300 dark:border-slate-600 pb-1.5">Standard Parts</h4>
-                                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs">
-                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-xs">
-                                        <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">STD PART NO</span>
-                                        <span id="std-part-no" class="font-medium text-slate-900 dark:text-slate-100 text-sm font-mono">—</span>
-                                    </div>
-                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-xs">
-                                        <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">STD QTY</span>
-                                        <span id="std-qty" class="font-medium text-slate-900 dark:text-slate-100 text-sm">—</span>
                                     </div>
                                 </div>
                             </div>
@@ -398,7 +399,8 @@
                                     <th class="p-2.5">Homeline</th>
                                     <th class="p-2.5 text-right">Tonnage</th>
                                     <th class="p-2.5 text-right">DH</th>
-                                    <th class="p-2.5 text-center">Cav</th>
+                                    <th class="p-2.5 text-center">Output</th>
+                                    <th class="p-2.5 text-center">Output Type</th>
                                     <th class="p-2.5 text-center">Qty</th>
                                     <th class="p-2.5 text-right">Price</th>
                                     <th class="p-2.5">Status</th>
@@ -437,6 +439,36 @@
                                 {{-- Filled via JS --}}
                             </tbody>
                         </table>
+                    </div>
+                </div>
+
+                {{-- TAB: STANDARD PARTS --}}
+                <div id="card-tab-stdpart" class="card-tab-panel hidden space-y-4">
+                    <div class="flex justify-between items-center pb-2 border-b border-slate-200 dark:border-slate-700">
+                        <div>
+                            <h4 class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                                <i class="fa-solid fa-puzzle-piece text-indigo-500"></i> Standard Parts
+                            </h4>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">List of standard parts and components for this part</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xs p-4 shadow-sm">
+                        <div class="p-3 bg-slate-100/50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xs">
+                            <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">STD PART NO</span>
+                            <span id="std-part-no" class="font-semibold text-indigo-600 dark:text-indigo-400 text-sm font-mono">—</span>
+                        </div>
+                        <div class="p-3 bg-slate-100/50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xs">
+                            <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">STD PART NAME</span>
+                            <span id="std-part-name" class="font-semibold text-slate-900 dark:text-slate-100 text-sm">—</span>
+                        </div>
+                        <div class="p-3 bg-slate-100/50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xs">
+                            <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">STD QUANTITY</span>
+                            <span id="std-qty" class="font-semibold text-emerald-600 dark:text-emerald-400 text-sm">—</span>
+                        </div>
+                        <div class="p-3 bg-slate-100/50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xs">
+                            <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">UNIT OF MEASURE (UOM)</span>
+                            <span id="std-uom" class="font-semibold text-slate-800 dark:text-slate-200 text-sm font-mono">—</span>
+                        </div>
                     </div>
                 </div>
 
@@ -576,6 +608,7 @@
                         </div>
                     </div>
                 </div>
+            </div>
 
 {{-- ===== IMPORT MODAL ===== --}}
 <div id="import-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm">
@@ -825,7 +858,7 @@
                 <!-- Section 4: Packing & Standard Parts & Sketch Drawing -->
                 <div>
                     <h3 class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-2.5 pb-1 border-b border-slate-200 dark:border-slate-700">Packing & Drawings</h3>
-                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                    <div class="grid grid-cols-2 sm:grid-cols-6 gap-3">
                         <div>
                             <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Packing Type</label>
                             <input type="text" name="packing_type" id="part-input-packing-type" placeholder="e.g. Box" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
@@ -837,6 +870,10 @@
                         <div>
                             <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Std Part No</label>
                             <input type="text" name="std_part_no" id="part-input-std-no" placeholder="e.g. Std-01" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Std Part Name</label>
+                            <input type="text" name="std_part_name" id="part-input-std-name" placeholder="e.g. Bolt M8x25" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                         </div>
                         <div>
                             <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Std Qty</label>
@@ -914,8 +951,8 @@
                         <input type="text" name="category" id="tooling-input-cat" placeholder="e.g. Press" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                     </div>
                     <div>
-                        <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">OP <span class="text-rose-500">*</span></label>
-                        <input type="text" name="op" id="tooling-input-op" required placeholder="e.g. OP10" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                        <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">OP</label>
+                        <input type="number" step="1" name="op" id="tooling-input-op" placeholder="e.g. 10" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                     </div>
                     <div>
                         <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Process Name <span class="text-rose-500">*</span></label>
@@ -940,10 +977,14 @@
                         <input type="text" name="tooling_status" id="tooling-input-status" placeholder="e.g. New" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                     </div>
                 </div>
-                <div class="grid grid-cols-3 gap-4">
+                <div class="grid grid-cols-4 gap-4">
                     <div>
-                        <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Cavity</label>
-                        <input type="number" name="cavity" id="tooling-input-cav" min="1" value="1" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                        <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Output</label>
+                        <input type="number" name="output" id="tooling-input-output" min="1" placeholder="e.g. 1" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Output Type</label>
+                        <input type="text" name="output_type" id="tooling-input-output-type" placeholder="e.g. Cav, Part" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                     </div>
                     <div>
                         <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Qty</label>
@@ -1046,7 +1087,7 @@ $(function () {
         $('#card-tab-' + target).removeClass('hidden');
 
         // Show/hide Edit Specs button based on active tab
-        if ((target === 'specs' || target === 'packing') && currentSelectedItemId) {
+        if ((target === 'specs' || target === 'packing' || target === 'stdpart') && currentSelectedItemId) {
             $('#btn-edit-specs').removeClass('hidden');
         } else {
             $('#btn-edit-specs').addClass('hidden');
@@ -1063,7 +1104,7 @@ $(function () {
         currentSelectedItemId = itemId;
         localStorage.setItem('ebd_active_item_id', itemId);
         const activeTab = $('.card-tab-btn.active-tab').data('tab') || 'specs';
-        if (activeTab === 'specs' || activeTab === 'packing') {
+        if (activeTab === 'specs' || activeTab === 'packing' || activeTab === 'stdpart') {
             $('#btn-edit-specs').removeClass('hidden');
         } else {
             $('#btn-edit-specs').addClass('hidden');
@@ -1091,27 +1132,25 @@ $(function () {
         $('#spec-qty-unit').text(item.qty_unit ?? 1);
         $('#spec-pcs-month').text(item.pcs_month ? Number(item.pcs_month).toLocaleString('id-ID') : '0');
         
-        const w = item.width ? Number(item.width).toFixed(1) : '0';
-        const l = item.length ? Number(item.length).toFixed(1) : '0';
-        const h = item.height ? Number(item.height).toFixed(1) : '0';
-        $('#spec-dimensions').text(`${w} × ${l} × ${h}`);
-        $('#spec-weight').text(item.weight ? Number(item.weight).toFixed(3) : '0.000');
+        $('#spec-width').text(item.width ? Number(item.width).toFixed(1) + ' mm' : '—');
+        $('#spec-length').text(item.length ? Number(item.length).toFixed(1) + ' mm' : '—');
+        $('#spec-height').text(item.height ? Number(item.height).toFixed(1) + ' mm' : '—');
+        $('#spec-weight').text(item.weight ? Number(item.weight).toFixed(3) + ' kg' : '—');
 
         $('#mat-spec').text(item.mat_spec || '—');
         $('#mat-thick').text(item.mat_thick ? Number(item.mat_thick).toFixed(2) + ' mm' : '—');
-        
-        const mw = item.mat_width ? Number(item.mat_width).toFixed(0) : '0';
-        const ml = item.mat_length ? Number(item.mat_length).toFixed(0) : '0';
-        $('#mat-size').text(`${mw} × ${ml} mm`);
-        
+        $('#mat-width').text(item.mat_width ? Number(item.mat_width).toFixed(0) + ' mm' : '—');
+        $('#mat-length').text(item.mat_length ? Number(item.mat_length).toFixed(0) + ' mm' : '—');
         $('#mat-pcs-sheet').text(item.mat_pcs_sheet ?? '—');
         $('#mat-weight-pcs').text(item.mat_weight_pcs ? Number(item.mat_weight_pcs).toFixed(3) + ' kg' : '—');
-        $('#mat-yield').text(item.mat_yield_ratio ? Number(item.mat_yield_ratio).toFixed(2) + '%' : '—');
+        $('#mat-yield').text(item.mat_yield_ratio ? Math.round(item.mat_yield_ratio) + '%' : '—');
 
         $('#pack-type').text(item.packing_type || '—');
         $('#pack-pcs').text(item.pcs_packing ? Number(item.pcs_packing).toLocaleString('id-ID') : '—');
         $('#std-part-no').text(item.std_part_no || '—');
-        $('#std-qty').text(item.std_qty ? `${item.std_qty} ${item.std_uom || ''}`.trim() : '—');
+        $('#std-part-name').text(item.std_part_name || '—');
+        $('#std-qty').text(item.std_qty ? Number(item.std_qty).toLocaleString('id-ID') : '—');
+        $('#std-uom').text(item.std_uom || '—');
 
         // Transport Cost
         $('#part-vol-m2').text(item.part_vol_m2 ? Number(item.part_vol_m2).toFixed(4) : '—');
@@ -1172,7 +1211,8 @@ $(function () {
                         <td class="p-2 text-slate-600 dark:text-slate-400">${tp.prod_homeline || '—'}</td>
                         <td class="p-2 text-right font-mono">${tonnageVal}</td>
                         <td class="p-2 text-right font-mono">${heightVal}</td>
-                        <td class="p-2 text-center">${tp.cavity ?? 1}</td>
+                        <td class="p-2 text-center font-mono">${tp.output !== null && tp.output !== undefined && tp.output !== '' ? tp.output : '—'}</td>
+                        <td class="p-2 text-center font-semibold text-slate-600 dark:text-slate-400">${tp.output_type || '—'}</td>
                         <td class="p-2 text-center">${tp.qty ?? 1}</td>
                         <td class="p-2 text-right font-bold font-mono text-slate-800 dark:text-slate-300">${priceVal}</td>
                         <td class="p-2">
@@ -1608,7 +1648,7 @@ $(function () {
             
             $('#part-input-mat-spec').val(data.mat_spec || '');
             $('#part-input-mat-thick').val(data.mat_thick ? Number(data.mat_thick).toFixed(2) : '0.00');
-            $('#part-input-mat-yield').val(data.mat_yield_ratio ? Number(data.mat_yield_ratio).toFixed(2) : '0.00');
+            $('#part-input-mat-yield').val(data.mat_yield_ratio ? Math.round(data.mat_yield_ratio) : '0');
             
             const mw = data.mat_width ? Number(data.mat_width).toFixed(0) : '0';
             const ml = data.mat_length ? Number(data.mat_length).toFixed(0) : '0';
@@ -1620,6 +1660,7 @@ $(function () {
             $('#part-input-packing-type').val(data.packing_type || '');
             $('#part-input-pcs-packing').val(data.pcs_packing || '0');
             $('#part-input-std-no').val(data.std_part_no || '');
+            $('#part-input-std-name').val(data.std_part_name || '');
             $('#part-input-std-qty').val(data.std_qty || '0');
             $('#part-input-std-uom').val(data.std_uom || '');
         } else {
@@ -1748,13 +1789,15 @@ $(function () {
             $('#tooling-input-ton').val(data.tonnage || '');
             $('#tooling-input-height').val(data.die_height || '');
             $('#tooling-input-status').val(data.tooling_status || '');
-            $('#tooling-input-cav').val(data.cavity ?? 1);
+            $('#tooling-input-output').val(data.output !== null && data.output !== undefined ? data.output : '');
+            $('#tooling-input-output-type').val(data.output_type || '');
             $('#tooling-input-qty').val(data.qty ?? 1);
             $('#tooling-input-price').val(data.price_idr ? Number(data.price_idr).toLocaleString('id-ID') : '0');
         } else {
             $('#tooling-modal-title').text('Add Tooling Process');
             $('#tooling-id').val('');
-            $('#tooling-input-cav').val(1);
+            $('#tooling-input-output').val('');
+            $('#tooling-input-output-type').val('');
             $('#tooling-input-qty').val(1);
         }
     }
