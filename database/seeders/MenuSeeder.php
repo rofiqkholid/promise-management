@@ -124,13 +124,29 @@ class MenuSeeder extends Seeder
                 ]
             );
 
-            // 3c. WO Inbox (submenu)
+            // 3c. SPK 2 Fastener (submenu)
+            DB::table('menus')->updateOrInsert(
+                ['route' => 'management.work-order-fastener.index', 'scope_id' => 'app_management'],
+                [
+                    'title'      => 'SPK 2 Fastener',
+                    'icon'       => 'fa-solid fa-screw',
+                    'sort_order' => 3,
+                    'level'      => 2,
+                    'parent_id'  => $woParentId,
+                    'is_active'  => true,
+                    'is_visible' => true,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            );
+
+            // 3d. WO Inbox (submenu)
             DB::table('menus')->updateOrInsert(
                 ['route' => 'management.work-order.approval-inbox', 'scope_id' => 'app_management'],
                 [
                     'title'      => 'WO Inbox',
                     'icon'       => 'fa-solid fa-envelope-open-text',
-                    'sort_order' => 3,
+                    'sort_order' => 4,
                     'level'      => 2,
                     'parent_id'  => $woParentId,
                     'is_active'  => true,
@@ -185,13 +201,29 @@ class MenuSeeder extends Seeder
             );
         }
 
-        // 5. Approval Config
+        // 5. Quotation Tooling (Level 1 Standalone Menu)
+        DB::table('menus')->updateOrInsert(
+            ['route' => 'management.tooling-quotation.index', 'scope_id' => 'app_management'],
+            [
+                'title'      => 'Quotation Tooling',
+                'icon'       => 'fa-solid fa-code-compare',
+                'sort_order' => 5,
+                'level'      => 1,
+                'parent_id'  => null,
+                'is_active'  => true,
+                'is_visible' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        );
+
+        // 6. Approval Config
         DB::table('menus')->updateOrInsert(
             ['route' => 'management.approval-config.index', 'scope_id' => 'app_management'],
             [
                 'title'      => 'Approval Config',
                 'icon'       => 'fa-solid fa-user-check',
-                'sort_order' => 5,
+                'sort_order' => 6,
                 'level'      => 1,
                 'parent_id'  => null,
                 'is_active'  => true,

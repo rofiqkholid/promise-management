@@ -116,6 +116,8 @@ class WorkOrderToolingController extends Controller
                     'total_approvals' => $totalApprovals,
                     'approval_percent' => $approvalPercent,
                     'hashed_id' => $this->encryptId($wo->id),
+                    'ebd_header_id' => $wo->ebd_header_id,
+                    'quotation_url' => route('management.work-order-tooling.quotation', $this->encryptId($wo->id)),
                     'show_url' => route('management.work-order-tooling.show', $this->encryptId($wo->id))
                 ];
             }

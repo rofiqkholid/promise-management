@@ -54,7 +54,7 @@ class QuotationToolingExport implements FromView, WithTitle, WithEvents
         $items = $this->getItems();
         $supplierName = $ebdHeader->customer->name ?? $workOrder->inquiry->customer->name ?? 'PT. SUMMIT ADYAWINSA INDONESIA';
 
-        return view('management.work-order.wo2-tooling.quotation', [
+        return view('management.export.quotation-tooling', [
             'workOrder' => $workOrder,
             'ebdHeader' => $ebdHeader,
             'items' => $items,

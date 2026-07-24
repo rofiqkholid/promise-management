@@ -205,7 +205,10 @@
                             <div x-show="detailData && detailData.wo_type === 'SPK_2_TOOLING'">
                                 @include('management.work-order.wo2-tooling.preview')
                             </div>
-                            <div x-show="!detailData || detailData.wo_type !== 'SPK_2_TOOLING'">
+                            <div x-show="detailData && detailData.wo_type === 'SPK_2_FASTENER'">
+                                @include('management.work-order.wo2-fastener.preview')
+                            </div>
+                            <div x-show="!detailData || (detailData.wo_type !== 'SPK_2_TOOLING' && detailData.wo_type !== 'SPK_2_FASTENER')">
                                 @include('management.work-order.wo1.preview')
                             </div>
                         </div>

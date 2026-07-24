@@ -59,6 +59,11 @@ class MngEbdHeader extends Model
         return $this->belongsTo(ProjectModel::class, 'model_id', 'id');
     }
 
+    public function quotations()
+    {
+        return $this->hasMany(ToolingQuotation::class, 'ebd_header_id');
+    }
+
     /**
      * All EBD items (BOM components) belonging to this header.
      */

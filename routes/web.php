@@ -6,6 +6,7 @@ use App\Http\Controllers\FeasibilityStudy\InquiryController;
 use App\Http\Controllers\Management\AssessmentConfigController;
 use App\Http\Controllers\FeasibilityStudy\WorkOrderController;
 use App\Http\Controllers\FeasibilityStudy\WorkOrderToolingController;
+use App\Http\Controllers\FeasibilityStudy\WorkOrderFastenerController;
 use App\Http\Controllers\Management\ApprovalConfigController;
 use App\Http\Controllers\Management\CalendarController;
 use App\Http\Controllers\FeasibilityStudy\EbdController;
@@ -105,6 +106,14 @@ Route::middleware('auth')->prefix('management')->name('management.')->group(func
         Route::get('work-order-tooling/{id}/quotation', [WorkOrderToolingController::class, 'exportQuotation'])->name('work-order-tooling.quotation');
         Route::match(['get', 'post'], 'work-order-tooling/create', [WorkOrderToolingController::class, 'create'])->name('work-order-tooling.create');
         Route::resource('work-order-tooling', WorkOrderToolingController::class)->parameters(['work-order-tooling' => 'id'])->except(['create']);
+
+        // Tooling Quotation Routes
+        Route::resource('tooling-quotation', \App\Http\Controllers\FeasibilityStudy\ToolingQuotationCompareController::class)->parameters(['tooling-quotation' => 'id']);
+        Route::post('tooling-quotation/import', [\App\Http\Controllers\FeasibilityStudy\ToolingQuotationCompareController::class, 'import'])->name('tooling-quotation.import');
+
+        // Work Order SPK 2 Fastener / Standard Part Routes
+        Route::match(['get', 'post'], 'work-order-fastener/create', [WorkOrderFastenerController::class, 'create'])->name('work-order-fastener.create');
+        Route::resource('work-order-fastener', WorkOrderFastenerController::class)->parameters(['work-order-fastener' => 'id'])->except(['create']);
     });
 
     // Assessment Configuration Routes

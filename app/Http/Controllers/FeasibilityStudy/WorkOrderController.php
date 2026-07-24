@@ -656,14 +656,18 @@ class WorkOrderController extends Controller
                     'class_id' => $prod->class_id,
                     'uom' => $prod->uom,
                     'remarks' => $prod->remarks ?: '—',
-                    'customer_code' => $workOrder->inquiry->customer->code ?? '',
-                    'model_name' => $workOrder->inquiry->projectModel->name ?? '—',
+                    'customer_code' => $workOrder->ebdHeader->customer->code ?? ($workOrder->inquiry->customer->code ?? '—'),
+                    'model_name' => $workOrder->ebdHeader->projectModel->name ?? ($workOrder->inquiry->projectModel->name ?? '—'),
                     'model_life' => $prod->model_life ?? '',
                     'variant' => $prod->variant ?? '',
                     'annual_volume' => $prod->annual_volume ?? '',
                     'sop_date' => $prod->sop_date ? $prod->sop_date->format('Y-m-d') : '',
                     'has_2d_data' => $prod->has_2d_data ?? false,
                     'has_3d_data' => $prod->has_3d_data ?? false,
+                    'std_part_no' => $prod->std_part_no ?: '—',
+                    'std_part_name' => $prod->std_part_name ?: '—',
+                    'std_qty' => $prod->std_qty ?? '—',
+                    'std_uom' => $prod->std_uom ?: '—',
                 ];
             })->values();
             $dueDatesClosedData = [];
