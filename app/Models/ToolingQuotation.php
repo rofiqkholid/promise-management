@@ -51,6 +51,22 @@ class ToolingQuotation extends Model
     }
 
     /**
+     * Relasi ke Master Supplier
+     */
+    public function supplier()
+    {
+        return $this->belongsTo(Suppliers::class, 'supplier_id');
+    }
+
+    /**
+     * Accessor untuk supplier_name
+     */
+    public function getSupplierNameAttribute()
+    {
+        return $this->supplier->name ?? '—';
+    }
+
+    /**
      * Relasi ke User yang meng-import
      */
     public function importer()

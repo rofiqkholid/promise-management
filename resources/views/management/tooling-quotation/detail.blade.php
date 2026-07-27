@@ -343,9 +343,9 @@
                                             </div>
                                             <div class="mt-0.5 text-xs font-bold">
                                                 @if($gVariance > 0)
-                                                    <span class="text-rose-600 dark:text-rose-400">+Rp{{ number_format($gVariance, 0, ',', '.') }} 🔺</span>
+                                                    <span class="text-rose-600 dark:text-rose-400 flex items-center gap-1 inline-flex">+Rp{{ number_format($gVariance, 0, ',', '.') }} <i class="fa-solid fa-arrow-up text-[10px]"></i></span>
                                                 @elseif($gVariance < 0)
-                                                    <span class="text-emerald-600 dark:text-emerald-400">-Rp{{ number_format(abs($gVariance), 0, ',', '.') }} 🟢</span>
+                                                    <span class="text-emerald-600 dark:text-emerald-400 flex items-center gap-1 inline-flex">-Rp{{ number_format(abs($gVariance), 0, ',', '.') }} <i class="fa-solid fa-arrow-down text-[10px]"></i></span>
                                                 @else
                                                     <span class="text-slate-400">Match (0)</span>
                                                 @endif
@@ -512,9 +512,9 @@
                                                 </div>
                                                 <div class="mt-0.5 text-xs font-semibold">
                                                     @if($variance > 0)
-                                                        <span class="text-rose-600 dark:text-rose-400">+Rp{{ number_format($variance, 0, ',', '.') }} 🔺</span>
+                                                        <span class="text-rose-600 dark:text-rose-400 flex items-center gap-1 inline-flex">+Rp{{ number_format($variance, 0, ',', '.') }} <i class="fa-solid fa-arrow-up text-[10px]"></i></span>
                                                     @elseif($variance < 0)
-                                                        <span class="text-emerald-600 dark:text-emerald-400">-Rp{{ number_format(abs($variance), 0, ',', '.') }} 🟢</span>
+                                                        <span class="text-emerald-600 dark:text-emerald-400 flex items-center gap-1 inline-flex">-Rp{{ number_format(abs($variance), 0, ',', '.') }} <i class="fa-solid fa-arrow-down text-[10px]"></i></span>
                                                     @else
                                                         <span class="text-slate-400">Match (0)</span>
                                                     @endif
@@ -628,9 +628,9 @@
                                                                     <span class="font-bold text-slate-800 dark:text-slate-100">Rp{{ number_format($suppCost, 0, ',', '.') }}</span>
                                                                     <div class="mt-0.5 text-[10px]">
                                                                         @if($variance > 0)
-                                                                            <span class="text-rose-600 dark:text-rose-400 font-bold">+Rp{{ number_format($variance, 0, ',', '.') }} 🔺</span>
+                                                                            <span class="text-rose-600 dark:text-rose-400 font-bold flex items-center gap-0.5 inline-flex">+Rp{{ number_format($variance, 0, ',', '.') }} <i class="fa-solid fa-arrow-up text-[9px]"></i></span>
                                                                         @elseif($variance < 0)
-                                                                            <span class="text-emerald-600 dark:text-emerald-400 font-bold">-Rp{{ number_format(abs($variance), 0, ',', '.') }} 🟢</span>
+                                                                            <span class="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-0.5 inline-flex">-Rp{{ number_format(abs($variance), 0, ',', '.') }} <i class="fa-solid fa-arrow-down text-[9px]"></i></span>
                                                                         @else
                                                                             <span class="text-slate-400">Match (0)</span>
                                                                         @endif
@@ -670,22 +670,24 @@
             </button>
         </div>
 
-        <form action="{{ route('management.tooling-quotation.import') }}" method="POST" enctype="multipart/form-data">
+        <form id="import-quotation-form" action="{{ route('management.tooling-quotation.import') }}" method="POST" enctype="multipart/form-data">
             @csrf
             <input type="hidden" name="ebd_header_id" value="{{ $selectedEbd->id }}">
 
             <div class="px-5 py-4 space-y-4">
                 <div>
                     <label class="block text-[11px] font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">
-                        Supplier Name <span class="text-rose-500">*</span>
+                        Nama Supplier <span class="text-rose-500">*</span>
                     </label>
-                    <input type="text" name="supplier_name" placeholder="e.g. PT. Summit Tooling Tech" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" required>
+                    <select name="supplier_id" id="supplier_id" class="w-full" required>
+                        <option value="">Pilih Supplier...</option>
+                    </select>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-[11px] font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">
-                            Currency <span class="text-rose-500">*</span>
+                            Mata Uang (Currency) <span class="text-rose-500">*</span>
                         </label>
                         <select name="currency_name" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" required>
                             <option value="China Yuan">China Yuan (CNY)</option>
@@ -697,24 +699,49 @@
                     </div>
                     <div>
                         <label class="block text-[11px] font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">
-                            Exchange Rate (IDR) <span class="text-rose-500">*</span>
+                            Nilai Tukar / Kurs (IDR) <span class="text-rose-500">*</span>
                         </label>
-                        <input type="number" step="0.01" name="exchange_rate" value="2275" placeholder="e.g. 2275" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" required>
+                        <input type="number" step="0.01" name="exchange_rate" value="2275" placeholder="Contoh: 2275" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" required>
                     </div>
                 </div>
 
                 <div>
                     <label class="block text-[11px] font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">
-                        Quotation File (.xlsx) <span class="text-rose-500">*</span>
+                        File Penawaran Quotation (.xlsx) <span class="text-rose-500">*</span>
                     </label>
-                    <input type="file" name="quotation_file" accept=".xlsx,.xls,.csv" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all cursor-pointer" required>
+                    <div id="dropzone-area" class="relative flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg bg-slate-50/50 dark:bg-slate-900/50 hover:bg-slate-100/70 dark:hover:bg-slate-800/60 transition-all cursor-pointer group text-center">
+                        <input type="file" id="quotation_file" name="quotation_file" accept=".xlsx,.xls,.csv" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" required>
+                        
+                        <div id="dropzone-prompt" class="flex flex-col items-center justify-center space-y-2 pointer-events-none">
+                            <div class="w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <i class="fa-solid fa-cloud-arrow-up text-lg"></i>
+                            </div>
+                            <div class="text-xs text-slate-600 dark:text-slate-300">
+                                <span class="font-semibold text-indigo-600 dark:text-indigo-400">Klik untuk memilih file</span> atau geser & lepas (drag and drop) di sini
+                            </div>
+                            <p class="text-[10px] text-slate-400 dark:text-slate-500">Format file Excel (.xlsx, .xls, .csv)</p>
+                        </div>
+
+                        <div id="dropzone-file-info" class="hidden flex items-center gap-3 p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md shadow-xs pointer-events-none max-w-full">
+                            <div class="w-8 h-8 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
+                                <i class="fa-solid fa-file-excel text-base"></i>
+                            </div>
+                            <div class="min-w-0 text-left pr-2">
+                                <p id="dropzone-file-name" class="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate max-w-[200px]"></p>
+                                <p id="dropzone-file-size" class="text-[10px] text-slate-400 dark:text-slate-500"></p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
+                {{-- IMPORT ERROR / SUCCESS RESULT CONTAINER --}}
+                <div id="importResult" class="hidden text-xs font-medium p-3.5 rounded-xs border"></div>
             </div>
 
             <div class="flex items-center justify-end gap-2 px-5 py-3.5 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-300 dark:border-slate-700">
-                <button type="button" onclick="$('#import-quotation-modal').addClass('hidden').removeClass('flex')" class="px-3.5 h-8 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xs transition-colors cursor-pointer">Cancel</button>
-                <button type="submit" class="inline-flex items-center justify-center gap-1.5 px-4 h-8 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xs text-xs font-normal active:scale-98 transition-all cursor-pointer">
-                    <i class="fa-solid fa-cloud-arrow-up text-xs"></i> Process Import & Compare
+                <button type="button" onclick="$('#import-quotation-modal').addClass('hidden').removeClass('flex')" class="px-3.5 h-8 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xs transition-colors cursor-pointer">Batal</button>
+                <button type="submit" id="btn-submit-import" class="inline-flex items-center justify-center gap-1.5 px-4 h-8 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xs text-xs font-normal active:scale-98 transition-all cursor-pointer">
+                    <i class="fa-solid fa-cloud-arrow-up text-xs"></i> Proses Import & Compare
                 </button>
             </div>
         </form>
@@ -823,6 +850,113 @@
                 $('#chk-toggle-all-suppliers').prop('checked', false);
             }
         }
+
+        // Initialize Select2 for Supplier ID in Import Modal
+        $('#supplier_id').select2({
+            width: '100%',
+            placeholder: 'Search supplier...',
+            dropdownParent: $('#import-quotation-modal'),
+            ajax: {
+                url: '{{ route("management.api.suppliers") }}',
+                dataType: 'json',
+                delay: 250,
+                data: function(params) {
+                    return {
+                        search: params.term
+                    };
+                },
+                processResults: function(data) {
+                    return {
+                        results: data.results
+                    };
+                },
+                cache: true
+            }
+        });
+
+        // Drag and Drop File Upload Logic
+        const $fileInput = $('#quotation_file');
+        const $dropzone = $('#dropzone-area');
+        const $prompt = $('#dropzone-prompt');
+        const $fileInfo = $('#dropzone-file-info');
+        const $fileName = $('#dropzone-file-name');
+        const $fileSize = $('#dropzone-file-size');
+
+        $fileInput.on('dragenter dragover', function() {
+            $dropzone.addClass('border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/40');
+        }).on('dragleave drop', function() {
+            $dropzone.removeClass('border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/40');
+        });
+
+        $fileInput.on('change', function() {
+            const files = this.files;
+            if (files && files.length > 0) {
+                const file = files[0];
+                $fileName.text(file.name);
+                
+                let sizeStr = (file.size / 1024).toFixed(1) + ' KB';
+                if (file.size > 1024 * 1024) {
+                    sizeStr = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+                }
+                $fileSize.text(sizeStr);
+
+                $prompt.addClass('hidden');
+                $fileInfo.removeClass('hidden').addClass('flex');
+            } else {
+                $prompt.removeClass('hidden');
+                $fileInfo.addClass('hidden').removeClass('flex');
+            }
+        });
+
+        // Handle AJAX Submit for Import Quotation Form
+        $('#import-quotation-form').on('submit', function(e) {
+            e.preventDefault();
+            const $form = $(this);
+            const $btn = $('#btn-submit-import');
+            const $result = $('#importResult');
+            const originalHtml = $btn.html();
+
+            $result.addClass('hidden').removeClass('bg-rose-50 text-rose-800 border-rose-200 bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800');
+            $btn.prop('disabled', true).html('<i class="fa-solid fa-circle-notch fa-spin text-xs"></i> Processing Import...');
+
+            const formData = new FormData(this);
+
+            $.ajax({
+                url: $form.attr('action'),
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(res) {
+                    $result.removeClass('hidden')
+                           .addClass('bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800')
+                           .html(`<div class="flex items-center gap-2"><i class="fa-solid fa-circle-check text-emerald-600"></i><span>${res.message}</span></div>`);
+                    
+                    setTimeout(function() {
+                        window.location.href = res.redirect_url || window.location.href;
+                    }, 1000);
+                },
+                error: function(xhr) {
+                    $btn.prop('disabled', false).html(originalHtml);
+                    
+                    let errorMsg = 'Gagal melakukan import data quotation.';
+                    if (xhr.responseJSON) {
+                        if (xhr.responseJSON.message) {
+                            errorMsg = xhr.responseJSON.message;
+                        } else if (xhr.responseJSON.errors) {
+                            const errs = Object.values(xhr.responseJSON.errors).flat();
+                            errorMsg = errs.join('<br>');
+                        }
+                    } else if (xhr.status) {
+                        errorMsg = `[Error ${xhr.status}: ${xhr.statusText}] Gagal mengunggah file.`;
+                    }
+
+                    $result.removeClass('hidden')
+                           .addClass('bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800')
+                           .html(`<div class="flex items-start gap-2"><i class="fa-solid fa-circle-exclamation text-rose-600 mt-0.5"></i><div>${errorMsg}</div></div>`);
+                }
+            });
+        });
 
         // Initial Label Update
         updateDropdownLabel();

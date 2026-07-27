@@ -49,6 +49,7 @@ Route::get('/dashboard', function () {
 
 Route::middleware('auth')->prefix('management')->name('management.')->group(function () {
     Route::get('ajax/users', [WorkOrderController::class, 'apiGetUsers'])->name('api.users');
+    Route::get('ajax/suppliers', [\App\Http\Controllers\FeasibilityStudy\ToolingQuotationCompareController::class, 'apiGetSuppliers'])->name('api.suppliers');
     Route::get('ajax/processes', [WorkOrderController::class, 'apiGetProcesses'])->name('api.processes');
     Route::get('ajax/approval-rules', [ApprovalConfigController::class, 'apiGetRules'])->name('api.approval-rules');
 
