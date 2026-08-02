@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'SPK 2 Tooling Cost · Promise Management')
+@section('title', 'SPK 2 Additional Process · Promise Management')
 
 @section('content')
 <div class="flex-1 overflow-y-auto p-4 pt-17.5 space-y-4 transition-colors duration-200">
@@ -9,12 +9,12 @@
     <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 border-b border-slate-100 dark:border-slate-800/80 mb-3 pb-3">
         <div class="flex items-center gap-4 flex-shrink-0">
             <div>
-                <h1 class="text-2xl font-bold tracking-tight text-slate-800 dark:text-white">SPK 2 Tooling Cost List</h1>
-                <p class="text-sm text-slate-500 dark:text-slate-400">Manage Tooling Cost Work Orders (SPK 2)</p>
+                <h1 class="text-2xl font-bold tracking-tight text-slate-800 dark:text-white">SPK 2 Additional Process List</h1>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Manage Additional Process Work Orders (SPK 2)</p>
             </div>
             <button type="button" id="btn-open-select-ebd-modal"
                     class="inline-flex items-center gap-2 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xs text-xs font-semibold shadow-xs transition-all cursor-pointer">
-                <i class="fa-solid fa-plus text-[10px]"></i> Create SPK 2 Tooling
+                <i class="fa-solid fa-plus text-[10px]"></i> Create SPK 2 Add Process
             </button>
         </div>
         
@@ -129,7 +129,6 @@
                         <th class="px-3 py-2.5 w-8 text-center">#</th>
                         <th class="px-3 py-2.5">WO No</th>
                         <th class="px-3 py-2.5">Revision</th>
-                        <th class="px-3 py-2.5">Inquiry No</th>
                         <th class="px-3 py-2.5">Customer &amp; Model</th>
                         <th class="px-3 py-2.5 text-center">Priority</th>
                         <th class="px-3 py-2.5 w-56">Task Progress</th>
@@ -159,7 +158,7 @@
                 <i class="fa-solid fa-xmark text-sm"></i>
             </button>
         </div>
-        <form action="{{ route('management.work-order-tooling.create') }}" method="GET" class="flex flex-col flex-1 overflow-hidden">
+        <form action="{{ route('management.work-order-add-process.create') }}" method="GET" class="flex flex-col flex-1 overflow-hidden">
             <div class="p-5 space-y-4 flex-1 overflow-y-auto">
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Choose EBD Header Reference <span class="text-rose-500">*</span></label>
@@ -187,10 +186,8 @@
                             <thead class="sticky top-0 bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 text-[10px] uppercase font-bold text-slate-500">
                                 <tr>
                                     <th class="p-2 w-10 text-center">#</th>
-                                    <th class="p-2">BOM Level</th>
-                                    <th class="p-2">Part No</th>
-                                    <th class="p-2">Part Name</th>
-                                    <th class="p-2">Part Status</th>
+                                    <th class="p-2">Part Number &amp; Name</th>
+                                    <th class="p-2">Additional Processes</th>
                                 </tr>
                             </thead>
                             <tbody id="bom-checklist-tbody" class="divide-y divide-slate-200 dark:divide-slate-800 bg-white dark:bg-slate-900">
@@ -216,7 +213,8 @@
     $(function() {
         const ebdData = @json($ebdHeadersData);
         const ebdLookup = {};
-        ebdData.forEach(e => ebdLookup[String(e.hashed_id)] = e);
+        const ebdList = Array.isArray(ebdData) ? ebdData : (ebdData ? Object.values(ebdData) : []);
+        ebdList.forEach(e => ebdLookup[String(e.hashed_id)] = e);
 
         function initSelect2InModal() {
             if ($.fn.select2) {
@@ -252,22 +250,48 @@
             }
 
             ebd.items.forEach(item => {
-                const bomLevel = item.bom_level || '1';
-                const partStatus = item.status || '—';
-                const row = `
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                        <td class="p-2 text-center">
-                            <input type="checkbox" name="items[]" value="${item.id}" checked class="bom-chk-item rounded-xs border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
-                        </td>
-                        <td class="p-2 font-mono font-bold text-indigo-600 dark:text-indigo-400">${bomLevel}</td>
-                        <td class="p-2 font-mono font-semibold text-slate-800 dark:text-slate-200">${item.part_no || '—'}</td>
-                        <td class="p-2 text-slate-700 dark:text-slate-300">${item.part_name || '—'}</td>
-                        <td class="p-2 font-semibold text-slate-600 dark:text-slate-300">
-                            <span class="inline-block px-1.5 py-0.5 text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 rounded-xs font-mono">${partStatus}</span>
-                        </td>
-                    </tr>
-                `;
-                tbody.append(row);
+                // Filter: Hanya tampilkan item BOM Level 1 (parent_id is null / 0 / active_level == 1)
+                const isLevel1 = (item.active_level == 1) || (!item.parent_id || item.parent_id == 0 || item.parent_id == '0');
+                if (!isLevel1) {
+                    return;
+                }
+
+                if (item.add_processes && item.add_processes.length > 0) {
+                    item.add_processes.forEach(proc => {
+                        const row = `
+                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                                <td class="p-2 text-center align-middle">
+                                    <input type="checkbox" name="add_process_ids[]" value="${proc.id}" checked class="bom-chk-item rounded-xs border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+                                </td>
+                                <td class="p-2 align-middle">
+                                    <div class="font-mono font-bold text-slate-800 dark:text-slate-100 text-xs">${item.part_no || '—'}</div>
+                                    <div class="text-slate-500 dark:text-slate-400 text-[11px] font-semibold">${item.part_name || '—'}</div>
+                                </td>
+                                <td class="p-2 align-middle">
+                                    <div class="font-bold text-slate-800 dark:text-slate-100 text-xs">${proc.process_name}</div>
+                                    <div class="text-slate-500 text-[11px] font-medium">${proc.qty} ${proc.unit}</div>
+                                </td>
+                            </tr>
+                        `;
+                        tbody.append(row);
+                    });
+                } else {
+                    const row = `
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 opacity-60">
+                            <td class="p-2 text-center align-middle">
+                                <input type="checkbox" name="items[]" value="${item.id}" disabled class="rounded-xs border-slate-300 text-slate-400 cursor-not-allowed">
+                            </td>
+                            <td class="p-2 align-middle">
+                                <div class="font-mono font-bold text-slate-800 dark:text-slate-100 text-xs">${item.part_no || '—'}</div>
+                                <div class="text-slate-500 dark:text-slate-400 text-[11px] font-semibold">${item.part_name || '—'}</div>
+                            </td>
+                            <td class="p-2 align-middle text-slate-400 italic text-xs">
+                                No additional process
+                            </td>
+                        </tr>
+                    `;
+                    tbody.append(row);
+                }
             });
 
             $('#chk-select-all-bom').prop('checked', true);
@@ -284,7 +308,7 @@
             serverSide: true,
             order: [[1, 'desc']],
             ajax: {
-                url: "{{ route('management.work-order-tooling.index') }}",
+                url: "{{ route('management.work-order-add-process.index') }}",
                 data: function(d) {
                     d.priority = $('#filter-priority').val();
                     d.status = $('#filter-status').val();
@@ -294,15 +318,6 @@
                 { data: 'index_num', orderable: false, searchable: false, className: 'text-center text-slate-400 font-mono text-[10px]' },
                 { data: 'wo_number', orderable: true, searchable: true, className: 'font-bold text-slate-800 dark:text-slate-100' },
                 { data: 'revision_no', orderable: true, searchable: false, className: 'font-mono text-slate-600 dark:text-slate-330' },
-                { 
-                    data: 'inquiry_no', 
-                    orderable: false, 
-                    searchable: true,
-                    render: function (data, type, row) {
-                        if (!data || data === '—') return '<span class="text-xs text-slate-400">—</span>';
-                        return `<a href="${row.inquiry_show_url}" class="text-blue-600 hover:underline font-semibold">${data}</a>`;
-                    }
-                },
                 {
                     data: 'customer_code',
                     orderable: false,
@@ -333,11 +348,12 @@
                     orderable: false,
                     searchable: false,
                     render: function (data, type, row) {
-                        if (!data || data.length === 0) {
+                        const items = Array.isArray(data) ? data : (data ? Object.values(data) : []);
+                        if (!items || items.length === 0) {
                             return '<span class="text-slate-400">—</span>';
                         }
                         let html = '<div class="flex flex-col gap-2">';
-                        data.forEach(function (dp) {
+                        items.forEach(function (dp) {
                             html += `
                                 <div class="flex items-center gap-2">
                                     <span class="text-[10px] font-bold font-mono text-slate-500 dark:text-slate-455 w-8 tracking-wider">${dp.code}</span>
@@ -400,10 +416,6 @@
                                 <a href="${row.show_url}" target="_blank" onclick="const w = window.open(this.href, '_blank'); w.onload = function() { setTimeout(() => { w.print(); }, 500); }; return false;" title="Print"
                                    class="w-6 h-6 flex items-center justify-center bg-blue-600 hover:bg-blue-750 text-white transition-colors">
                                     <i class="fa-solid fa-print text-[10px]"></i>
-                                </a>
-                                <a href="/management/tooling-quotation/compare?ebd_id=${row.ebd_header_id}" title="Import & Compare Supplier Quotations"
-                                   class="w-6 h-6 flex items-center justify-center bg-purple-600 hover:bg-purple-700 text-white transition-colors">
-                                    <i class="fa-solid fa-code-compare text-[10px]"></i>
                                 </a>
                                 <button type="button" title="Track Progress & Checklist"
                                         onclick="window.dispatchEvent(new CustomEvent('open-wo-progress', { detail: { hashedId: '${data}' } }))"

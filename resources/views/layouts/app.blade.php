@@ -72,6 +72,7 @@
     </script>
 
     @include('components.sweetalert')
+    @include('components.modal-download-quotation')
     @stack('scripts')
 </body>
 </html>

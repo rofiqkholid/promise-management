@@ -101,11 +101,6 @@
                     <span x-text="showPreview ? 'Hide' : 'Preview'"></span>
                 </button>
                 @if(isset($workOrder))
-                    <a href="{{ route('management.work-order-tooling.quotation', [$workOrder->hashed_id, 'download' => 1]) }}" target="_blank"
-                       class="flex items-center gap-1.5 px-2.5 h-7 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-xs transition-colors"
-                       title="Download Quotation Tooling Excel Attachment">
-                        <i class="fa-solid fa-file-excel"></i> Quotation
-                    </a>
                     <button type="button" onclick="window.print()"
                             class="w-7 h-7 bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center text-xs shadow-xs transition-colors cursor-pointer rounded-xs"
                             title="Print SPK">
@@ -1320,8 +1315,8 @@ document.addEventListener('alpine:init', () => {
             model_life: p.model_life ?? '',
             annual_volume: p.annual_volume ?? '',
             eo: p.eo ?? '',
-            class_id: p.class_id ?? 'FG',
-            uom: p.std_uom ?? p.uom ?? '',
+            class_id: p.class_id ?? null,
+            uom: p.std_uom ?? p.uom ?? null,
             variant: p.variant ?? '',
             has_2d_data: Boolean(p.has_2d_data),
             has_3d_data: Boolean(p.has_3d_data),

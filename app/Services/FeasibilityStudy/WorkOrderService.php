@@ -57,6 +57,25 @@ class WorkOrderService
                 $data['inquiry_id'] = null;
             }
 
+            // Ensure wo_number is unique for revision_no = 0
+            if (empty($data['wo_number']) || \App\Models\WorkOrder::withTrashed()->where('wo_number', $data['wo_number'])->where('revision_no', 0)->exists()) {
+                $currentYear = now()->year;
+                $count = \App\Models\WorkOrder::withTrashed()->whereYear('created_at', $currentYear)->where('revision_no', 0)->count() + 1;
+                $romans = [
+                    1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV', 5 => 'V', 6 => 'VI',
+                    7 => 'VII', 8 => 'VIII', 9 => 'IX', 10 => 'X', 11 => 'XI', 12 => 'XII'
+                ];
+                $romanMonth = $romans[now()->month] ?? 'I';
+                do {
+                    $uniqueNo = sprintf("%03d/MKT-SPK/SAI/%s/%02d", $count, $romanMonth, now()->year % 100);
+                    $exists = \App\Models\WorkOrder::withTrashed()->where('wo_number', $uniqueNo)->where('revision_no', 0)->exists();
+                    if ($exists) {
+                        $count++;
+                    }
+                } while ($exists);
+                $data['wo_number'] = $uniqueNo;
+            }
+
             $workOrder = $this->workOrderRepo->create($data);
             
             $this->workOrderRepo->attachProcessesAndPics($workOrder->id, $processes, $assignedPics);
@@ -90,12 +109,19 @@ class WorkOrderService
                         'model_life' => $inqProduct->model_life ?? (!empty($rp['model_life']) ? (int)$rp['model_life'] : null),
                         'annual_volume' => $inqProduct->annual_volume ?? (!empty($rp['annual_volume']) ? (int)$rp['annual_volume'] : null),
                         'eo' => $rp['eo'] ?? '',
-                        'class_id' => $rp['class_id'] ?? 'FG',
-                        'uom' => $rp['uom'] ?? 'Kg',
+                        'class_id' => !empty($rp['class_id']) ? $rp['class_id'] : null,
+                        'uom' => !empty($rp['uom']) ? $rp['uom'] : null,
                         'has_2d_data' => $inqProduct->has_2d_data ?? (bool)($rp['has_2d_data'] ?? false),
                         'has_3d_data' => $inqProduct->has_3d_data ?? (bool)($rp['has_3d_data'] ?? false),
                         'has_tech_doc' => $inqProduct->has_tech_doc ?? (bool)($rp['has_tech_doc'] ?? false),
                         'remarks' => $rp['remarks'] ?? ($inqProduct->remarks ?? ''),
+                        'ebd_add_process_id' => isset($rp['ebd_add_process_id']) && is_numeric($rp['ebd_add_process_id']) ? (int)$rp['ebd_add_process_id'] : null,
+                        'add_process_name' => !empty($rp['add_process_name']) ? $rp['add_process_name'] : null,
+                        'add_process_qty' => (isset($rp['add_process_qty']) && $rp['add_process_qty'] !== '') ? (int)$rp['add_process_qty'] : null,
+                        'add_process_unit' => !empty($rp['add_process_unit']) ? $rp['add_process_unit'] : null,
+                        'mat_spec' => !empty($rp['mat_spec']) ? $rp['mat_spec'] : null,
+                        'mat_size' => !empty($rp['mat_size']) ? $rp['mat_size'] : null,
+                        'mat_weight_pcs' => (isset($rp['mat_weight_pcs']) && $rp['mat_weight_pcs'] !== '') ? (float)$rp['mat_weight_pcs'] : null,
                         'sort_order' => $idx,
                         'created_at' => now(),
                         'updated_at' => now()
@@ -151,8 +177,8 @@ class WorkOrderService
                     $insertData = [
                         'work_order_id' => $workOrder->id,
                         'inquiry_product_id' => $inqProductId,
-                        'customer_name' => $workOrder->inquiry->customer->name ?? '',
-                        'model_name' => $inqProduct->variant ?? $workOrder->inquiry->projectModel->name ?? '',
+                        'customer_name' => !empty($rp['customer_code']) ? $rp['customer_code'] : ($workOrder->inquiry->customer->code ?? $workOrder->ebdHeader->customer->code ?? ''),
+                        'model_name' => !empty($rp['model_name']) ? $rp['model_name'] : ($inqProduct->variant ?? $workOrder->inquiry->projectModel->name ?? $workOrder->ebdHeader->projectModel->name ?? ''),
                         'variant' => $inqProduct->variant ?? $rp['variant'] ?? '',
                         'customer_part_no' => $inqProduct->customer_part_no ?? $rp['customer_part_no'] ?? '',
                         'customer_part_name' => $inqProduct->customer_part_name ?? $rp['customer_part_name'] ?? '',
@@ -162,12 +188,20 @@ class WorkOrderService
                         'model_life' => $inqProduct->model_life ?? (!empty($rp['model_life']) ? (int)$rp['model_life'] : null),
                         'annual_volume' => $inqProduct->annual_volume ?? (!empty($rp['annual_volume']) ? (int)$rp['annual_volume'] : null),
                         'eo' => $rp['eo'] ?? '',
-                        'class_id' => $rp['class_id'] ?? 'FG',
-                        'uom' => $rp['uom'] ?? 'Kg',
+                        'class_id' => !empty($rp['class_id']) ? $rp['class_id'] : null,
+                        'uom' => !empty($rp['uom']) ? $rp['uom'] : null,
                         'has_2d_data' => $inqProduct->has_2d_data ?? (bool)($rp['has_2d_data'] ?? false),
                         'has_3d_data' => $inqProduct->has_3d_data ?? (bool)($rp['has_3d_data'] ?? false),
                         'has_tech_doc' => $inqProduct->has_tech_doc ?? (bool)($rp['has_tech_doc'] ?? false),
                         'remarks' => $rp['remarks'] ?? ($inqProduct->remarks ?? ''),
+                        'ebd_item_id' => isset($rp['ebd_item_id']) && is_numeric($rp['ebd_item_id']) && $rp['ebd_item_id'] > 0 ? (int)$rp['ebd_item_id'] : null,
+                        'ebd_add_process_id' => isset($rp['ebd_add_process_id']) && is_numeric($rp['ebd_add_process_id']) ? (int)$rp['ebd_add_process_id'] : null,
+                        'add_process_name' => !empty($rp['add_process_name']) ? $rp['add_process_name'] : null,
+                        'add_process_qty' => (isset($rp['add_process_qty']) && $rp['add_process_qty'] !== '') ? (int)$rp['add_process_qty'] : null,
+                        'add_process_unit' => !empty($rp['add_process_unit']) ? $rp['add_process_unit'] : null,
+                        'mat_spec' => !empty($rp['mat_spec']) ? $rp['mat_spec'] : null,
+                        'mat_size' => !empty($rp['mat_size']) ? $rp['mat_size'] : null,
+                        'mat_weight_pcs' => (isset($rp['mat_weight_pcs']) && $rp['mat_weight_pcs'] !== '') ? (float)$rp['mat_weight_pcs'] : null,
                         'sort_order' => $idx,
                         'created_at' => now(),
                         'updated_at' => now()

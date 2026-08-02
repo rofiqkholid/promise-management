@@ -251,7 +251,10 @@ class EbdItemImport
                 if (!empty($toolProcessName)) {
 
                     $isLevel1  = ($activeLevel === 1);
-                    $isCfOrJig = (bool) preg_match('/(cf|jig)/i', $toolProcessName);
+                    $toolRank = $this->val($rawRow, $map, 'tool_rank') ?? '';
+                    $toolCategory = $this->val($rawRow, $map, 'tool_category') ?? '';
+                    $combinedToolType = strtoupper("{$toolRank} {$toolCategory} {$toolProcessName}");
+                    $isCfOrJig = (bool) preg_match('/(cf|jig)/i', $combinedToolType);
 
                     MngEbdToolingProcess::create([
                         'ebd_item_id'    => $activePartId,

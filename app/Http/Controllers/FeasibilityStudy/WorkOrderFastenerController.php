@@ -236,13 +236,19 @@ class WorkOrderFastenerController extends Controller
         $users = User::orderBy('name', 'asc')->get();
 
         $currentYear = now()->year;
-        $count = WorkOrder::whereYear('created_at', $currentYear)->where('revision_no', 0)->count() + 1;
+        $count = WorkOrder::withTrashed()->whereYear('created_at', $currentYear)->where('revision_no', 0)->count() + 1;
         $romans = [
             1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV', 5 => 'V', 6 => 'VI',
             7 => 'VII', 8 => 'VIII', 9 => 'IX', 10 => 'X', 11 => 'XI', 12 => 'XII'
         ];
         $romanMonth = $romans[now()->month] ?? 'I';
-        $defaultSpkNo = sprintf("%03d/MKT-SPK/SAI/%s/%02d", $count, $romanMonth, now()->year % 100);
+        do {
+            $defaultSpkNo = sprintf("%03d/MKT-SPK/SAI/%s/%02d", $count, $romanMonth, now()->year % 100);
+            $exists = WorkOrder::withTrashed()->where('wo_number', $defaultSpkNo)->where('revision_no', 0)->exists();
+            if ($exists) {
+                $count++;
+            }
+        } while ($exists);
 
         $woHeader = DB::table('mng_wo_doc_format')->where('is_current', true)->first() ?: DB::table('mng_wo_doc_format')->first();
 

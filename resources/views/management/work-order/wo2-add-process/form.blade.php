@@ -58,15 +58,16 @@
     
     {{-- ── LEFT SIDE: Detail Configuration Form ─────────────────────────── --}}
     @if($isEditable)
-        <form id="spkForm" action="{{ isset($workOrder) ? route('management.work-order-tooling.update', $workOrder->hashed_id) : route('management.work-order-tooling.store') }}" method="POST" 
+        <form id="spkForm" action="{{ isset($workOrder) ? route('management.work-order-add-process.update', $workOrder->hashed_id) : route('management.work-order-add-process.store') }}" method="POST" 
               class="wo-form-panel w-1/2 h-full flex flex-col overflow-hidden border-r border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 transition-[width] duration-200 ease-in-out" :style="showPreview ? 'width: 50%' : 'width: 100%'">
             @csrf
             @if(isset($workOrder))
                 @method('PUT')
             @else
-                <input type="hidden" name="inquiry_id" value="{{ $inquiry->hashed_id }}">
+                <input type="hidden" name="inquiry_id" value="{{ $inquiry->hashed_id ?? '' }}">
                 <input type="hidden" name="ebd_header_id" value="{{ $ebdHeader->hashed_id ?? '' }}">
             @endif
+            <input type="hidden" name="header_id" value="{{ $woHeader->id ?? 1 }}">
             <input type="hidden" name="department_id" :value="department_id">
     @else
         <div class="wo-form-panel w-1/2 h-full flex flex-col overflow-hidden border-r border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 transition-[width] duration-200 ease-in-out" :style="showPreview ? 'width: 50%' : 'width: 100%'">
@@ -76,9 +77,9 @@
         {{-- Fixed Header --}}
         <div class="p-6 pb-4 border-b border-slate-300 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900 z-10 flex-none">
             <div class="flex items-center gap-3">
-                <a href="{{ route('management.work-order-tooling.index') }}"
+                <a href="{{ route('management.work-order-add-process.index') }}"
                    class="flex items-center justify-center w-7 h-7 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-500 hover:text-blue-600 hover:border-blue-500 transition-colors text-xs rounded-xs"
-                   title="Back to SPK 2 Tooling List">
+                   title="Back to SPK 2 Additional Process List">
                     <i class="fa-solid fa-arrow-left"></i>
                 </a>
                 <div>
@@ -531,6 +532,8 @@
                                 <th class="p-2 w-10 text-center">Drag</th>
                             @endif
                             <th class="p-2 min-w-48 text-left">Part Number / Name</th>
+                            <th class="p-2 text-left">Additional Process</th>
+                            <th class="p-2 text-center w-28">Process Qty</th>
                             <th class="p-2">Remarks</th>
                             <th class="p-2 w-20 text-center">Action</th>
                         </tr>
@@ -567,7 +570,22 @@
                                             <div class="text-[10px] text-slate-400" x-text="prod.customer_part_name || '—'"></div>
                                         </div>
                                     </div>
+                                    {{-- Hidden inputs to submit product data & SPK2 Additional Process snapshot fields --}}
+                                    <input type="hidden" :name="'products[' + index + '][id]'" :value="prod.id || ''">
+                                    <input type="hidden" :name="'products[' + index + '][ebd_item_id]'" :value="prod.ebd_item_id || ''">
+                                    <input type="hidden" :name="'products[' + index + '][ebd_add_process_id]'" :value="prod.ebd_add_process_id || ''">
+                                    <input type="hidden" :name="'products[' + index + '][add_process_name]'" :value="prod.add_process_name || ''">
+                                    <input type="hidden" :name="'products[' + index + '][add_process_qty]'" :value="prod.add_process_qty || ''">
+                                    <input type="hidden" :name="'products[' + index + '][add_process_unit]'" :value="prod.add_process_unit || ''">
+                                    <input type="hidden" :name="'products[' + index + '][customer_code]'" :value="prod.customer_code">
+                                    <input type="hidden" :name="'products[' + index + '][model_name]'" :value="prod.model_name">
+                                    <input type="hidden" :name="'products[' + index + '][customer_part_no]'" :value="prod.customer_part_no">
+                                    <input type="hidden" :name="'products[' + index + '][customer_part_name]'" :value="prod.customer_part_name">
+                                    <input type="hidden" :name="'products[' + index + '][remarks]'" :value="prod.remarks">
+                                    <input type="hidden" :name="'products[' + index + '][sort_order]'" :value="index + 1">
                                 </td>
+                                <td class="p-2 font-semibold text-slate-800 dark:text-slate-200" x-text="prod.add_process_name || '—'"></td>
+                                <td class="p-2 text-center font-mono font-bold text-slate-800 dark:text-slate-200" x-text="(prod.add_process_qty || '0') + ' ' + (prod.add_process_unit || '')"></td>
                                 <td class="p-2" x-text="prod.remarks || '—'"></td>
                                 <td class="p-2 text-center">
                                     <div class="flex justify-center gap-1">
@@ -590,15 +608,13 @@
             </div>
         </x-form-card>
 
-        {{-- Data for submission is sent via JSON AJAX, not hidden fields --}}
-
-        </div> {{-- End Scrollable Container --}}
+</div> {{-- End Scrollable Container --}}
 
         {{-- Fixed Footer --}}
         <div class="p-6 pt-4 border-t border-slate-300 dark:border-slate-800 flex justify-end gap-2.5 bg-slate-50 dark:bg-slate-900/60 z-10 flex-none">
-            <a href="{{ isset($workOrder) ? route('management.work-order-tooling.index') : route('management.inquiry.show', $inquiry->hashed_id) }}"
+            <a href="{{ isset($workOrder) ? route('management.work-order-add-process.index') : ($inquiry ? route('management.inquiry.show', $inquiry->hashed_id) : route('management.work-order-add-process.index')) }}"
                class="px-4 py-2 text-xs font-bold border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xs transition-colors">
-                {{ isset($workOrder) ? 'Back to WO List' : 'Back to Inquiry' }}
+                {{ isset($workOrder) ? 'Back to WO List' : ($inquiry ? 'Back to Inquiry' : 'Back to WO List') }}
             </a>
             @if(isset($workOrder) && in_array($workOrder->status, ['Draft', 'Pending Approval']) && ($workOrder->is_latest ?? true))
                 <button type="button" onclick="confirmDeleteWO()"
@@ -633,12 +649,12 @@
 
     <div class="wo-preview-panel w-1/2 h-full overflow-auto bg-slate-150 dark:bg-slate-800 transition-[width] duration-200 ease-in-out p-8 flex flex-col items-center border-l border-slate-300 dark:border-slate-700"
          x-show="showPreview" :style="showPreview ? 'width: 50%' : 'width: 0%'">
-        @include('management.work-order.wo2-tooling.preview')
+        @include('management.work-order.wo2-add-process.preview')
     </div>
     
     @if(isset($workOrder))
         @if(in_array($workOrder->status, ['Draft', 'Pending Approval']) && ($workOrder->is_latest ?? true))
-            <form id="deleteWoForm" action="{{ route('management.work-order-tooling.destroy', $workOrder->hashed_id) }}" method="POST" class="hidden">
+            <form id="deleteWoForm" action="{{ route('management.work-order-add-process.destroy', $workOrder->hashed_id) }}" method="POST" class="hidden">
                 @csrf
                 @method('DELETE')
             </form>
@@ -1284,8 +1300,8 @@ document.addEventListener('alpine:init', () => {
         selected_approval_rules: (@json(isset($workOrder) ? ($workOrder->selected_approval_rule_ids ?: $approvalRules->pluck('id')) : $approvalRules->pluck('id')) || []).map(Number),
         
         // All approval rules with their department_id for filtering
-        approvalRulesList: @json($approvalRulesListMapped),
-        approvalRulesListFull: @json($approvalRulesListFullMapped),
+        approvalRulesList: @json($approvalRules),
+        approvalRulesListFull: @json($approvalRules),
         
         // Departments list lookup
         departmentsList: @json($departments),
@@ -1293,16 +1309,20 @@ document.addEventListener('alpine:init', () => {
         usersList: [],
         
         // Pre-populated selected products
-        products: @json(isset($workOrder) ? $workOrder->products->sortBy('sort_order')->values() : (isset($itemsData) ? $itemsData : ($inquiry->products ?? []))).map(p => ({
+        products: @json(isset($workOrder) ? $workOrder->products->sortBy('sort_order')->values() : (isset($itemsData) ? $itemsData : [])).map(p => ({
             id: p.id ?? null,
             ebd_item_id: p.ebd_item_id ?? null,
+            ebd_add_process_id: p.ebd_add_process_id ?? null,
+            add_process_name: p.add_process_name ?? '',
+            add_process_qty: p.add_process_qty ?? '',
+            add_process_unit: p.add_process_unit ?? p.unit ?? '',
             tempId: 'prod_' + Math.random().toString(36).substr(2, 9),
             parent_id: p.parent_id ?? null,
             parentTempId: null,
             work_order_product_id: p.id ?? null,
             inquiry_product_id: p.inquiry_product_id ?? null,
-            customer_code: '{{ isset($workOrder) ? ($workOrder->inquiry->customer->code ?? "") : ($ebdHeader->customer->code ?? $inquiry->customer->code ?? "") }}',
-            model_name: '{{ isset($workOrder) ? ($workOrder->inquiry->projectModel->name ?? "") : ($ebdHeader->projectModel->name ?? $inquiry->projectModel->name ?? "") }}',
+            customer_code: p.customer_code ?? p.customer_name ?? '',
+            model_name: p.model_name ?? '',
             customer_part_no: p.customer_part_no ?? p.part_no ?? '',
             customer_part_name: p.customer_part_name ?? p.part_name ?? '',
             destination: p.destination ?? '',
@@ -2140,6 +2160,12 @@ document.addEventListener('alpine:init', () => {
                         work_order_product_id: p.work_order_product_id || null,
                         inquiry_product_id: p.inquiry_product_id || null,
                         ebd_item_id: p.ebd_item_id || null,
+                        ebd_add_process_id: p.ebd_add_process_id || null,
+                        add_process_name: p.add_process_name || '',
+                        add_process_qty: (p.add_process_qty !== null && p.add_process_qty !== undefined && p.add_process_qty !== '') ? p.add_process_qty : null,
+                        add_process_unit: p.add_process_unit || '',
+                        customer_code: p.customer_code || '',
+                        model_name: p.model_name || '',
                         tempId: p.tempId || '',
                         parentTempId: p.parentTempId || '',
                         customer_part_no: p.customer_part_no || '',
@@ -2172,11 +2198,12 @@ document.addEventListener('alpine:init', () => {
                 contentType: 'application/json',
                 data: JSON.stringify(payload),
                 success: function(response) {
-                    if (response.success && response.redirect_url) {
+                    let redirectUrl = response.redirect_url || response.redirect;
+                    if (response.success && redirectUrl) {
                         showToast(response.message || 'Successfully saved SPK!', 'success');
                         setTimeout(function() {
-                            window.location.href = response.redirect_url;
-                        }, 1500);
+                            window.location.href = redirectUrl;
+                        }, 1000);
                     } else {
                         showToast(response.message || 'Successfully saved SPK!', 'success');
                     }

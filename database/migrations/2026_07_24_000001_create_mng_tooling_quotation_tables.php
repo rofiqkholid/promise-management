@@ -23,8 +23,8 @@ return new class extends Migration
             $table->string('quotation_no', 100)->nullable();
             $table->string('revision', 20)->default('0');
             
-            // Kurs / Exchange Rate (Contoh: China Yuan, USD, IDR)
-            $table->string('currency_name', 50)->nullable(); // e.g., China Yuan
+            // Kurs / Exchange Rate (Contoh: CNY, USD, IDR)
+            $table->string('currency_code', 10)->nullable(); // e.g. CNY, USD, IDR
             $table->decimal('exchange_rate', 15, 2)->default(1.00); // e.g., 2275.00
             
             // Total Ringkasan Biaya Penawaran Supplier
@@ -55,8 +55,7 @@ return new class extends Migration
             $table->unsignedBigInteger('ebd_item_id')->nullable()->index(); // Relasi ke Part (mng_ebd_items)
             $table->unsignedBigInteger('ebd_tooling_process_id')->nullable()->index(); // Relasi ke Process/OP EBD (mng_ebd_tooling_processes)
             
-            // Info Proses (Menampung jika ada penambahan proses / homeline dari supplier)
-            $table->string('process_type', 150)->nullable(); // e.g. STAMPING, SSW, dsb.
+            // Info Proses (Menampung jika ada homeline dari supplier)
             $table->string('homeline', 50)->nullable(); // e.g. SAI / SUBCONT
             
             // Data Penawaran Supplier per OP/Tooling

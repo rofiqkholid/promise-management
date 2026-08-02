@@ -413,13 +413,13 @@
                                     <i class="fa-solid fa-circle-check text-sm"></i>
                                     <span>Approval Completed — Attachment Ready</span>
                                 </span>
-                                <a :href="WO_BASE_URL + '/work-order-tooling/' + selectedHashedId + '/quotation'"
-                                   target="_blank"
-                                   class="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xs shadow-xs hover:shadow transition-all shrink-0"
-                                   title="Download Quotation Tooling Attachment">
+                                <button type="button"
+                                        @click="openQuotationExportModal(WO_BASE_URL + '/work-order-tooling/' + selectedHashedId + '/quotation')"
+                                        class="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xs shadow-xs hover:shadow transition-all shrink-0 cursor-pointer"
+                                        title="Download Quotation Tooling Attachment">
                                     <i class="fa-solid fa-file-excel text-base"></i>
                                     <span>Download Quotation Tooling</span>
-                                </a>
+                                </button>
                             </div>
                         </template>
                     </div>

@@ -33,6 +33,14 @@ class WorkOrderProduct extends Model
         'has_tech_doc',
         'remarks',
         'ebd_item_id',
+        // SPK2 Fields
+        'ebd_add_process_id',
+        'add_process_name',
+        'add_process_qty',
+        'add_process_unit',
+        'mat_spec',
+        'mat_size',
+        'mat_weight_pcs',
     ];
 
     protected $casts = [
@@ -41,6 +49,8 @@ class WorkOrderProduct extends Model
         'has_2d_data' => 'boolean',
         'has_3d_data' => 'boolean',
         'has_tech_doc' => 'boolean',
+        'add_process_qty' => 'integer',
+        'mat_weight_pcs' => 'decimal:3',
     ];
 
     public function workOrder()
@@ -56,5 +66,10 @@ class WorkOrderProduct extends Model
     public function ebdItem()
     {
         return $this->belongsTo(MngEbdItem::class, 'ebd_item_id', 'id');
+    }
+
+    public function ebdAddProcess()
+    {
+        return $this->belongsTo(MngEbdAddProcess::class, 'ebd_add_process_id', 'id');
     }
 }

@@ -14,10 +14,14 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 class QuotationToolingExport implements FromView, WithTitle, WithEvents
 {
     protected $workOrder;
+    protected $currency;
+    protected $exchangeRate;
 
-    public function __construct(WorkOrder $workOrder)
+    public function __construct(WorkOrder $workOrder, ?string $currency = null, $exchangeRate = null)
     {
         $this->workOrder = $workOrder;
+        $this->currency = $currency;
+        $this->exchangeRate = $exchangeRate;
     }
 
     protected function getItems()
@@ -52,13 +56,19 @@ class QuotationToolingExport implements FromView, WithTitle, WithEvents
 
         $ebdHeader = $workOrder->ebdHeader;
         $items = $this->getItems();
-        $supplierName = $ebdHeader->customer->name ?? $workOrder->inquiry->customer->name ?? 'PT. SUMMIT ADYAWINSA INDONESIA';
+        $supplierName = 'Supplier Name';
+
+        $formattedCurrency = !empty($this->currency) ? \App\Helpers\CurrencyHelper::formatLabel($this->currency) : '';
+        $currencyCode = !empty($this->currency) ? \App\Helpers\CurrencyHelper::getCode($this->currency) : '';
 
         return view('management.export.quotation-tooling', [
             'workOrder' => $workOrder,
             'ebdHeader' => $ebdHeader,
             'items' => $items,
-            'supplierName' => $supplierName
+            'supplierName' => $supplierName,
+            'currency' => $formattedCurrency,
+            'currencyCode' => $currencyCode,
+            'exchangeRate' => $this->exchangeRate,
         ]);
     }
 
@@ -121,9 +131,34 @@ class QuotationToolingExport implements FromView, WithTitle, WithEvents
                     $currentRow = $endRow + 1;
                 }
 
+                // Format Cell X5 (Exchange Rate value) in Rupiah (Rp) since exchange rate is to IDR
+                $sheet->getStyle('X5')->getNumberFormat()->setFormatCode('"Rp "#,##0.00');
+
+                // Format Column X (Foreign Currency prices) with foreign currency symbol (e.g. ¥ 100.00, $ 100.00, ฿ 100.00)
+                $symbol = \App\Helpers\CurrencyHelper::getSymbol($this->currency);
+                $currFormat = '"' . $symbol . ' "#,##0.00';
+
+                // Format Column R, S, T (Dies, Jig, CF quantities) & Column X (Foreign Currency) & Column Y (IDR)
+                if ($highestRow >= 11) {
+                    $sheet->getStyle("R11:T{$highestRow}")->getNumberFormat()->setFormatCode('#,##0');
+                    $sheet->getStyle("X11:X{$highestRow}")->getNumberFormat()->setFormatCode($currFormat);
+                    $sheet->getStyle("Y11:Y{$highestRow}")->getNumberFormat()->setFormatCode('"Rp "#,##0.00');
+
+                    // Set formulas explicitly for TOTAL row to ensure Excel calculates sums automatically
+                    $totalRow = $highestRow;
+                    $lastDataRow = $highestRow - 1;
+                    if ($lastDataRow >= 11) {
+                        $sheet->setCellValue("R{$totalRow}", "=SUM(R11:R{$lastDataRow})");
+                        $sheet->setCellValue("S{$totalRow}", "=SUM(S11:S{$lastDataRow})");
+                        $sheet->setCellValue("T{$totalRow}", "=SUM(T11:T{$lastDataRow})");
+                        $sheet->setCellValue("X{$totalRow}", "=SUM(X11:X{$lastDataRow})");
+                        $sheet->setCellValue("Y{$totalRow}", "=SUM(Y11:Y{$lastDataRow})");
+                    }
+                }
+
                 // Explicit Column Widths
                 $sheet->getColumnDimension('A')->setWidth(6);   // No
-                $sheet->getColumnDimension('B')->setWidth(3);   // NEW/COMMON/MODIFY col 1
+                $sheet->getColumnDimension('B')->setWidth(3);   // col 1
                 $sheet->getColumnDimension('C')->setWidth(3);   // col 2
                 $sheet->getColumnDimension('D')->setWidth(3);   // col 3
                 $sheet->getColumnDimension('E')->setWidth(3);   // col 4
@@ -131,19 +166,19 @@ class QuotationToolingExport implements FromView, WithTitle, WithEvents
                 $sheet->getColumnDimension('G')->setWidth(3);   // col 6
                 $sheet->getColumnDimension('H')->setWidth(22);  // Part No.
                 $sheet->getColumnDimension('I')->setWidth(32);  // Part Name
-                $sheet->getColumnDimension('J')->setWidth(18);  // Process Name
-                $sheet->getColumnDimension('K')->setWidth(12);  // Process
-                $sheet->getColumnDimension('L')->setWidth(15);  // NEW DIES/MODIF/COMMON
-                $sheet->getColumnDimension('M')->setWidth(8);   // OP
-                $sheet->getColumnDimension('N')->setWidth(18);  // Process Name
-                $sheet->getColumnDimension('O')->setWidth(12);  // TOOLING
-                $sheet->getColumnDimension('P')->setWidth(8);   // Dies
-                $sheet->getColumnDimension('Q')->setWidth(8);   // Jig
-                $sheet->getColumnDimension('R')->setWidth(8);   // CF
-                $sheet->getColumnDimension('S')->setWidth(9);   // Tonage (T)
-                $sheet->getColumnDimension('T')->setWidth(9);   // Width
-                $sheet->getColumnDimension('U')->setWidth(9);   // Length
-                $sheet->getColumnDimension('V')->setWidth(9);   // Height
+                $sheet->getColumnDimension('J')->setWidth(18);  // Material Spec
+                $sheet->getColumnDimension('K')->setWidth(12);  // Thickness
+                $sheet->getColumnDimension('L')->setWidth(18);  // Process Name (Main)
+                $sheet->getColumnDimension('M')->setWidth(12);  // Process (prod_homeline)
+                $sheet->getColumnDimension('N')->setWidth(22);  // NEW DIES / MODIF / COMMON
+                $sheet->getColumnDimension('O')->setWidth(8);   // OP
+                $sheet->getColumnDimension('P')->setWidth(26);  // Tooling Process Name (Widened to 26!)
+                $sheet->getColumnDimension('Q')->setWidth(12);  // Category (Tool Rank/Category)
+                $sheet->getColumnDimension('R')->setWidth(8);   // Dies
+                $sheet->getColumnDimension('S')->setWidth(8);   // Jig
+                $sheet->getColumnDimension('T')->setWidth(8);   // CF
+                $sheet->getColumnDimension('U')->setWidth(12);  // Tonage (T)
+                $sheet->getColumnDimension('V')->setWidth(12);  // Height (Die Height)
                 $sheet->getColumnDimension('W')->setWidth(12);  // Category
                 $sheet->getColumnDimension('X')->setWidth(20);  // Currency
                 $sheet->getColumnDimension('Y')->setWidth(20);  // IDR

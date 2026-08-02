@@ -17,7 +17,7 @@ class ToolingQuotation extends Model
         'supplier_id',
         'quotation_no',
         'revision',
-        'currency_name',
+        'currency_code',
         'exchange_rate',
         'total_cost_foreign',
         'total_cost_idr',
@@ -33,6 +33,22 @@ class ToolingQuotation extends Model
         'total_cost_idr' => 'decimal:2',
         'imported_at' => 'datetime',
     ];
+
+    /**
+     * Accessor untuk nama/label mata uang lengkap dari CurrencyHelper
+     */
+    public function getCurrencyLabelAttribute(): string
+    {
+        return \App\Helpers\CurrencyHelper::formatLabel($this->currency_code) ?: ($this->currency_code ?? 'IDR');
+    }
+
+    /**
+     * Accessor untuk simbol mata uang dari CurrencyHelper
+     */
+    public function getCurrencySymbolAttribute(): string
+    {
+        return \App\Helpers\CurrencyHelper::getSymbol($this->currency_code) ?: 'Rp';
+    }
 
     /**
      * Relasi ke EBD Header Target

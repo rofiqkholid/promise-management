@@ -15,7 +15,6 @@ class ToolingQuotationDetail extends Model
         'tooling_quotation_id',
         'ebd_item_id',
         'ebd_tooling_process_id',
-        'process_type',
         'homeline',
         'supplier_status',
         'op',

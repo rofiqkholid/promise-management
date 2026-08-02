@@ -18,10 +18,10 @@
                     <i class="fa-solid fa-arrow-left text-[10px]"></i> Back
                 </a>
                 @if($selectedEbd)
-                    <a href="{{ route('management.work-order-tooling.quotation', $encryptedWoId) }}"
-                       class="inline-flex items-center justify-center gap-1.5 px-3 h-8 bg-emerald-600 hover:bg-emerald-700 border border-transparent rounded-xs text-xs font-normal text-white transition-all active:scale-98">
+                    <button type="button" onclick="openQuotationExportModal('{{ route('management.work-order-tooling.quotation', $encryptedWoId) }}')"
+                            class="inline-flex items-center justify-center gap-1.5 px-3 h-8 bg-emerald-600 hover:bg-emerald-700 border border-transparent rounded-xs text-xs font-normal text-white transition-all active:scale-98 cursor-pointer">
                         <i class="fa-solid fa-file-excel text-[10px]"></i> Download Template
-                    </a>
+                    </button>
                     <button type="button" onclick="$('#import-quotation-modal').removeClass('hidden').addClass('flex')"
                             class="inline-flex items-center justify-center gap-1.5 px-3 h-8 bg-indigo-600 hover:bg-indigo-700 border border-transparent rounded-xs text-xs font-normal text-white transition-all active:scale-98 cursor-pointer shadow-none">
                         <i class="fa-solid fa-file-import text-[10px]"></i> Import Supplier Quote
@@ -153,44 +153,105 @@
             {{-- TOP NAVIGATION BAR (MULTI-SELECT CHECKBOXES + SUMMARY vs DETAILED COMPARISON) --}}
             <div class="px-6 py-2.5 bg-slate-50 dark:bg-slate-900/80 border-b border-slate-300 dark:border-slate-800 flex items-center justify-between flex-shrink-0 gap-4 relative z-20">
                 
-                {{-- CUSTOM DROPDOWN MULTI-SELECT WITH SEARCH & CHECKBOXES --}}
-                <div class="relative min-w-[220px]">
+                {{-- CUSTOM DROPDOWN MULTI-SELECT WITH REVISIONS, SEARCH & CHECKBOXES --}}
+                <div class="relative min-w-[240px]">
                     <button type="button" 
                             id="btn-custom-supplier-dropdown"
                             class="w-full flex items-center justify-between gap-2 px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xs text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-750 transition-all cursor-pointer">
-                        <span id="lbl-custom-supplier-dropdown" class="truncate font-medium">All Suppliers Selected</span>
+                        <span id="lbl-custom-supplier-dropdown" class="truncate font-semibold text-indigo-600 dark:text-indigo-400">
+                            <i class="fa-solid fa-filter text-[10px] mr-1"></i> Filter & Revisions
+                        </span>
                         <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
                     </button>
 
                     {{-- DROPDOWN MENU PANEL (FLOATING) --}}
-                    <div id="panel-custom-supplier-dropdown" class="hidden absolute top-full left-0 mt-1 w-64 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xs shadow-2xl z-50 overflow-hidden">
-                        {{-- SEARCH INPUT --}}
-                        <div class="p-2 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
-                            <div class="relative">
+                    <div id="panel-custom-supplier-dropdown" class="hidden absolute top-full left-0 mt-1 w-72 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xs shadow-2xl z-50 overflow-hidden">
+                        
+                        {{-- 1. EBD REVISION SELECTOR --}}
+                        <div class="p-2.5 bg-slate-100/70 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-700">
+                            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+                                Target EBD Revision
+                            </label>
+                            @if(isset($availableEbdRevisions) && $availableEbdRevisions->count() > 1)
+                                <select onchange="window.location.href='?ebd_id=' + this.value" class="w-full text-xs font-mono font-bold px-2 py-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:border-indigo-500 cursor-pointer">
+                                    @foreach($availableEbdRevisions as $revEbd)
+                                        <option value="{{ $revEbd->id }}" {{ $revEbd->id == $selectedEbd->id ? 'selected' : '' }}>
+                                            Rev {{ $revEbd->revision }} {{ $revEbd->id == $workOrder->ebd_header_id ? '★ (Active WO)' : '' }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            @else
+                                <div class="text-xs font-mono font-semibold text-slate-700 dark:text-slate-300 px-2 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xs">
+                                    Rev {{ $selectedEbd->revision }} (Latest)
+                                </div>
+                            @endif
+                        </div>
+
+                        {{-- 2. SORT SUPPLIERS BY --}}
+                        <div class="p-2.5 bg-slate-100/70 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-700">
+                            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+                                Sort Suppliers By
+                            </label>
+                            <select onchange="window.location.href=updateQueryStringParam('sort', this.value)" class="w-full text-xs font-semibold px-2 py-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:border-indigo-500 cursor-pointer">
+                                <option value="worth" {{ request('sort', 'worth') == 'worth' ? 'selected' : '' }}>Lowest Cost (Best Value)</option>
+                                <option value="highest" {{ request('sort') == 'highest' ? 'selected' : '' }}>Highest Cost</option>
+                                <option value="name" {{ request('sort') == 'name' ? 'selected' : '' }}>Supplier Name (A-Z)</option>
+                            </select>
+                        </div>
+
+                        {{-- 3. SUPPLIER FILTER SEARCH & HEADER --}}
+                        <div class="p-2 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 flex items-center justify-between gap-2">
+                            <div class="relative flex-1">
                                 <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]"></i>
                                 <input type="text" id="input-search-supplier-filter" placeholder="Search supplier..." class="w-full pl-7 pr-2 py-1 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                             </div>
-                        </div>
-
-                        {{-- CHECKBOX LIST --}}
-                        <div class="max-h-56 overflow-y-auto p-1.5 space-y-0.5">
-                            {{-- SELECT ALL OPTION --}}
-                            <label class="flex items-center gap-2 px-2 py-1.5 rounded-xs hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-semibold text-indigo-600 dark:text-indigo-400 cursor-pointer">
+                            <label class="flex items-center gap-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 cursor-pointer flex-shrink-0 pr-1">
                                 <input type="checkbox" id="chk-toggle-all-suppliers" checked class="rounded-xs border-slate-300 text-indigo-600 focus:ring-indigo-500" {{ $quotations->count() === 0 ? 'disabled' : '' }}>
                                 <span>All</span>
                             </label>
+                        </div>
 
-                            <div class="h-px bg-slate-200 dark:bg-slate-700 my-1"></div>
-
-                            {{-- SUPPLIER CHECKBOX ITEMS --}}
-                            <div id="supplier-items-container" class="space-y-0.5">
+                        {{-- 4. SUPPLIER CHECKBOX ITEMS WITH REVISION DROPDOWN & RANK BADGE --}}
+                        <div class="max-h-64 overflow-y-auto p-1.5 space-y-1">
+                            <div id="supplier-items-container" class="space-y-1">
                                 @forelse($quotations as $q)
-                                    <label class="supp-item-label flex items-center gap-2 px-2 py-1.5 rounded-xs hover:bg-slate-100 dark:hover:bg-slate-700 text-xs text-slate-700 dark:text-slate-200 cursor-pointer">
-                                        <input type="checkbox" class="chk-supp-filter rounded-xs border-slate-300 text-indigo-600 focus:ring-indigo-500" data-supp-id="{{ $q->id }}" data-supp-name="{{ $q->supplier_name }}" checked>
-                                        <span class="supp-name-text truncate">{{ $q->supplier_name }} ({{ $q->currency_name }})</span>
-                                    </label>
+                                    <div class="supp-item-label p-2 rounded-xs hover:bg-slate-50 dark:hover:bg-slate-750/60 border border-slate-100 dark:border-slate-750 bg-slate-50/30 dark:bg-slate-900/30 space-y-1">
+                                        <div class="flex items-center justify-between gap-2">
+                                            <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-800 dark:text-slate-100 min-w-0">
+                                                <input type="checkbox" class="chk-supp-filter rounded-xs border-slate-300 text-indigo-600 focus:ring-indigo-500" data-supp-id="{{ $q->id }}" data-supp-name="{{ $q->supplier_name }}" checked>
+                                                <span class="supp-name-text truncate">{{ $q->supplier_name }}</span>
+                                            </label>
+                                            <div class="flex items-center gap-1 flex-shrink-0">
+                                                @if(isset($q->worth_rank))
+                                                    @if($q->worth_rank === 1)
+                                                        <span class="px-1.5 py-0.5 text-[9px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 rounded-xs">Best Value</span>
+                                                    @else
+                                                        <span class="px-1.5 py-0.5 text-[9px] font-medium bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700 rounded-xs">#{{ $q->worth_rank }}</span>
+                                                    @endif
+                                                @endif
+                                                <span class="text-[10px] text-slate-400 font-mono">({{ $q->currency_code ?? 'IDR' }})</span>
+                                            </div>
+                                        </div>
+
+                                        @if(isset($q->all_revisions) && count($q->all_revisions) > 1)
+                                            <div class="flex items-center gap-1.5 pl-6">
+                                                <span class="text-[9px] font-medium text-slate-400 uppercase">Rev:</span>
+                                                <select onchange="switchSupplierRevision('{{ $q->supplier_id }}', this.value)" class="w-full text-[10px] font-mono font-bold px-1.5 py-0.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xs text-indigo-600 dark:text-indigo-400 focus:outline-none cursor-pointer">
+                                                    @foreach($q->all_revisions as $revQuote)
+                                                        <option value="{{ $revQuote->id }}" {{ $revQuote->id == $q->id ? 'selected' : '' }}>
+                                                            Rev {{ $revQuote->revision }} ({{ $revQuote->created_at ? $revQuote->created_at->format('d/m') : '' }})
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                        @else
+                                            <div class="pl-6 text-[10px] font-mono text-slate-400">
+                                                Quotation Rev: {{ $q->revision ?? '0' }}
+                                            </div>
+                                        @endif
+                                    </div>
                                 @empty
-                                    <div class="px-2 py-2 text-xs text-slate-400 dark:text-slate-500 italic text-center">No imported suppliers</div>
+                                    <div class="px-2 py-3 text-xs text-slate-400 dark:text-slate-500 italic text-center">No imported suppliers</div>
                                 @endforelse
                             </div>
                         </div>
@@ -247,7 +308,7 @@
                                         <th class="col-supp-{{ $q->id }} p-3 border-r border-slate-300 dark:border-slate-800 bg-indigo-50/50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-300 min-w-[200px]">
                                             <div class="flex items-center justify-between">
                                                 <span>{{ $q->supplier_name }}</span>
-                                                <span class="text-[10px] text-slate-400 font-mono">({{ $q->currency_name }})</span>
+                                                <span class="text-[10px] text-slate-400 font-mono">({{ $q->currency_code ?? 'IDR' }})</span>
                                             </div>
                                         </th>
                                     @endforeach
@@ -319,9 +380,10 @@
                                     @foreach($quotations as $q)
                                         @php
                                             $gSForeignCost = $q->details->sum('cost_foreign');
+                                            $currSymbol = \App\Helpers\CurrencyHelper::getSymbol($q->currency_code);
                                         @endphp
                                         <td class="col-supp-{{ $q->id }} p-3 border-r border-slate-300 dark:border-slate-800 font-mono font-semibold text-slate-800 dark:text-slate-100">
-                                            {{ number_format($gSForeignCost, 2, ',', '.') }} {{ $q->currency_name }}
+                                            {{ $currSymbol }} {{ number_format($gSForeignCost, 2, ',', '.') }}
                                         </td>
                                     @endforeach
                                 </tr>
@@ -330,26 +392,68 @@
                                 <tr class="bg-indigo-50/40 dark:bg-indigo-950/30">
                                     <td class="p-3 border-r border-slate-300 dark:border-slate-800 font-bold text-slate-900 dark:text-white">GRAND TOTAL TOOLING COST (IDR)</td>
                                     <td class="p-3 border-r border-slate-300 dark:border-slate-800 font-mono font-bold text-slate-900 dark:text-white text-base bg-indigo-100/40 dark:bg-indigo-900/40">
-                                        Rp{{ number_format($gEbdTotalCost, 0, ',', '.') }}
+                                        Rp. {{ number_format($gEbdTotalCost, 0, ',', '.') }}
+                                    </td>
+                                    @foreach($quotations as $q)
+                                        @php
+                                            $gSCostIdr = $q->total_cost_idr ?: $q->details->sum('cost_idr');
+                                        @endphp
+                                        <td class="col-supp-{{ $q->id }} p-3 border-r border-slate-300 dark:border-slate-800 font-mono">
+                                            <div class="font-bold text-indigo-700 dark:text-indigo-300 text-base">
+                                                Rp. {{ number_format($gSCostIdr, 0, ',', '.') }}
+                                            </div>
+                                        </td>
+                                    @endforeach
+                                </tr>
+
+                                {{-- Row: Global Cost Variance / Gap (IDR) --}}
+                                {{-- Row: Global Cost Variance / Gap (IDR) --}}
+                                <tr class="bg-slate-50/60 dark:bg-slate-900/40">
+                                    <td class="p-3 border-r border-slate-300 dark:border-slate-800 font-bold text-slate-700 dark:text-slate-300">COST VARIANCE / GAP (IDR)</td>
+                                    <td class="p-3 border-r border-slate-300 dark:border-slate-800 font-mono text-slate-400 bg-slate-100/30 dark:bg-slate-800/30">
+                                        —
                                     </td>
                                     @foreach($quotations as $q)
                                         @php
                                             $gSCostIdr = $q->total_cost_idr ?: $q->details->sum('cost_idr');
                                             $gVariance = $gSCostIdr > 0 ? ($gSCostIdr - $gEbdTotalCost) : 0;
                                         @endphp
-                                        <td class="col-supp-{{ $q->id }} p-3 border-r border-slate-300 dark:border-slate-800 font-mono">
-                                            <div class="font-bold text-indigo-700 dark:text-indigo-300 text-base">
-                                                Rp{{ number_format($gSCostIdr, 0, ',', '.') }}
-                                            </div>
-                                            <div class="mt-0.5 text-xs font-bold">
-                                                @if($gVariance > 0)
-                                                    <span class="text-rose-600 dark:text-rose-400 flex items-center gap-1 inline-flex">+Rp{{ number_format($gVariance, 0, ',', '.') }} <i class="fa-solid fa-arrow-up text-[10px]"></i></span>
-                                                @elseif($gVariance < 0)
-                                                    <span class="text-emerald-600 dark:text-emerald-400 flex items-center gap-1 inline-flex">-Rp{{ number_format(abs($gVariance), 0, ',', '.') }} <i class="fa-solid fa-arrow-down text-[10px]"></i></span>
-                                                @else
-                                                    <span class="text-slate-400">Match (0)</span>
-                                                @endif
-                                            </div>
+                                        <td class="col-supp-{{ $q->id }} p-3 border-r border-slate-300 dark:border-slate-800 font-mono text-xs font-bold">
+                                            @if($gVariance > 0)
+                                                <span class="text-rose-600 dark:text-rose-400 flex items-center gap-1 inline-flex">+ Rp. {{ number_format($gVariance, 0, ',', '.') }} <i class="fa-solid fa-arrow-up text-[10px]"></i></span>
+                                            @elseif($gVariance < 0)
+                                                <span class="text-emerald-600 dark:text-emerald-400 flex items-center gap-1 inline-flex">- Rp. {{ number_format(abs($gVariance), 0, ',', '.') }} <i class="fa-solid fa-arrow-down text-[10px]"></i></span>
+                                            @else
+                                                <span class="text-slate-400 font-medium">Match (0)</span>
+                                            @endif
+                                        </td>
+                                    @endforeach
+                                </tr>
+
+                                {{-- Row: Global Variance Rate (%) --}}
+                                <tr class="bg-slate-50/60 dark:bg-slate-900/40 border-t border-slate-200 dark:border-slate-800">
+                                    <td class="p-3 border-r border-slate-300 dark:border-slate-800 font-bold text-slate-700 dark:text-slate-300">VARIANCE RATE (%)</td>
+                                    <td class="p-3 border-r border-slate-300 dark:border-slate-800 font-mono text-slate-400 bg-slate-100/30 dark:bg-slate-800/30">
+                                        —
+                                    </td>
+                                    @foreach($quotations as $q)
+                                        @php
+                                            $gSCostIdr = $q->total_cost_idr ?: $q->details->sum('cost_idr');
+                                            $gVariance = $gSCostIdr > 0 ? ($gSCostIdr - $gEbdTotalCost) : 0;
+                                            $gVariancePct = ($gEbdTotalCost > 0 && $gSCostIdr > 0) ? (($gVariance / $gEbdTotalCost) * 100) : 0;
+                                        @endphp
+                                        <td class="col-supp-{{ $q->id }} p-3 border-r border-slate-300 dark:border-slate-800 font-mono text-xs font-bold">
+                                            @if($gVariance > 0)
+                                                <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-xs font-mono font-bold text-xs bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+                                                    + {{ number_format($gVariancePct, 1, ',', '.') }}% <i class="fa-solid fa-arrow-up text-[10px]"></i>
+                                                </span>
+                                            @elseif($gVariance < 0)
+                                                <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-xs font-mono font-bold text-xs bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                                                    - {{ number_format(abs($gVariancePct), 1, ',', '.') }}% <i class="fa-solid fa-arrow-down text-[10px]"></i>
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-xs font-mono font-medium text-xs bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700">0.0%</span>
+                                            @endif
                                         </td>
                                     @endforeach
                                 </tr>
@@ -472,7 +576,7 @@
                                         </td>
                                         @foreach($quotations as $q)
                                             <td class="col-supp-{{ $q->id }} p-3 border-r border-slate-300 dark:border-slate-800 font-mono text-slate-600 dark:text-slate-400">
-                                                {{ $q->currency_name }} <span class="text-[10px] text-slate-400">(@ Rp{{ number_format($q->exchange_rate, 0, ',', '.') }})</span>
+                                                {{ $q->currency_code ?? 'IDR' }} <span class="text-[10px] text-slate-400">(@ Rp. {{ number_format($q->exchange_rate, 0, ',', '.') }})</span>
                                             </td>
                                         @endforeach
                                     </tr>
@@ -487,9 +591,10 @@
                                             @php
                                                 $sDetails = $q->details->where('ebd_item_id', $item->id);
                                                 $sForeignCost = $sDetails->sum('cost_foreign');
+                                                $currSymbol = \App\Helpers\CurrencyHelper::getSymbol($q->currency_code);
                                             @endphp
                                             <td class="col-supp-{{ $q->id }} p-3 border-r border-slate-300 dark:border-slate-800 font-mono font-semibold text-slate-800 dark:text-slate-100">
-                                                {{ number_format($sForeignCost, 2, ',', '.') }} {{ $q->currency_name }}
+                                                {{ $currSymbol }} {{ number_format($sForeignCost, 2, ',', '.') }}
                                             </td>
                                         @endforeach
                                     </tr>
@@ -498,7 +603,24 @@
                                     <tr class="bg-indigo-50/30 dark:bg-indigo-950/20">
                                         <td class="p-3 border-r border-slate-300 dark:border-slate-800 font-bold text-slate-800 dark:text-slate-100">Total Tooling Cost (IDR)</td>
                                         <td class="p-3 border-r border-slate-300 dark:border-slate-800 font-mono font-bold text-slate-900 dark:text-white text-sm bg-slate-100/50 dark:bg-slate-800/50">
-                                            Rp{{ number_format($ebdTotalCost, 0, ',', '.') }}
+                                            Rp. {{ number_format($ebdTotalCost, 0, ',', '.') }}
+                                        </td>
+                                        @foreach($quotations as $q)
+                                            @php
+                                                $sDetails = $q->details->where('ebd_item_id', $item->id);
+                                                $sCostIdr = $sDetails->sum('cost_idr');
+                                            @endphp
+                                            <td class="col-supp-{{ $q->id }} p-3 border-r border-slate-300 dark:border-slate-800 font-mono font-bold text-slate-900 dark:text-white text-sm">
+                                                Rp. {{ number_format($sCostIdr, 0, ',', '.') }}
+                                            </td>
+                                        @endforeach
+                                    </tr>
+
+                                    {{-- Row: Cost Variance / Gap (IDR) --}}
+                                    <tr class="bg-slate-50/60 dark:bg-slate-900/40">
+                                        <td class="p-3 border-r border-slate-300 dark:border-slate-800 font-bold text-slate-700 dark:text-slate-300">Cost Variance / Gap (IDR)</td>
+                                        <td class="p-3 border-r border-slate-300 dark:border-slate-800 font-mono text-slate-400 bg-slate-100/30 dark:bg-slate-800/30">
+                                            —
                                         </td>
                                         @foreach($quotations as $q)
                                             @php
@@ -506,19 +628,43 @@
                                                 $sCostIdr = $sDetails->sum('cost_idr');
                                                 $variance = $sCostIdr > 0 ? ($sCostIdr - $ebdTotalCost) : 0;
                                             @endphp
-                                            <td class="col-supp-{{ $q->id }} p-3 border-r border-slate-300 dark:border-slate-800 font-mono">
-                                                <div class="font-bold text-slate-900 dark:text-white text-sm">
-                                                    Rp{{ number_format($sCostIdr, 0, ',', '.') }}
-                                                </div>
-                                                <div class="mt-0.5 text-xs font-semibold">
-                                                    @if($variance > 0)
-                                                        <span class="text-rose-600 dark:text-rose-400 flex items-center gap-1 inline-flex">+Rp{{ number_format($variance, 0, ',', '.') }} <i class="fa-solid fa-arrow-up text-[10px]"></i></span>
-                                                    @elseif($variance < 0)
-                                                        <span class="text-emerald-600 dark:text-emerald-400 flex items-center gap-1 inline-flex">-Rp{{ number_format(abs($variance), 0, ',', '.') }} <i class="fa-solid fa-arrow-down text-[10px]"></i></span>
-                                                    @else
-                                                        <span class="text-slate-400">Match (0)</span>
-                                                    @endif
-                                                </div>
+                                            <td class="col-supp-{{ $q->id }} p-3 border-r border-slate-300 dark:border-slate-800 font-mono text-xs font-bold">
+                                                @if($variance > 0)
+                                                    <span class="text-rose-600 dark:text-rose-400 flex items-center gap-1 inline-flex">+ Rp. {{ number_format($variance, 0, ',', '.') }} <i class="fa-solid fa-arrow-up text-[10px]"></i></span>
+                                                @elseif($variance < 0)
+                                                    <span class="text-emerald-600 dark:text-emerald-400 flex items-center gap-1 inline-flex">- Rp. {{ number_format(abs($variance), 0, ',', '.') }} <i class="fa-solid fa-arrow-down text-[10px]"></i></span>
+                                                @else
+                                                    <span class="text-slate-400 font-medium">Match (0)</span>
+                                                @endif
+                                            </td>
+                                        @endforeach
+                                    </tr>
+
+                                    {{-- Row: Variance Rate (%) --}}
+                                    <tr class="bg-slate-50/60 dark:bg-slate-900/40 border-t border-slate-200 dark:border-slate-800">
+                                        <td class="p-3 border-r border-slate-300 dark:border-slate-800 font-bold text-slate-700 dark:text-slate-300">Variance Rate (%)</td>
+                                        <td class="p-3 border-r border-slate-300 dark:border-slate-800 font-mono text-slate-400 bg-slate-100/30 dark:bg-slate-800/30">
+                                            —
+                                        </td>
+                                        @foreach($quotations as $q)
+                                            @php
+                                                $sDetails = $q->details->where('ebd_item_id', $item->id);
+                                                $sCostIdr = $sDetails->sum('cost_idr');
+                                                $variance = $sCostIdr > 0 ? ($sCostIdr - $ebdTotalCost) : 0;
+                                                $variancePct = ($ebdTotalCost > 0 && $sCostIdr > 0) ? (($variance / $ebdTotalCost) * 100) : 0;
+                                            @endphp
+                                            <td class="col-supp-{{ $q->id }} p-3 border-r border-slate-300 dark:border-slate-800 font-mono text-xs font-bold">
+                                                @if($variance > 0)
+                                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-xs font-mono font-bold text-xs bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+                                                        + {{ number_format($variancePct, 1, ',', '.') }}% <i class="fa-solid fa-arrow-up text-[10px]"></i>
+                                                    </span>
+                                                @elseif($variance < 0)
+                                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-xs font-mono font-bold text-xs bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                                                        - {{ number_format(abs($variancePct), 1, ',', '.') }}% <i class="fa-solid fa-arrow-down text-[10px]"></i>
+                                                    </span>
+                                                @else
+                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-xs font-mono font-medium text-xs bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700">0.0%</span>
+                                                @endif
                                             </td>
                                         @endforeach
                                     </tr>
@@ -684,26 +830,30 @@
                     </select>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-[11px] font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">
-                            Mata Uang (Currency) <span class="text-rose-500">*</span>
+                {{-- Mode Import --}}
+                <div>
+                    <label class="block text-[11px] font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">
+                        Mode Import <span class="text-rose-500">*</span>
+                    </label>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <label class="flex items-center gap-2 p-2.5 border border-indigo-200 dark:border-indigo-800 rounded-xs bg-indigo-50/40 dark:bg-indigo-950/40 cursor-pointer hover:border-indigo-400">
+                            <input type="radio" name="import_mode" value="new_revision" checked class="text-indigo-600 focus:ring-indigo-500">
+                            <div>
+                                <span class="block font-bold text-slate-800 dark:text-slate-100 text-[11px]">Revisi Baru</span>
+                                <span class="block text-[9px] text-slate-500">Simpan sebagai Rev 1, Rev 2...</span>
+                            </div>
                         </label>
-                        <select name="currency_name" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" required>
-                            <option value="China Yuan">China Yuan (CNY)</option>
-                            <option value="USD">US Dollar (USD)</option>
-                            <option value="THB">Thai Baht (THB)</option>
-                            <option value="YEN">Japanese Yen (YEN)</option>
-                            <option value="IDR">Rupiah (IDR)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">
-                            Nilai Tukar / Kurs (IDR) <span class="text-rose-500">*</span>
+                        <label class="flex items-center gap-2 p-2.5 border border-slate-200 dark:border-slate-700 rounded-xs bg-white dark:bg-slate-900 cursor-pointer hover:border-indigo-400">
+                            <input type="radio" name="import_mode" value="overwrite" class="text-indigo-600 focus:ring-indigo-500">
+                            <div>
+                                <span class="block font-bold text-slate-800 dark:text-slate-100 text-[11px]">Timpa / Overwrite</span>
+                                <span class="block text-[9px] text-slate-500">Update revisi saat ini</span>
+                            </div>
                         </label>
-                        <input type="number" step="0.01" name="exchange_rate" value="2275" placeholder="Contoh: 2275" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" required>
                     </div>
                 </div>
+
+
 
                 <div>
                     <label class="block text-[11px] font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">
@@ -722,14 +872,17 @@
                             <p class="text-[10px] text-slate-400 dark:text-slate-500">Format file Excel (.xlsx, .xls, .csv)</p>
                         </div>
 
-                        <div id="dropzone-file-info" class="hidden flex items-center gap-3 p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md shadow-xs pointer-events-none max-w-full">
+                        <div id="dropzone-file-info" class="hidden flex items-center gap-3 p-2 pl-3 pr-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md shadow-xs relative z-20 max-w-full">
                             <div class="w-8 h-8 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
                                 <i class="fa-solid fa-file-excel text-base"></i>
                             </div>
                             <div class="min-w-0 text-left pr-2">
-                                <p id="dropzone-file-name" class="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate max-w-[200px]"></p>
+                                <p id="dropzone-file-name" class="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate max-w-[180px]"></p>
                                 <p id="dropzone-file-size" class="text-[10px] text-slate-400 dark:text-slate-500"></p>
                             </div>
+                            <button type="button" id="btn-remove-file" class="w-6 h-6 rounded-full hover:bg-rose-50 dark:hover:bg-rose-950/60 text-slate-400 hover:text-rose-600 flex items-center justify-center transition-colors cursor-pointer ml-auto flex-shrink-0 z-30" title="Hapus File">
+                                <i class="fa-solid fa-xmark text-xs"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -908,6 +1061,15 @@
             }
         });
 
+        // Click logic for 'X' button to remove attached file
+        $('#btn-remove-file').on('click', function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            $fileInput.val('');
+            $prompt.removeClass('hidden');
+            $fileInfo.addClass('hidden').removeClass('flex');
+        });
+
         // Handle AJAX Submit for Import Quotation Form
         $('#import-quotation-form').on('submit', function(e) {
             e.preventDefault();
@@ -961,6 +1123,18 @@
         // Initial Label Update
         updateDropdownLabel();
     });
+
+    function switchSupplierRevision(supplierId, quoteId) {
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('supp_quote_' + supplierId, quoteId);
+        window.location.search = urlParams.toString();
+    }
+
+    function updateQueryStringParam(key, value) {
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set(key, value);
+        return window.location.pathname + '?' + urlParams.toString();
+    }
 </script>
 @endpush
 @endsection

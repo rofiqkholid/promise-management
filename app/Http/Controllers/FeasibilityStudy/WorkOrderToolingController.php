@@ -276,13 +276,19 @@ class WorkOrderToolingController extends Controller
         $users = User::orderBy('name', 'asc')->get();
 
         $currentYear = now()->year;
-        $count = WorkOrder::whereYear('created_at', $currentYear)->where('revision_no', 0)->count() + 1;
+        $count = WorkOrder::withTrashed()->whereYear('created_at', $currentYear)->where('revision_no', 0)->count() + 1;
         $romans = [
             1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV', 5 => 'V', 6 => 'VI',
             7 => 'VII', 8 => 'VIII', 9 => 'IX', 10 => 'X', 11 => 'XI', 12 => 'XII'
         ];
         $romanMonth = $romans[now()->month] ?? 'I';
-        $defaultSpkNo = sprintf("%03d/MKT-SPK/SAI/%s/%02d", $count, $romanMonth, now()->year % 100);
+        do {
+            $defaultSpkNo = sprintf("%03d/MKT-SPK/SAI/%s/%02d", $count, $romanMonth, now()->year % 100);
+            $exists = WorkOrder::withTrashed()->where('wo_number', $defaultSpkNo)->where('revision_no', 0)->exists();
+            if ($exists) {
+                $count++;
+            }
+        } while ($exists);
 
         $woHeader = DB::table('mng_wo_doc_format')->where('is_current', true)->first() ?: DB::table('mng_wo_doc_format')->first();
 
@@ -421,7 +427,10 @@ class WorkOrderToolingController extends Controller
             $sanitizedNo = str_replace(['/', '\\', ' '], '_', $workOrder->wo_number);
             $filename = 'Quotation_Tooling_' . $sanitizedNo . '.xlsx';
 
-            return Excel::download(new QuotationToolingExport($workOrder), $filename);
+            $currency = $request->input('currency');
+            $exchangeRate = $request->input('exchange_rate');
+
+            return Excel::download(new QuotationToolingExport($workOrder, $currency, $exchangeRate), $filename);
         } catch (\Exception $e) {
             Log::error('Failed to export Quotation Tooling', ['error' => $e->getMessage()]);
             return redirect()->back()->with('error', 'Failed to generate Quotation Tooling: ' . $e->getMessage());

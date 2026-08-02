@@ -58,13 +58,13 @@
     
     {{-- ── LEFT SIDE: Detail Configuration Form ─────────────────────────── --}}
     @if($isEditable)
-        <form id="spkForm" action="{{ isset($workOrder) ? route('management.work-order-tooling.update', $workOrder->hashed_id) : route('management.work-order-tooling.store') }}" method="POST" 
+        <form id="spkForm" action="{{ isset($workOrder) ? route('management.work-order-material.update', $workOrder->hashed_id) : route('management.work-order-material.store') }}" method="POST" 
               class="wo-form-panel w-1/2 h-full flex flex-col overflow-hidden border-r border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 transition-[width] duration-200 ease-in-out" :style="showPreview ? 'width: 50%' : 'width: 100%'">
             @csrf
             @if(isset($workOrder))
                 @method('PUT')
             @else
-                <input type="hidden" name="inquiry_id" value="{{ $inquiry->hashed_id }}">
+                <input type="hidden" name="inquiry_id" value="{{ $inquiry->hashed_id ?? '' }}">
                 <input type="hidden" name="ebd_header_id" value="{{ $ebdHeader->hashed_id ?? '' }}">
             @endif
             <input type="hidden" name="department_id" :value="department_id">
@@ -76,9 +76,9 @@
         {{-- Fixed Header --}}
         <div class="p-6 pb-4 border-b border-slate-300 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900 z-10 flex-none">
             <div class="flex items-center gap-3">
-                <a href="{{ route('management.work-order-tooling.index') }}"
+                <a href="{{ route('management.work-order-material.index') }}"
                    class="flex items-center justify-center w-7 h-7 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-500 hover:text-blue-600 hover:border-blue-500 transition-colors text-xs rounded-xs"
-                   title="Back to SPK 2 Tooling List">
+                   title="Back to SPK 2 Raw Material List">
                     <i class="fa-solid fa-arrow-left"></i>
                 </a>
                 <div>
@@ -531,6 +531,9 @@
                                 <th class="p-2 w-10 text-center">Drag</th>
                             @endif
                             <th class="p-2 min-w-48 text-left">Part Number / Name</th>
+                            <th class="p-2 min-w-32">Material Spec</th>
+                            <th class="p-2 min-w-36">Material Size</th>
+                            <th class="p-2 w-28 text-right">Weight (Pcs)</th>
                             <th class="p-2">Remarks</th>
                             <th class="p-2 w-20 text-center">Action</th>
                         </tr>
@@ -568,6 +571,9 @@
                                         </div>
                                     </div>
                                 </td>
+                                <td class="p-2 font-medium text-slate-700 dark:text-slate-300" x-text="prod.mat_spec || '—'"></td>
+                                <td class="p-2 font-medium text-slate-700 dark:text-slate-300" x-text="prod.mat_size || '—'"></td>
+                                <td class="p-2 text-right font-semibold text-slate-800 dark:text-slate-200" x-text="(prod.mat_weight_pcs !== null && prod.mat_weight_pcs !== undefined && prod.mat_weight_pcs !== '') ? prod.mat_weight_pcs : '—'"></td>
                                 <td class="p-2" x-text="prod.remarks || '—'"></td>
                                 <td class="p-2 text-center">
                                     <div class="flex justify-center gap-1">
@@ -596,9 +602,9 @@
 
         {{-- Fixed Footer --}}
         <div class="p-6 pt-4 border-t border-slate-300 dark:border-slate-800 flex justify-end gap-2.5 bg-slate-50 dark:bg-slate-900/60 z-10 flex-none">
-            <a href="{{ isset($workOrder) ? route('management.work-order-tooling.index') : route('management.inquiry.show', $inquiry->hashed_id) }}"
+            <a href="{{ isset($workOrder) ? route('management.work-order-material.index') : (isset($inquiry) ? route('management.inquiry.show', $inquiry->hashed_id) : route('management.work-order-material.index')) }}"
                class="px-4 py-2 text-xs font-bold border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xs transition-colors">
-                {{ isset($workOrder) ? 'Back to WO List' : 'Back to Inquiry' }}
+                {{ isset($workOrder) ? 'Back to WO List' : 'Back to List' }}
             </a>
             @if(isset($workOrder) && in_array($workOrder->status, ['Draft', 'Pending Approval']) && ($workOrder->is_latest ?? true))
                 <button type="button" onclick="confirmDeleteWO()"
@@ -633,12 +639,12 @@
 
     <div class="wo-preview-panel w-1/2 h-full overflow-auto bg-slate-150 dark:bg-slate-800 transition-[width] duration-200 ease-in-out p-8 flex flex-col items-center border-l border-slate-300 dark:border-slate-700"
          x-show="showPreview" :style="showPreview ? 'width: 50%' : 'width: 0%'">
-        @include('management.work-order.wo2-tooling.preview')
+        @include('management.work-order.wo2-material.preview')
     </div>
     
     @if(isset($workOrder))
         @if(in_array($workOrder->status, ['Draft', 'Pending Approval']) && ($workOrder->is_latest ?? true))
-            <form id="deleteWoForm" action="{{ route('management.work-order-tooling.destroy', $workOrder->hashed_id) }}" method="POST" class="hidden">
+            <form id="deleteWoForm" action="{{ route('management.work-order-material.destroy', $workOrder->hashed_id) }}" method="POST" class="hidden">
                 @csrf
                 @method('DELETE')
             </form>
@@ -1014,6 +1020,22 @@
             </div>
 
             <div>
+                <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Material Spec</label>
+                <input type="text" x-model="activeBom.mat_spec" placeholder="e.g. SPHC, SECC, SUS304..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Material Size</label>
+                    <input type="text" x-model="activeBom.mat_size" placeholder="e.g. t1.2 x 1200 x 2400" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Weight / Pcs (Kg)</label>
+                    <input type="number" step="0.001" min="0" x-model="activeBom.mat_weight_pcs" placeholder="0.000" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500">
+                </div>
+            </div>
+
+            <div>
                 <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider mb-1">Remarks</label>
                 <textarea x-model="activeBom.remarks" rows="2" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-100 text-xs px-2.5 py-1.5 rounded-xs focus:outline-none focus:border-blue-500" placeholder="Remarks..."></textarea>
             </div>
@@ -1275,6 +1297,9 @@ document.addEventListener('alpine:init', () => {
             parentTempId: '',
             customer_part_no: '',
             customer_part_name: '',
+            mat_spec: '',
+            mat_size: '',
+            mat_weight_pcs: '',
             eo: '',
             class_id: 'RM',
             uom: 'Pcs',
@@ -1301,10 +1326,13 @@ document.addEventListener('alpine:init', () => {
             parentTempId: null,
             work_order_product_id: p.id ?? null,
             inquiry_product_id: p.inquiry_product_id ?? null,
-            customer_code: '{{ isset($workOrder) ? ($workOrder->inquiry->customer->code ?? "") : ($ebdHeader->customer->code ?? $inquiry->customer->code ?? "") }}',
-            model_name: '{{ isset($workOrder) ? ($workOrder->inquiry->projectModel->name ?? "") : ($ebdHeader->projectModel->name ?? $inquiry->projectModel->name ?? "") }}',
+            customer_code: p.customer_code || '{{ isset($workOrder) ? ($workOrder->inquiry->customer->code ?? $workOrder->ebdHeader->customer->code ?? "") : ($ebdHeader->customer->code ?? $inquiry->customer->code ?? "") }}',
+            model_name: p.model_name || '{{ isset($workOrder) ? ($workOrder->inquiry->projectModel->name ?? $workOrder->ebdHeader->projectModel->name ?? "") : ($ebdHeader->projectModel->name ?? $inquiry->projectModel->name ?? "") }}',
             customer_part_no: p.customer_part_no ?? p.part_no ?? '',
             customer_part_name: p.customer_part_name ?? p.part_name ?? '',
+            mat_spec: p.mat_spec ?? '',
+            mat_size: p.mat_size ?? '',
+            mat_weight_pcs: p.mat_weight_pcs ?? '',
             destination: p.destination ?? '',
             sop_date: p.sop_date ? (typeof p.sop_date === 'string' ? p.sop_date.substring(0, 10) : p.sop_date) : '',
             eol_date: p.eol_date ? (typeof p.eol_date === 'string' ? p.eol_date.substring(0, 10) : p.eol_date) : '',
@@ -1744,6 +1772,9 @@ document.addEventListener('alpine:init', () => {
                 parentTempId: '',
                 customer_part_no: '',
                 customer_part_name: '',
+                mat_spec: '',
+                mat_size: '',
+                mat_weight_pcs: '',
                 eo: '',
                 class_id: 'RM',
                 uom: 'Pcs',
@@ -1762,6 +1793,9 @@ document.addEventListener('alpine:init', () => {
                 parentTempId: p.parentTempId || '',
                 customer_part_no: p.customer_part_no,
                 customer_part_name: p.customer_part_name,
+                mat_spec: p.mat_spec || '',
+                mat_size: p.mat_size || '',
+                mat_weight_pcs: p.mat_weight_pcs !== null && p.mat_weight_pcs !== undefined ? p.mat_weight_pcs : '',
                 eo: p.eo || '',
                 class_id: p.class_id || 'FG',
                 uom: p.uom || 'Kg',
@@ -1782,10 +1816,13 @@ document.addEventListener('alpine:init', () => {
                     parentTempId: this.activeBom.parentTempId,
                     work_order_product_id: null,
                     inquiry_product_id: null,
-                    customer_code: '{{ isset($workOrder) ? ($workOrder->inquiry->customer->code ?? "") : ($inquiry->customer->code ?? "") }}',
-                    model_name: '{{ isset($workOrder) ? ($workOrder->inquiry->projectModel->name ?? "") : ($inquiry->projectModel->name ?? "") }}',
+                    customer_code: '{{ isset($workOrder) ? ($workOrder->inquiry->customer->code ?? $workOrder->ebdHeader->customer->code ?? "") : ($ebdHeader->customer->code ?? $inquiry->customer->code ?? "") }}',
+                    model_name: '{{ isset($workOrder) ? ($workOrder->inquiry->projectModel->name ?? $workOrder->ebdHeader->projectModel->name ?? "") : ($ebdHeader->projectModel->name ?? $inquiry->projectModel->name ?? "") }}',
                     customer_part_no: this.activeBom.customer_part_no,
                     customer_part_name: this.activeBom.customer_part_name,
+                    mat_spec: this.activeBom.mat_spec,
+                    mat_size: this.activeBom.mat_size,
+                    mat_weight_pcs: this.activeBom.mat_weight_pcs,
                     destination: '',
                     sop_date: '',
                     eol_date: '',
@@ -1806,6 +1843,9 @@ document.addEventListener('alpine:init', () => {
                 p.parentTempId = this.activeBom.parentTempId;
                 p.customer_part_no = this.activeBom.customer_part_no;
                 p.customer_part_name = this.activeBom.customer_part_name;
+                p.mat_spec = this.activeBom.mat_spec;
+                p.mat_size = this.activeBom.mat_size;
+                p.mat_weight_pcs = this.activeBom.mat_weight_pcs;
                 p.eo = this.activeBom.eo;
                 p.class_id = this.activeBom.class_id;
                 p.uom = this.activeBom.uom;
@@ -2140,6 +2180,11 @@ document.addEventListener('alpine:init', () => {
                         work_order_product_id: p.work_order_product_id || null,
                         inquiry_product_id: p.inquiry_product_id || null,
                         ebd_item_id: p.ebd_item_id || null,
+                        mat_spec: p.mat_spec || '',
+                        mat_size: p.mat_size || '',
+                        mat_weight_pcs: (p.mat_weight_pcs !== null && p.mat_weight_pcs !== undefined && p.mat_weight_pcs !== '') ? p.mat_weight_pcs : null,
+                        customer_code: p.customer_code || '',
+                        model_name: p.model_name || '',
                         tempId: p.tempId || '',
                         parentTempId: p.parentTempId || '',
                         customer_part_no: p.customer_part_no || '',
@@ -2172,11 +2217,12 @@ document.addEventListener('alpine:init', () => {
                 contentType: 'application/json',
                 data: JSON.stringify(payload),
                 success: function(response) {
-                    if (response.success && response.redirect_url) {
+                    let redirectUrl = response.redirect_url || response.redirect;
+                    if (response.success && redirectUrl) {
                         showToast(response.message || 'Successfully saved SPK!', 'success');
                         setTimeout(function() {
-                            window.location.href = response.redirect_url;
-                        }, 1500);
+                            window.location.href = redirectUrl;
+                        }, 1000);
                     } else {
                         showToast(response.message || 'Successfully saved SPK!', 'success');
                     }

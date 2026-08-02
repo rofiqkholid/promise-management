@@ -89,10 +89,10 @@
                     render: function(data, type, row) {
                         return `
                             <div class="flex items-center justify-end gap-1.5">
-                                <a href="${row.download_template_url}" title="Download Quotation Excel Template"
-                                   class="inline-flex items-center justify-center gap-1 px-2.5 h-7 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xs text-[11px] font-normal transition-all active:scale-98">
+                                <button type="button" onclick="openQuotationExportModal('${row.download_template_url}')" title="Download Quotation Excel Template"
+                                   class="inline-flex items-center justify-center gap-1 px-2.5 h-7 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xs text-[11px] font-normal transition-all active:scale-98 cursor-pointer">
                                     <i class="fa-solid fa-file-excel text-[10px]"></i> Download Template
-                                </a>
+                                </button>
                                 <a href="${row.compare_url}" title="View Detail Comparison"
                                    class="inline-flex items-center justify-center gap-1 px-2.5 h-7 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xs text-[11px] font-normal transition-all active:scale-98">
                                     <i class="fa-solid fa-code-compare text-[10px]"></i> Detail Comparison

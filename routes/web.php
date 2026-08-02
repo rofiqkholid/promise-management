@@ -6,6 +6,7 @@ use App\Http\Controllers\FeasibilityStudy\InquiryController;
 use App\Http\Controllers\Management\AssessmentConfigController;
 use App\Http\Controllers\FeasibilityStudy\WorkOrderController;
 use App\Http\Controllers\FeasibilityStudy\WorkOrderToolingController;
+use App\Http\Controllers\FeasibilityStudy\WorkOrderAddProcessController;
 use App\Http\Controllers\FeasibilityStudy\WorkOrderFastenerController;
 use App\Http\Controllers\Management\ApprovalConfigController;
 use App\Http\Controllers\Management\CalendarController;
@@ -50,6 +51,7 @@ Route::get('/dashboard', function () {
 Route::middleware('auth')->prefix('management')->name('management.')->group(function () {
     Route::get('ajax/users', [WorkOrderController::class, 'apiGetUsers'])->name('api.users');
     Route::get('ajax/suppliers', [\App\Http\Controllers\FeasibilityStudy\ToolingQuotationCompareController::class, 'apiGetSuppliers'])->name('api.suppliers');
+    Route::get('ajax/exchange-rate', [\App\Http\Controllers\FeasibilityStudy\ToolingQuotationCompareController::class, 'apiGetExchangeRate'])->name('api.exchange-rate');
     Route::get('ajax/processes', [WorkOrderController::class, 'apiGetProcesses'])->name('api.processes');
     Route::get('ajax/approval-rules', [ApprovalConfigController::class, 'apiGetRules'])->name('api.approval-rules');
 
@@ -92,18 +94,22 @@ Route::middleware('auth')->prefix('management')->name('management.')->group(func
         Route::post('work-order/{id}/reject', [WorkOrderController::class, 'reject'])->name('work-order.reject');
     });
 
-    // Work Order Management (accessible by users with list/management menu permission)
+    // Shared Work Order Actions (Accessible across all WO types: WO 1, WO 2 Tooling, WO 2 Add Process, WO 2 Fastener)
+    Route::post('work-order/{id}/submit', [WorkOrderController::class, 'submit'])->name('work-order.submit');
+    Route::post('work-order/{id}/revise', [WorkOrderController::class, 'revise'])->name('work-order.revise');
+    Route::post('work-order/{id}/progress', [WorkOrderController::class, 'updateProgress'])->name('work-order.update-progress');
+    Route::post('process-checklist', [WorkOrderController::class, 'storeProcess'])->name('process-checklist.store');
+    Route::post('process-checklist/{id}/update', [WorkOrderController::class, 'updateProcess'])->name('process-checklist.update');
+    Route::post('process-checklist/{id}/delete', [WorkOrderController::class, 'destroyProcess'])->name('process-checklist.destroy');
+
+    // 1. WO 1 Tech Feasibility Routes
     Route::middleware('check.menu:management.work-order.index')->group(function () {
-        Route::post('work-order/{id}/submit', [WorkOrderController::class, 'submit'])->name('work-order.submit');
-        Route::post('work-order/{id}/revise', [WorkOrderController::class, 'revise'])->name('work-order.revise');
-        Route::post('work-order/{id}/progress', [WorkOrderController::class, 'updateProgress'])->name('work-order.update-progress');
-        Route::post('process-checklist', [WorkOrderController::class, 'storeProcess'])->name('process-checklist.store');
-        Route::post('process-checklist/{id}/update', [WorkOrderController::class, 'updateProcess'])->name('process-checklist.update');
-        Route::post('process-checklist/{id}/delete', [WorkOrderController::class, 'destroyProcess'])->name('process-checklist.destroy');
         Route::match(['get', 'post'], 'work-order/create', [WorkOrderController::class, 'create'])->name('work-order.create');
         Route::resource('work-order', WorkOrderController::class)->parameters(['work-order' => 'id'])->except(['create']);
+    });
 
-        // Work Order SPK 2 Tooling Cost Routes
+    // 2. WO 2 Tooling Cost Routes
+    Route::middleware('check.menu:management.work-order-tooling.index')->group(function () {
         Route::get('work-order-tooling/{id}/quotation', [WorkOrderToolingController::class, 'exportQuotation'])->name('work-order-tooling.quotation');
         Route::match(['get', 'post'], 'work-order-tooling/create', [WorkOrderToolingController::class, 'create'])->name('work-order-tooling.create');
         Route::resource('work-order-tooling', WorkOrderToolingController::class)->parameters(['work-order-tooling' => 'id'])->except(['create']);
@@ -111,10 +117,24 @@ Route::middleware('auth')->prefix('management')->name('management.')->group(func
         // Tooling Quotation Routes
         Route::resource('tooling-quotation', \App\Http\Controllers\FeasibilityStudy\ToolingQuotationCompareController::class)->parameters(['tooling-quotation' => 'id']);
         Route::post('tooling-quotation/import', [\App\Http\Controllers\FeasibilityStudy\ToolingQuotationCompareController::class, 'import'])->name('tooling-quotation.import');
+    });
 
-        // Work Order SPK 2 Fastener / Standard Part Routes
+    // 3. WO 2 Additional Process Routes
+    Route::middleware('check.menu:management.work-order-add-process.index')->group(function () {
+        Route::match(['get', 'post'], 'work-order-add-process/create', [WorkOrderAddProcessController::class, 'create'])->name('work-order-add-process.create');
+        Route::resource('work-order-add-process', WorkOrderAddProcessController::class)->parameters(['work-order-add-process' => 'id'])->except(['create']);
+    });
+
+    // 4. WO 2 Fastener / Standard Part Routes
+    Route::middleware('check.menu:management.work-order-fastener.index')->group(function () {
         Route::match(['get', 'post'], 'work-order-fastener/create', [WorkOrderFastenerController::class, 'create'])->name('work-order-fastener.create');
         Route::resource('work-order-fastener', WorkOrderFastenerController::class)->parameters(['work-order-fastener' => 'id'])->except(['create']);
+    });
+
+    // 5. WO 2 Raw Material Specification Routes
+    Route::middleware('check.menu:management.work-order-material.index')->group(function () {
+        Route::match(['get', 'post'], 'work-order-material/create', [\App\Http\Controllers\FeasibilityStudy\WorkOrderMaterialController::class, 'create'])->name('work-order-material.create');
+        Route::resource('work-order-material', \App\Http\Controllers\FeasibilityStudy\WorkOrderMaterialController::class)->parameters(['work-order-material' => 'id'])->except(['create']);
     });
 
     // Assessment Configuration Routes

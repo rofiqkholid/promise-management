@@ -71,11 +71,11 @@ class MenuSeeder extends Seeder
             ]
         );
 
-        // 3. Work Order (SPK) — parent group (no route, used as dropdown header)
+        // 3. Work Order (WO) — parent group (no route, used as dropdown header)
         DB::table('menus')->updateOrInsert(
             ['route' => 'management.work-order.parent', 'scope_id' => 'app_management'],
             [
-                'title'      => 'Work Order (SPK)',
+                'title'      => 'Work Order (WO)',
                 'icon'       => 'fa-solid fa-file-signature',
                 'sort_order' => 3,
                 'level'      => 1,
@@ -91,12 +91,12 @@ class MenuSeeder extends Seeder
             ->where('scope_id', 'app_management')
             ->value('id');
 
-        // 3a. SPK 1 List (submenu)
+        // 3a. WO 1 Tech Feasibility (submenu)
         if ($woParentId) {
             DB::table('menus')->updateOrInsert(
                 ['route' => 'management.work-order.index', 'scope_id' => 'app_management'],
                 [
-                    'title'      => 'SPK 1 List',
+                    'title'      => 'WO 1 Tech Feasibility',
                     'icon'       => 'fa-solid fa-list',
                     'sort_order' => 1,
                     'level'      => 2,
@@ -108,11 +108,11 @@ class MenuSeeder extends Seeder
                 ]
             );
 
-            // 3b. SPK 2 Tooling Cost (submenu)
+            // 3b. WO 2 Tooling Cost (submenu)
             DB::table('menus')->updateOrInsert(
                 ['route' => 'management.work-order-tooling.index', 'scope_id' => 'app_management'],
                 [
-                    'title'      => 'SPK 2 Tooling Cost',
+                    'title'      => 'WO 2 Tooling Cost',
                     'icon'       => 'fa-solid fa-calculator',
                     'sort_order' => 2,
                     'level'      => 2,
@@ -124,12 +124,12 @@ class MenuSeeder extends Seeder
                 ]
             );
 
-            // 3c. SPK 2 Fastener (submenu)
+            // 3c. WO 2 Additional Process (submenu)
             DB::table('menus')->updateOrInsert(
-                ['route' => 'management.work-order-fastener.index', 'scope_id' => 'app_management'],
+                ['route' => 'management.work-order-add-process.index', 'scope_id' => 'app_management'],
                 [
-                    'title'      => 'SPK 2 Fastener',
-                    'icon'       => 'fa-solid fa-screw',
+                    'title'      => 'WO 2 Additional Process',
+                    'icon'       => 'fa-solid fa-gears',
                     'sort_order' => 3,
                     'level'      => 2,
                     'parent_id'  => $woParentId,
@@ -140,13 +140,45 @@ class MenuSeeder extends Seeder
                 ]
             );
 
-            // 3d. WO Inbox (submenu)
+            // 3d. WO 2 Material (submenu)
+            DB::table('menus')->updateOrInsert(
+                ['route' => 'management.work-order-material.index', 'scope_id' => 'app_management'],
+                [
+                    'title'      => 'WO 2 Material',
+                    'icon'       => 'fa-solid fa-boxes-stacked',
+                    'sort_order' => 4,
+                    'level'      => 2,
+                    'parent_id'  => $woParentId,
+                    'is_active'  => true,
+                    'is_visible' => true,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            );
+
+            // 3e. WO 2 Fastener (submenu)
+            DB::table('menus')->updateOrInsert(
+                ['route' => 'management.work-order-fastener.index', 'scope_id' => 'app_management'],
+                [
+                    'title'      => 'WO 2 Fastener',
+                    'icon'       => 'fa-solid fa-screw',
+                    'sort_order' => 5,
+                    'level'      => 2,
+                    'parent_id'  => $woParentId,
+                    'is_active'  => true,
+                    'is_visible' => true,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            );
+
+            // 3f. WO Inbox (submenu)
             DB::table('menus')->updateOrInsert(
                 ['route' => 'management.work-order.approval-inbox', 'scope_id' => 'app_management'],
                 [
                     'title'      => 'WO Inbox',
                     'icon'       => 'fa-solid fa-envelope-open-text',
-                    'sort_order' => 4,
+                    'sort_order' => 6,
                     'level'      => 2,
                     'parent_id'  => $woParentId,
                     'is_active'  => true,
