@@ -17,4 +17,8 @@ require __DIR__.'/../vendor/autoload.php';
 /** @var Application $app */
 $app = require_once __DIR__.'/../bootstrap/app.php';
 
+if (isset($_SERVER['HTTP_X_ORIGINAL_URL'])) {
+    $_SERVER['REQUEST_URI'] = $_SERVER['HTTP_X_ORIGINAL_URL'];
+}
+
 $app->handleRequest(Request::capture());

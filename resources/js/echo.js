@@ -10,7 +10,7 @@ if (import.meta.env.VITE_REVERB_APP_KEY) {
         wsHost: import.meta.env.VITE_REVERB_HOST,
         wsPort: 8443,
         wssPort: 8443,
-        forceTLS: false,
+        forceTLS: true,
         enabledTransports: ['ws', 'wss'],
     });
 }
