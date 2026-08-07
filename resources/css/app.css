@@ -30,3 +30,7 @@
 
 @variant dark (&:where(.dark, .dark *));
 
+[x-cloak] {
+    display: none !important;
+}
+

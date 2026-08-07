@@ -281,6 +281,60 @@ class MenuSeeder extends Seeder
             ]
         );
 
+        // 7. Excel Engine Config — parent group (dropdown header)
+        DB::table('menus')->updateOrInsert(
+            ['route' => 'management.excel-engine.parent', 'scope_id' => 'app_management'],
+            [
+                'title'      => 'Excel Engine Config',
+                'icon'       => 'fa-solid fa-file-excel',
+                'sort_order' => 7,
+                'level'      => 1,
+                'parent_id'  => null,
+                'is_active'  => true,
+                'is_visible' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        );
+        $excelEngineParentId = DB::table('menus')
+            ->where('route', 'management.excel-engine.parent')
+            ->where('scope_id', 'app_management')
+            ->value('id');
+
+        if ($excelEngineParentId) {
+            // 7a. System Fields Dictionary (submenu)
+            DB::table('menus')->updateOrInsert(
+                ['route' => 'management.system-fields.index', 'scope_id' => 'app_management'],
+                [
+                    'title'      => 'System Fields Dictionary',
+                    'icon'       => 'fa-solid fa-list-check',
+                    'sort_order' => 1,
+                    'level'      => 2,
+                    'parent_id'  => $excelEngineParentId,
+                    'is_active'  => true,
+                    'is_visible' => true,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            );
+
+            // 7b. Excel Template Engine (submenu)
+            DB::table('menus')->updateOrInsert(
+                ['route' => 'management.excel-templates.index', 'scope_id' => 'app_management'],
+                [
+                    'title'      => 'Excel Template Engine',
+                    'icon'       => 'fa-solid fa-sliders',
+                    'sort_order' => 2,
+                    'level'      => 2,
+                    'parent_id'  => $excelEngineParentId,
+                    'is_active'  => true,
+                    'is_visible' => true,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            );
+        }
+
         // ----------------------------------------------------------------
         // Grant "Mng User" role (ID 34) access to all management menus
         // ----------------------------------------------------------------

@@ -148,6 +148,16 @@ Route::middleware('auth')->prefix('management')->name('management.')->group(func
         Route::post('assessment-config/ranking/{id}/update', [AssessmentConfigController::class, 'updateRanking'])->name('assessment-config.ranking.update');
     });
 
+    // Calendar & Holiday Routes
+    Route::middleware('check.menu:management.calendar.index')->group(function () {
+        Route::get('calendar', [CalendarController::class, 'index'])->name('calendar.index');
+        Route::get('calendar/events', [CalendarController::class, 'getEvents'])->name('calendar.events');
+        Route::get('calendar/holidays', [CalendarController::class, 'getHolidays'])->name('calendar.holidays');
+        Route::post('calendar', [CalendarController::class, 'store'])->name('calendar.store');
+        Route::put('calendar/{id}', [CalendarController::class, 'update'])->name('calendar.update');
+        Route::delete('calendar/{id}', [CalendarController::class, 'destroy'])->name('calendar.destroy');
+    });
+
     // Approval Rules Configuration Routes
     Route::middleware('check.menu:management.approval-config.index')->group(function () {
         Route::get('approval-config', [ApprovalConfigController::class, 'index'])->name('approval-config.index');
@@ -178,12 +188,18 @@ Route::middleware('auth')->prefix('management')->name('management.')->group(func
     Route::post('ebd/addprocess/{id}/update', [EbdController::class, 'updateAddProcess'])->name('ebd.update-addprocess');
     Route::post('ebd/addprocess/{id}/delete', [EbdController::class, 'destroyAddProcess'])->name('ebd.destroy-addprocess');
 
-    // Calendar & Holiday Routes
-    Route::get('calendar', [CalendarController::class, 'index'])->name('calendar.index');
-    Route::get('calendar/events', [CalendarController::class, 'getEvents'])->name('calendar.events');
-    Route::post('calendar/events', [CalendarController::class, 'store'])->name('calendar.store');
-    Route::match(['patch', 'post'], 'calendar/events/{id}', [CalendarController::class, 'update'])->name('calendar.update');
-    Route::match(['delete', 'post'], 'calendar/events/{id}/delete', [CalendarController::class, 'destroy'])->name('calendar.destroy');
-    Route::get('calendar/holidays', [CalendarController::class, 'getHolidays'])->name('calendar.holidays');
+    // Dynamic Excel Template Engine & Visual Mapping Studio Routes
+    Route::get('excel-templates', [\App\Http\Controllers\Admin\ExcelTemplateController::class, 'index'])->name('excel-templates.index');
+    Route::get('excel-templates/create', [\App\Http\Controllers\Admin\ExcelTemplateController::class, 'create'])->name('excel-templates.create');
+    Route::post('excel-templates', [\App\Http\Controllers\Admin\ExcelTemplateController::class, 'store'])->name('excel-templates.store');
+    Route::post('excel-templates/{id}/update', [\App\Http\Controllers\Admin\ExcelTemplateController::class, 'update'])->name('excel-templates.update');
+    Route::post('excel-templates/{id}/delete', [\App\Http\Controllers\Admin\ExcelTemplateController::class, 'destroy'])->name('excel-templates.destroy');
+    Route::get('excel-templates/{id}/builder', [\App\Http\Controllers\Admin\ExcelTemplateController::class, 'builder'])->name('excel-templates.builder');
+    Route::get('excel-templates/{id}/preview', [\App\Http\Controllers\Admin\ExcelTemplateController::class, 'preview'])->name('excel-templates.preview');
+    Route::post('excel-templates/{id}/mapping', [\App\Http\Controllers\Admin\ExcelTemplateController::class, 'saveMapping'])->name('excel-templates.save-mapping');
+
+    Route::get('system-fields', [\App\Http\Controllers\Admin\SystemFieldController::class, 'index'])->name('system-fields.index');
+    Route::post('system-fields', [\App\Http\Controllers\Admin\SystemFieldController::class, 'store'])->name('system-fields.store');
 });
+
 

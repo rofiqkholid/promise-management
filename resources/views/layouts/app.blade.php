@@ -27,7 +27,7 @@
     </script>
 
     <!-- Styles / Scripts -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/css/select2-custom.css', 'resources/js/app.js'])
     
     @stack('styles')
 </head>

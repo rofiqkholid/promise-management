@@ -311,7 +311,7 @@
                         <thead class="sticky top-0 z-10">
                             <tr class="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">
                                 <th class="p-3 w-12 text-center bg-slate-50/50 dark:bg-slate-900/50">#</th>
-                                <th class="p-3 w-20 text-center bg-slate-50/50 dark:bg-slate-900/50">
+                                <th class="p-3 w-20 text-left bg-slate-50/50 dark:bg-slate-900/50">
                                     <input type="checkbox" id="select-all-spk"
                                            onchange="window._alpine_toggleSelectAllSpk(this.checked)"
                                            class="w-3.5 h-3.5 text-blue-600 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-blue-500 cursor-pointer rounded-xs"
@@ -1086,8 +1086,9 @@ document.addEventListener('alpine:init', () => {
                 const currentDecision = this.unsavedDecisions[prod.id] !== undefined ? this.unsavedDecisions[prod.id] : prod.decision;
                 const currentReviewed = this.unsavedReviewed[prod.id] !== undefined ? this.unsavedReviewed[prod.id] : prod.reviewed_product_id;
                 const isNotGo = currentDecision === 'not go';
-                const disabledAttr = isNotGo ? 'disabled' : '';
-                const cursorClass = isNotGo ? 'cursor-not-allowed opacity-30' : 'cursor-pointer';
+                const isGo = currentDecision === 'go';
+                const disabledAttr = !isGo ? 'disabled' : '';
+                const cursorClass = !isGo ? 'cursor-not-allowed opacity-30' : 'cursor-pointer';
                 const draggable = !isLocked && !isNotGo ? 'true' : 'false';
                 
                 let rowBg = '';
@@ -1117,13 +1118,13 @@ document.addEventListener('alpine:init', () => {
                   <td class="p-3 text-center text-slate-500 dark:text-slate-450 font-mono text-xs font-semibold" onclick="event.stopPropagation()">
                     <span>${index + 1}</span>
                   </td>
-                  <td class="p-3 text-center" onclick="event.stopPropagation()">
-                    <div class="flex items-center justify-center gap-2">
+                  <td class="p-3 text-left" onclick="event.stopPropagation()">
+                    <div class="flex items-center justify-start gap-2">
                       <i class="fa-solid fa-grip-vertical text-slate-400 dark:text-slate-500 cursor-grab active:cursor-grabbing hover:text-slate-600 dark:hover:text-slate-300 text-xs ${!isLocked && !isNotGo ?'':'opacity-25'}" title="${!isLocked && !isNotGo ?'Drag to reorder':''}"></i>
                       <input type="checkbox" ${checkedAttr} ${disabledAttr}
                         onchange="event.stopPropagation();window._alpine_toggleSpk(${prod.id}, this.checked)"
                         class="w-3.5 h-3.5 text-blue-600 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-blue-500 rounded-xs ${cursorClass}"
-                        title="${isNotGo ? 'Cannot select a product with decision Not Go' : ''}">
+                        title="${!isGo ? 'Only products with decision Go can be selected for SPK' : ''}">
                       ${spkBadge}
                     </div>
                   </td>
@@ -1172,7 +1173,7 @@ document.addEventListener('alpine:init', () => {
             if (selectAll) {
                 const selectable = this.products.filter(p => {
                     const decision = this.unsavedDecisions[p.id] !== undefined ? this.unsavedDecisions[p.id] : p.decision;
-                    return decision !== 'not go';
+                    return decision === 'go';
                 });
                 selectAll.checked = selectable.length > 0 && this.selectedSpkProducts.length === selectable.length;
             }
@@ -1507,6 +1508,9 @@ document.addEventListener('alpine:init', () => {
 
         toggleSpkSelection(prodId, isChecked) {
             if (isChecked) {
+                const prod = this.products.find(p => p.id == prodId);
+                const decision = prod ? (this.unsavedDecisions[prod.id] !== undefined ? this.unsavedDecisions[prod.id] : prod.decision) : '';
+                if (decision !== 'go') return;
                 if (!this.selectedSpkProducts.includes(prodId)) {
                     this.selectedSpkProducts.push(prodId);
                 }
@@ -1518,7 +1522,7 @@ document.addEventListener('alpine:init', () => {
             if (selectAll) {
                 const selectable = this.products.filter(p => {
                     const decision = this.unsavedDecisions[p.id] !== undefined ? this.unsavedDecisions[p.id] : p.decision;
-                    return decision !== 'not go';
+                    return decision === 'go';
                 });
                 selectAll.checked = selectable.length > 0 && this.selectedSpkProducts.length === selectable.length;
             }
@@ -1530,7 +1534,7 @@ document.addEventListener('alpine:init', () => {
                 this.selectedSpkProducts = this.products
                     .filter(p => {
                         const decision = this.unsavedDecisions[p.id] !== undefined ? this.unsavedDecisions[p.id] : p.decision;
-                        return decision !== 'not go';
+                        return decision === 'go';
                     })
                     .map(p => p.id);
             } else {
@@ -1587,7 +1591,7 @@ document.addEventListener('alpine:init', () => {
                 this.unsavedDecisions[prodId] = decisionValue;
             }
 
-            if (decisionValue === 'not go') {
+            if (decisionValue !== 'go') {
                 this.selectedSpkProducts = this.selectedSpkProducts.filter(id => id !== prodId);
             }
 
@@ -1693,7 +1697,7 @@ document.addEventListener('alpine:init', () => {
                             const product = this.products.find(p => p.id == prodId);
                             if (product) {
                                 product.decision = decisionValue;
-                                if (decisionValue === 'not go') {
+                                if (decisionValue !== 'go') {
                                     this.selectedSpkProducts = this.selectedSpkProducts.filter(sid => sid != prodId);
                                 }
                             }

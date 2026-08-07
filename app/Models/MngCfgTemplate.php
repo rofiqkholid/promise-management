@@ -1,0 +1,25 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class MngCfgTemplate extends Model
+{
+    protected $table = 'mng_cfg_templates';
+
+    protected $fillable = [
+        'template_type',
+        'customer_id',
+        'template_name',
+        'revision',
+        'file_path',
+        'mapping_config',
+        'is_active',
+    ];
+
+    protected $casts = [
+        'mapping_config' => 'array',
+        'is_active' => 'boolean',
+    ];
+}

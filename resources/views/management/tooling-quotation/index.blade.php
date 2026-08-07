@@ -58,8 +58,53 @@
     </x-table>
 </div>
 
+<!-- Modal: Download Injected EBD Dynamic Template -->
+<div id="exportDynamicEbdModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+    <div class="bg-white dark:bg-slate-800 w-full max-w-lg border border-slate-200 dark:border-slate-700 shadow-2xl p-6 relative">
+        <button onclick="closeDynamicEbdModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-white">
+            <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+
+        <h2 class="text-lg font-bold text-slate-800 dark:text-white mb-1 flex items-center gap-2">
+            <i class="fa-solid fa-file-invoice text-blue-600"></i> Download Form Customer (Injected Data EBD)
+        </h2>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Pilih template master milik Customer/Vendor. Sistem akan menyuntikkan data EBD & Work Order ke dalam sel template yang telah di-mapping.</p>
+
+        <form id="exportDynamicEbdForm" method="GET" action="" class="space-y-4">
+            <div>
+                <label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Pilih Layout Template Master Customer <span class="text-rose-500">*</span></label>
+                <select name="template_id" id="dynamicTemplateSelect" required class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-3 py-2 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500">
+                    <option value="">-- Pilih Template Customer / Vendor --</option>
+                    @foreach($templates ?? [] as $tpl)
+                        <option value="{{ $tpl->id }}">{{ $tpl->template_name }} (Rev {{ $tpl->revision ?? '0' }}) [{{ strtoupper($tpl->template_type) }}]</option>
+                    @endforeach
+                </select>
+                <p class="text-[11px] text-slate-400 mt-1">Logo, border, formula, dan layout master file customer akan dipertahankan 100%.</p>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-200 dark:border-slate-700">
+                <button type="button" onclick="closeDynamicEbdModal()" class="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-medium hover:bg-slate-50">
+                    Batal
+                </button>
+                <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium flex items-center gap-1.5">
+                    <i class="fa-solid fa-cloud-arrow-down text-xs"></i> Download Form Customer (.xlsx)
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 @push('scripts')
 <script>
+    function openDynamicEbdModal(downloadUrl) {
+        document.getElementById('exportDynamicEbdForm').action = downloadUrl;
+        document.getElementById('exportDynamicEbdModal').classList.remove('hidden');
+    }
+
+    function closeDynamicEbdModal() {
+        document.getElementById('exportDynamicEbdModal').classList.add('hidden');
+    }
+
     $(function() {
         defaultDataTable('#quotation-tooling-table', {
             processing: true,
@@ -89,9 +134,13 @@
                     render: function(data, type, row) {
                         return `
                             <div class="flex items-center justify-end gap-1.5">
-                                <button type="button" onclick="openQuotationExportModal('${row.download_template_url}')" title="Download Quotation Excel Template"
-                                   class="inline-flex items-center justify-center gap-1 px-2.5 h-7 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xs text-[11px] font-normal transition-all active:scale-98 cursor-pointer">
-                                    <i class="fa-solid fa-file-excel text-[10px]"></i> Download Template
+                                <a href="${row.download_template_url}" title="Download Standard Excel Template"
+                                   class="inline-flex items-center justify-center gap-1 px-2.5 h-7 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xs text-[11px] font-normal transition-all active:scale-98">
+                                    <i class="fa-solid fa-file-excel text-[10px]"></i> Standard Template
+                                </a>
+                                <button type="button" onclick="openDynamicEbdModal('${row.download_template_url}')" title="Download Customer Form with Injected EBD Data"
+                                   class="inline-flex items-center justify-center gap-1 px-2.5 h-7 bg-blue-600 hover:bg-blue-700 text-white rounded-xs text-[11px] font-normal transition-all active:scale-98 cursor-pointer">
+                                    <i class="fa-solid fa-file-invoice text-[10px]"></i> Form Customer (Injected EBD)
                                 </button>
                                 <a href="${row.compare_url}" title="View Detail Comparison"
                                    class="inline-flex items-center justify-center gap-1 px-2.5 h-7 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xs text-[11px] font-normal transition-all active:scale-98">

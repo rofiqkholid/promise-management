@@ -427,6 +427,101 @@ class WorkOrderToolingController extends Controller
             $sanitizedNo = str_replace(['/', '\\', ' '], '_', $workOrder->wo_number);
             $filename = 'Quotation_Tooling_' . $sanitizedNo . '.xlsx';
 
+            $templateId = $request->input('template_id');
+
+            // If user selected a configured dynamic template from MngCfgTemplate
+            if ($templateId) {
+                $templateConfig = \App\Models\MngCfgTemplate::find($templateId);
+                
+                if ($templateConfig && $templateConfig->file_path) {
+                    $templatePath = \Illuminate\Support\Facades\Storage::disk('public')->path($templateConfig->file_path);
+
+                    if (file_exists($templatePath)) {
+                        // Gather EBD & WorkOrder Payload Data for Excel Engine
+                        $ebdHeader = $workOrder->ebdHeader;
+                        $ebdItems = $ebdHeader ? $ebdHeader->items()->with(['toolingProcesses', 'addProcesses'])->get() : collect();
+
+                        $payloadData = [
+                            // Single Header Fields
+                            'quotation_no' => 'QT-' . $workOrder->wo_number,
+                            'revision' => $workOrder->ebdHeader->revision ?? '0',
+                            'quote_date' => now()->format('Y-m-d'),
+                            'supplier_name' => 'Supplier Name',
+                            'ebd_date' => $workOrder->ebdHeader->date ?? now()->format('Y-m-d'),
+                            'ebd_revision' => $workOrder->ebdHeader->revision ?? '0',
+                            'ebd_status' => $workOrder->ebdHeader->status ?? 'Active',
+                            
+                            // Loops Data Array
+                            'items' => [],
+                            'ebd_items' => []
+                        ];
+
+                        // Build Parent-Child Data Structures for EBD Items & Tooling OP Processes
+                        foreach ($ebdItems as $item) {
+                            $processes = [];
+                            foreach ($item->toolingProcesses as $tp) {
+                                $processes[] = [
+                                    'ebd_tool_op' => $tp->op,
+                                    'op' => $tp->op,
+                                    'ebd_tool_process_name' => $tp->process_name,
+                                    'process_name' => $tp->process_name,
+                                    'tooling_process_name' => $tp->process_name,
+                                    'ebd_tool_category' => $tp->category,
+                                    'tooling_type' => $tp->category,
+                                    'ebd_tool_homeline' => $tp->prod_homeline,
+                                    'homeline' => $tp->prod_homeline,
+                                    'ebd_tool_tonnage' => $tp->tonnage,
+                                    'tonnage' => $tp->tonnage,
+                                    'ebd_tool_die_height' => $tp->die_height,
+                                    'die_height' => $tp->die_height,
+                                    'ebd_tool_output' => $tp->output,
+                                    'output' => $tp->output,
+                                    'ebd_tool_price_idr' => $tp->price_idr,
+                                    'cost_idr' => $tp->price_idr,
+                                    'ebd_tool_status' => $tp->tooling_status,
+                                    'supplier_status' => $tp->tooling_status,
+                                    'ebd_tool_information' => $tp->information,
+                                    'remarks' => $tp->information,
+                                ];
+                            }
+
+                            $itemData = [
+                                'ebd_part_no' => $item->part_no,
+                                'part_number' => $item->part_no,
+                                'ebd_part_name' => $item->part_name,
+                                'part_name' => $item->part_name,
+                                'ebd_active_level' => $item->active_level,
+                                'ebd_pcs_month' => $item->pcs_month,
+                                'ebd_qty_unit' => $item->qty_unit,
+                                'ebd_part_width' => $item->width,
+                                'ebd_part_length' => $item->length,
+                                'ebd_part_height' => $item->height,
+                                'ebd_part_weight' => $item->weight,
+                                'ebd_mat_spec' => $item->mat_spec,
+                                'ebd_mat_thick' => $item->mat_thick,
+                                'processes' => $processes // Child array for nested block repeater
+                            ];
+
+                            $payloadData['items'][] = $itemData;
+                            $payloadData['ebd_items'][] = $itemData;
+                        }
+
+                        // Alias all EBD header and WO fields at root level safely
+                        $payloadData['part_number'] = optional(optional($workOrder->inquiry)->products)->first()->part_number ?? optional($ebdItems->first())->part_no ?? '-';
+                        $payloadData['part_name'] = optional(optional($workOrder->inquiry)->products)->first()->part_name ?? optional($ebdItems->first())->part_name ?? '-';
+                        $payloadData['customer_name'] = optional(optional($workOrder->inquiry)->customer)->name ?? '-';
+                        $payloadData['model_name'] = optional(optional($workOrder->inquiry)->projectModel)->name ?? '-';
+
+                        // Run Dynamic Excel Engine Service
+                        $exportEngine = new \App\Services\ExcelEngine\ExcelExportEngineService();
+                        $generatedFilePath = $exportEngine->export($templatePath, $templateConfig->mapping_config ?? [], $payloadData);
+
+                        return response()->download($generatedFilePath, $filename)->deleteFileAfterSend(true);
+                    }
+                }
+            }
+
+            // Fallback to legacy default Excel view export
             $currency = $request->input('currency');
             $exchangeRate = $request->input('exchange_rate');
 
