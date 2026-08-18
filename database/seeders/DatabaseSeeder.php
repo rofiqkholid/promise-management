@@ -21,6 +21,8 @@ class DatabaseSeeder extends Seeder
             ScoreCategoryAndOptionSeeder::class,
             WorkOrderProcessSeeder::class,
             MenuSeeder::class,
+            MaterialCostSeeder::class,
+            RealCostComparisonScenarioSeeder::class,
         ]);
     }
 }

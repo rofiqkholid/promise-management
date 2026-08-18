@@ -123,53 +123,95 @@
 
         <div class="overflow-x-auto">
             <table class="w-full text-xs text-left border-collapse">
-                {{-- Header with Yellow Product Cost Accent --}}
+                {{-- Header with Yellow Product Cost Accent & Dedicated Rate Columns --}}
                 <thead>
                     <tr>
                         <th class="w-28 bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 p-2.5 text-center font-bold text-slate-600 dark:text-slate-400"></th>
                         <th class="bg-amber-300 dark:bg-amber-500 text-slate-900 font-black text-sm uppercase text-center p-2.5 border border-slate-300 dark:border-slate-700 tracking-wider">
                             Product Cost
                         </th>
-                        <th colspan="2" class="bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700"></th>
+                        <th colspan="2" class="bg-sky-600 dark:bg-sky-700 text-white font-black text-xs uppercase tracking-wider text-center p-2 border border-slate-300 dark:border-slate-700 shadow-xs">
+                            <i class="fa-solid fa-wrench mr-1"></i> Engineering (Eng)
+                        </th>
+                        <th colspan="2" class="bg-amber-500 dark:bg-amber-600 text-slate-950 font-black text-xs uppercase tracking-wider text-center p-2 border border-slate-300 dark:border-slate-700 shadow-xs">
+                            <i class="fa-solid fa-file-invoice-dollar mr-1"></i> Sales
+                        </th>
                     </tr>
                     <tr class="bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-extrabold text-[11px] uppercase">
                         <th class="border border-slate-300 dark:border-slate-700 p-2.5 text-center w-28">Stage</th>
                         <th class="border border-slate-300 dark:border-slate-700 p-2.5">Criteria</th>
-                        <th class="border border-slate-300 dark:border-slate-700 p-2.5 text-right w-56 bg-sky-100 dark:bg-sky-950/60 text-sky-950 dark:text-sky-200 font-black">
-                            <i class="fa-solid fa-wrench mr-1 text-sky-600 dark:text-sky-400"></i> Engineering (Eng)
+                        <th class="border border-slate-300 dark:border-slate-700 p-2 text-center w-20 bg-sky-100 dark:bg-sky-950/60 text-sky-950 dark:text-sky-200 font-black">
+                            Rate (%)
                         </th>
-                        <th class="border border-slate-300 dark:border-slate-700 p-2.5 text-right w-56 bg-amber-100 dark:bg-amber-950/60 text-amber-950 dark:text-amber-200 font-black">
-                            <i class="fa-solid fa-file-invoice-dollar mr-1 text-amber-600 dark:text-amber-400"></i> Sales
+                        <th class="border border-slate-300 dark:border-slate-700 p-2 text-right w-48 bg-sky-50/80 dark:bg-sky-950/40 text-sky-950 dark:text-sky-200 font-black">
+                            Amount (IDR)
+                        </th>
+                        <th class="border border-slate-300 dark:border-slate-700 p-2 text-center w-20 bg-amber-100 dark:bg-amber-950/60 text-amber-950 dark:text-amber-200 font-black">
+                            Rate (%)
+                        </th>
+                        <th class="border border-slate-300 dark:border-slate-700 p-2 text-right w-48 bg-amber-50/80 dark:bg-amber-950/40 text-amber-950 dark:text-amber-200 font-black">
+                            Amount (IDR)
                         </th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
                     {{-- 1. COGM: Material --}}
                     <tr>
-                        <td rowspan="3" class="border border-slate-300 dark:border-slate-700 p-3 text-center font-black text-sm text-slate-800 dark:text-white bg-slate-50/70 dark:bg-slate-900/40 align-middle">
+                        <td rowspan="4" class="border border-slate-300 dark:border-slate-700 p-3 text-center font-black text-sm text-slate-800 dark:text-white bg-slate-50/70 dark:bg-slate-900/40 align-middle">
                             COGM
                         </td>
                         <td class="border border-slate-300 dark:border-slate-700 p-2.5 font-bold text-slate-700 dark:text-slate-300">
                             Material Cost
                         </td>
+                        <td class="border border-slate-300 dark:border-slate-700 p-2.5 text-center text-slate-400 font-bold bg-sky-50/40 dark:bg-sky-950/20">
+                            -
+                        </td>
                         <td class="border border-slate-300 dark:border-slate-700 p-2.5 text-right font-bold text-sky-950 dark:text-sky-100 bg-sky-50/80 dark:bg-sky-950/40">
                             Rp {{ number_format($comparisonResult['totals']['material_eng'], 2, ',', '.') }}
+                        </td>
+                        <td class="border border-slate-300 dark:border-slate-700 p-2.5 text-center text-slate-400 font-bold bg-amber-50/40 dark:bg-amber-950/20">
+                            -
                         </td>
                         <td class="border border-slate-300 dark:border-slate-700 p-2.5 text-right font-bold text-amber-950 dark:text-amber-100 bg-amber-50/80 dark:bg-amber-950/40">
                             Rp {{ number_format($comparisonResult['totals']['material_sales'], 2, ',', '.') }}
                         </td>
                     </tr>
 
-                    {{-- 1. COGM: Mfg --}}
+                    {{-- 1. COGM: Stamping Process --}}
                     <tr>
                         <td class="border border-slate-300 dark:border-slate-700 p-2.5 font-bold text-slate-700 dark:text-slate-300">
-                            Mfg Cost (Stamping & Processes)
+                            Stamping Process (Press)
+                        </td>
+                        <td class="border border-slate-300 dark:border-slate-700 p-2.5 text-center text-slate-400 font-bold bg-sky-50/40 dark:bg-sky-950/20">
+                            -
                         </td>
                         <td class="border border-slate-300 dark:border-slate-700 p-2.5 text-right font-bold text-sky-950 dark:text-sky-100 bg-sky-50/80 dark:bg-sky-950/40">
-                            Rp {{ number_format($comparisonResult['totals']['mfg_eng'], 2, ',', '.') }}
+                            Rp {{ number_format($comparisonResult['totals']['stamping_eng'], 2, ',', '.') }}
+                        </td>
+                        <td class="border border-slate-300 dark:border-slate-700 p-2.5 text-center text-slate-400 font-bold bg-amber-50/40 dark:bg-amber-950/20">
+                            -
                         </td>
                         <td class="border border-slate-300 dark:border-slate-700 p-2.5 text-right font-bold text-amber-950 dark:text-amber-100 bg-amber-50/80 dark:bg-amber-950/40">
-                            Rp {{ number_format($comparisonResult['totals']['mfg_sales'], 2, ',', '.') }}
+                            Rp {{ number_format($comparisonResult['totals']['stamping_sales'], 2, ',', '.') }}
+                        </td>
+                    </tr>
+
+                    {{-- 1. COGM: Assembly & Additional Processes --}}
+                    <tr>
+                        <td class="border border-slate-300 dark:border-slate-700 p-2.5 font-bold text-slate-700 dark:text-slate-300">
+                            Assembly & Add. Process
+                        </td>
+                        <td class="border border-slate-300 dark:border-slate-700 p-2.5 text-center text-slate-400 font-bold bg-sky-50/40 dark:bg-sky-950/20">
+                            -
+                        </td>
+                        <td class="border border-slate-300 dark:border-slate-700 p-2.5 text-right font-bold text-sky-950 dark:text-sky-100 bg-sky-50/80 dark:bg-sky-950/40">
+                            Rp {{ number_format($comparisonResult['totals']['add_proc_eng'], 2, ',', '.') }}
+                        </td>
+                        <td class="border border-slate-300 dark:border-slate-700 p-2.5 text-center text-slate-400 font-bold bg-amber-50/40 dark:bg-amber-950/20">
+                            -
+                        </td>
+                        <td class="border border-slate-300 dark:border-slate-700 p-2.5 text-right font-bold text-amber-950 dark:text-amber-100 bg-amber-50/80 dark:bg-amber-950/40">
+                            Rp {{ number_format($comparisonResult['totals']['add_proc_sales'], 2, ',', '.') }}
                         </td>
                     </tr>
 
@@ -178,8 +220,14 @@
                         <td class="border border-slate-300 dark:border-slate-700 p-2 text-slate-600 dark:text-slate-400 uppercase text-[10px]">
                             Subtotal COGM
                         </td>
+                        <td class="border border-slate-300 dark:border-slate-700 p-2 text-center text-slate-400 bg-sky-100/50 dark:bg-sky-900/30">
+                            -
+                        </td>
                         <td class="border border-slate-300 dark:border-slate-700 p-2 text-right text-sky-950 dark:text-sky-100 bg-sky-100/90 dark:bg-sky-900/60">
                             Rp {{ number_format($comparisonResult['totals']['cogm_eng'], 2, ',', '.') }}
+                        </td>
+                        <td class="border border-slate-300 dark:border-slate-700 p-2 text-center text-slate-400 bg-amber-100/50 dark:bg-amber-900/30">
+                            -
                         </td>
                         <td class="border border-slate-300 dark:border-slate-700 p-2 text-right text-amber-950 dark:text-amber-100 bg-amber-100/90 dark:bg-amber-900/60">
                             Rp {{ number_format($comparisonResult['totals']['cogm_sales'], 2, ',', '.') }}
@@ -191,14 +239,17 @@
                         <td rowspan="3" class="border border-slate-300 dark:border-slate-700 p-3 text-center font-black text-sm text-slate-800 dark:text-white bg-slate-50/70 dark:bg-slate-900/40 align-middle">
                             Others
                         </td>
-                        <td class="border border-slate-300 dark:border-slate-700 p-2.5 font-medium text-slate-700 dark:text-slate-300 flex justify-between items-center">
-                            <span>Admin matrl.</span>
-                            <span class="text-[10px] text-slate-400">
-                                Eng: {{ $comparisonResult['policy_eng']->admin_matrl_pct }}% | Sales: Follow Cust Rate ({{ $comparisonResult['policy_sales']->admin_matrl_pct }}%)
-                            </span>
+                        <td class="border border-slate-300 dark:border-slate-700 p-2.5 font-bold text-slate-700 dark:text-slate-300">
+                            Admin matrl.
+                        </td>
+                        <td class="border border-slate-300 dark:border-slate-700 p-2.5 text-center font-black text-sky-700 dark:text-sky-300 bg-sky-100/60 dark:bg-sky-950/50">
+                            {{ number_format($comparisonResult['policy_eng']->admin_matrl_pct ?? 0, 2) }}%
                         </td>
                         <td class="border border-slate-300 dark:border-slate-700 p-2.5 text-right font-semibold text-sky-950 dark:text-sky-100 bg-sky-50/80 dark:bg-sky-950/40">
                             Rp {{ number_format($comparisonResult['totals']['admin_matrl_eng'], 2, ',', '.') }}
+                        </td>
+                        <td class="border border-slate-300 dark:border-slate-700 p-2.5 text-center font-black text-amber-700 dark:text-amber-300 bg-amber-100/60 dark:bg-amber-950/50">
+                            {{ number_format($comparisonResult['policy_sales']->admin_matrl_pct ?? 0, 2) }}%
                         </td>
                         <td class="border border-slate-300 dark:border-slate-700 p-2.5 text-right font-semibold text-amber-950 dark:text-amber-100 bg-amber-50/80 dark:bg-amber-950/40">
                             Rp {{ number_format($comparisonResult['totals']['admin_matrl_sales'], 2, ',', '.') }}
@@ -207,14 +258,17 @@
 
                     {{-- 2. Others: Admin Mfg --}}
                     <tr>
-                        <td class="border border-slate-300 dark:border-slate-700 p-2.5 font-medium text-slate-700 dark:text-slate-300 flex justify-between items-center">
-                            <span>Admin mfg.</span>
-                            <span class="text-[10px] text-slate-400">
-                                Eng: {{ $comparisonResult['policy_eng']->admin_mfg_pct }}% | Sales: Follow Cust Rate ({{ $comparisonResult['policy_sales']->admin_mfg_pct }}%)
-                            </span>
+                        <td class="border border-slate-300 dark:border-slate-700 p-2.5 font-bold text-slate-700 dark:text-slate-300">
+                            Admin mfg.
+                        </td>
+                        <td class="border border-slate-300 dark:border-slate-700 p-2.5 text-center font-black text-sky-700 dark:text-sky-300 bg-sky-100/60 dark:bg-sky-950/50">
+                            {{ number_format($comparisonResult['policy_eng']->admin_mfg_pct ?? 0, 2) }}%
                         </td>
                         <td class="border border-slate-300 dark:border-slate-700 p-2.5 text-right font-semibold text-sky-950 dark:text-sky-100 bg-sky-50/80 dark:bg-sky-950/40">
                             Rp {{ number_format($comparisonResult['totals']['admin_mfg_eng'], 2, ',', '.') }}
+                        </td>
+                        <td class="border border-slate-300 dark:border-slate-700 p-2.5 text-center font-black text-amber-700 dark:text-amber-300 bg-amber-100/60 dark:bg-amber-950/50">
+                            {{ number_format($comparisonResult['policy_sales']->admin_mfg_pct ?? 0, 2) }}%
                         </td>
                         <td class="border border-slate-300 dark:border-slate-700 p-2.5 text-right font-semibold text-amber-950 dark:text-amber-100 bg-amber-50/80 dark:bg-amber-950/40">
                             Rp {{ number_format($comparisonResult['totals']['admin_mfg_sales'], 2, ',', '.') }}
@@ -223,14 +277,17 @@
 
                     {{-- 2. Others: O/H + Profit --}}
                     <tr>
-                        <td class="border border-slate-300 dark:border-slate-700 p-2.5 font-medium text-slate-700 dark:text-slate-300 flex justify-between items-center">
-                            <span>O/H + Profit</span>
-                            <span class="text-[10px] text-slate-400">
-                                Eng: 0% | Sales: Follow Sales Strategy ({{ $comparisonResult['policy_sales']->oh_profit_pct }}%)
-                            </span>
+                        <td class="border border-slate-300 dark:border-slate-700 p-2.5 font-bold text-slate-700 dark:text-slate-300">
+                            O/H + Profit
+                        </td>
+                        <td class="border border-slate-300 dark:border-slate-700 p-2.5 text-center font-black text-sky-700 dark:text-sky-300 bg-sky-100/60 dark:bg-sky-950/50">
+                            {{ number_format($comparisonResult['policy_eng']->oh_profit_pct ?? 0, 2) }}%
                         </td>
                         <td class="border border-slate-300 dark:border-slate-700 p-2.5 text-right font-semibold text-sky-950 dark:text-sky-100 bg-sky-50/80 dark:bg-sky-950/40">
                             Rp {{ number_format($comparisonResult['totals']['oh_profit_eng'], 2, ',', '.') }}
+                        </td>
+                        <td class="border border-slate-300 dark:border-slate-700 p-2.5 text-center font-black text-amber-700 dark:text-amber-300 bg-amber-100/60 dark:bg-amber-950/50">
+                            {{ number_format($comparisonResult['policy_sales']->oh_profit_pct ?? 0, 2) }}%
                         </td>
                         <td class="border border-slate-300 dark:border-slate-700 p-2.5 text-right font-semibold text-amber-950 dark:text-amber-100 bg-amber-50/80 dark:bg-amber-950/40">
                             Rp {{ number_format($comparisonResult['totals']['oh_profit_sales'], 2, ',', '.') }}
@@ -245,20 +302,26 @@
                         <td class="border border-slate-300 dark:border-slate-700 p-3 text-slate-900 dark:text-white">
                             Total ( COGM + Admin + O/H )
                         </td>
+                        <td class="border border-slate-300 dark:border-slate-700 p-3 text-center text-slate-400 bg-sky-200/50 dark:bg-sky-800/30">
+                            -
+                        </td>
                         <td class="border border-slate-300 dark:border-slate-700 p-3 text-right text-sky-950 dark:text-white bg-sky-200/90 dark:bg-sky-800/60 font-black">
                             Rp {{ number_format($comparisonResult['totals']['cogs_eng'], 2, ',', '.') }}
+                        </td>
+                        <td class="border border-slate-300 dark:border-slate-700 p-3 text-center text-slate-400 bg-amber-200/50 dark:bg-amber-800/30">
+                            -
                         </td>
                         <td class="border border-slate-300 dark:border-slate-700 p-3 text-right text-amber-950 dark:text-white bg-amber-200/90 dark:bg-amber-800/60 font-black">
                             Rp {{ number_format($comparisonResult['totals']['cogs_sales'], 2, ',', '.') }}
                         </td>
                     </tr>
 
-                    {{-- 4. Margin (Yellow Highlight row as per reference) --}}
+                    {{-- 4. Margin --}}
                     <tr class="bg-amber-100/80 dark:bg-amber-950/40 font-extrabold">
                         <td class="border border-slate-300 dark:border-slate-700 p-3 text-center bg-amber-200 dark:bg-amber-900 text-amber-950 dark:text-amber-100 uppercase">
                             Margin
                         </td>
-                        <td colspan="3" class="border border-slate-300 dark:border-slate-700 p-3 text-slate-900 dark:text-amber-100">
+                        <td colspan="5" class="border border-slate-300 dark:border-slate-700 p-3 text-slate-900 dark:text-amber-100">
                             <div class="flex flex-wrap items-center justify-between gap-2">
                                 <span><strong>= COGS SALES - COGS ENG</strong></span>
                                 <div class="text-right">
@@ -273,14 +336,14 @@
                         </td>
                     </tr>
 
-                    {{-- 5. Std Margin (Yellow Highlight row as per reference) --}}
+                    {{-- 5. Std Margin --}}
                     <tr class="bg-amber-100/80 dark:bg-amber-950/40 font-extrabold">
                         <td class="border border-slate-300 dark:border-slate-700 p-3 text-center bg-amber-200 dark:bg-amber-900 text-amber-950 dark:text-amber-100 uppercase">
                             Std Margin
                         </td>
-                        <td colspan="3" class="border border-slate-300 dark:border-slate-700 p-3 text-slate-900 dark:text-amber-100">
+                        <td colspan="5" class="border border-slate-300 dark:border-slate-700 p-3 text-slate-900 dark:text-amber-100">
                             <div class="flex flex-wrap items-center justify-between gap-2">
-                                <span><strong>= Min. {{ number_format($comparisonResult['target_margin_sales'], 2) }}%</strong></span>
+                                <span><strong>= Min. {{ number_format($comparisonResult['target_margin_sales'], 2) }}%</strong> <span class="text-xs font-normal text-slate-500 dark:text-slate-400">(Sales Target Margin)</span></span>
                                 <span class="px-2.5 py-1 text-xs font-black rounded-xs {{ $comparisonResult['status_badge'] }}">
                                     {{ $comparisonResult['status_text'] }}
                                 </span>
@@ -302,34 +365,62 @@
 
         <x-table id="part-breakdown-table" class="w-full text-xs text-left border-collapse">
             <thead>
-                <tr class="border-b border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900 text-[10px] font-extrabold text-slate-600 dark:text-slate-300 uppercase">
-                    <th class="px-3 py-3 w-10 text-center border-r border-slate-200 dark:border-slate-700">No.</th>
-                    <th class="px-3 py-3 border-r border-slate-200 dark:border-slate-700">Part No & Name</th>
-                    <th class="px-2 py-3 text-center border-r border-slate-200 dark:border-slate-700">Rank</th>
-                    <th class="px-3 py-3 border-r border-slate-200 dark:border-slate-700">Material Spec</th>
-                    <th class="px-2 py-3 text-center border-r-2 border-sky-400 dark:border-sky-700">Total Process</th>
-                    <th class="px-2 py-3 text-right border-r border-slate-200 dark:border-slate-700 bg-sky-100 dark:bg-sky-950/60 text-sky-950 dark:text-sky-200 font-bold">
-                        Matrl (Eng)
+                <tr class="border-b border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900 text-[10px] font-extrabold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                    <th rowspan="2" class="px-3 py-3 w-10 text-center border-r border-slate-200 dark:border-slate-700 align-middle">No.</th>
+                    <th rowspan="2" class="px-3 py-3 border-r border-slate-200 dark:border-slate-700 align-middle">Part No & Name</th>
+                    <th rowspan="2" class="px-2 py-3 text-center border-r border-slate-200 dark:border-slate-700 align-middle">Rank</th>
+                    <th rowspan="2" class="px-3 py-3 border-r border-slate-200 dark:border-slate-700 align-middle">Material Spec</th>
+                    <th rowspan="2" class="px-2 py-3 text-center border-r-2 border-sky-400 dark:border-sky-700 align-middle">Total Process</th>
+
+                    {{-- Group Header: Engineering --}}
+                    <th colspan="4" class="px-3 py-2 text-center border-r-2 border-amber-400 dark:border-amber-700 bg-sky-600 dark:bg-sky-700 text-white font-black text-[11px] shadow-xs">
+                        <i class="fa-solid fa-wrench mr-1"></i> ENGINEERING (HPP)
                     </th>
-                    <th class="px-2 py-3 text-right border-r border-slate-200 dark:border-slate-700 bg-sky-100 dark:bg-sky-950/60 text-sky-950 dark:text-sky-200 font-bold">
-                        Mfg (Eng)
+
+                    {{-- Group Header: Sales --}}
+                    <th colspan="4" class="px-3 py-2 text-center border-r-2 border-emerald-400 dark:border-emerald-700 bg-amber-500 dark:bg-amber-600 text-slate-950 font-black text-[11px] shadow-xs">
+                        <i class="fa-solid fa-file-invoice-dollar mr-1"></i> SALES (QUOTATION)
                     </th>
-                    <th class="px-2 py-3 text-right border-r-2 border-amber-400 dark:border-amber-700 bg-sky-200 dark:bg-sky-900/70 text-sky-950 dark:text-sky-100 font-black">
-                        COGS Eng
+
+                    {{-- Group Header: Profitability --}}
+                    <th colspan="2" class="px-3 py-2 text-center bg-emerald-600 dark:bg-emerald-700 text-white font-black text-[11px] shadow-xs">
+                        <i class="fa-solid fa-chart-line mr-1"></i> PROFITABILITY
                     </th>
-                    <th class="px-2 py-3 text-right border-r border-slate-200 dark:border-slate-700 bg-amber-100 dark:bg-amber-950/60 text-amber-950 dark:text-amber-200 font-bold">
-                        Matrl (Sales)
+                </tr>
+                <tr class="border-b-2 border-slate-200 dark:border-slate-700 text-[10px] font-extrabold uppercase">
+                    {{-- Engineering Sub-headers --}}
+                    <th class="px-2 py-2 text-right border-r border-slate-200 dark:border-slate-700 bg-sky-100 dark:bg-sky-950/60 text-sky-950 dark:text-sky-200 font-bold">
+                        Material Cost
                     </th>
-                    <th class="px-2 py-3 text-right border-r border-slate-200 dark:border-slate-700 bg-amber-100 dark:bg-amber-950/60 text-amber-950 dark:text-amber-200 font-bold">
-                        Mfg (Sales)
+                    <th class="px-2 py-2 text-right border-r border-slate-200 dark:border-slate-700 bg-sky-100 dark:bg-sky-950/60 text-sky-950 dark:text-sky-200 font-bold">
+                        Stamping
                     </th>
-                    <th class="px-2 py-3 text-right border-r-2 border-emerald-400 dark:border-emerald-700 bg-amber-200 dark:bg-amber-900/70 text-amber-950 dark:text-amber-100 font-black">
-                        COGS Sales
+                    <th class="px-2 py-2 text-right border-r border-slate-200 dark:border-slate-700 bg-sky-100 dark:bg-sky-950/60 text-sky-950 dark:text-sky-200 font-bold">
+                        Assembly & Add.
                     </th>
-                    <th class="px-2 py-3 text-right border-r border-slate-200 dark:border-slate-700 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-950 dark:text-emerald-200 font-bold">
+                    <th class="px-2 py-2 text-right border-r-2 border-amber-400 dark:border-amber-700 bg-sky-200 dark:bg-sky-900/70 text-sky-950 dark:text-sky-100 font-black">
+                        COGS
+                    </th>
+
+                    {{-- Sales Sub-headers --}}
+                    <th class="px-2 py-2 text-right border-r border-slate-200 dark:border-slate-700 bg-amber-100 dark:bg-amber-950/60 text-amber-950 dark:text-amber-200 font-bold">
+                        Material Cost
+                    </th>
+                    <th class="px-2 py-2 text-right border-r border-slate-200 dark:border-slate-700 bg-amber-100 dark:bg-amber-950/60 text-amber-950 dark:text-amber-200 font-bold">
+                        Stamping
+                    </th>
+                    <th class="px-2 py-2 text-right border-r border-slate-200 dark:border-slate-700 bg-amber-100 dark:bg-amber-950/60 text-amber-950 dark:text-amber-200 font-bold">
+                        Assembly & Add.
+                    </th>
+                    <th class="px-2 py-2 text-right border-r-2 border-emerald-400 dark:border-emerald-700 bg-amber-200 dark:bg-amber-900/70 text-amber-950 dark:text-amber-100 font-black">
+                        COGS
+                    </th>
+
+                    {{-- Profitability Sub-headers --}}
+                    <th class="px-2 py-2 text-right border-r border-slate-200 dark:border-slate-700 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-950 dark:text-emerald-200 font-bold">
                         Margin (IDR)
                     </th>
-                    <th class="px-2 py-3 text-right bg-emerald-200 dark:bg-emerald-900/70 text-emerald-950 dark:text-emerald-100 font-black">
+                    <th class="px-2 py-2 text-right bg-emerald-200 dark:bg-emerald-900/70 text-emerald-950 dark:text-emerald-100 font-black">
                         Margin (%)
                     </th>
                 </tr>
@@ -350,7 +441,7 @@
                 processing: true,
                 pageLength: 25,
                 ordering: true,
-                order: [[1, 'asc']],
+                order: [[0, 'asc']],
                 ajax: '{{ route("management.product-cost-comparison.items-data", $comparisonResult["ebd_header"]->id) }}',
                 columns: [
                     {
@@ -402,7 +493,15 @@
                         }
                     },
                     {
-                        data: 'eng_mfg_cost',
+                        data: 'eng_stamping_cost',
+                        orderable: true,
+                        className: 'px-2 py-2.5 text-right border-r border-slate-100 dark:border-slate-800 text-sky-950 dark:text-sky-100 bg-sky-50/80 dark:bg-sky-950/30',
+                        render: function (data) {
+                            return Number(data || 0).toLocaleString('id-ID');
+                        }
+                    },
+                    {
+                        data: 'eng_add_proc_cost',
                         orderable: true,
                         className: 'px-2 py-2.5 text-right border-r border-slate-100 dark:border-slate-800 text-sky-950 dark:text-sky-100 bg-sky-50/80 dark:bg-sky-950/30',
                         render: function (data) {
@@ -426,7 +525,15 @@
                         }
                     },
                     {
-                        data: 'sales_mfg_cost',
+                        data: 'sales_stamping_cost',
+                        orderable: true,
+                        className: 'px-2 py-2.5 text-right border-r border-slate-100 dark:border-slate-800 text-amber-950 dark:text-amber-100 bg-amber-50/80 dark:bg-amber-950/30',
+                        render: function (data) {
+                            return Number(data || 0).toLocaleString('id-ID');
+                        }
+                    },
+                    {
+                        data: 'sales_add_proc_cost',
                         orderable: true,
                         className: 'px-2 py-2.5 text-right border-r border-slate-100 dark:border-slate-800 text-amber-950 dark:text-amber-100 bg-amber-50/80 dark:bg-amber-950/30',
                         render: function (data) {

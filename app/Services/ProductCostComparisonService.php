@@ -25,14 +25,14 @@ class ProductCostComparisonService
 
         $customerId = $ebdHeader->customer_id;
 
-        // 1. Fetch Cost Policies
+        // 1. Fetch Cost Policies (Strict: 0.0 if not defined in master data)
         $policyEng = CustomerCostPolicy::where('rate_source', 'Engineering')
             ->whereNull('customer_id')
             ->first() ?? (object)[
-                'admin_matrl_pct' => 2.00,
-                'admin_mfg_pct' => 4.00,
+                'admin_matrl_pct' => 0.00,
+                'admin_mfg_pct' => 0.00,
                 'oh_profit_pct' => 0.00,
-                'min_std_margin_pct' => 12.00,
+                'min_std_margin_pct' => 0.00,
             ];
 
         $policySales = null;
@@ -45,10 +45,10 @@ class ProductCostComparisonService
             $policySales = CustomerCostPolicy::where('rate_source', 'Sales')
                 ->whereNull('customer_id')
                 ->first() ?? (object)[
-                    'admin_matrl_pct' => 3.00,
-                    'admin_mfg_pct' => 5.00,
-                    'oh_profit_pct' => 10.00,
-                    'min_std_margin_pct' => 12.00,
+                    'admin_matrl_pct' => 0.00,
+                    'admin_mfg_pct' => 0.00,
+                    'oh_profit_pct' => 0.00,
+                    'min_std_margin_pct' => 0.00,
                 ];
         }
 
@@ -61,6 +61,10 @@ class ProductCostComparisonService
         $totals = [
             'material_eng' => 0.0,
             'material_sales' => 0.0,
+            'stamping_eng' => 0.0,
+            'stamping_sales' => 0.0,
+            'add_proc_eng' => 0.0,
+            'add_proc_sales' => 0.0,
             'mfg_eng' => 0.0,
             'mfg_sales' => 0.0,
             'cogm_eng' => 0.0,
@@ -92,6 +96,10 @@ class ProductCostComparisonService
             $qty = max(1, $item->qty_unit ?? 1);
             $totals['material_eng'] += ($itemResult['eng']['material_cost'] * $qty);
             $totals['material_sales'] += ($itemResult['sales']['material_cost'] * $qty);
+            $totals['stamping_eng'] += ($itemResult['eng']['stamping_cost'] * $qty);
+            $totals['stamping_sales'] += ($itemResult['sales']['stamping_cost'] * $qty);
+            $totals['add_proc_eng'] += ($itemResult['eng']['add_proc_cost'] * $qty);
+            $totals['add_proc_sales'] += ($itemResult['sales']['add_proc_cost'] * $qty);
             $totals['mfg_eng'] += ($itemResult['eng']['mfg_cost'] * $qty);
             $totals['mfg_sales'] += ($itemResult['sales']['mfg_cost'] * $qty);
             $totals['cogm_eng'] += ($itemResult['eng']['cogm'] * $qty);
@@ -110,18 +118,18 @@ class ProductCostComparisonService
         $marginIdr = $totals['cogs_sales'] - $totals['cogs_eng'];
         $marginPct = $totals['cogs_sales'] > 0 ? ($marginIdr / $totals['cogs_sales']) * 100 : 0.0;
 
-        $targetMarginSales = $policySales->min_std_margin_pct ?? 12.0;
-        $targetMarginEng = $policyEng->min_std_margin_pct ?? 12.0;
+        $targetMarginSales = $policySales->min_std_margin_pct ?? 0.0;
+        $targetMarginEng = $policyEng->min_std_margin_pct ?? 0.0;
 
         $status = 'PASSED';
         $statusBadge = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300';
         $statusText = 'TARGET ACHIEVED (PASSED)';
 
-        if ($marginPct < $targetMarginEng) {
+        if ($targetMarginEng > 0 && $marginPct < $targetMarginEng) {
             $status = 'ALERT';
             $statusBadge = 'bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-300';
             $statusText = 'BELOW MINIMUM MARGIN (CRITICAL)';
-        } elseif ($marginPct < $targetMarginSales) {
+        } elseif ($targetMarginSales > 0 && $marginPct < $targetMarginSales) {
             $status = 'WARNING';
             $statusBadge = 'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300';
             $statusText = 'MARGINAL (BELOW SALES TARGET)';
@@ -157,14 +165,14 @@ class ProductCostComparisonService
         $ebdHeader = MngEbdHeader::findOrFail($ebdHeaderId);
         $customerId = $ebdHeader->customer_id;
 
-        // 1. Fetch Cost Policies
+        // 1. Fetch Cost Policies (Strict: 0.0 if not defined)
         $policyEng = CustomerCostPolicy::where('rate_source', 'Engineering')
             ->whereNull('customer_id')
             ->first() ?? (object)[
-                'admin_matrl_pct' => 2.00,
-                'admin_mfg_pct' => 4.00,
+                'admin_matrl_pct' => 0.00,
+                'admin_mfg_pct' => 0.00,
                 'oh_profit_pct' => 0.00,
-                'min_std_margin_pct' => 12.00,
+                'min_std_margin_pct' => 0.00,
             ];
 
         $policySales = null;
@@ -177,10 +185,10 @@ class ProductCostComparisonService
             $policySales = CustomerCostPolicy::where('rate_source', 'Sales')
                 ->whereNull('customer_id')
                 ->first() ?? (object)[
-                    'admin_matrl_pct' => 3.00,
-                    'admin_mfg_pct' => 5.00,
-                    'oh_profit_pct' => 10.00,
-                    'min_std_margin_pct' => 12.00,
+                    'admin_matrl_pct' => 0.00,
+                    'admin_mfg_pct' => 0.00,
+                    'oh_profit_pct' => 0.00,
+                    'min_std_margin_pct' => 0.00,
                 ];
         }
 
@@ -229,15 +237,21 @@ class ProductCostComparisonService
                 'id' => $item->id,
                 'part_no' => $item->part_no ?? '-',
                 'part_name' => $item->part_name ?? '-',
+                'active_level' => intval($item->active_level ?? 1),
+                'parent_id' => $item->parent_id,
                 'part_rank' => $item->part_rank ?? '-',
                 'mat_spec' => $item->mat_spec ?? '-',
                 'total_process' => $totalProcesses,
                 'tp_count' => $tpCount,
                 'ap_count' => $apCount,
                 'eng_mat_cost' => $calc['eng']['material_cost'],
+                'eng_stamping_cost' => $calc['eng']['stamping_cost'],
+                'eng_add_proc_cost' => $calc['eng']['add_proc_cost'],
                 'eng_mfg_cost' => $calc['eng']['mfg_cost'],
                 'eng_cogs' => $calc['eng']['cogs'],
                 'sales_mat_cost' => $calc['sales']['material_cost'],
+                'sales_stamping_cost' => $calc['sales']['stamping_cost'],
+                'sales_add_proc_cost' => $calc['sales']['add_proc_cost'],
                 'sales_mfg_cost' => $calc['sales']['mfg_cost'],
                 'sales_cogs' => $calc['sales']['cogs'],
                 'margin_idr' => $calc['margin_idr'],
@@ -246,7 +260,7 @@ class ProductCostComparisonService
         }
 
         // Sorting mapping across all columns
-        $orderColumnIndex = $request->input('order.0.column', 1);
+        $orderColumnIndex = $request->input('order.0.column', 0);
         $orderDir = strtolower($request->input('order.0.dir', 'asc'));
         $columnsMap = [
             0 => 'id',
@@ -255,18 +269,30 @@ class ProductCostComparisonService
             3 => 'mat_spec',
             4 => 'total_process',
             5 => 'eng_mat_cost',
-            6 => 'eng_mfg_cost',
-            7 => 'eng_cogs',
-            8 => 'sales_mat_cost',
-            9 => 'sales_mfg_cost',
-            10 => 'sales_cogs',
-            11 => 'margin_idr',
-            12 => 'margin_pct',
+            6 => 'eng_stamping_cost',
+            7 => 'eng_add_proc_cost',
+            8 => 'eng_cogs',
+            9 => 'sales_mat_cost',
+            10 => 'sales_stamping_cost',
+            11 => 'sales_add_proc_cost',
+            12 => 'sales_cogs',
+            13 => 'margin_idr',
+            14 => 'margin_pct',
         ];
 
-        $sortField = $columnsMap[$orderColumnIndex] ?? 'part_no';
+        $sortField = $columnsMap[$orderColumnIndex] ?? 'id';
 
         usort($allRows, function ($a, $b) use ($sortField, $orderDir) {
+            if ($sortField === 'id' && $orderDir === 'asc') {
+                // Natural BOM sequence: Level 1 parent first, then Level 2 children
+                $lvlA = $a['active_level'] ?? 1;
+                $lvlB = $b['active_level'] ?? 1;
+                if ($lvlA !== $lvlB) {
+                    return $lvlA <=> $lvlB;
+                }
+                return ($a['id'] ?? 0) <=> ($b['id'] ?? 0);
+            }
+
             $valA = $a[$sortField] ?? 0;
             $valB = $b[$sortField] ?? 0;
 
@@ -313,27 +339,36 @@ class ProductCostComparisonService
         $partRank = trim($item->part_rank ?? '');
 
         // -------------------------------------------------------------
-        // 1. Match Material Cost
+        // 1. Match Material Cost (Strict: 0.0 if not matched in master data)
         // -------------------------------------------------------------
         $rateMatEng = $this->matchMaterialRate($materials, $matSpec, $matThick, 'Engineering', null);
         $rateMatSales = $this->matchMaterialRate($materials, $matSpec, $matThick, 'Sales', $customerId);
 
-        $matPriceEng = $rateMatEng ? $rateMatEng->price_per_kg : 15000.0;
-        $matPriceSales = $rateMatSales ? $rateMatSales->price_per_kg : 16500.0;
+        $matPriceEng = $rateMatEng ? floatval($rateMatEng->price_per_kg) : 0.0;
+        $matPriceSales = $rateMatSales ? floatval($rateMatSales->price_per_kg) : 0.0;
 
         $matCostEng = $weight * $matPriceEng;
         $matCostSales = $weight * $matPriceSales;
 
         // -------------------------------------------------------------
-        // 2. Match Manufacturing Cost (Stamping Processes & Additional Processes)
+        // 2. Match Manufacturing Cost: Stamping Process vs Assembly & Add. Process
         // -------------------------------------------------------------
-        $mfgCostEng = 0.0;
-        $mfgCostSales = 0.0;
+        $stampingCostEng = 0.0;
+        $stampingCostSales = 0.0;
 
         if ($item->toolingProcesses && $item->toolingProcesses->count() > 0) {
             foreach ($item->toolingProcesses as $tp) {
+                // CF and JIG are checking fixture / welding jigs (tooling investment), DIE is stamping press
+                if ($tp->category && strtoupper(trim($tp->category)) !== 'DIE') {
+                    continue;
+                }
+
                 $tonnage = $tp->tonnage ? intval($tp->tonnage) : null;
-                $machineType = $tp->machine_type ?: null;
+                if (!$tonnage) {
+                    continue;
+                }
+
+                $machineType = ($tp->machine_type && !in_array($tp->machine_type, ['M', 'JW'])) ? $tp->machine_type : 'Tandem';
                 $stroke = ($tp->stroke !== null && $tp->stroke !== '') ? floatval($tp->stroke) : null;
                 $outputQty = max(1, intval($tp->output ?? 1));
 
@@ -344,26 +379,50 @@ class ProductCostComparisonService
                 $rateValEng = $stpEng ? ($stpEng->std_cost_rate * $strokeMultiplier) : 0.0;
                 $rateValSales = $stpSales ? ($stpSales->std_cost_rate * $strokeMultiplier) : 0.0;
 
-                $mfgCostEng += ($rateValEng / $outputQty);
-                $mfgCostSales += ($rateValSales / $outputQty);
+                $stampingCostEng += ($rateValEng / $outputQty);
+                $stampingCostSales += ($rateValSales / $outputQty);
             }
-        } else {
-            // Default single stamping process estimation based on part rank
-            $stpEng = $this->matchStampingRate($stampingRates, null, null, null, $partRank, 'Engineering');
-            $stpSales = $this->matchStampingRate($stampingRates, null, null, null, $partRank, 'Sales');
-
-            $mfgCostEng += ($stpEng ? $stpEng->std_cost_rate : 0.0);
-            $mfgCostSales += ($stpSales ? $stpSales->std_cost_rate : 0.0);
         }
 
-        // Additional processes if any (ED Painting, PSW, RSW, etc.)
+        // Additional processes (Welding: Spot/CO2, Painting, QC Check, Rivet, etc. from mng_mfg_process_costs)
+        $addProcCostEng = 0.0;
+        $addProcCostSales = 0.0;
+
         if ($item->addProcesses && $item->addProcesses->count() > 0) {
             foreach ($item->addProcesses as $ap) {
-                $apCost = floatval($ap->cost_idr ?? 0.0);
-                $mfgCostEng += $apCost;
-                $mfgCostSales += ($apCost * 1.10); // 10% markup for sales
+                $procName = trim($ap->process_name ?? '');
+                $rawQty = floatval($ap->qty ?? 0.0);
+                $qtyMultiplier = $rawQty > 0 ? $rawQty : 1.0;
+
+                // Match in master data by process_name (case-insensitive & bidirectional)
+                $apEng = $generalMfgRates->where('rate_source', 'Engineering')
+                    ->first(function($r) use ($procName) {
+                        if (empty($procName)) return false;
+                        $mfgName = trim($r->process_name);
+                        return strcasecmp($mfgName, $procName) === 0 ||
+                               stripos($mfgName, $procName) !== false ||
+                               stripos($procName, $mfgName) !== false;
+                    });
+
+                $apSales = $generalMfgRates->where('rate_source', 'Sales')
+                    ->first(function($r) use ($procName) {
+                        if (empty($procName)) return false;
+                        $mfgName = trim($r->process_name);
+                        return strcasecmp($mfgName, $procName) === 0 ||
+                               stripos($mfgName, $procName) !== false ||
+                               stripos($procName, $mfgName) !== false;
+                    });
+
+                $valEng = $apEng ? (floatval($apEng->std_cost_rate) * $qtyMultiplier) : floatval($ap->cost_idr ?? 0.0);
+                $valSales = $apSales ? (floatval($apSales->std_cost_rate) * $qtyMultiplier) : floatval($ap->cost_idr ?? 0.0);
+
+                $addProcCostEng += $valEng;
+                $addProcCostSales += $valSales;
             }
         }
+
+        $mfgCostEng = $stampingCostEng + $addProcCostEng;
+        $mfgCostSales = $stampingCostSales + $addProcCostSales;
 
         // -------------------------------------------------------------
         // 3. COGM Subtotals
@@ -374,14 +433,14 @@ class ProductCostComparisonService
         // -------------------------------------------------------------
         // 4. Others (Admin Matrl, Admin Mfg, OH + Profit)
         // -------------------------------------------------------------
-        $adminMatrlEng = $matCostEng * (floatval($policyEng->admin_matrl_pct) / 100);
-        $adminMatrlSales = $matCostSales * (floatval($policySales->admin_matrl_pct) / 100);
+        $adminMatrlEng = $matCostEng * (floatval($policyEng->admin_matrl_pct ?? 0.0) / 100);
+        $adminMatrlSales = $matCostSales * (floatval($policySales->admin_matrl_pct ?? 0.0) / 100);
 
-        $adminMfgEng = $mfgCostEng * (floatval($policyEng->admin_mfg_pct) / 100);
-        $adminMfgSales = $mfgCostSales * (floatval($policySales->admin_mfg_pct) / 100);
+        $adminMfgEng = $mfgCostEng * (floatval($policyEng->admin_mfg_pct ?? 0.0) / 100);
+        $adminMfgSales = $mfgCostSales * (floatval($policySales->admin_mfg_pct ?? 0.0) / 100);
 
         $ohProfitEng = 0.0; // Engineering = 0%
-        $ohProfitSales = ($cogmSales + $adminMatrlSales + $adminMfgSales) * (floatval($policySales->oh_profit_pct) / 100);
+        $ohProfitSales = ($cogmSales + $adminMatrlSales + $adminMfgSales) * (floatval($policySales->oh_profit_pct ?? 0.0) / 100);
 
         // -------------------------------------------------------------
         // 5. COGS Totals
@@ -397,27 +456,31 @@ class ProductCostComparisonService
             'eng' => [
                 'material_rate' => $matPriceEng,
                 'material_cost' => $matCostEng,
+                'stamping_cost' => $stampingCostEng,
+                'add_proc_cost' => $addProcCostEng,
                 'mfg_cost' => $mfgCostEng,
                 'cogm' => $cogmEng,
                 'admin_matrl' => $adminMatrlEng,
-                'admin_matrl_pct' => $policyEng->admin_matrl_pct,
+                'admin_matrl_pct' => $policyEng->admin_matrl_pct ?? 0.0,
                 'admin_mfg' => $adminMfgEng,
-                'admin_mfg_pct' => $policyEng->admin_mfg_pct,
+                'admin_mfg_pct' => $policyEng->admin_mfg_pct ?? 0.0,
                 'oh_profit' => $ohProfitEng,
-                'oh_profit_pct' => $policyEng->oh_profit_pct,
+                'oh_profit_pct' => $policyEng->oh_profit_pct ?? 0.0,
                 'cogs' => $cogsEng,
             ],
             'sales' => [
                 'material_rate' => $matPriceSales,
                 'material_cost' => $matCostSales,
+                'stamping_cost' => $stampingCostSales,
+                'add_proc_cost' => $addProcCostSales,
                 'mfg_cost' => $mfgCostSales,
                 'cogm' => $cogmSales,
                 'admin_matrl' => $adminMatrlSales,
-                'admin_matrl_pct' => $policySales->admin_matrl_pct,
+                'admin_matrl_pct' => $policySales->admin_matrl_pct ?? 0.0,
                 'admin_mfg' => $adminMfgSales,
-                'admin_mfg_pct' => $policySales->admin_mfg_pct,
+                'admin_mfg_pct' => $policySales->admin_mfg_pct ?? 0.0,
                 'oh_profit' => $ohProfitSales,
-                'oh_profit_pct' => $policySales->oh_profit_pct,
+                'oh_profit_pct' => $policySales->oh_profit_pct ?? 0.0,
                 'cogs' => $cogsSales,
             ],
             'margin_idr' => $itemMarginIdr,
@@ -427,15 +490,20 @@ class ProductCostComparisonService
 
     /**
      * Match closest Material Rate from master data.
+     * Returns null if no match found.
      */
     protected function matchMaterialRate($materials, $spec, $thick, $rateSource, $customerId = null)
     {
-        // 1. Try exact Customer + Spec + Thickness + RateSource
+        if (empty($spec) && empty($thick)) {
+            return null;
+        }
+
+        // 1. Try Customer + Spec + Thickness + RateSource
         if ($customerId) {
             $match = $materials->where('rate_source', $rateSource)
                 ->where('customer_id', $customerId)
                 ->filter(function($m) use ($spec, $thick) {
-                    $specMatch = empty($spec) || stripos($m->material_spec, $spec) !== false || stripos($spec, $m->material_spec) !== false;
+                    $specMatch = !empty($spec) && (stripos($m->material_spec, $spec) !== false || stripos($spec, $m->material_spec) !== false);
                     $thickMatch = empty($thick) || empty($m->thickness) || abs($m->thickness - $thick) < 0.05;
                     return $specMatch && $thickMatch;
                 })->first();
@@ -447,25 +515,40 @@ class ProductCostComparisonService
         $match = $materials->where('rate_source', $rateSource)
             ->whereNull('customer_id')
             ->filter(function($m) use ($spec, $thick) {
-                $specMatch = empty($spec) || stripos($m->material_spec, $spec) !== false || stripos($spec, $m->material_spec) !== false;
+                $specMatch = !empty($spec) && (stripos($m->material_spec, $spec) !== false || stripos($spec, $m->material_spec) !== false);
                 $thickMatch = empty($thick) || empty($m->thickness) || abs($m->thickness - $thick) < 0.05;
                 return $specMatch && $thickMatch;
             })->first();
 
         if ($match) return $match;
 
-        // 3. Fallback to any active rate with same rateSource
-        return $materials->where('rate_source', $rateSource)->first() ?? $materials->first();
+        // 3. Try Global Rate with Spec only
+        if (!empty($spec)) {
+            $match = $materials->where('rate_source', $rateSource)
+                ->whereNull('customer_id')
+                ->filter(function($m) use ($spec) {
+                    return stripos($m->material_spec, $spec) !== false || stripos($spec, $m->material_spec) !== false;
+                })->first();
+
+            if ($match) return $match;
+        }
+
+        return null;
     }
 
     /**
-     * Match closest Stamping Process Rate from master data.
+     * Match Stamping Process Rate from master data.
+     * Returns null if no match found.
      */
     protected function matchStampingRate($rates, $machineType, $tonnage, $stroke, $partRank, $rateSource)
     {
-        // 1. Try exact match: Machine Type + Tonnage (closest) + Complexity Alias/Rank + RateSource
+        if (empty($rates) || $rates->isEmpty()) {
+            return null;
+        }
+
+        // 1. Exact match: Machine Type + Tonnage Range + Complexity Alias/Rank + RateSource
         $match = $rates->where('rate_source', $rateSource)
-            ->filter(function($r) use ($machineType, $partRank, $tonnage, $stroke) {
+            ->filter(function($r) use ($machineType, $partRank, $tonnage) {
                 $machineMatch = empty($machineType) || strcasecmp($r->machine_type, $machineType) === 0;
                 $rankMatch = empty($partRank) ||
                     strcasecmp($r->complexity_alias, $partRank) === 0 ||
@@ -477,18 +560,18 @@ class ProductCostComparisonService
         if ($match) return $match;
 
         // 2. Match by Complexity Alias & Tonnage
-        $match = $rates->where('rate_source', $rateSource)
-            ->filter(function($r) use ($partRank, $tonnage) {
-                $rankMatch = empty($partRank) ||
-                    strcasecmp($r->complexity_alias, $partRank) === 0 ||
-                    stripos($r->process_complexity, $partRank) !== false;
-                $tonnageMatch = empty($tonnage) || $r->tonnage >= ($tonnage - 50);
-                return $rankMatch && $tonnageMatch;
-            })->first();
+        if (!empty($partRank)) {
+            $match = $rates->where('rate_source', $rateSource)
+                ->filter(function($r) use ($partRank, $tonnage) {
+                    $rankMatch = strcasecmp($r->complexity_alias, $partRank) === 0 ||
+                        stripos($r->process_complexity, $partRank) !== false;
+                    $tonnageMatch = empty($tonnage) || $r->tonnage >= ($tonnage - 50);
+                    return $rankMatch && $tonnageMatch;
+                })->first();
 
-        if ($match) return $match;
+            if ($match) return $match;
+        }
 
-        // 3. Fallback to same rateSource
-        return $rates->where('rate_source', $rateSource)->first() ?? $rates->first();
+        return null;
     }
 }

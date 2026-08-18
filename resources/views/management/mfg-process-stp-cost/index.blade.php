@@ -156,8 +156,7 @@
                 <th colspan="3" class="px-4 py-2 text-center border-r border-slate-200 dark:border-slate-700 bg-indigo-50/50 dark:bg-indigo-950/30 text-indigo-900 dark:text-indigo-300">
                     Output & Setup
                 </th>
-                <th rowspan="2" class="px-4 py-3 border-r border-slate-200 dark:border-slate-700">Complexity</th>
-                <th rowspan="2" class="px-3 py-3 border-r border-slate-200 dark:border-slate-700">Complexity Alias (Rank)</th>
+                <th rowspan="2" class="px-4 py-3 border-r border-slate-200 dark:border-slate-700">Complexity (Rank)</th>
                 <th colspan="2" class="px-4 py-2 text-center border-r border-slate-200 dark:border-slate-700 bg-blue-50/70 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300">
                     Stamping Cost Rate
                 </th>
@@ -287,14 +286,14 @@
                 { data: 'output_type', orderable: true, className: 'font-medium text-slate-700 dark:text-slate-300' },
                 { data: 'output_qty', orderable: true, className: 'text-center font-semibold text-slate-800 dark:text-slate-200' },
                 { data: 'stroke', orderable: true, className: 'text-right font-medium text-slate-700 dark:text-slate-300' },
-                { data: 'process_complexity', orderable: true, className: 'font-semibold text-slate-800 dark:text-slate-200' },
                 {
-                    data: 'complexity_alias',
+                    data: 'process_complexity',
                     orderable: true,
-                    className: 'text-center font-bold text-slate-700 dark:text-slate-300',
-                    render: function(data) {
+                    className: 'font-semibold text-slate-800 dark:text-slate-200',
+                    render: function (data, type, row) {
                         if (!data) return '-';
-                        return `<span class="px-2 py-0.5 text-[10px] font-extrabold rounded-xs bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600">${data}</span>`;
+                        const alias = row.complexity_alias ? ` (${row.complexity_alias})` : '';
+                        return `<span class="font-bold text-slate-800 dark:text-slate-100">${data}${alias}</span>`;
                     }
                 },
                 {
