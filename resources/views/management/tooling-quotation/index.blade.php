@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
-@section('title', 'Quotation Tooling · Promise Management')
-@section('page_title', 'Quotation Tooling')
-@section('header-title', 'Engineering Breakdown (EBD)')
+@section('title', 'Supplier Quotation Comparison · Promise Management')
+@section('page_title', 'Supplier Quotation Comparison')
+@section('header-title', 'Cost Comparison')
 
 @section('content')
 <div class="flex-1 overflow-y-auto p-4 pt-17.5 space-y-4 transition-colors duration-200">
@@ -10,7 +10,7 @@
     {{-- ===== HEADER ACTIONS ===== --}}
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-            <h1 class="text-2xl font-bold tracking-tight text-slate-800 dark:text-white">Quotation Tooling</h1>
+            <h1 class="text-2xl font-bold tracking-tight text-slate-800 dark:text-white">Supplier Quotation Comparison</h1>
             <p class="text-sm text-slate-500 dark:text-slate-400">List of SPK 2 Tooling Cost Work Orders with Approved status ready for supplier quotation comparison</p>
         </div>
     </div>

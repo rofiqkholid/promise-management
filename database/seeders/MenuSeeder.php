@@ -195,11 +195,17 @@ class MenuSeeder extends Seeder
             ->where('scope_id', 'app_management')
             ->delete();
 
-        // 4. EBD — parent group (dropdown header)
+        // Remove obsolete parent routes if any
+        DB::table('menus')
+            ->where('route', 'management.ebd.parent')
+            ->where('scope_id', 'app_management')
+            ->delete();
+
+        // 4. Engineering Breakdown (EBD) (Standalone Level 1 Menu)
         DB::table('menus')->updateOrInsert(
-            ['route' => 'management.ebd.parent', 'scope_id' => 'app_management'],
+            ['route' => 'management.ebd.index', 'scope_id' => 'app_management'],
             [
-                'title'      => 'EBD',
+                'title'      => 'Engineering Breakdown (EBD)',
                 'icon'       => 'fa-solid fa-cubes',
                 'sort_order' => 4,
                 'level'      => 1,
@@ -210,50 +216,13 @@ class MenuSeeder extends Seeder
                 'updated_at' => now(),
             ]
         );
-        $ebdParentId = DB::table('menus')
-            ->where('route', 'management.ebd.parent')
-            ->where('scope_id', 'app_management')
-            ->value('id');
 
-        // 4a. EBD List (submenu)
-        if ($ebdParentId) {
-            DB::table('menus')->updateOrInsert(
-                ['route' => 'management.ebd.index', 'scope_id' => 'app_management'],
-                [
-                    'title'      => 'EBD List',
-                    'icon'       => 'fa-solid fa-table-list',
-                    'sort_order' => 1,
-                    'level'      => 2,
-                    'parent_id'  => $ebdParentId,
-                    'is_active'  => true,
-                    'is_visible' => true,
-                    'updated_at' => now(),
-                ]
-            );
-
-            // 4b. Product Cost Comparison (submenu)
-            DB::table('menus')->updateOrInsert(
-                ['route' => 'management.product-cost-comparison.index', 'scope_id' => 'app_management'],
-                [
-                    'title'      => 'Cost Comparison (Eng vs Sales)',
-                    'icon'       => 'fa-solid fa-scale-balanced',
-                    'sort_order' => 2,
-                    'level'      => 2,
-                    'parent_id'  => $ebdParentId,
-                    'is_active'  => true,
-                    'is_visible' => true,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]
-            );
-        }
-
-        // 5. Quotation Tooling (Level 1 Standalone Menu)
+        // 5. Cost Comparison — parent group (dropdown header)
         DB::table('menus')->updateOrInsert(
-            ['route' => 'management.tooling-quotation.index', 'scope_id' => 'app_management'],
+            ['route' => 'management.cost-quotation-comparison.parent', 'scope_id' => 'app_management'],
             [
-                'title'      => 'Quotation Tooling',
-                'icon'       => 'fa-solid fa-code-compare',
+                'title'      => 'Cost Comparison',
+                'icon'       => 'fa-solid fa-scale-balanced',
                 'sort_order' => 5,
                 'level'      => 1,
                 'parent_id'  => null,
@@ -263,6 +232,44 @@ class MenuSeeder extends Seeder
                 'updated_at' => now(),
             ]
         );
+        $compParentId = DB::table('menus')
+            ->where('route', 'management.cost-quotation-comparison.parent')
+            ->where('scope_id', 'app_management')
+            ->value('id');
+
+        if ($compParentId) {
+            // 5a. Product Cost Comparison (submenu)
+            DB::table('menus')->updateOrInsert(
+                ['route' => 'management.product-cost-comparison.index', 'scope_id' => 'app_management'],
+                [
+                    'title'      => 'Product Cost Comparison',
+                    'icon'       => 'fa-solid fa-calculator',
+                    'sort_order' => 1,
+                    'level'      => 2,
+                    'parent_id'  => $compParentId,
+                    'is_active'  => true,
+                    'is_visible' => true,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            );
+
+            // 5b. Supplier Quotation Comparison (submenu)
+            DB::table('menus')->updateOrInsert(
+                ['route' => 'management.tooling-quotation.index', 'scope_id' => 'app_management'],
+                [
+                    'title'      => 'Supplier Quotation Comparison',
+                    'icon'       => 'fa-solid fa-code-compare',
+                    'sort_order' => 2,
+                    'level'      => 2,
+                    'parent_id'  => $compParentId,
+                    'is_active'  => true,
+                    'is_visible' => true,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            );
+        }
 
         // 6. Approval Config
         DB::table('menus')->updateOrInsert(
@@ -280,13 +287,13 @@ class MenuSeeder extends Seeder
             ]
         );
 
-        // 6. Calendar & Holiday
+        // 7. Calendar & Holiday
         DB::table('menus')->updateOrInsert(
             ['route' => 'management.calendar.index', 'scope_id' => 'app_management'],
             [
                 'title'      => 'Calendar & Holiday',
                 'icon'       => 'fa-solid fa-calendar-days',
-                'sort_order' => 6,
+                'sort_order' => 7,
                 'level'      => 1,
                 'parent_id'  => null,
                 'is_active'  => true,
@@ -296,13 +303,13 @@ class MenuSeeder extends Seeder
             ]
         );
 
-        // 7. Master Data — parent group (dropdown header)
+        // 8. Master Data — parent group (dropdown header)
         DB::table('menus')->updateOrInsert(
             ['route' => 'management.master-data.parent', 'scope_id' => 'app_management'],
             [
                 'title'      => 'Master Data',
                 'icon'       => 'fa-solid fa-database',
-                'sort_order' => 7,
+                'sort_order' => 8,
                 'level'      => 1,
                 'parent_id'  => null,
                 'is_active'  => true,
@@ -382,13 +389,13 @@ class MenuSeeder extends Seeder
             );
         }
 
-        // 7. Excel Engine Config — parent group (dropdown header)
+        // 9. Excel Engine Config — parent group (dropdown header)
         DB::table('menus')->updateOrInsert(
             ['route' => 'management.excel-engine.parent', 'scope_id' => 'app_management'],
             [
                 'title'      => 'Excel Engine Config',
                 'icon'       => 'fa-solid fa-file-excel',
-                'sort_order' => 7,
+                'sort_order' => 9,
                 'level'      => 1,
                 'parent_id'  => null,
                 'is_active'  => true,

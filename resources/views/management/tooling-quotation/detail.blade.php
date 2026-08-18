@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
-@section('title', 'Quotation Tooling Detail · Promise Management')
-@section('page_title', 'Quotation Tooling Detail')
-@section('header-title', 'Engineering Breakdown (EBD)')
+@section('title', 'Supplier Quotation Comparison Detail · Promise Management')
+@section('page_title', 'Supplier Quotation Comparison Detail')
+@section('header-title', 'Cost Comparison')
 
 @section('content')
 <div class="flex h-[calc(100vh-64px)] mt-16 overflow-hidden bg-white dark:bg-slate-900 flex-col border-t border-slate-300 dark:border-slate-800">
@@ -40,7 +40,7 @@
                 </div>
                 <div class="min-w-0">
                     <span class="block text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-0.5">WO Number</span>
-                    <span class="block font-normal text-slate-800 dark:text-slate-100 text-xs truncate">{{ $selectedEbd->workOrder->wo_number ?? '—' }}</span>
+                    <span class="block font-normal text-slate-800 dark:text-slate-100 text-xs truncate">{{ $selectedEbd?->workOrder?->wo_number ?? $workOrder?->wo_number ?? '—' }}</span>
                 </div>
             </div>
 
@@ -55,10 +55,12 @@
                 <div class="min-w-0 w-full">
                     <span class="block text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-0.5">Customer</span>
                     <span class="block font-normal text-slate-800 dark:text-slate-100 text-xs truncate">
-                        @if(isset($selectedEbd->customer->code))
+                        @if(isset($selectedEbd?->customer?->code))
                             {{ $selectedEbd->customer->code }} -
+                        @elseif(isset($workOrder?->customer?->code))
+                            {{ $workOrder->customer->code }} -
                         @endif
-                        {{ $selectedEbd->customer->name ?? '—' }}
+                        {{ $selectedEbd?->customer?->name ?? $workOrder?->customer?->name ?? '—' }}
                     </span>
                 </div>
             </div>
@@ -73,7 +75,7 @@
                 </div>
                 <div class="min-w-0">
                     <span class="block text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-0.5">Project Model</span>
-                    <span class="block font-normal text-slate-800 dark:text-slate-100 text-xs truncate">{{ $selectedEbd->projectModel->name ?? '—' }}</span>
+                    <span class="block font-normal text-slate-800 dark:text-slate-100 text-xs truncate">{{ $selectedEbd?->projectModel?->name ?? $workOrder?->projectModel?->name ?? '—' }}</span>
                 </div>
             </div>
 
@@ -87,7 +89,7 @@
                 </div>
                 <div class="min-w-0">
                     <span class="block text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-0.5">Part Count</span>
-                    <span class="block font-mono font-normal text-slate-800 dark:text-slate-100 text-xs truncate">{{ $ebdItems->count() }} Parts</span>
+                    <span class="block font-mono font-normal text-slate-800 dark:text-slate-100 text-xs truncate">{{ $ebdItems ? $ebdItems->count() : 0 }} Parts</span>
                 </div>
             </div>
         </div>
@@ -95,10 +97,10 @@
         {{-- Global Revision & Status --}}
         <div class="pl-6 border-l border-slate-300 dark:border-slate-700 flex-shrink-0 flex items-center gap-2.5">
             <span class="px-2.5 py-1 text-xs font-mono font-normal border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xs">
-                REV: {{ $selectedEbd->revision }}
+                REV: {{ $selectedEbd?->revision ?? '0' }}
             </span>
             <span class="px-2.5 py-1 text-xs font-normal border rounded-xs bg-emerald-100/70 text-emerald-700 border-emerald-350/60 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900/30">
-                {{ $selectedEbd->status ?? 'Released' }}
+                {{ $selectedEbd?->status ?? 'Released' }}
             </span>
         </div>
     </div>
@@ -175,14 +177,14 @@
                             @if(isset($availableEbdRevisions) && $availableEbdRevisions->count() > 1)
                                 <select onchange="window.location.href='?ebd_id=' + this.value" class="w-full text-xs font-mono font-bold px-2 py-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:border-indigo-500 cursor-pointer">
                                     @foreach($availableEbdRevisions as $revEbd)
-                                        <option value="{{ $revEbd->id }}" {{ $revEbd->id == $selectedEbd->id ? 'selected' : '' }}>
-                                            Rev {{ $revEbd->revision }} {{ $revEbd->id == $workOrder->ebd_header_id ? '★ (Active WO)' : '' }}
+                                        <option value="{{ $revEbd->id }}" {{ $revEbd->id == ($selectedEbd?->id ?? null) ? 'selected' : '' }}>
+                                            Rev {{ $revEbd->revision }} {{ $revEbd->id == ($workOrder?->ebd_header_id ?? null) ? '★ (Active WO)' : '' }}
                                         </option>
                                     @endforeach
                                 </select>
                             @else
                                 <div class="text-xs font-mono font-semibold text-slate-700 dark:text-slate-300 px-2 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xs">
-                                    Rev {{ $selectedEbd->revision }} (Latest)
+                                    Rev {{ $selectedEbd?->revision ?? '0' }} (Latest)
                                 </div>
                             @endif
                         </div>

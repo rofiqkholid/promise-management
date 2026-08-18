@@ -49,7 +49,7 @@ if (isset($menus)) {
     x-transition:leave="transition ease-in duration-200 transform"
     x-transition:leave-start="translate-x-0"
     x-transition:leave-end="-translate-x-full md:translate-x-0"
-    class="no-scrollbar fixed top-0 left-0 h-screen z-50 group w-64 md:w-20 md:hover:w-64 p-4 bg-white dark:bg-gray-900 flex-col flex-shrink-0 transition-all duration-300 ease-in-out overflow-y-auto overflow-x-hidden shadow-lg border-r border-gray-200 dark:border-gray-700">
+    class="no-scrollbar fixed top-0 left-0 h-screen z-50 group w-72 md:w-20 md:hover:w-72 p-4 bg-white dark:bg-gray-900 flex-col flex-shrink-0 transition-all duration-300 ease-in-out overflow-y-auto overflow-x-hidden shadow-lg border-r border-gray-200 dark:border-gray-700">
 
     {{-- Mobile close button --}}
     <button @click="sidebarOpen = false" 
@@ -82,11 +82,12 @@ if (isset($menus)) {
                 <li class="mb-2">
                     @if ($hasChildren)
                         <button type="button" @click.prevent="openMenu = (openMenu === {{ $menu->id }} ? null : {{ $menu->id }})"
+                            title="{{ $menu->title }}"
                             class="w-full flex items-center justify-between p-3 rounded-xs transition-colors duration-200 text-sm font-medium text-left
                                             hover:bg-blue-50 hover:text-blue-800 dark:hover:bg-gray-800 dark:hover:text-gray-200
                                             {{ $isActive ? 'bg-blue-50 text-blue-800 dark:bg-gray-800 dark:text-gray-200' : 'text-gray-600 dark:text-gray-400' }}">
 
-                            <div class="flex items-center">
+                            <div class="flex items-center min-w-0 flex-1 mr-2">
                                 <span class="flex items-center justify-center w-5 mr-3 flex-shrink-0 text-center">
                                     @if($menu->icon && str_contains($menu->icon, 'fa-'))
                                         <i class="{{ $menu->icon }}"></i>
@@ -94,10 +95,10 @@ if (isset($menus)) {
                                         <span class="font-bold font-sans">{{ substr($menu->title, 0, 1) }}</span>
                                     @endif
                                 </span>
-                                <span class="whitespace-nowrap transition-opacity duration-200 opacity-100 md:opacity-0 md:group-hover:opacity-100">{{ $menu->title }}</span>
+                                <span class="truncate block w-full transition-opacity duration-200 opacity-100 md:opacity-0 md:group-hover:opacity-100">{{ $menu->title }}</span>
                             </div>
 
-                            <span class="whitespace-nowrap transition-opacity duration-200 opacity-100 md:opacity-0 md:group-hover:opacity-100">
+                            <span class="flex-shrink-0 transition-opacity duration-200 opacity-100 md:opacity-0 md:group-hover:opacity-100">
                                 <i class="fa-solid fa-chevron-down h-4 w-4 transform transition-transform duration-200" :class="{'rotate-180': openMenu === {{ $menu->id }}}"></i>
                             </span>
                         </button>
@@ -109,7 +110,7 @@ if (isset($menus)) {
                                     $childUrl = Route::has($child->route) ? route($child->route) : url($child->route);
                                 @endphp
                                 <li>
-                                    <a href="{{ $childUrl }}" class="flex items-center p-3 rounded-xs transition-colors duration-200 text-xs font-medium
+                                    <a href="{{ $childUrl }}" title="{{ $child->title }}" class="flex items-center p-3 rounded-xs transition-colors duration-200 text-xs font-medium min-w-0
                                                             hover:bg-blue-50 hover:text-blue-800 dark:hover:bg-gray-800 dark:hover:text-gray-200
                                                             {{ $childActive ? 'font-bold text-blue-700 dark:text-white' : 'text-gray-600 dark:text-gray-400' }}">
                                         <span class="flex items-center justify-center w-5 mr-3 flex-shrink-0 text-center">
@@ -119,13 +120,13 @@ if (isset($menus)) {
                                                 <span class="font-bold font-sans">{{ substr($child->title, 0, 1) }}</span>
                                             @endif
                                         </span>
-                                        <span class="whitespace-nowrap transition-opacity duration-200 opacity-100 md:opacity-0 md:group-hover:opacity-100">{{ $child->title }}</span>
+                                        <span class="truncate block flex-1 transition-opacity duration-200 opacity-100 md:opacity-0 md:group-hover:opacity-100">{{ $child->title }}</span>
                                     </a>
                                 </li>
                             @endforeach
                         </ul>
                     @else
-                        <a href="{{ $menuUrl }}" class="flex items-center p-3 rounded-xs transition-colors duration-200 text-sm font-medium
+                        <a href="{{ $menuUrl }}" title="{{ $menu->title }}" class="flex items-center p-3 rounded-xs transition-colors duration-200 text-sm font-medium min-w-0
                                         hover:bg-blue-50 hover:text-blue-800 dark:hover:bg-gray-800 dark:hover:text-gray-200
                                         {{ $isActive ? 'bg-blue-50 text-blue-800 dark:bg-gray-800 dark:text-gray-200' : 'text-gray-600 dark:text-gray-400' }}">
                             <span class="flex items-center justify-center w-5 mr-3 flex-shrink-0 text-center">
@@ -135,7 +136,7 @@ if (isset($menus)) {
                                     <span class="font-bold font-sans">{{ substr($menu->title, 0, 1) }}</span>
                                 @endif
                             </span>
-                            <span class="whitespace-nowrap transition-opacity duration-200 opacity-100 md:opacity-0 md:group-hover:opacity-100">{{ $menu->title }}</span>
+                            <span class="truncate block flex-1 transition-opacity duration-200 opacity-100 md:opacity-0 md:group-hover:opacity-100">{{ $menu->title }}</span>
                         </a>
                     @endif
                 </li>

@@ -13,7 +13,7 @@
             </div>
             <h1 class="text-xl font-extrabold tracking-tight text-slate-800 dark:text-white leading-none flex items-center gap-2">
                 <i class="fa-solid fa-scale-balanced text-blue-600 dark:text-blue-400 text-lg"></i>
-                Product Cost Comparison (Eng vs Sales)
+                Product Cost Comparison
             </h1>
             <p class="text-xs text-slate-400 mt-1">
                 Daftar perbandingan biaya HPP Engineering vs Harga Penawaran Sales per Customer dan Project Model EBD.
@@ -148,11 +148,10 @@
                     <td class="px-3 py-3 text-center font-bold text-slate-400 border-r border-slate-100 dark:border-slate-800">
                         {{ $idx + 1 }}
                     </td>
-                    <td class="px-4 py-3 border-r border-slate-100 dark:border-slate-800 font-bold text-slate-800 dark:text-white">
-                        {{ $row['customer']->name ?? '-' }}
-                        @if($row['customer'] && $row['customer']->code)
-                            <span class="text-[10px] text-slate-400 font-normal block">{{ $row['customer']->code }}</span>
-                        @endif
+                    <td class="px-4 py-3 border-r border-slate-100 dark:border-slate-800 font-bold">
+                        <span class="inline-block px-2.5 py-1 text-xs font-black rounded-xs bg-indigo-100 text-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                            {{ $row['customer']->code ?? $row['customer']->name ?? '-' }}
+                        </span>
                     </td>
                     <td class="px-4 py-3 border-r border-slate-100 dark:border-slate-800 font-semibold text-slate-700 dark:text-slate-200">
                         {{ $row['model']->name ?? 'Model' }}

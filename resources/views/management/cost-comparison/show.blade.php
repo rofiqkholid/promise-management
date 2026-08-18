@@ -18,7 +18,7 @@
                 </div>
                 <h1 class="text-xl font-extrabold tracking-tight text-slate-800 dark:text-white leading-none flex items-center gap-2">
                     <i class="fa-solid fa-scale-balanced text-blue-600 dark:text-blue-400 text-lg"></i>
-                    {{ $comparisonResult['project_model']->name ?? 'Model' }} — {{ $comparisonResult['customer']->name ?? 'Customer' }}
+                    {{ $comparisonResult['project_model']->name ?? 'Model' }} — {{ $comparisonResult['customer']->code ?? $comparisonResult['customer']->name ?? 'Customer' }}
                 </h1>
                 <p class="text-xs text-slate-400 mt-1">
                     EBD Rev: <strong>{{ $comparisonResult['ebd_header']->revision ?? '0' }}</strong> |
@@ -116,7 +116,7 @@
                 <i class="fa-solid fa-table-cells text-amber-500"></i> Product Cost Structure Matrix
             </h2>
             <div class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                Customer: <span class="font-bold text-slate-700 dark:text-slate-200">{{ $comparisonResult['customer']->name ?? 'Global' }}</span> |
+                Customer: <span class="font-bold text-slate-700 dark:text-slate-200">{{ $comparisonResult['customer']->code ?? $comparisonResult['customer']->name ?? 'Global' }}</span> |
                 Model: <span class="font-bold text-slate-700 dark:text-slate-200">{{ $comparisonResult['project_model']->name ?? '-' }}</span>
             </div>
         </div>

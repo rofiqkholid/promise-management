@@ -228,7 +228,7 @@
                     className: 'font-semibold',
                     render: function (data, type, row) {
                         if (row.customer) {
-                            return `<span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300">${row.customer.name}</span>`;
+                            return `<span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300">${row.customer.code || row.customer.name}</span>`;
                         }
                         return `<span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300">Global Standard</span>`;
                     }
