@@ -11,6 +11,11 @@ use App\Http\Controllers\FeasibilityStudy\WorkOrderFastenerController;
 use App\Http\Controllers\Management\ApprovalConfigController;
 use App\Http\Controllers\Management\CalendarController;
 use App\Http\Controllers\FeasibilityStudy\EbdController;
+use App\Http\Controllers\Management\MfgProcessCostController;
+use App\Http\Controllers\Management\MfgProcessStpCostController;
+use App\Http\Controllers\Management\MaterialCostController;
+use App\Http\Controllers\Management\CustomerCostPolicyController;
+use App\Http\Controllers\Management\ProductCostComparisonController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
@@ -194,12 +199,63 @@ Route::middleware('auth')->prefix('management')->name('management.')->group(func
     Route::post('excel-templates', [\App\Http\Controllers\Admin\ExcelTemplateController::class, 'store'])->name('excel-templates.store');
     Route::post('excel-templates/{id}/update', [\App\Http\Controllers\Admin\ExcelTemplateController::class, 'update'])->name('excel-templates.update');
     Route::post('excel-templates/{id}/delete', [\App\Http\Controllers\Admin\ExcelTemplateController::class, 'destroy'])->name('excel-templates.destroy');
+    Route::post('excel-templates/{id}/duplicate', [\App\Http\Controllers\Admin\ExcelTemplateController::class, 'duplicate'])->name('excel-templates.duplicate');
     Route::get('excel-templates/{id}/builder', [\App\Http\Controllers\Admin\ExcelTemplateController::class, 'builder'])->name('excel-templates.builder');
     Route::get('excel-templates/{id}/preview', [\App\Http\Controllers\Admin\ExcelTemplateController::class, 'preview'])->name('excel-templates.preview');
     Route::post('excel-templates/{id}/mapping', [\App\Http\Controllers\Admin\ExcelTemplateController::class, 'saveMapping'])->name('excel-templates.save-mapping');
 
     Route::get('system-fields', [\App\Http\Controllers\Admin\SystemFieldController::class, 'index'])->name('system-fields.index');
     Route::post('system-fields', [\App\Http\Controllers\Admin\SystemFieldController::class, 'store'])->name('system-fields.store');
+
+    // Manufacturing Process Cost Master Data Routes
+    Route::middleware('check.menu:management.mfg-process-cost.index')->group(function () {
+        Route::get('mfg-process-cost', [MfgProcessCostController::class, 'index'])->name('mfg-process-cost.index');
+        Route::get('mfg-process-cost/data', [MfgProcessCostController::class, 'data'])->name('mfg-process-cost.data');
+        Route::get('mfg-process-cost/export', [MfgProcessCostController::class, 'export'])->name('mfg-process-cost.export');
+        Route::post('mfg-process-cost', [MfgProcessCostController::class, 'store'])->name('mfg-process-cost.store');
+        Route::put('mfg-process-cost/{id}', [MfgProcessCostController::class, 'update'])->name('mfg-process-cost.update');
+        Route::delete('mfg-process-cost/{id}', [MfgProcessCostController::class, 'destroy'])->name('mfg-process-cost.destroy');
+    });
+
+    // Manufacturing Stamping Process Cost Master Data Routes
+    Route::middleware('check.menu:management.mfg-process-stp-cost.index')->group(function () {
+        Route::get('mfg-process-stp-cost', [MfgProcessStpCostController::class, 'index'])->name('mfg-process-stp-cost.index');
+        Route::get('mfg-process-stp-cost/data', [MfgProcessStpCostController::class, 'data'])->name('mfg-process-stp-cost.data');
+        Route::get('mfg-process-stp-cost/export', [MfgProcessStpCostController::class, 'export'])->name('mfg-process-stp-cost.export');
+        Route::post('mfg-process-stp-cost', [MfgProcessStpCostController::class, 'store'])->name('mfg-process-stp-cost.store');
+        Route::put('mfg-process-stp-cost/{id}', [MfgProcessStpCostController::class, 'update'])->name('mfg-process-stp-cost.update');
+        Route::delete('mfg-process-stp-cost/{id}', [MfgProcessStpCostController::class, 'destroy'])->name('mfg-process-stp-cost.destroy');
+    });
+
+    // Material Cost Master Data Routes
+    Route::middleware('check.menu:management.material-cost.index')->group(function () {
+        Route::get('material-cost', [MaterialCostController::class, 'index'])->name('material-cost.index');
+        Route::get('material-cost/data', [MaterialCostController::class, 'data'])->name('material-cost.data');
+        Route::get('material-cost/export', [MaterialCostController::class, 'export'])->name('material-cost.export');
+        Route::post('material-cost', [MaterialCostController::class, 'store'])->name('material-cost.store');
+        Route::put('material-cost/{id}', [MaterialCostController::class, 'update'])->name('material-cost.update');
+        Route::delete('material-cost/{id}', [MaterialCostController::class, 'destroy'])->name('material-cost.destroy');
+    });
+
+    // Cost Policy & Markup Master Data Routes
+    Route::middleware('check.menu:management.cost-policy.index')->group(function () {
+        Route::get('cost-policy', [CustomerCostPolicyController::class, 'index'])->name('cost-policy.index');
+        Route::get('cost-policy/data', [CustomerCostPolicyController::class, 'data'])->name('cost-policy.data');
+        Route::get('cost-policy/export', [CustomerCostPolicyController::class, 'export'])->name('cost-policy.export');
+        Route::post('cost-policy', [CustomerCostPolicyController::class, 'store'])->name('cost-policy.store');
+        Route::put('cost-policy/{id}', [CustomerCostPolicyController::class, 'update'])->name('cost-policy.update');
+        Route::delete('cost-policy/{id}', [CustomerCostPolicyController::class, 'destroy'])->name('cost-policy.destroy');
+    });
+
+    // Product Cost Comparison Routes (Eng vs Sales Matrix)
+    Route::middleware('check.menu:management.product-cost-comparison.index')->group(function () {
+        Route::get('product-cost-comparison', [ProductCostComparisonController::class, 'index'])->name('product-cost-comparison.index');
+        Route::get('product-cost-comparison/models', [ProductCostComparisonController::class, 'getModelsByCustomer'])->name('product-cost-comparison.models');
+        Route::get('product-cost-comparison/ebds', [ProductCostComparisonController::class, 'getEbdsByModel'])->name('product-cost-comparison.ebds');
+        Route::get('product-cost-comparison/export', [ProductCostComparisonController::class, 'export'])->name('product-cost-comparison.export');
+        Route::get('product-cost-comparison/{id}', [ProductCostComparisonController::class, 'show'])->name('product-cost-comparison.show');
+        Route::get('product-cost-comparison/{id}/items-data', [ProductCostComparisonController::class, 'itemsData'])->name('product-cost-comparison.items-data');
+    });
 });
 
 

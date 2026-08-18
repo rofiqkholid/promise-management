@@ -27,21 +27,25 @@ class ExcelTemplateController extends Controller
         $request->validate([
             'template_name' => 'required|string|max:255',
             'template_type' => 'required|string',
+            'direction'     => 'nullable|string|in:export,import',
             'revision'      => 'nullable|string|max:20',
             'file'          => 'required|file|mimes:xlsx',
         ]);
 
         $filePath = $request->file('file')->store('templates', 'public');
+        $direction = $request->direction ?? 'export';
 
         $template = MngCfgTemplate::create([
             'template_name' => $request->template_name,
             'template_type' => $request->template_type,
+            'direction'     => $direction,
             'revision'      => $request->revision ?? '0',
             'customer_id'   => $request->customer_id,
             'file_path'     => $filePath,
             'is_active'     => true,
             'mapping_config' => [
                 'template_type' => $request->template_type,
+                'direction'     => $direction,
                 'single_fields' => [],
                 'table_loops'   => []
             ]
@@ -58,6 +62,7 @@ class ExcelTemplateController extends Controller
         $request->validate([
             'template_name' => 'required|string|max:255',
             'template_type' => 'required|string',
+            'direction'     => 'nullable|string|in:export,import',
             'revision'      => 'nullable|string|max:20',
             'file'          => 'nullable|file|mimes:xlsx',
         ]);
@@ -65,6 +70,7 @@ class ExcelTemplateController extends Controller
         $data = [
             'template_name' => $request->template_name,
             'template_type' => $request->template_type,
+            'direction'     => $request->direction ?? $template->direction ?? 'export',
             'revision'      => $request->revision ?? $template->revision ?? '0',
             'customer_id'   => $request->customer_id ?? $template->customer_id,
         ];
@@ -96,6 +102,32 @@ class ExcelTemplateController extends Controller
 
         return redirect()->route('management.excel-templates.index')
             ->with('success', 'Template deleted successfully!');
+    }
+
+    public function duplicate($id)
+    {
+        $original = MngCfgTemplate::findOrFail($id);
+
+        $newFilePath = null;
+        if ($original->file_path && Storage::disk('public')->exists($original->file_path)) {
+            $ext = pathinfo($original->file_path, PATHINFO_EXTENSION);
+            $newFilePath = 'templates/' . \Illuminate\Support\Str::uuid() . '.' . $ext;
+            Storage::disk('public')->copy($original->file_path, $newFilePath);
+        }
+
+        $duplicate = MngCfgTemplate::create([
+            'template_name'  => $original->template_name . ' (Copy)',
+            'template_type'  => $original->template_type,
+            'direction'      => $original->direction,
+            'revision'       => $original->revision ? $original->revision . '.copy' : '0.copy',
+            'customer_id'    => $original->customer_id,
+            'file_path'      => $newFilePath,
+            'is_active'      => false,
+            'mapping_config' => $original->mapping_config,
+        ]);
+
+        return redirect()->route('management.excel-templates.index')
+            ->with('success', "Template '{$original->template_name}' successfully duplicated!");
     }
 
     public function builder(Request $request, $id)
@@ -172,29 +204,43 @@ class ExcelTemplateController extends Controller
 
             // 2. Merged Cells details (colspan & rowspan)
             $mergeMap = [];
+            // Store merge range metadata for border post-processing
+            $mergeRangeMeta = []; // keyed by firstCell => [firstRow, lastRow, firstCol, lastCol, lastColLetter, lastRowLetter]
             foreach ($sheet->getMergeCells() as $mergeRange) {
                 $mergedCells[] = $mergeRange;
                 $range = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::splitRange($mergeRange);
                 $firstCell = $range[0][0];
                 $lastCell = $range[0][1];
 
-                $firstCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString(preg_replace('/[0-9]/', '', $firstCell));
+                $firstColIdx = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString(preg_replace('/[0-9]/', '', $firstCell));
                 $firstRow = (int)preg_replace('/[A-Z]/', '', $firstCell);
 
-                $lastCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString(preg_replace('/[0-9]/', '', $lastCell));
+                $lastColIdx = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString(preg_replace('/[0-9]/', '', $lastCell));
                 $lastRow = (int)preg_replace('/[A-Z]/', '', $lastCell);
 
-                $colSpan = $lastCol - $firstCol + 1;
+                $colSpan = $lastColIdx - $firstColIdx + 1;
                 $rowSpan = $lastRow - $firstRow + 1;
+
+                $lastColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($lastColIdx);
+                $firstColLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($firstColIdx);
 
                 $mergeMap[$firstCell] = [
                     'colspan' => $colSpan,
                     'rowspan' => $rowSpan,
                 ];
 
-                // Mark covered slave cells so they can be hidden in table HTML, but save master cell reference
+                $mergeRangeMeta[$firstCell] = [
+                    'firstRow'       => $firstRow,
+                    'lastRow'        => $lastRow,
+                    'firstColIdx'    => $firstColIdx,
+                    'lastColIdx'     => $lastColIdx,
+                    'firstColLetter' => $firstColLetter,
+                    'lastColLetter'  => $lastColLetter,
+                ];
+
+                // Mark covered slave cells so they can be hidden in table HTML
                 for ($r = $firstRow; $r <= $lastRow; $r++) {
-                    for ($c = $firstCol; $c <= $lastCol; $c++) {
+                    for ($c = $firstColIdx; $c <= $lastColIdx; $c++) {
                         $cellCoord = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($c) . $r;
                         if ($cellCoord !== $firstCell) {
                             $mergeMap[$cellCoord] = [
@@ -206,22 +252,212 @@ class ExcelTemplateController extends Controller
                 }
             }
 
-            // 3. Drawings / Embedded Images
-            foreach ($sheet->getDrawingCollection() as $drawing) {
-                if ($drawing instanceof \PhpOffice\PhpSpreadsheet\Worksheet\Drawing) {
-                    $coordinates = $drawing->getCoordinates();
-                    $path = $drawing->getPath();
-                    if (file_exists($path)) {
-                        $imageData = base64_encode(file_get_contents($path));
-                        $mime = mime_content_type($path) ?: 'image/png';
+            // 3. Drawings / Embedded Images (PhpSpreadsheet collection & Dynamic XLSX XML drawing parser)
+            try {
+                $drawingCollection = $sheet->getDrawingCollection();
+                foreach ($drawingCollection as $drawing) {
+                    $coordinates = method_exists($drawing, 'getCoordinates') ? $drawing->getCoordinates() : 'A1';
+                    $width = method_exists($drawing, 'getWidth') ? $drawing->getWidth() : 100;
+                    $height = method_exists($drawing, 'getHeight') ? $drawing->getHeight() : 100;
+                    $offsetX = method_exists($drawing, 'getOffsetX') ? $drawing->getOffsetX() : 0;
+                    $offsetY = method_exists($drawing, 'getOffsetY') ? $drawing->getOffsetY() : 0;
+                    $src = null;
+
+                    if ($drawing instanceof \PhpOffice\PhpSpreadsheet\Worksheet\Drawing) {
+                        $path = $drawing->getPath();
+                        if (!empty($path) && file_exists($path)) {
+                            $imageData = base64_encode(file_get_contents($path));
+                            $mime = @mime_content_type($path) ?: 'image/png';
+                            $src = "data:{$mime};base64,{$imageData}";
+                        }
+                    } elseif ($drawing instanceof \PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing) {
+                        $imageRes = $drawing->getImageResource();
+                        if ($imageRes) {
+                            ob_start();
+                            switch ($drawing->getRenderingFunction()) {
+                                case \PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing::RENDERING_JPEG:
+                                    imagejpeg($imageRes);
+                                    $mime = 'image/jpeg';
+                                    break;
+                                case \PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing::RENDERING_GIF:
+                                    imagegif($imageRes);
+                                    $mime = 'image/gif';
+                                    break;
+                                case \PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing::RENDERING_PNG:
+                                default:
+                                    imagepng($imageRes);
+                                    $mime = 'image/png';
+                                    break;
+                            }
+                            $imageData = base64_encode(ob_get_clean());
+                            $src = "data:{$mime};base64,{$imageData}";
+                        }
+                    } elseif (method_exists($drawing, 'getPath')) {
+                        $path = $drawing->getPath();
+                        if (!empty($path) && file_exists($path)) {
+                            $imageData = base64_encode(file_get_contents($path));
+                            $mime = @mime_content_type($path) ?: 'image/png';
+                            $src = "data:{$mime};base64,{$imageData}";
+                        }
+                    }
+
+                    if ($src) {
                         $images[] = [
-                            'cell' => $coordinates,
-                            'src' => "data:{$mime};base64,{$imageData}",
-                            'width' => $drawing->getWidth(),
-                            'height' => $drawing->getHeight(),
+                            'cell'     => $coordinates,
+                            'src'      => $src,
+                            'width'    => $width,
+                            'height'   => $height,
+                            'offsetX'  => $offsetX,
+                            'offsetY'  => $offsetY,
                         ];
                     }
                 }
+
+                // If getDrawingCollection returned no images, parse XLSX drawings XML files dynamically
+                if (empty($images) && class_exists('\ZipArchive')) {
+                    $zip = new \ZipArchive();
+                    if ($zip->open($filePath) === true) {
+                        // 1. Collect all media files (e.g. xl/media/image1.png => rId mapping or path)
+                        $mediaStreams = [];
+                        for ($i = 0; $i < $zip->numFiles; $i++) {
+                            $name = $zip->getNameIndex($i);
+                            if (str_starts_with($name, 'xl/media/')) {
+                                $stream = $zip->getStream($name);
+                                if ($stream) {
+                                    $data = stream_get_contents($stream);
+                                    fclose($stream);
+                                    $ext = pathinfo($name, PATHINFO_EXTENSION);
+                                    $mime = match (strtolower($ext)) {
+                                        'png'  => 'image/png',
+                                        'jpg', 'jpeg' => 'image/jpeg',
+                                        'gif'  => 'image/gif',
+                                        'svg'  => 'image/svg+xml',
+                                        default => 'image/png',
+                                    };
+                                    $mediaStreams[basename($name)] = "data:{$mime};base64," . base64_encode($data);
+                                }
+                            }
+                        }
+
+                        // 2. Iterate all xl/drawings/drawing*.xml files inside the zip
+                        for ($i = 0; $i < $zip->numFiles; $i++) {
+                            $filename = $zip->getNameIndex($i);
+                            if (preg_match('#^xl/drawings/drawing\d+\.xml$#i', $filename)) {
+                                $drawingXml = $zip->getFromName($filename);
+                                $dir = dirname($filename);
+                                $baseName = basename($filename);
+                                $relsPath = $dir . '/_rels/' . $baseName . '.rels';
+                                
+                                $relsMap = [];
+                                $relsContent = $zip->getFromName($relsPath);
+                                if ($relsContent) {
+                                    $sxmlRels = @simplexml_load_string($relsContent);
+                                    if ($sxmlRels) {
+                                        foreach ($sxmlRels->Relationship as $rel) {
+                                            $rId = (string)$rel['Id'];
+                                            $target = (string)$rel['Target'];
+                                            $relsMap[$rId] = basename($target);
+                                        }
+                                    }
+                                }
+
+                                if ($drawingXml) {
+                                    // Remove XML namespaces to simplify SimpleXML parsing across versions
+                                    $cleanXmlStr = preg_replace('/xmlns[^=]*="[^"]*"/i', '', $drawingXml);
+                                    $cleanXmlStr = preg_replace('/[a-zA-Z0-9]+:([a-zA-Z0-9]+)/', '$1', $cleanXmlStr);
+                                    
+                                    $sxml = @simplexml_load_string($cleanXmlStr);
+                                    if ($sxml) {
+                                        $anchors = array_merge(
+                                            $sxml->xpath('//twoCellAnchor') ?: [],
+                                            $sxml->xpath('//oneCellAnchor') ?: []
+                                        );
+
+                                        foreach ($anchors as $anchor) {
+                                            if (isset($anchor->from)) {
+                                                $col = (int)$anchor->from->col + 1; // 0-indexed to 1-indexed
+                                                $row = (int)$anchor->from->row + 1;
+                                                $colOff = (int)($anchor->from->colOff ?? 0);
+                                                $rowOff = (int)($anchor->from->rowOff ?? 0);
+
+                                                $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col);
+                                                $cellCoord = $colLetter . $row;
+
+                                                // Find blip embed Id
+                                                $blips = $anchor->xpath('.//blip');
+                                                if (!empty($blips)) {
+                                                    $embedId = null;
+                                                    foreach ($blips[0]->attributes() as $attrName => $attrVal) {
+                                                        if (str_contains(strtolower($attrName), 'embed') || $attrName === 'id') {
+                                                            $embedId = (string)$attrVal;
+                                                            break;
+                                                        }
+                                                    }
+
+                                                    $imageFilename = $embedId ? ($relsMap[$embedId] ?? null) : null;
+                                                    // Fallback if rels map direct match or single media stream
+                                                    if (!$imageFilename && !empty($mediaStreams)) {
+                                                        $imageFilename = array_key_first($mediaStreams);
+                                                    }
+
+                                                    if ($imageFilename && isset($mediaStreams[$imageFilename])) {
+                                                        $widthPx = 120;
+                                                        $heightPx = 45;
+
+                                                        $exts = $anchor->xpath('.//ext');
+                                                        if (!empty($exts)) {
+                                                            foreach ($exts as $extNode) {
+                                                                $cx = (int)($extNode['cx'] ?? 0);
+                                                                $cy = (int)($extNode['cy'] ?? 0);
+                                                                if ($cx > 0) $widthPx = round($cx / 9525);
+                                                                if ($cy > 0) $heightPx = round($cy / 9525);
+                                                                if ($cx > 0 && $cy > 0) break;
+                                                            }
+                                                        }
+
+                                                        $offsetX = ($colOff > 0) ? round($colOff / 9525) : 0;
+                                                        $offsetY = ($rowOff > 0) ? round($rowOff / 9525) : 0;
+
+                                                        $images[] = [
+                                                            'cell'    => $cellCoord,
+                                                            'src'     => $mediaStreams[$imageFilename],
+                                                            'width'   => $widthPx,
+                                                            'height'  => $heightPx,
+                                                            'offsetX' => $offsetX,
+                                                            'offsetY' => $offsetY,
+                                                        ];
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Ultimate fallback: if drawing XML wasn't matched but xl/media/ has images
+                        if (empty($images) && !empty($mediaStreams)) {
+                            $fallbackCells = ['A1', 'J1', 'M1'];
+                            $idx = 0;
+                            foreach ($mediaStreams as $fileName => $srcData) {
+                                $targetCell = $fallbackCells[$idx] ?? 'A1';
+                                $images[] = [
+                                    'cell'    => $targetCell,
+                                    'src'     => $srcData,
+                                    'width'   => 120,
+                                    'height'  => 45,
+                                    'offsetX' => 5,
+                                    'offsetY' => 2,
+                                ];
+                                $idx++;
+                            }
+                        }
+
+                        $zip->close();
+                    }
+                }
+            } catch (\Throwable $e) {
+                // Ignore drawing parse errors gracefully
             }
 
             // ── Border helper (defined once, outside the cell loop) ────────────────
@@ -230,12 +466,23 @@ class ExcelTemplateController extends Controller
                 if (!$styleType || $styleType === \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_NONE) {
                     return ['active' => false, 'css' => ''];
                 }
-                if ($styleType === \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_HAIR) {
-                    return ['active' => false, 'css' => ''];
+                
+                $colorObj = $borderObject->getColor();
+                $rgb = $colorObj ? $colorObj->getRGB() : null;
+                $argb = $colorObj ? $colorObj->getARGB() : null;
+
+                // Handle ARGB color or default dark border
+                if ($rgb && strtoupper($rgb) !== 'FFFFFF' && strtoupper($rgb) !== '000000') {
+                    $color = '#' . $rgb;
+                } elseif ($argb && strlen($argb) === 8 && substr($argb, 2) !== 'FFFFFF') {
+                    $color = '#' . substr($argb, 2);
+                } else {
+                    // Default border color matching Excel's standard gridlines/borders
+                    $color = '#000000';
                 }
-                $rgb = $borderObject->getColor()->getRGB();
-                $color = ($rgb) ? '#' . $rgb : '#000000';
+
                 switch ($styleType) {
+                    case \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_HAIR:
                     case \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN:        $w = '1px'; $s = 'solid';  break;
                     case \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_DOTTED:      $w = '1px'; $s = 'dotted'; break;
                     case \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_DASHED:      $w = '1px'; $s = 'dashed'; break;
@@ -278,12 +525,17 @@ class ExcelTemplateController extends Controller
                     }
 
                     // Font
-                    $font      = $style->getFont();
-                    $fontColor = $font->getColor()->getRGB() ? '#' . $font->getColor()->getRGB() : null;
-                    $isBold    = $font->getBold();
-                    $isItalic  = $font->getItalic();
-                    $fontSize  = $font->getSize() ? round($font->getSize()) : 11;
-                    $align     = $style->getAlignment()->getHorizontal();
+                    $font       = $style->getFont();
+                    $fontColor  = $font->getColor()->getRGB() ? '#' . $font->getColor()->getRGB() : null;
+                    $fontFamily = $font->getName() ?: 'Segoe UI, Calibri, sans-serif';
+                    $isBold     = $font->getBold();
+                    $isItalic   = $font->getItalic();
+                    $fontSize   = $font->getSize() ? round($font->getSize(), 1) : 11;
+                    $alignment  = $style->getAlignment();
+                    $align      = $alignment->getHorizontal();
+                    $valign     = $alignment->getVertical();
+                    $wrapText   = $alignment->getWrapText();
+                    $textRotation = $alignment->getTextRotation();
 
                     // Own borders
                     $borders = [
@@ -294,25 +546,30 @@ class ExcelTemplateController extends Controller
                     ];
 
                     $rowCells[] = [
-                        'col'        => $colLetter,
-                        'row'        => $r,
-                        'cell'       => $coordinate,
-                        'value'      => $formattedValue,
-                        'is_formula' => $isFormula,
-                        'fill_color' => $fillColor,
-                        'font_color' => $fontColor,
-                        'is_bold'    => $isBold,
-                        'is_italic'  => $isItalic,
-                        'font_size'  => $fontSize,
-                        'align'      => $align,
-                        'borders'    => $borders,
-                        'merge'      => $mergeMap[$coordinate] ?? null,
+                        'col'           => $colLetter,
+                        'row'           => $r,
+                        'cell'          => $coordinate,
+                        'value'         => $formattedValue,
+                        'is_formula'    => $isFormula,
+                        'raw_formula'   => $isFormula ? $rawValue : null,
+                        'fill_color'    => $fillColor,
+                        'font_color'    => $fontColor,
+                        'font_family'   => $fontFamily,
+                        'font_size'     => $fontSize,
+                        'is_bold'       => $isBold,
+                        'is_italic'     => $isItalic,
+                        'align'         => $align,
+                        'valign'        => $valign,
+                        'wrap_text'     => $wrapText,
+                        'text_rotation' => $textRotation,
+                        'borders'       => $borders,
+                        'merge'         => $mergeMap[$coordinate] ?? null,
                     ];
                 }
                 $gridData[] = $rowCells;
             }
 
-            // ── Pure-PHP second pass: propagate borders from adjacent cells ──────────
+            // ── Pure-PHP second pass: propagate borders ──────────────────────────────
             // Build a flat map: coordinate → [ri, ci] index for O(1) lookups
             $coordIndex = [];
             foreach ($gridData as $ri => $row) {
@@ -321,10 +578,61 @@ class ExcelTemplateController extends Controller
                 }
             }
 
-            $Coord = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::class;
+            // A. For each merged range, read REAL borders from all 4 outer edges
+            //    (left of firstCol, right of lastCol, top of firstRow, bottom of lastRow)
+            //    and assign them to the master cell so it renders with the correct borders.
+            foreach ($mergeRangeMeta as $masterCoord => $meta) {
+                if (!isset($coordIndex[$masterCoord])) continue;
+                [$mri, $mci] = $coordIndex[$masterCoord];
 
+                $fRow = $meta['firstRow'];
+                $lRow = $meta['lastRow'];
+                $fColIdx = $meta['firstColIdx'];
+                $lColIdx = $meta['lastColIdx'];
+                $fColLetter = $meta['firstColLetter'];
+                $lColLetter = $meta['lastColLetter'];
+
+                // TOP border: read from master cell itself (firstRow, firstCol)
+                // — already in master, no action needed
+
+                // LEFT border: read from firstCol cells of the range (master cell handles this)
+                // — already in master, no action needed
+
+                // RIGHT border: read from lastCol cells of the range — get from last slave col
+                // Look at the actual style from PhpSpreadsheet for each right-edge cell
+                $rightBorder = $gridData[$mri][$mci]['borders']['right'];
+                for ($r2 = $fRow; $r2 <= $lRow; $r2++) {
+                    $edgeCoord = $lColLetter . $r2;
+                    $edgeStyle = $sheet->getStyle($edgeCoord)->getBorders()->getRight();
+                    $parsed = $parseSideBorder($edgeStyle);
+                    if ($parsed['active']) {
+                        $rightBorder = $parsed;
+                        break;
+                    }
+                }
+                $gridData[$mri][$mci]['borders']['right'] = $rightBorder;
+
+                // BOTTOM border: read from lastRow cells of the range
+                $bottomBorder = $gridData[$mri][$mci]['borders']['bottom'];
+                for ($c2 = $fColIdx; $c2 <= $lColIdx; $c2++) {
+                    $edgeCoord = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($c2) . $lRow;
+                    $edgeStyle = $sheet->getStyle($edgeCoord)->getBorders()->getBottom();
+                    $parsed = $parseSideBorder($edgeStyle);
+                    if ($parsed['active']) {
+                        $bottomBorder = $parsed;
+                        break;
+                    }
+                }
+                $gridData[$mri][$mci]['borders']['bottom'] = $bottomBorder;
+            }
+
+            // B. Propagate borders from adjacent neighboring cells (for non-merged cells that
+            //    only define border on one side)
             foreach ($gridData as $ri => &$row) {
                 foreach ($row as $ci => &$cellData) {
+                    // Skip hidden slave merge cells
+                    if (!empty($cellData['merge']['hidden'])) continue;
+
                     $col = $cellData['col'];
                     $rowNum = $cellData['row'];
 
@@ -333,6 +641,11 @@ class ExcelTemplateController extends Controller
                         $aboveKey = $col . ($rowNum - 1);
                         if (isset($coordIndex[$aboveKey])) {
                             [$ari, $aci] = $coordIndex[$aboveKey];
+                            $aboveCell = $gridData[$ari][$aci];
+                            // If above cell is slave, use its master
+                            if (!empty($aboveCell['merge']['hidden']) && isset($coordIndex[$aboveCell['merge']['master']])) {
+                                [$ari, $aci] = $coordIndex[$aboveCell['merge']['master']];
+                            }
                             if ($gridData[$ari][$aci]['borders']['bottom']['active']) {
                                 $cellData['borders']['top'] = $gridData[$ari][$aci]['borders']['bottom'];
                             }
@@ -341,8 +654,21 @@ class ExcelTemplateController extends Controller
 
                     // LEFT: inherit from right of the cell to the left
                     if (!$cellData['borders']['left']['active'] && $ci > 0) {
-                        $nb = $row[$ci - 1]['borders']['right'] ?? null;
-                        if ($nb && $nb['active']) $cellData['borders']['left'] = $nb;
+                        // Walk left to find nearest non-hidden cell
+                        for ($li = $ci - 1; $li >= 0; $li--) {
+                            $leftCell = $row[$li];
+                            if (!empty($leftCell['merge']['hidden'])) {
+                                // Use master
+                                if (isset($coordIndex[$leftCell['merge']['master']])) {
+                                    [$lri, $lci] = $coordIndex[$leftCell['merge']['master']];
+                                    $leftCell = $gridData[$lri][$lci];
+                                }
+                            }
+                            if ($leftCell['borders']['right']['active']) {
+                                $cellData['borders']['left'] = $leftCell['borders']['right'];
+                            }
+                            break;
+                        }
                     }
 
                     // BOTTOM: inherit from top of the cell below
@@ -358,8 +684,14 @@ class ExcelTemplateController extends Controller
 
                     // RIGHT: inherit from left of the cell to the right
                     if (!$cellData['borders']['right']['active'] && $ci < count($row) - 1) {
-                        $nb = $row[$ci + 1]['borders']['left'] ?? null;
-                        if ($nb && $nb['active']) $cellData['borders']['right'] = $nb;
+                        for ($ri2 = $ci + 1; $ri2 < count($row); $ri2++) {
+                            $rightCell = $row[$ri2];
+                            if (!empty($rightCell['merge']['hidden'])) continue;
+                            if ($rightCell['borders']['left']['active']) {
+                                $cellData['borders']['right'] = $rightCell['borders']['left'];
+                            }
+                            break;
+                        }
                     }
                 }
             }

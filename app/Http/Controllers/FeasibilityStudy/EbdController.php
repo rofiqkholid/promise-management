@@ -471,18 +471,20 @@ class EbdController extends Controller
         try {
             $tp = MngEbdToolingProcess::create([
                 'ebd_item_id'    => $itemId,
-                'tool_rank'      => $request->input('tool_rank'),
-                'category'       => $request->input('category'),
+                'tool_rank'      => $request->input('tool_rank') ?: null,
+                'category'       => $request->input('category') ?: null,
                 'op'             => $request->filled('op') ? (int) $request->input('op') : null,
                 'process_name'   => $request->input('process_name'),
-                'prod_homeline'  => $request->input('prod_homeline'),
+                'machine_type'   => $request->input('machine_type') ?: null,
+                'prod_homeline'  => $request->input('prod_homeline') ?: null,
                 'tonnage'        => $request->input('tonnage') ? (int) $request->input('tonnage') : null,
                 'die_height'     => $request->input('die_height') ? (float) $request->input('die_height') : null,
                 'output'         => $request->filled('output') ? (int) $request->input('output') : null,
                 'output_type'    => $request->input('output_type') ?: null,
+                'stroke'         => $request->filled('stroke') ? (float) $request->input('stroke') : null,
                 'qty'            => (int) $request->input('qty', 1),
                 'price_idr'      => $request->input('price_idr') ? (float) str_replace('.', '', $request->input('price_idr')) : null,
-                'tooling_status' => $request->input('tooling_status'),
+                'tooling_status' => $request->input('tooling_status') ?: null,
             ]);
 
             return response()->json([
@@ -508,18 +510,20 @@ class EbdController extends Controller
         try {
             $tp = MngEbdToolingProcess::findOrFail($id);
             $tp->update([
-                'tool_rank'      => $request->input('tool_rank'),
-                'category'       => $request->input('category'),
+                'tool_rank'      => $request->input('tool_rank') ?: null,
+                'category'       => $request->input('category') ?: null,
                 'op'             => $request->filled('op') ? (int) $request->input('op') : null,
                 'process_name'   => $request->input('process_name'),
-                'prod_homeline'  => $request->input('prod_homeline'),
+                'machine_type'   => $request->input('machine_type') ?: null,
+                'prod_homeline'  => $request->input('prod_homeline') ?: null,
                 'tonnage'        => $request->input('tonnage') ? (int) $request->input('tonnage') : null,
                 'die_height'     => $request->input('die_height') ? (float) $request->input('die_height') : null,
                 'output'         => $request->filled('output') ? (int) $request->input('output') : null,
                 'output_type'    => $request->input('output_type') ?: null,
+                'stroke'         => $request->filled('stroke') ? (float) $request->input('stroke') : null,
                 'qty'            => (int) $request->input('qty', 1),
                 'price_idr'      => $request->input('price_idr') ? (float) str_replace('.', '', $request->input('price_idr')) : null,
-                'tooling_status' => $request->input('tooling_status'),
+                'tooling_status' => $request->input('tooling_status') ?: null,
             ]);
 
             return response()->json([

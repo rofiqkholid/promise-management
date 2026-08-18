@@ -507,8 +507,12 @@ class WorkOrderToolingController extends Controller
                         }
 
                         // Alias all EBD header and WO fields at root level safely
-                        $payloadData['part_number'] = optional(optional($workOrder->inquiry)->products)->first()->part_number ?? optional($ebdItems->first())->part_no ?? '-';
-                        $payloadData['part_name'] = optional(optional($workOrder->inquiry)->products)->first()->part_name ?? optional($ebdItems->first())->part_name ?? '-';
+                        $partNoVal = optional(optional($workOrder->inquiry)->products)->first()->part_number ?? optional($ebdItems->first())->part_no ?? '-';
+                        $partNameVal = optional(optional($workOrder->inquiry)->products)->first()->part_name ?? optional($ebdItems->first())->part_name ?? '-';
+                        $payloadData['ebd_part_no'] = $partNoVal;
+                        $payloadData['part_number'] = $partNoVal;
+                        $payloadData['ebd_part_name'] = $partNameVal;
+                        $payloadData['part_name'] = $partNameVal;
                         $payloadData['customer_name'] = optional(optional($workOrder->inquiry)->customer)->name ?? '-';
                         $payloadData['model_name'] = optional(optional($workOrder->inquiry)->projectModel)->name ?? '-';
 

@@ -227,6 +227,21 @@ class MenuSeeder extends Seeder
                     'parent_id'  => $ebdParentId,
                     'is_active'  => true,
                     'is_visible' => true,
+                    'updated_at' => now(),
+                ]
+            );
+
+            // 4b. Product Cost Comparison (submenu)
+            DB::table('menus')->updateOrInsert(
+                ['route' => 'management.product-cost-comparison.index', 'scope_id' => 'app_management'],
+                [
+                    'title'      => 'Cost Comparison (Eng vs Sales)',
+                    'icon'       => 'fa-solid fa-scale-balanced',
+                    'sort_order' => 2,
+                    'level'      => 2,
+                    'parent_id'  => $ebdParentId,
+                    'is_active'  => true,
+                    'is_visible' => true,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]
@@ -280,6 +295,92 @@ class MenuSeeder extends Seeder
                 'updated_at' => now(),
             ]
         );
+
+        // 7. Master Data — parent group (dropdown header)
+        DB::table('menus')->updateOrInsert(
+            ['route' => 'management.master-data.parent', 'scope_id' => 'app_management'],
+            [
+                'title'      => 'Master Data',
+                'icon'       => 'fa-solid fa-database',
+                'sort_order' => 7,
+                'level'      => 1,
+                'parent_id'  => null,
+                'is_active'  => true,
+                'is_visible' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        );
+        $masterDataParentId = DB::table('menus')
+            ->where('route', 'management.master-data.parent')
+            ->where('scope_id', 'app_management')
+            ->value('id');
+
+        if ($masterDataParentId) {
+            // 7a. Manufacturing Process Cost
+            DB::table('menus')->updateOrInsert(
+                ['route' => 'management.mfg-process-cost.index', 'scope_id' => 'app_management'],
+                [
+                    'title'      => 'Mfg Process Cost',
+                    'icon'       => 'fa-solid fa-industry',
+                    'sort_order' => 1,
+                    'level'      => 2,
+                    'parent_id'  => $masterDataParentId,
+                    'is_active'  => true,
+                    'is_visible' => true,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            );
+
+            // 7b. Manufacturing Stamping Process Cost
+            DB::table('menus')->updateOrInsert(
+                ['route' => 'management.mfg-process-stp-cost.index', 'scope_id' => 'app_management'],
+                [
+                    'title'      => 'Mfg Stamping Rate',
+                    'icon'       => 'fa-solid fa-stamp',
+                    'sort_order' => 2,
+                    'level'      => 2,
+                    'parent_id'  => $masterDataParentId,
+                    'is_active'  => true,
+                    'is_visible' => true,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            );
+
+            // 7c. Material Cost Rate
+            DB::table('menus')->updateOrInsert(
+                ['route' => 'management.material-cost.index', 'scope_id' => 'app_management'],
+                [
+                    'title'      => 'Material Rate',
+                    'icon'       => 'fa-solid fa-boxes-stacked',
+                    'sort_order' => 3,
+                    'level'      => 2,
+                    'parent_id'  => $masterDataParentId,
+                    'is_active'  => true,
+                    'is_visible' => true,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            );
+
+            // 7d. Customer Cost Policy & Markup Rate
+            DB::table('menus')->updateOrInsert(
+                ['route' => 'management.cost-policy.index', 'scope_id' => 'app_management'],
+                [
+                    'title'      => 'Cost Policy & Markup',
+                    'icon'       => 'fa-solid fa-calculator',
+                    'sort_order' => 4,
+                    'level'      => 2,
+                    'parent_id'  => $masterDataParentId,
+                    'is_active'  => true,
+                    'is_visible' => true,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            );
+        }
 
         // 7. Excel Engine Config — parent group (dropdown header)
         DB::table('menus')->updateOrInsert(

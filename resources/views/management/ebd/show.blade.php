@@ -396,11 +396,13 @@
                                     <th class="p-2.5">Cat</th>
                                     <th class="p-2.5">OP</th>
                                     <th class="p-2.5">Process Name</th>
+                                    <th class="p-2.5">Machine Type</th>
                                     <th class="p-2.5">Homeline</th>
                                     <th class="p-2.5 text-right">Tonnage</th>
                                     <th class="p-2.5 text-right">DH</th>
                                     <th class="p-2.5 text-center">Output</th>
                                     <th class="p-2.5 text-center">Output Type</th>
+                                    <th class="p-2.5 text-right">Stroke</th>
                                     <th class="p-2.5 text-center">Qty</th>
                                     <th class="p-2.5 text-right">Price</th>
                                     <th class="p-2.5">Status</th>
@@ -954,9 +956,20 @@
                         <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">OP</label>
                         <input type="number" step="1" name="op" id="tooling-input-op" placeholder="e.g. 10" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                     </div>
+                <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Process Name <span class="text-rose-500">*</span></label>
                         <input type="text" name="process_name" id="tooling-input-name" required placeholder="e.g. Blanking" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Machine Type</label>
+                        <input type="text" name="machine_type" id="tooling-input-machinetype" list="list-stp-machines" placeholder="e.g. Tandem" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                        <datalist id="list-stp-machines">
+                            <option value="Tandem">
+                            <option value="Transfer">
+                            <option value="Progressive">
+                            <option value="Manual">
+                        </datalist>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
@@ -977,7 +990,7 @@
                         <input type="text" name="tooling_status" id="tooling-input-status" placeholder="e.g. New" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                     </div>
                 </div>
-                <div class="grid grid-cols-4 gap-4">
+                <div class="grid grid-cols-5 gap-3">
                     <div>
                         <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Output</label>
                         <input type="number" name="output" id="tooling-input-output" min="1" placeholder="e.g. 1" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
@@ -985,6 +998,10 @@
                     <div>
                         <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Output Type</label>
                         <input type="text" name="output_type" id="tooling-input-output-type" placeholder="e.g. Cav, Part" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Stroke</label>
+                        <input type="number" step="0.01" name="stroke" id="tooling-input-stroke" min="0.01" value="1.00" placeholder="1.00" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                     </div>
                     <div>
                         <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Qty</label>
@@ -1208,11 +1225,13 @@ $(function () {
                         <td class="p-2 text-slate-600 dark:text-slate-400">${tp.category || '—'}</td>
                         <td class="p-2 font-bold text-rose-600 dark:text-rose-400">${tp.op || '—'}</td>
                         <td class="p-2 font-semibold text-slate-800 dark:text-slate-200">${tp.process_name || '—'}</td>
+                        <td class="p-2 text-slate-600 dark:text-slate-400 text-[11px] font-medium">${tp.machine_type || 'Tandem'}</td>
                         <td class="p-2 text-slate-600 dark:text-slate-400">${tp.prod_homeline || '—'}</td>
                         <td class="p-2 text-right font-mono">${tonnageVal}</td>
                         <td class="p-2 text-right font-mono">${heightVal}</td>
                         <td class="p-2 text-center font-mono">${tp.output !== null && tp.output !== undefined && tp.output !== '' ? tp.output : '—'}</td>
                         <td class="p-2 text-center font-semibold text-slate-600 dark:text-slate-400">${tp.output_type || '—'}</td>
+                        <td class="p-2 text-right font-mono text-slate-600 dark:text-slate-400">${tp.stroke !== null && tp.stroke !== undefined ? Number(tp.stroke).toFixed(2) : '1.00'}</td>
                         <td class="p-2 text-center">${tp.qty ?? 1}</td>
                         <td class="p-2 text-right font-bold font-mono text-slate-800 dark:text-slate-300">${priceVal}</td>
                         <td class="p-2">
@@ -1785,19 +1804,23 @@ $(function () {
             $('#tooling-input-cat').val(data.category || '');
             $('#tooling-input-op').val(data.op || '');
             $('#tooling-input-name').val(data.process_name || '');
+            $('#tooling-input-machinetype').val(data.machine_type || '');
             $('#tooling-input-home').val(data.prod_homeline || '');
             $('#tooling-input-ton').val(data.tonnage || '');
             $('#tooling-input-height').val(data.die_height || '');
             $('#tooling-input-status').val(data.tooling_status || '');
             $('#tooling-input-output').val(data.output !== null && data.output !== undefined ? data.output : '');
             $('#tooling-input-output-type').val(data.output_type || '');
+            $('#tooling-input-stroke').val(data.stroke !== null && data.stroke !== undefined ? Number(data.stroke).toFixed(2) : '');
             $('#tooling-input-qty').val(data.qty ?? 1);
             $('#tooling-input-price').val(data.price_idr ? Number(data.price_idr).toLocaleString('id-ID') : '0');
         } else {
             $('#tooling-modal-title').text('Add Tooling Process');
             $('#tooling-id').val('');
+            $('#tooling-input-machinetype').val('');
             $('#tooling-input-output').val('');
             $('#tooling-input-output-type').val('');
+            $('#tooling-input-stroke').val('');
             $('#tooling-input-qty').val(1);
         }
     }

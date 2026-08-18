@@ -170,7 +170,11 @@ class ToolingQuotationCompareController extends Controller
             ]);
         }
 
-        $templates = \App\Models\MngCfgTemplate::where('is_active', true)->get();
+        $templates = \App\Models\MngCfgTemplate::where('is_active', true)
+            ->where(function($q) {
+                $q->where('direction', 'export')->orWhereNull('direction');
+            })
+            ->get();
 
         return view('management.tooling-quotation.index', compact('templates'));
     }

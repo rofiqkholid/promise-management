@@ -10,6 +10,7 @@ class MngCfgTemplate extends Model
 
     protected $fillable = [
         'template_type',
+        'direction',
         'customer_id',
         'template_name',
         'revision',
