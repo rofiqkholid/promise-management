@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 use App\Models\Customer;
 use App\Models\ProjectModel;
 use App\Models\CustomerCostPolicy;
@@ -20,58 +19,55 @@ class RealCostComparisonScenarioSeeder extends Seeder
     public function run(): void
     {
         // =========================================================================
-        // 1. CLEAN ALL EXISTING MASTER DATA & EBD (FOCUS 100% ON 1 CUSTOMER)
-        // =========================================================================
-        DB::statement('SET NOCOUNT ON;');
-        
-        // Clean master tables
-        CustomerCostPolicy::query()->delete();
-        MaterialCost::query()->delete();
-        MfgProcessStpCost::query()->delete();
-        MfgProcessCost::query()->delete();
-
-        // Clean EBD tables safely
-        DB::table('mng_wo_products')->update(['ebd_item_id' => null]);
-        MngEbdToolingProcess::query()->delete();
-        MngEbdAddProcess::query()->delete();
-        MngEbdItem::whereNotNull('parent_id')->update(['parent_id' => null]);
-        MngEbdItem::query()->delete();
-        MngEbdHeader::query()->delete();
-
-        // =========================================================================
-        // 2. FOCUS STRICTLY ON 1 CUSTOMER (MMKI) & 1 MODEL (5J45)
+        // 1. GET TARGET CUSTOMER (MMKI) & MODEL (5J45)
         // =========================================================================
         $custMMKI = Customer::where('code', 'MMKI')->first() ?? Customer::first();
+        if (!$custMMKI) {
+            return;
+        }
+
         $modelMMKI = ProjectModel::where('name', '5J45')->where('customer_id', $custMMKI->id)->first()
             ?? ProjectModel::where('customer_id', $custMMKI->id)->first();
 
+        if (!$modelMMKI) {
+            return;
+        }
+
         // =========================================================================
-        // 3. SEED MASTER COST POLICIES (ENGINEERING HPP + SALES MMKI ONLY)
+        // 2. SEED / UPDATE MASTER COST POLICIES (ENGINEERING HPP + SALES MMKI)
         // =========================================================================
         // Engineering Baseline (Internal HPP)
-        CustomerCostPolicy::create([
-            'customer_id' => null,
-            'rate_source' => 'Engineering',
-            'admin_matrl_pct' => 2.00,
-            'admin_mfg_pct' => 4.00,
-            'oh_profit_pct' => 0.00,
-            'min_std_margin_pct' => 8.00,
-            'notes' => 'Internal Engineering Cost Baseline (Admin Matrl 2%, Admin Mfg 4%, OH 0%).',
-        ]);
+        CustomerCostPolicy::updateOrCreate(
+            [
+                'customer_id' => null,
+                'rate_source' => 'Engineering',
+            ],
+            [
+                'admin_matrl_pct' => 2.00,
+                'admin_mfg_pct' => 4.00,
+                'oh_profit_pct' => 0.00,
+                'min_std_margin_pct' => 8.00,
+                'notes' => 'Internal Engineering Cost Baseline (Admin Matrl 2%, Admin Mfg 4%, OH 0%).',
+            ]
+        );
 
         // MMKI Sales Policy
-        CustomerCostPolicy::create([
-            'customer_id' => $custMMKI->id,
-            'rate_source' => 'Sales',
-            'admin_matrl_pct' => 2.50,
-            'admin_mfg_pct' => 4.50,
-            'oh_profit_pct' => 12.00,
-            'min_std_margin_pct' => 12.00,
-            'notes' => 'Commercial Sales Policy for MMKI (Target Margin 12.00%, Markup OH 12.00%).',
-        ]);
+        CustomerCostPolicy::updateOrCreate(
+            [
+                'customer_id' => $custMMKI->id,
+                'rate_source' => 'Sales',
+            ],
+            [
+                'admin_matrl_pct' => 2.50,
+                'admin_mfg_pct' => 4.50,
+                'oh_profit_pct' => 12.00,
+                'min_std_margin_pct' => 12.00,
+                'notes' => 'Commercial Sales Policy for MMKI (Target Margin 12.00%, Markup OH 12.00%).',
+            ]
+        );
 
         // =========================================================================
-        // 4. SEED MASTER MATERIAL COSTS (FROM MMKI MATERIAL SHEET)
+        // 3. SEED / UPDATE MASTER MATERIAL COSTS (MMKI MATERIAL SHEET)
         // =========================================================================
         $materialsData = [
             ['spec' => 'MJSC270C-OD', 'type' => 'Sheet', 'thick' => 1.20, 'sales' => 18842.0, 'eng' => 17200.0, 'scrap' => 4500.0],
@@ -84,34 +80,42 @@ class RealCostComparisonScenarioSeeder extends Seeder
 
         foreach ($materialsData as $m) {
             // Engineering Global
-            MaterialCost::create([
-                'material_spec' => $m['spec'],
-                'material_type' => $m['type'],
-                'thickness' => $m['thick'],
-                'price_per_kg' => $m['eng'],
-                'scrap_price_per_kg' => $m['scrap'],
-                'rate_source' => 'Engineering',
-                'customer_id' => null,
-                'valid_from' => '2026-01-01',
-                'is_active' => true,
-            ]);
+            MaterialCost::updateOrCreate(
+                [
+                    'material_spec' => $m['spec'],
+                    'thickness' => $m['thick'],
+                    'rate_source' => 'Engineering',
+                    'customer_id' => null,
+                ],
+                [
+                    'material_type' => $m['type'],
+                    'price_per_kg' => $m['eng'],
+                    'scrap_price_per_kg' => $m['scrap'],
+                    'valid_from' => '2026-01-01',
+                    'is_active' => true,
+                ]
+            );
 
             // Sales for MMKI
-            MaterialCost::create([
-                'material_spec' => $m['spec'],
-                'material_type' => $m['type'],
-                'thickness' => $m['thick'],
-                'price_per_kg' => $m['sales'],
-                'scrap_price_per_kg' => $m['scrap'],
-                'rate_source' => 'Sales',
-                'customer_id' => $custMMKI->id,
-                'valid_from' => '2026-01-01',
-                'is_active' => true,
-            ]);
+            MaterialCost::updateOrCreate(
+                [
+                    'material_spec' => $m['spec'],
+                    'thickness' => $m['thick'],
+                    'rate_source' => 'Sales',
+                    'customer_id' => $custMMKI->id,
+                ],
+                [
+                    'material_type' => $m['type'],
+                    'price_per_kg' => $m['sales'],
+                    'scrap_price_per_kg' => $m['scrap'],
+                    'valid_from' => '2026-01-01',
+                    'is_active' => true,
+                ]
+            );
         }
 
         // =========================================================================
-        // 5. SEED MASTER STAMPING PROCESS RATES (Inner I, Outer O, Outer Extra Large OL)
+        // 4. SEED / UPDATE MASTER STAMPING PROCESS RATES
         // =========================================================================
         $stampingMatrix = [
             // 110-150 Ton
@@ -156,40 +160,48 @@ class RealCostComparisonScenarioSeeder extends Seeder
 
         foreach ($stampingMatrix as $s) {
             // Engineering Rate
-            MfgProcessStpCost::create([
-                'machine_type' => 'Tandem',
-                'tonnage' => $s['ton'],
-                'machine_category' => $s['cat'],
-                'output_type' => 'Part',
-                'output_qty' => $s['out'],
-                'stroke' => 1.00,
-                'process_complexity' => $s['comp'],
-                'complexity_alias' => $s['alias'],
-                'min_cost_rate' => $s['min_e'],
-                'std_cost_rate' => $s['std_e'],
-                'rate_source' => 'Engineering',
-                'is_active' => true,
-            ]);
+            MfgProcessStpCost::updateOrCreate(
+                [
+                    'machine_type' => 'Tandem',
+                    'tonnage' => $s['ton'],
+                    'complexity_alias' => $s['alias'],
+                    'rate_source' => 'Engineering',
+                ],
+                [
+                    'machine_category' => $s['cat'],
+                    'output_type' => 'Part',
+                    'output_qty' => $s['out'],
+                    'stroke' => 1.00,
+                    'process_complexity' => $s['comp'],
+                    'min_cost_rate' => $s['min_e'],
+                    'std_cost_rate' => $s['std_e'],
+                    'is_active' => true,
+                ]
+            );
 
             // Sales Rate
-            MfgProcessStpCost::create([
-                'machine_type' => 'Tandem',
-                'tonnage' => $s['ton'],
-                'machine_category' => $s['cat'],
-                'output_type' => 'Part',
-                'output_qty' => $s['out'],
-                'stroke' => 1.00,
-                'process_complexity' => $s['comp'],
-                'complexity_alias' => $s['alias'],
-                'min_cost_rate' => $s['std_e'],
-                'std_cost_rate' => $s['std_s'],
-                'rate_source' => 'Sales',
-                'is_active' => true,
-            ]);
+            MfgProcessStpCost::updateOrCreate(
+                [
+                    'machine_type' => 'Tandem',
+                    'tonnage' => $s['ton'],
+                    'complexity_alias' => $s['alias'],
+                    'rate_source' => 'Sales',
+                ],
+                [
+                    'machine_category' => $s['cat'],
+                    'output_type' => 'Part',
+                    'output_qty' => $s['out'],
+                    'stroke' => 1.00,
+                    'process_complexity' => $s['comp'],
+                    'min_cost_rate' => $s['std_e'],
+                    'std_cost_rate' => $s['std_s'],
+                    'is_active' => true,
+                ]
+            );
         }
 
         // =========================================================================
-        // 6. SEED MASTER NON-STAMPING & ADDITIONAL PROCESS COSTS (SAI Rates)
+        // 5. SEED / UPDATE MASTER NON-STAMPING & ADDITIONAL PROCESS COSTS
         // =========================================================================
         $nonStampingRates = [
             ['group' => 'Non Stamping', 'name' => 'RSW', 'cp' => 'Qty Spot', 'uom' => 'Spot', 'unit' => 'Idr / spot', 'min_e' => 217.6, 'std_e' => 229.0, 'std_s' => 250.0],
@@ -204,72 +216,88 @@ class RealCostComparisonScenarioSeeder extends Seeder
         ];
 
         foreach ($nonStampingRates as $ns) {
-            MfgProcessCost::create([
-                'category' => 'Product',
-                'process_group' => $ns['group'],
-                'process_name' => $ns['name'],
-                'control_point' => $ns['cp'],
-                'uom' => $ns['uom'],
-                'rate_unit' => $ns['unit'],
-                'min_cost_rate' => $ns['min_e'],
-                'std_cost_rate' => $ns['std_e'],
-                'rate_source' => 'Engineering',
-                'is_active' => true,
-            ]);
+            MfgProcessCost::updateOrCreate(
+                [
+                    'process_name' => $ns['name'],
+                    'rate_source' => 'Engineering',
+                ],
+                [
+                    'category' => 'Product',
+                    'process_group' => $ns['group'],
+                    'control_point' => $ns['cp'],
+                    'uom' => $ns['uom'],
+                    'rate_unit' => $ns['unit'],
+                    'min_cost_rate' => $ns['min_e'],
+                    'std_cost_rate' => $ns['std_e'],
+                    'is_active' => true,
+                ]
+            );
 
-            MfgProcessCost::create([
-                'category' => 'Product',
-                'process_group' => $ns['group'],
-                'process_name' => $ns['name'],
-                'control_point' => $ns['cp'],
-                'uom' => $ns['uom'],
-                'rate_unit' => $ns['unit'],
-                'min_cost_rate' => $ns['std_e'],
-                'std_cost_rate' => $ns['std_s'],
-                'rate_source' => 'Sales',
-                'is_active' => true,
-            ]);
+            MfgProcessCost::updateOrCreate(
+                [
+                    'process_name' => $ns['name'],
+                    'rate_source' => 'Sales',
+                ],
+                [
+                    'category' => 'Product',
+                    'process_group' => $ns['group'],
+                    'control_point' => $ns['cp'],
+                    'uom' => $ns['uom'],
+                    'rate_unit' => $ns['unit'],
+                    'min_cost_rate' => $ns['std_e'],
+                    'std_cost_rate' => $ns['std_s'],
+                    'is_active' => true,
+                ]
+            );
         }
 
         // =========================================================================
-        // 7. SEED SINGLE EBD PROJECT: MMKI - 5J45 WITH 2-LEVEL BOM & REAL DIES/JIG
+        // 6. SEED / UPDATE EBD PROJECT: MMKI - 5J45 (WITHOUT DELETING OTHER PROJECTS)
         // =========================================================================
-        $ebdHeader = MngEbdHeader::create([
-            'customer_id' => $custMMKI->id,
-            'model_id' => $modelMMKI->id,
-            'date' => '2026-08-18',
-            'revision' => '0',
-            'status' => 'Released',
-            'created_by' => 'Engineering Dept',
-        ]);
+        $ebdHeader = MngEbdHeader::firstOrCreate(
+            [
+                'customer_id' => $custMMKI->id,
+                'model_id' => $modelMMKI->id,
+            ],
+            [
+                'date' => '2026-08-18',
+                'revision' => '0',
+                'status' => 'Released',
+                'created_by' => 'Engineering Dept',
+            ]
+        );
 
         // A. Level 1: Top Level Assembly Part (Assy Part No: 17201W150P)
-        $assyItem = MngEbdItem::create([
-            'ebd_header_id' => $ebdHeader->id,
-            'parent_id' => null,
-            'active_level' => 1,
-            'part_no' => '17201W150P',
-            'part_name' => 'TANK ASSY, FUEL',
-            'qty_unit' => 1,
-            'pcs_month' => 2500,
-            'width' => 580.00,
-            'length' => 1065.00,
-            'height' => 280.00,
-            'weight' => 10.840,
-            'part_rank' => 'I',
-            'status' => 'New Part',
-            'mat_spec' => null,
-            'mat_thick' => null,
-            'mat_width' => null,
-            'mat_length' => null,
-            'mat_pcs_sheet' => null,
-            'mat_weight_pcs' => null,
-            'mat_yield_ratio' => null,
-            'packing_type' => 'Returnable Steel Rack',
-            'pcs_packing' => 10,
-            'part_vol_m2' => 0.0850,
-            'truck_vol_m2' => 0.8500,
-        ]);
+        $assyItem = MngEbdItem::updateOrCreate(
+            [
+                'ebd_header_id' => $ebdHeader->id,
+                'part_no' => '17201W150P',
+            ],
+            [
+                'parent_id' => null,
+                'active_level' => 1,
+                'part_name' => 'TANK ASSY, FUEL',
+                'qty_unit' => 1,
+                'pcs_month' => 2500,
+                'width' => 580.00,
+                'length' => 1065.00,
+                'height' => 280.00,
+                'weight' => 10.840,
+                'part_rank' => 'I',
+                'status' => 'New Part',
+                'mat_spec' => null,
+                'mat_thick' => null,
+                'mat_width' => null,
+                'mat_length' => null,
+                'mat_pcs_sheet' => null,
+                'mat_weight_pcs' => null,
+                'mat_yield_ratio' => null,
+                'packing_type' => 'Returnable Steel Rack',
+                'pcs_packing' => 10,
+                'part_vol_m2' => 0.0850,
+                'truck_vol_m2' => 0.8500,
+            ]
+        );
 
         // Tooling / Fixture on Top Assembly
         $assyToolings = [
@@ -278,6 +306,7 @@ class RealCostComparisonScenarioSeeder extends Seeder
             ['cat' => 'JIG', 'op' => null, 'name' => 'JIG SUB ASSY', 'line' => 'SAI', 'mach' => 'JW', 'ton' => null, 'dh' => 127.0, 'out' => 1, 'out_t' => 'Part', 'stk' => 1.0, 'price' => 148489790, 'st' => 'MODIFICATION'],
         ];
 
+        MngEbdToolingProcess::where('ebd_item_id', $assyItem->id)->delete();
         foreach ($assyToolings as $at) {
             MngEbdToolingProcess::create([
                 'ebd_item_id' => $assyItem->id,
@@ -299,6 +328,7 @@ class RealCostComparisonScenarioSeeder extends Seeder
         }
 
         // Secondary Assembly Processes on Top Level
+        MngEbdAddProcess::where('ebd_item_id', $assyItem->id)->delete();
         MngEbdAddProcess::create(['ebd_item_id' => $assyItem->id, 'process_name' => 'RSW', 'qty' => 12, 'unit' => 'Spot']);
         MngEbdAddProcess::create(['ebd_item_id' => $assyItem->id, 'process_name' => 'CO2', 'qty' => 150, 'unit' => 'mm']);
         MngEbdAddProcess::create(['ebd_item_id' => $assyItem->id, 'process_name' => 'QC Check', 'qty' => 30, 'unit' => 'second']);
@@ -521,34 +551,39 @@ class RealCostComparisonScenarioSeeder extends Seeder
         ];
 
         foreach ($childParts as $p) {
-            $item = MngEbdItem::create([
-                'ebd_header_id' => $ebdHeader->id,
-                'parent_id' => $assyItem->id,
-                'active_level' => 2,
-                'part_no' => $p['part_no'],
-                'part_name' => $p['part_name'],
-                'qty_unit' => 1,
-                'pcs_month' => 2500,
-                'width' => $p['width'],
-                'length' => $p['length'],
-                'height' => $p['height'],
-                'weight' => $p['weight'],
-                'part_rank' => $p['part_rank'],
-                'status' => $p['status'] ?? 'New Part',
-                'mat_spec' => $p['mat_spec'],
-                'mat_thick' => $p['mat_thick'],
-                'mat_width' => $p['mat_width'],
-                'mat_length' => $p['mat_length'],
-                'mat_pcs_sheet' => 1,
-                'mat_weight_pcs' => $p['weight'],
-                'mat_yield_ratio' => 83.00,
-                'packing_type' => 'Returnable Steel Rack',
-                'pcs_packing' => 20,
-                'part_vol_m2' => 0.0150,
-                'truck_vol_m2' => 0.3000,
-            ]);
+            $item = MngEbdItem::updateOrCreate(
+                [
+                    'ebd_header_id' => $ebdHeader->id,
+                    'part_no' => $p['part_no'],
+                ],
+                [
+                    'parent_id' => $assyItem->id,
+                    'active_level' => 2,
+                    'part_name' => $p['part_name'],
+                    'qty_unit' => 1,
+                    'pcs_month' => 2500,
+                    'width' => $p['width'],
+                    'length' => $p['length'],
+                    'height' => $p['height'],
+                    'weight' => $p['weight'],
+                    'part_rank' => $p['part_rank'],
+                    'status' => $p['status'] ?? 'New Part',
+                    'mat_spec' => $p['mat_spec'],
+                    'mat_thick' => $p['mat_thick'],
+                    'mat_width' => $p['mat_width'],
+                    'mat_length' => $p['mat_length'],
+                    'mat_pcs_sheet' => 1,
+                    'mat_weight_pcs' => $p['weight'],
+                    'mat_yield_ratio' => 83.00,
+                    'packing_type' => 'Returnable Steel Rack',
+                    'pcs_packing' => 20,
+                    'part_vol_m2' => 0.0150,
+                    'truck_vol_m2' => 0.3000,
+                ]
+            );
 
-            // Tooling processes
+            // Re-create tooling processes for this item only
+            MngEbdToolingProcess::where('ebd_item_id', $item->id)->delete();
             foreach ($p['ops'] as $op) {
                 MngEbdToolingProcess::create([
                     'ebd_item_id' => $item->id,
@@ -569,7 +604,8 @@ class RealCostComparisonScenarioSeeder extends Seeder
                 ]);
             }
 
-            // Additional processes
+            // Re-create additional processes for this item only
+            MngEbdAddProcess::where('ebd_item_id', $item->id)->delete();
             foreach ($p['adds'] as $add) {
                 MngEbdAddProcess::create([
                     'ebd_item_id' => $item->id,
