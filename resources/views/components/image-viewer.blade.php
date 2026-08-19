@@ -1,4 +1,4 @@
-@props([
+﻿@props([
     'id' => 'image-viewer',
     'src' => '',
     'alt' => 'Image',
@@ -30,7 +30,7 @@
     <img id="{{ $id }}" 
          src="{{ $src }}" 
          alt="{{ $alt }}" 
-         class="hidden cursor-zoom-in max-w-full max-h-60 object-contain rounded-xs {{ $imgClass }}">
+         class="hidden cursor-zoom-in max-w-full max-h-60 object-contain rounded-sm {{ $imgClass }}">
     
     <div id="{{ $placeholderId }}" class="text-slate-400 dark:text-slate-600 flex flex-col items-center justify-center text-center">
         <i class="fa-regular fa-image text-4xl mb-2.5"></i>

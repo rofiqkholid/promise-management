@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', 'Visual Mapping Studio · Promise Management')
 @section('page_title', 'Visual Mapping Studio')
@@ -1656,7 +1656,7 @@
                     suggestions.forEach(s => {
                         const pillBtn = document.createElement('button');
                         pillBtn.type = 'button';
-                        pillBtn.className = 'px-2 py-0.5 bg-purple-100 dark:bg-purple-900/50 hover:bg-purple-600 hover:text-white text-purple-700 dark:text-purple-300 text-[11px] font-semibold rounded-xs transition-colors border border-purple-200 dark:border-purple-700 text-left';
+                        pillBtn.className = 'px-2 py-0.5 bg-purple-100 dark:bg-purple-900/50 hover:bg-purple-600 hover:text-white text-purple-700 dark:text-purple-300 text-[11px] font-semibold rounded-sm transition-colors border border-purple-200 dark:border-purple-700 text-left';
                         pillBtn.textContent = s.label;
                         pillBtn.title = `Click to use ${s.key}`;
                         pillBtn.addEventListener('click', () => {

@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', 'Inquiry — ' . $inquiry->inquiry_no . ' · Promise Management')
 
@@ -123,7 +123,7 @@
                        window.location.href = '{{ route('management.inquiry.index') }}';
                    }
                "
-               class="flex items-center justify-center w-9 h-9 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-500 hover:text-blue-600 hover:border-blue-500 transition-colors text-sm rounded-xs"
+               class="flex items-center justify-center w-9 h-9 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-500 hover:text-blue-600 hover:border-blue-500 transition-colors text-sm rounded-sm"
                title="Back to list">
                 <i class="fa-solid fa-arrow-left"></i>
             </a>
@@ -145,7 +145,7 @@
                         ];
                         $st = $statusMap[$inquiry->status] ?? ['dot' => 'bg-slate-400', 'cls' => 'bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'];
                     @endphp
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[10px] font-bold border rounded-xs {{ $st['cls'] }}">
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[10px] font-bold border rounded-sm {{ $st['cls'] }}">
                         <span class="w-1 h-1 rounded-full {{ $st['dot'] }}"></span>
                         {{ $inquiry->status }}
                     </span>
@@ -160,15 +160,15 @@
         <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto justify-start lg:justify-end">
             @if(!$isLocked)
                 <button @click="openAddProduct()"
-                        class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-colors cursor-pointer rounded-xs">
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-colors cursor-pointer rounded-sm">
                     <i class="fa-solid fa-plus text-xs"></i> Add Product
                 </button>
                 <button @click="showImportModal = true"
-                        class="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold transition-colors cursor-pointer rounded-xs">
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold transition-colors cursor-pointer rounded-sm">
                     <i class="fa-solid fa-file-excel text-emerald-600 dark:text-emerald-500 text-xs"></i> Import Excel
                 </button>
                 <button @click="showAssessmentConfigModal = true"
-                        class="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold transition-colors cursor-pointer rounded-xs">
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold transition-colors cursor-pointer rounded-sm">
                     <i class="fa-solid fa-gears text-xs"></i> Scoring Config
                 </button>
             @endif
@@ -178,14 +178,14 @@
                     <div class="h-6 w-[1px] bg-slate-300 dark:bg-slate-700 mx-1"></div>
                 @endif
                 <button @click="showEditModal = true"
-                        class="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold transition-colors cursor-pointer rounded-xs">
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold transition-colors cursor-pointer rounded-sm">
                     <i class="fa-solid fa-pen-to-square text-xs"></i> Edit Info
                 </button>
                 <form id="close-inquiry-form" method="POST" action="{{ route('management.inquiry.close', $inquiry->hashed_id) }}"
                       class="inline">
                     @csrf
                     <button type="button" onclick="confirmCloseInquiry()"
-                            class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors cursor-pointer rounded-xs">
+                            class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors cursor-pointer rounded-sm">
                         <i class="fa-solid fa-lock text-xs"></i> Close Inquiry
                     </button>
                 </form>
@@ -193,7 +193,7 @@
                       class="inline">
                     @csrf
                     <button type="button" onclick="confirmDeleteInquiry()"
-                            class="inline-flex items-center gap-2 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-colors cursor-pointer rounded-xs">
+                            class="inline-flex items-center gap-2 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-colors cursor-pointer rounded-sm">
                         <i class="fa-solid fa-trash-can text-xs"></i> Delete
                     </button>
                 </form>
@@ -202,7 +202,7 @@
     </div>
 
     {{-- ── Inquiry Metadata Card ────────────────────────────────────────── --}}
-    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 mb-4 rounded-xs">
+    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 mb-4 rounded-sm">
         <div class="grid grid-cols-2 lg:grid-cols-5 divide-x divide-y lg:divide-y-0 divide-slate-200 dark:divide-slate-700">
             <div class="px-4 py-3">
                 <span class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5">Customer</span>
@@ -314,7 +314,7 @@
                                 <th class="p-3 w-20 text-left bg-slate-50/50 dark:bg-slate-900/50">
                                     <input type="checkbox" id="select-all-spk"
                                            onchange="window._alpine_toggleSelectAllSpk(this.checked)"
-                                           class="w-3.5 h-3.5 text-blue-600 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-blue-500 cursor-pointer rounded-xs"
+                                           class="w-3.5 h-3.5 text-blue-600 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-blue-500 cursor-pointer rounded-sm"
                                            title="Select/Deselect All Products for SPK">
                                 </th>
                                 <th class="p-3 bg-slate-50/50 dark:bg-slate-900/50">Part Number</th>
@@ -660,9 +660,9 @@
                                class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs focus:outline-none focus:border-blue-500 text-slate-750 dark:text-slate-300 file:mr-3 file:py-2 file:px-3 file:border-0 file:bg-slate-200 dark:file:bg-slate-700 file:text-slate-700 dark:file:text-slate-200 file:text-xs file:font-bold hover:file:bg-slate-300 dark:hover:file:bg-slate-650 cursor-pointer">
                     </div>
                     {{-- Overwrite mode toggle --}}
-                    <div class="flex items-start gap-3 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/30 rounded-xs">
+                    <div class="flex items-start gap-3 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/30 rounded-sm">
                         <input type="checkbox" name="append" value="true" id="import_append_mode"
-                               class="mt-0.5 w-3.5 h-3.5 rounded-xs border-slate-300 accent-blue-600 cursor-pointer flex-shrink-0">
+                               class="mt-0.5 w-3.5 h-3.5 rounded-sm border-slate-300 accent-blue-600 cursor-pointer flex-shrink-0">
                         <div>
                             <label for="import_append_mode" class="text-xs font-bold text-amber-800 dark:text-amber-300 cursor-pointer">Overwrite mode (Check to clear existing data)</label>
                             <p class="text-[10px] text-amber-700 dark:text-amber-400 mt-0.5">If checked, the import process will <strong class="font-bold text-amber-900 dark:text-amber-200">delete all existing products</strong> in this inquiry before inserting the new ones. If unchecked, new products will be <strong class="font-bold text-amber-900 dark:text-amber-200">appended</strong> to the current list.</p>
@@ -732,13 +732,13 @@
                  <div class="h-4 w-[1px] bg-slate-200 dark:bg-slate-700"></div>
                  
                  {{-- Action: Move to Target Position --}}
-                 <div class="flex items-center gap-1 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 px-2 py-0.5 rounded-xs">
+                 <div class="flex items-center gap-1 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 px-2 py-0.5 rounded-sm">
                      <span class="text-[10px] text-slate-500 dark:text-slate-400 font-bold whitespace-nowrap">Move to Row:</span>
                      <input type="number" x-model="targetOrderInput" min="1" :max="products.length"
                             class="w-12 h-5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-center text-slate-800 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
                             placeholder="Pos">
                      <button type="button" @click="moveSelectedToTarget()"
-                             class="px-2 py-0.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-extrabold text-[9px] uppercase tracking-wider rounded-xs flex items-center justify-center transition-colors cursor-pointer border border-slate-300 dark:border-slate-600">
+                             class="px-2 py-0.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-extrabold text-[9px] uppercase tracking-wider rounded-sm flex items-center justify-center transition-colors cursor-pointer border border-slate-300 dark:border-slate-600">
                          Go
                      </button>
                  </div>
@@ -768,7 +768,7 @@
                   </div>
                   <button @click="saveAllChanges()"
                           :disabled="savingOrder"
-                          class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-xs font-bold transition-colors cursor-pointer rounded-xs border-0 whitespace-nowrap">
+                          class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-xs font-bold transition-colors cursor-pointer rounded-sm border-0 whitespace-nowrap">
                       <template x-if="!savingOrder">
                           <span class="flex items-center gap-1.5">
                               <i class="fa-solid fa-floppy-disk"></i> Save Changes
@@ -781,7 +781,7 @@
                       </template>
                   </button>
                   <button @click="discardAllChanges()"
-                          class="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-semibold transition-colors cursor-pointer rounded-xs whitespace-nowrap">
+                          class="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-semibold transition-colors cursor-pointer rounded-sm whitespace-nowrap">
                       <i class="fa-solid fa-rotate-left"></i> Reset
                   </button>
               </div>
@@ -804,7 +804,7 @@
                  <button type="submit"
                           :disabled="orderDirty || Object.keys(unsavedDecisions).length > 0 || Object.keys(unsavedReviewed).length > 0 || creatingWo"
                           :title="orderDirty || Object.keys(unsavedDecisions).length > 0 || Object.keys(unsavedReviewed).length > 0 ? 'Please save your changes before creating a Work Order.' : ''"
-                          class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 dark:disabled:bg-slate-700 disabled:text-slate-450 dark:disabled:text-slate-500 disabled:cursor-not-allowed text-white text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 rounded-xs border-0 whitespace-nowrap">
+                          class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 dark:disabled:bg-slate-700 disabled:text-slate-450 dark:disabled:text-slate-500 disabled:cursor-not-allowed text-white text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 rounded-sm border-0 whitespace-nowrap">
                      <template x-if="!creatingWo">
                           <span class="flex items-center gap-1.5">
                               <i class="fa-solid fa-file-signature"></i> Create WO
@@ -1069,7 +1069,7 @@ document.addEventListener('alpine:init', () => {
                 const hasSpk = prod.spkList && prod.spkList.length > 0;
                 const spkTooltip = hasSpk ? 'Associated WOs:\n' + prod.spkList.map(s => `• ${s.number} (${s.status})`).join('\n') : '';
                 const spkBadge = hasSpk 
-                    ? `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-xs bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-450 border border-emerald-200 dark:border-emerald-800 text-[9px] font-bold cursor-pointer whitespace-nowrap ml-1.5" title="${spkTooltip}">
+                    ? `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-450 border border-emerald-200 dark:border-emerald-800 text-[9px] font-bold cursor-pointer whitespace-nowrap ml-1.5" title="${spkTooltip}">
                          <i class="fa-solid fa-file-signature text-[8px]"></i> ${prod.spkList.length} WO
                        </span>`
                     : '';
@@ -1123,7 +1123,7 @@ document.addEventListener('alpine:init', () => {
                       <i class="fa-solid fa-grip-vertical text-slate-400 dark:text-slate-500 cursor-grab active:cursor-grabbing hover:text-slate-600 dark:hover:text-slate-300 text-xs ${!isLocked && !isNotGo ?'':'opacity-25'}" title="${!isLocked && !isNotGo ?'Drag to reorder':''}"></i>
                       <input type="checkbox" ${checkedAttr} ${disabledAttr}
                         onchange="event.stopPropagation();window._alpine_toggleSpk(${prod.id}, this.checked)"
-                        class="w-3.5 h-3.5 text-blue-600 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-blue-500 rounded-xs ${cursorClass}"
+                        class="w-3.5 h-3.5 text-blue-600 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-blue-500 rounded-sm ${cursorClass}"
                         title="${!isGo ? 'Only products with decision Go can be selected for SPK' : ''}">
                       ${spkBadge}
                     </div>
@@ -1135,7 +1135,7 @@ document.addEventListener('alpine:init', () => {
                   <td class="p-3 text-right font-mono ${isNotGo ? 'text-slate-400 dark:text-slate-500' : 'text-slate-700 dark:text-slate-300'}">${vol}</td>
                   <td class="p-3 text-center" onclick="event.stopPropagation()">
                     <select onchange="window._alpine_changeDecision(${prod.id}, this.value)"
-                            class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-750 px-1.5 py-1.5 text-[10px] font-semibold uppercase rounded-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+                            class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-750 px-1.5 py-1.5 text-[10px] font-semibold uppercase rounded-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
                       <option value="" ${!currentDecision ? 'selected' : ''}>Select</option>
                       <option value="go" ${currentDecision === 'go' ? 'selected' : ''}>Go</option>
                       <option value="not go" ${currentDecision === 'not go' ? 'selected' : ''}>Not Go</option>
@@ -1143,7 +1143,7 @@ document.addEventListener('alpine:init', () => {
                   </td>
                   <td class="p-3 text-center" onclick="event.stopPropagation()">
                     <select onchange="window._alpine_changeReviewed(${prod.id}, this.value)"
-                            class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-750 px-1.5 py-1.5 text-[10px] font-semibold uppercase rounded-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer w-full max-w-[120px]">
+                            class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-750 px-1.5 py-1.5 text-[10px] font-semibold uppercase rounded-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer w-full max-w-[120px]">
                       <option value="" ${!currentReviewed ? 'selected' : ''}>Select</option>
                       ${(window.__reviewedProductsList || []).map(r => {
                           const isSel = currentReviewed == r.id ? 'selected' : '';

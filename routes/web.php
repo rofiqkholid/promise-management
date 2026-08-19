@@ -49,9 +49,7 @@ Route::post('/logout', function () {
     return redirect(config('services.portal_login_url'));
 })->name('logout');
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware('auth')->name('dashboard');
+Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->middleware('auth')->name('dashboard');
 
 Route::middleware('auth')->prefix('management')->name('management.')->group(function () {
     Route::get('ajax/users', [WorkOrderController::class, 'apiGetUsers'])->name('api.users');

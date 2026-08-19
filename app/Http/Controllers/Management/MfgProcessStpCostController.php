@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Management;
 
 use App\Http\Controllers\Controller;
 use App\Models\MfgProcessStpCost;
+use App\Models\Customer;
 use Illuminate\Http\Request;
 
 class MfgProcessStpCostController extends Controller
@@ -13,6 +14,8 @@ class MfgProcessStpCostController extends Controller
      */
     public function index(Request $request)
     {
+        $customers = Customer::orderBy('name', 'asc')->get();
+
         $machineTypes = MfgProcessStpCost::select('machine_type')->distinct()->pluck('machine_type')->filter()->values();
         if ($machineTypes->isEmpty()) {
             $machineTypes = collect(['Tandem', 'Transfer', 'Progressive', 'Manual']);
@@ -37,17 +40,22 @@ class MfgProcessStpCostController extends Controller
 
         // Calculate KPI summary stats
         $totalItems = MfgProcessStpCost::count();
+        $generalCount = MfgProcessStpCost::whereNull('customer_id')->count();
+        $customCount = MfgProcessStpCost::whereNotNull('customer_id')->count();
         $smallCount = MfgProcessStpCost::where('machine_category', 'Small')->count();
         $mediumCount = MfgProcessStpCost::where('machine_category', 'Medium')->count();
         $largeCount = MfgProcessStpCost::where('machine_category', 'Large')->count();
 
         return view('management.mfg-process-stp-cost.index', compact(
+            'customers',
             'machineTypes',
             'machineCategories',
             'outputTypes',
             'complexities',
             'rateSources',
             'totalItems',
+            'generalCount',
+            'customCount',
             'smallCount',
             'mediumCount',
             'largeCount'
@@ -65,7 +73,16 @@ class MfgProcessStpCostController extends Controller
 
         $totalRecords = MfgProcessStpCost::count();
 
-        $query = MfgProcessStpCost::query();
+        $query = MfgProcessStpCost::with('customer');
+
+        // Customer Context Filter
+        if ($request->filled('customer_id')) {
+            if ($request->customer_id === 'general') {
+                $query->whereNull('customer_id');
+            } else {
+                $query->where('customer_id', $request->customer_id);
+            }
+        }
 
         // Filters
         if ($request->filled('machine_type')) {
@@ -98,7 +115,11 @@ class MfgProcessStpCostController extends Controller
                   ->orWhere('output_type', 'like', "%{$searchValue}%")
                   ->orWhere('process_complexity', 'like', "%{$searchValue}%")
                   ->orWhere('complexity_alias', 'like', "%{$searchValue}%")
-                  ->orWhere('rate_source', 'like', "%{$searchValue}%");
+                  ->orWhere('rate_source', 'like', "%{$searchValue}%")
+                  ->orWhereHas('customer', function ($cq) use ($searchValue) {
+                      $cq->where('name', 'like', "%{$searchValue}%")
+                         ->orWhere('code', 'like', "%{$searchValue}%");
+                  });
             });
         }
 
@@ -107,17 +128,18 @@ class MfgProcessStpCostController extends Controller
         // Sorting map
         $columnsMap = [
             0 => 'id',
-            1 => 'machine_type',
-            2 => 'tonnage',
-            3 => 'machine_category',
-            4 => 'output_type',
-            5 => 'output_qty',
-            6 => 'stroke',
-            7 => 'process_complexity',
-            8 => 'complexity_alias',
-            9 => 'min_cost_rate',
-            10 => 'std_cost_rate',
-            11 => 'rate_source',
+            1 => 'customer_id',
+            2 => 'machine_type',
+            3 => 'tonnage',
+            4 => 'machine_category',
+            5 => 'output_type',
+            6 => 'output_qty',
+            7 => 'stroke',
+            8 => 'process_complexity',
+            9 => 'complexity_alias',
+            10 => 'min_cost_rate',
+            11 => 'std_cost_rate',
+            12 => 'rate_source',
         ];
 
         $orderColumnIndex = $request->input('order.0.column');
@@ -150,6 +172,7 @@ class MfgProcessStpCostController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'customer_id' => 'nullable|integer|exists:customers,id',
             'machine_type' => 'required|string|max:100',
             'tonnage' => 'required|integer|min:1',
             'machine_category' => 'nullable|string|max:100',
@@ -180,6 +203,7 @@ class MfgProcessStpCostController extends Controller
         $item = MfgProcessStpCost::findOrFail($id);
 
         $validated = $request->validate([
+            'customer_id' => 'nullable|integer|exists:customers,id',
             'machine_type' => 'required|string|max:100',
             'tonnage' => 'required|integer|min:1',
             'machine_category' => 'nullable|string|max:100',
@@ -224,7 +248,7 @@ class MfgProcessStpCostController extends Controller
     public function export()
     {
         $fileName = 'Mfg_Stamping_Process_Cost_' . date('Y-m-d_H-i-s') . '.csv';
-        $items = MfgProcessStpCost::orderBy('id', 'asc')->get();
+        $items = MfgProcessStpCost::with('customer')->orderBy('id', 'asc')->get();
 
         $headers = array(
             "Content-type"        => "text/csv; charset=UTF-8",
@@ -235,7 +259,7 @@ class MfgProcessStpCostController extends Controller
         );
 
         $columns = array(
-            'No', 'Machine Type', 'Tonnage', 'Machine Category',
+            'No', 'Customer Scope', 'Machine Type', 'Tonnage', 'Machine Category',
             'Output Type', 'Output Qty', 'Stroke', 'Process Complexity',
             'Complexity Alias (Part Rank)', 'Min Cost Rate', 'Std Cost Rate', 'Rate Source'
         );
@@ -249,6 +273,7 @@ class MfgProcessStpCostController extends Controller
             foreach ($items as $item) {
                 fputcsv($file, array(
                     $no++,
+                    $item->customer ? ($item->customer->code ?: $item->customer->name) : 'Global (All Customers)',
                     $item->machine_type,
                     $item->tonnage,
                     $item->machine_category,
@@ -268,3 +293,4 @@ class MfgProcessStpCostController extends Controller
         return response()->stream($callback, 200, $headers);
     }
 }
+

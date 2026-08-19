@@ -1,11 +1,11 @@
-{{-- ===== QUOTATION DOWNLOAD MODAL ===== --}}
+﻿{{-- ===== QUOTATION DOWNLOAD MODAL ===== --}}
 <div id="modal-quotation-export" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-xs">
-    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xs shadow-2xl w-full max-w-md mx-4 overflow-hidden animate-fade-in">
+    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm shadow-2xl w-full max-w-md mx-4 overflow-hidden animate-fade-in">
         
         {{-- Header --}}
         <div class="flex items-center justify-between px-5 py-3.5 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
             <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-xs bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                <div class="w-8 h-8 rounded-sm bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
                     <i class="fa-solid fa-file-excel text-sm"></i>
                 </div>
                 <div>
@@ -22,7 +22,7 @@
         <div class="p-5 space-y-4 text-xs">
             
             {{-- Alert message area --}}
-            <div id="export-modal-alert" class="hidden p-3 rounded-xs text-[11px] font-semibold"></div>
+            <div id="export-modal-alert" class="hidden p-3 rounded-sm text-[11px] font-semibold"></div>
 
             {{-- 1. Currency Input --}}
             <div>
@@ -30,7 +30,7 @@
                     Currency <span class="text-rose-500">*</span>
                 </label>
                 <div class="space-y-2">
-                    <select id="export-currency-select" onchange="handleExportCurrencyChange(this.value)" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-800 dark:text-slate-100 font-semibold focus:outline-none focus:border-indigo-500">
+                    <select id="export-currency-select" onchange="handleExportCurrencyChange(this.value)" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-800 dark:text-slate-100 font-semibold focus:outline-none focus:border-indigo-500">
                         <option value="China Yuan" data-code="CNY">China Yuan (CNY)</option>
                         <option value="US Dollar" data-code="USD">US Dollar (USD)</option>
                         <option value="Japanese Yen" data-code="JPY">Japanese Yen (JPY)</option>
@@ -40,7 +40,7 @@
                     </select>
 
                     <div id="export-currency-custom-container" class="hidden space-y-1">
-                        <input type="text" id="export-currency-custom" placeholder="e.g. SGD or Singapore Dollar" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:border-indigo-500">
+                        <input type="text" id="export-currency-custom" placeholder="e.g. SGD or Singapore Dollar" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-indigo-500">
                         <span class="text-[10px] text-slate-400 dark:text-slate-500 block">* Enter 3-letter currency code (e.g. SGD, MYR, AUD, GBP) for auto-fetch.</span>
                     </div>
                 </div>
@@ -53,7 +53,7 @@
                         Exchange Rate to IDR <span class="text-rose-500">*</span>
                     </label>
                     <button type="button" id="btn-fetch-exchange-rate" onclick="fetchExchangeRateFromApi()"
-                            class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/80 border border-indigo-200 dark:border-indigo-800 rounded-xs transition-all active:scale-95 cursor-pointer">
+                            class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/80 border border-indigo-200 dark:border-indigo-800 rounded-sm transition-all active:scale-95 cursor-pointer">
                         <i id="icon-fetch-spinner" class="fa-solid fa-arrows-rotate text-[10px]"></i>
                         <span>Auto-Fetch</span>
                     </button>
@@ -61,7 +61,7 @@
                 <div class="relative flex items-center">
                     <span class="absolute left-3 text-slate-400 font-bold text-xs">Rp</span>
                     <input type="number" step="0.01" id="export-exchange-rate" value="" placeholder="e.g. 2275.00"
-                           class="w-full pl-9 pr-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs font-mono font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-indigo-500">
+                           class="w-full pl-9 pr-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm font-mono font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-indigo-500">
                 </div>
                 <span class="text-[10px] text-slate-400 dark:text-slate-500 mt-1 block">
                     * Exchange rate is automatically fetched via ExchangeRate-API (live conversion to IDR).
@@ -73,11 +73,11 @@
         {{-- Footer --}}
         <div class="px-5 py-3 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 flex items-center justify-end gap-2">
             <button type="button" onclick="closeQuotationExportModal()"
-                    class="px-3.5 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600 rounded-xs hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+                    class="px-3.5 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600 rounded-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer">
                 Cancel
             </button>
             <button type="button" onclick="submitQuotationExport()"
-                    class="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xs shadow-sm hover:shadow transition-all active:scale-98 cursor-pointer">
+                    class="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-sm shadow-sm hover:shadow transition-all active:scale-98 cursor-pointer">
                 <i class="fa-solid fa-download text-[11px]"></i>
                 <span>Download Excel</span>
             </button>

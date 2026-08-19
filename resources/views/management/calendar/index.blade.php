@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', 'Project & Holiday Calendar · Promise Management')
 
@@ -231,7 +231,7 @@
             <p class="text-[10px] text-slate-405 dark:text-slate-400 mt-0.5">Schedule company events and define holidays to calculate effective working days.</p>
         </div>
         <button @click="openCreateModal()"
-                class="inline-flex items-center justify-center gap-2 px-3 h-8 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold transition-all text-xs rounded-xs shadow-none cursor-pointer">
+                class="inline-flex items-center justify-center gap-2 px-3 h-8 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold transition-all text-xs rounded-sm shadow-none cursor-pointer">
             <i class="fa-solid fa-plus text-[10px]"></i>
             Add Event
         </button>
@@ -250,7 +250,7 @@
 
             <div class="flex-1 overflow-y-auto p-4 space-y-4 custom-scroll">
                 <!-- Legend / Filters -->
-                <div class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 p-4 rounded-xs shadow-2xs space-y-3">
+                <div class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 p-4 rounded-sm shadow-2xs space-y-3">
                     <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Calendar Colors</span>
                     <div class="space-y-2 text-xs">
                         <div class="flex items-center gap-2.5">
@@ -269,7 +269,7 @@
                 </div>
 
                 <!-- Mini Calendar -->
-                <div class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 p-4 rounded-xs shadow-2xs space-y-3">
+                <div class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 p-4 rounded-sm shadow-2xs space-y-3">
                     <div class="flex justify-between items-center pb-1 border-b border-slate-100 dark:border-slate-700/50">
                         <span class="text-xs font-bold text-slate-850 dark:text-white" x-text="miniMonthName + ' ' + miniYear"></span>
                         <div class="flex gap-1">
@@ -310,7 +310,7 @@
                 </div>
 
                 <!-- Upcoming Holiday List -->
-                <div class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 p-4 rounded-xs shadow-2xs flex flex-col space-y-3">
+                <div class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 p-4 rounded-sm shadow-2xs flex flex-col space-y-3">
                     <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block pb-1 border-b border-slate-100 dark:border-slate-700/50">Upcoming Holidays</span>
                     <div class="divide-y divide-slate-100 dark:divide-slate-700/50 pr-1 max-h-[220px] overflow-y-auto custom-scroll">
                         <template x-for="holiday in upcomingHolidays" :key="holiday.id">
@@ -336,14 +336,14 @@
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-2 border-b border-slate-100 dark:border-slate-700/50">
                 <!-- Month Picker (with navigation buttons next to it) -->
                 <div class="flex items-center gap-2">
-                    <button type="button" @click="navigate('prev')" class="w-8 h-8 flex items-center justify-center border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xs text-slate-600 dark:text-slate-300 transition-colors cursor-pointer">
+                    <button type="button" @click="navigate('prev')" class="w-8 h-8 flex items-center justify-center border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-sm text-slate-600 dark:text-slate-300 transition-colors cursor-pointer">
                         <i class="fa-solid fa-chevron-left text-[10px]"></i>
                     </button>
 
                     <input type="month" id="month-picker" @change="goToMonth($event.target.value)"
-                            class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-sm font-bold px-3 py-1.5 rounded-xs focus:outline-none cursor-pointer text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus:border-blue-500">
+                            class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-sm font-bold px-3 py-1.5 rounded-sm focus:outline-none cursor-pointer text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus:border-blue-500">
 
-                    <button type="button" @click="navigate('next')" class="w-8 h-8 flex items-center justify-center border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xs text-slate-600 dark:text-slate-300 transition-colors cursor-pointer">
+                    <button type="button" @click="navigate('next')" class="w-8 h-8 flex items-center justify-center border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-sm text-slate-600 dark:text-slate-300 transition-colors cursor-pointer">
                         <i class="fa-solid fa-chevron-right text-[10px]"></i>
                     </button>
                     <!-- Spinner loading indicator -->
@@ -355,19 +355,19 @@
 
                 <div class="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
                     <!-- View Switcher Tabs (Day | Week | Month) -->
-                    <div class="flex bg-slate-100 dark:bg-slate-900 p-0.5 rounded-sm border border-slate-200 dark:border-slate-700">
+                    <div class="flex bg-slate-100 dark:bg-slate-900 p-0.5 rounded-sm border border-slate-300 dark:border-slate-700">
                         <button type="button" 
                                 @click="changeView('timeGridDay')" 
                                 :class="currentView === 'timeGridDay' ? 'bg-white dark:bg-slate-800 shadow-xs text-slate-850 dark:text-white' : 'text-slate-500 dark:text-slate-400'" 
-                                class="px-3 py-1 text-xs font-semibold rounded-xs transition-all cursor-pointer">Day</button>
+                                class="px-3 py-1 text-xs font-semibold rounded-sm transition-all cursor-pointer">Day</button>
                         <button type="button" 
                                 @click="changeView('timeGridWeek')" 
                                 :class="currentView === 'timeGridWeek' ? 'bg-white dark:bg-slate-800 shadow-xs text-slate-850 dark:text-white' : 'text-slate-500 dark:text-slate-400'" 
-                                class="px-3 py-1 text-xs font-semibold rounded-xs transition-all cursor-pointer">Week</button>
+                                class="px-3 py-1 text-xs font-semibold rounded-sm transition-all cursor-pointer">Week</button>
                         <button type="button" 
                                 @click="changeView('dayGridMonth')" 
                                 :class="currentView === 'dayGridMonth' ? 'bg-white dark:bg-slate-800 shadow-xs text-slate-850 dark:text-white' : 'text-slate-500 dark:text-slate-400'" 
-                                class="px-3 py-1 text-xs font-semibold rounded-xs transition-all cursor-pointer">Month</button>
+                                class="px-3 py-1 text-xs font-semibold rounded-sm transition-all cursor-pointer">Month</button>
                     </div>
                 </div>
             </div>
@@ -380,7 +380,7 @@
     <div x-show="showModal"
          class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 backdrop-blur-xs p-4"
          style="display: none;" x-cloak>
-        <div class="bg-white dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700 w-full max-w-md shadow-xl rounded-xs overflow-hidden relative">
+        <div class="bg-white dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700 w-full max-w-md shadow-xl rounded-sm overflow-hidden relative">
             
             <!-- Header -->
             <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/10">
@@ -478,15 +478,15 @@
 
                 <div class="flex items-center gap-2 pt-4 border-t border-slate-100 dark:border-slate-700">
                     <button type="button" x-show="isEditMode" @click="deleteEvent()"
-                            class="px-4 py-2 text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white rounded-xs transition-colors cursor-pointer mr-auto"
+                            class="px-4 py-2 text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white rounded-sm transition-colors cursor-pointer mr-auto"
                             x-text="isApiHoliday ? 'Reset Kebijakan' : 'Delete Event'">
                     </button>
                     <button type="button" @click="showModal = false"
-                            class="px-4 py-2 text-xs font-bold border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xs transition-colors cursor-pointer">
+                            class="px-4 py-2 text-xs font-bold border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-sm transition-colors cursor-pointer">
                         Cancel
                     </button>
                     <button type="submit"
-                            class="px-4 py-2 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xs transition-colors cursor-pointer">
+                            class="px-4 py-2 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-sm transition-colors cursor-pointer">
                         Save
                     </button>
                 </div>

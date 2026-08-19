@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', 'Project Inquiries - Promise Management')
 
@@ -9,17 +9,17 @@
     <!-- Title & Action -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-            <h1 class="text-2xl font-bold tracking-tight text-slate-800 dark:text-white">Project Inquiries</h1>
-            <p class="text-sm text-slate-500 dark:text-slate-400">Manage customer RFQs, product lists, and feasibility studies</p>
+            <h1 class="text-lg font-bold tracking-tight text-slate-800 dark:text-white">Project Inquiries</h1>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Manage customer RFQs, product lists, and feasibility studies</p>
         </div>
         <div class="flex items-center gap-2">
             <button @click="showAssessmentConfigModal = true"
-               class="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 font-medium rounded-none transition-colors text-sm">
+               class="inline-flex items-center gap-2 px-3.5 h-9 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold rounded-sm transition-colors text-xs cursor-pointer">
                 <i class="fa-solid fa-gears text-xs"></i>
                 Scoring Config
             </button>
             <button @click="openWizard()"
-               class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium rounded-nones transition-colors text-sm">
+               class="inline-flex items-center gap-2 px-3.5 h-9 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold rounded-sm transition-colors text-xs cursor-pointer">
                 <i class="fa-solid fa-plus text-xs"></i>
                 Create New Inquiry
             </button>
@@ -43,14 +43,12 @@
         </script>
     @endif
 
-    {{-- Inquiry List Card with Integrated Filter Bar --}}
-    <div class="bg-white dark:bg-slate-800 rounded-xs border border-slate-200 dark:border-slate-700 overflow-hidden relative">
-        
-        {{-- Integrated Filter Bar --}}
-        <div class="flex flex-wrap items-center gap-4 p-4 bg-slate-100/50 dark:bg-slate-900/30">
-            <div class="flex items-center gap-2">
-                <label for="filter-status" class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status:</label>
-                <select id="filter-status" class="bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-none text-xs px-3 py-1.5 focus:outline-none focus:border-blue-500 text-slate-700 dark:text-slate-300">
+    {{-- Table Card with x-table & Filter Popover --}}
+    <x-table id="inquiries-table" class="w-full text-xs text-left border-collapse">
+        <x-slot:filters>
+            <div>
+                <label for="filter-status" class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Status</label>
+                <select id="filter-status" class="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-sm text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:border-blue-500">
                     <option value="">All Statuses</option>
                     <option value="Draft">Draft</option>
                     <option value="Active">Active</option>
@@ -58,28 +56,24 @@
                     <option value="Cancelled">Cancelled</option>
                 </select>
             </div>
-        </div>
+        </x-slot:filters>
 
-        <div class="border-t border-slate-100 dark:border-slate-700 p-4 bg-white dark:bg-slate-800">
-            <table id="inquiries-table" class="custom-table w-full text-left border-collapse">
-                <thead>
-                    <tr class="border-b-2 border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900/30 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                        <th class="px-3 py-2.5 w-12 text-center bg-slate-100/50 dark:bg-slate-900/50">#</th>
-                        <th class="px-3 py-2.5 bg-slate-100/50 dark:bg-slate-900/50">Inquiry No</th>
-                        <th class="px-3 py-2.5 bg-slate-100/50 dark:bg-slate-900/50">Customer</th>
-                        <th class="px-3 py-2.5 bg-slate-100/50 dark:bg-slate-900/50">Model</th>
-                        <th class="px-3 py-2.5 bg-slate-100/50 dark:bg-slate-900/50">Inquiry Date</th>
-                        <th class="px-3 py-2.5 text-center bg-slate-100/50 dark:bg-slate-900/50">Products</th>
-                        <th class="px-3 py-2.5 bg-slate-100/50 dark:bg-slate-900/50">Created WO</th>
-                        <th class="px-3 py-2.5 bg-slate-100/50 dark:bg-slate-900/50">Status</th>
-                        <th class="px-3 py-2.5 text-right w-36 bg-slate-100/50 dark:bg-slate-900/50">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-200 dark:divide-slate-700/80 text-sm">
-                </tbody>
-            </table>
-        </div>
-    </div>
+        <thead>
+            <tr class="border-b-2 border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900 text-[10px] font-extrabold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                <th class="px-3 py-2.5 w-12 text-center border-r border-slate-200 dark:border-slate-700">#</th>
+                <th class="px-3 py-2.5 border-r border-slate-200 dark:border-slate-700">Inquiry No</th>
+                <th class="px-3 py-2.5 border-r border-slate-200 dark:border-slate-700">Customer</th>
+                <th class="px-3 py-2.5 border-r border-slate-200 dark:border-slate-700">Model</th>
+                <th class="px-3 py-2.5 border-r border-slate-200 dark:border-slate-700">Inquiry Date</th>
+                <th class="px-3 py-2.5 text-center border-r border-slate-200 dark:border-slate-700">Products</th>
+                <th class="px-3 py-2.5 text-center border-r border-slate-200 dark:border-slate-700">Created WO</th>
+                <th class="px-3 py-2.5 border-r border-slate-200 dark:border-slate-700">Status</th>
+                <th class="px-3 py-2.5 text-right w-28">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-xs">
+        </tbody>
+    </x-table>
 
     <!-- Wizard (Add) Modal -->
     <div x-show="showWizard" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4" style="display: none;">
@@ -94,7 +88,7 @@
             <div class="border-b border-slate-100 dark:border-slate-700 pb-4 mb-4">
                 <h3 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
                     <span>Create Project Inquiry Wizard</span>
-                    <span x-show="inquiryNo" class="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 px-2 py-0.5 rounded-xs" x-text="inquiryNo"></span>
+                    <span x-show="inquiryNo" class="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 px-2 py-0.5 rounded-sm" x-text="inquiryNo"></span>
                 </h3>
                 
                 <!-- Steps indicators -->
@@ -176,7 +170,7 @@
                         </div>
 
                         <!-- Visual Attachment Info -->
-                        <div x-show="attachedFileName" class="mt-4 p-3 bg-blue-50 dark:bg-blue-950/20 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800/40 rounded-xs flex items-center justify-between max-w-md mx-auto" style="display: none;">
+                        <div x-show="attachedFileName" class="mt-4 p-3 bg-blue-50 dark:bg-blue-950/20 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800/40 rounded-sm flex items-center justify-between max-w-md mx-auto" style="display: none;">
                             <div class="flex items-center gap-2 text-left">
                                 <i class="fa-solid fa-file-excel text-lg text-emerald-600"></i>
                                 <div>
@@ -336,10 +330,68 @@
     <!-- Assessment Configuration Modal -->
     @include('management.inquiry.assessment-config-modal')
 
+    <!-- Created Work Orders Modal -->
+    <div id="modal-wo-list" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4" onclick="if(event.target===this) closeWoListModal()">
+        <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[85vh]">
+            <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-900/50">
+                <div>
+                    <h3 class="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                        <i class="fa-solid fa-file-signature text-blue-600 dark:text-blue-400"></i>
+                        <span>Created Work Orders</span>
+                    </h3>
+                    <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5" id="wo-modal-inquiry-no"></p>
+                </div>
+                <button type="button" onclick="closeWoListModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg leading-none cursor-pointer">&times;</button>
+            </div>
+            <div class="p-4 overflow-y-auto space-y-2 max-h-96" id="wo-modal-list-container">
+                {{-- Injected dynamically --}}
+            </div>
+            <div class="px-4 py-2.5 bg-slate-50 dark:bg-slate-900/30 border-t border-slate-100 dark:border-slate-700 flex justify-end">
+                <button type="button" onclick="closeWoListModal()" class="px-3.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-sm hover:bg-slate-50 transition-colors cursor-pointer">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 @push('scripts')
 <script>
+    window.showWoListModal = function(inquiryNo, wos) {
+        document.getElementById('wo-modal-inquiry-no').textContent = 'Inquiry No: ' + inquiryNo + ' (' + (wos ? wos.length : 0) + ' Work Orders)';
+        const container = document.getElementById('wo-modal-list-container');
+        if (!wos || wos.length === 0) {
+            container.innerHTML = '<div class="py-6 text-center text-xs text-slate-400 italic">No Work Orders created for this inquiry.</div>';
+        } else {
+            let html = '';
+            wos.forEach((wo, idx) => {
+                html += `
+                <div class="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-sm hover:border-blue-300 dark:hover:border-blue-600 transition-colors">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <div class="w-6 h-6 rounded-sm bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center text-[10px] font-extrabold shrink-0">
+                            ${idx + 1}
+                        </div>
+                        <div class="min-w-0">
+                            <span class="font-bold text-xs text-slate-800 dark:text-slate-100 block truncate font-mono">${wo.wo_number}</span>
+                            <span class="text-[10px] text-slate-400 block">Work Order (SPK 1)</span>
+                        </div>
+                    </div>
+                    <a href="${wo.show_url}" target="_blank" class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-sm text-[11px] font-semibold transition-colors shrink-0">
+                        <span>View</span>
+                        <i class="fa-solid fa-arrow-right text-[9px]"></i>
+                    </a>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+        document.getElementById('modal-wo-list').classList.remove('hidden');
+    };
+
+    window.closeWoListModal = function() {
+        document.getElementById('modal-wo-list').classList.add('hidden');
+    };
+
     document.addEventListener('alpine:init', () => {
         Alpine.data('inquiryIndex', () => ({
             showAssessmentConfigModal: false,
@@ -675,19 +727,22 @@
                     data: 'work_orders', 
                     name: 'work_orders',
                     orderable: false,
-                    render: function(data) {
+                    className: 'text-center',
+                    render: function(data, type, row) {
                         if (!data || data.length === 0) {
                             return '<span class="text-xs text-slate-400 italic">None</span>';
                         }
-                        let html = '<div class="flex flex-col gap-1.5">';
-                        data.forEach(function(wo) {
-                            html += `<a href="${wo.show_url}" class="text-xs font-normal text-blue-600 hover:text-blue-800 hover:underline dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1.5 whitespace-nowrap">
-                                <i class="fa-solid fa-file-signature text-[10px] text-slate-400 dark:text-slate-500"></i>
-                                <span>${wo.wo_number}</span>
-                            </a>`;
-                        });
-                        html += '</div>';
-                        return html;
+                        const escapedInquiry = (row.inquiry_no || '').replace(/'/g, "\\'");
+                        const wosJson = JSON.stringify(data).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
+                        return `
+                            <button type="button" onclick='window.showWoListModal("${escapedInquiry}", ${wosJson})'
+                                    class="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/40 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800/80 text-blue-700 dark:text-blue-300 rounded-sm text-xs font-bold transition-all cursor-pointer shadow-xs group"
+                                    title="Click to view created Work Orders">
+                                <i class="fa-solid fa-file-signature text-[10px] text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform"></i>
+                                <span>${data.length} SPK</span>
+                                <i class="fa-solid fa-chevron-right text-[8px] text-blue-400 opacity-75"></i>
+                            </button>
+                        `;
                     }
                 },
                 { 
@@ -715,8 +770,8 @@
                     render: function(data, type, row) {
                         let actionsHtml = `<div class="flex items-center justify-end gap-2">
                             <a href="${row.show_url}" title="View Details"
-                               class="w-7 h-7 flex items-center justify-center bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 transition-colors">
-                                <i class="fa-solid fa-eye text-xs"></i>
+                               class="w-7 h-7 flex items-center justify-center bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 transition-colors rounded-sm">
+                                <i class="fa-solid fa-arrow-right text-xs"></i>
                             </a>`;
                         
                         if (row.status === 'Draft') {

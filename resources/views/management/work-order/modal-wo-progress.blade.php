@@ -1,14 +1,14 @@
-{{-- Modal Progress Tracking & Checklist --}}
+﻿{{-- Modal Progress Tracking & Checklist --}}
 <div id="modal-wo-progress" class="hidden fixed inset-0 z-50 overflow-hidden flex items-center justify-center bg-slate-900/50 backdrop-blur-xs transition-opacity duration-150"
      x-data="woProgressModal()" @keydown.escape.window="closeModal()" @click.self="closeModal()">
     
-    <div class="bg-white dark:bg-slate-900 w-full max-w-5xl h-[85vh] flex flex-col shadow-2xl rounded-xs overflow-hidden border border-slate-200 dark:border-slate-800 transition-all duration-150 transform scale-95"
+    <div class="bg-white dark:bg-slate-900 w-full max-w-5xl h-[85vh] flex flex-col shadow-2xl rounded-sm overflow-hidden border border-slate-200 dark:border-slate-800 transition-all duration-150 transform scale-95"
          :class="isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'">
         
         {{-- Modal Header --}}
         <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/50 flex-none">
             <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-xs bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                <div class="w-8 h-8 rounded-sm bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
                     <i class="fa-solid fa-list-check text-sm"></i>
                 </div>
                 <div>
@@ -18,7 +18,7 @@
                 </div>
             </div>
             
-            <button type="button" @click="closeModal()" class="w-7 h-7 flex items-center justify-center rounded-xs bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors cursor-pointer flex-none">
+            <button type="button" @click="closeModal()" class="w-7 h-7 flex items-center justify-center rounded-sm bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors cursor-pointer flex-none">
                 <i class="fa-solid fa-xmark text-sm"></i>
             </button>
         </div>
@@ -36,7 +36,7 @@
                 <div class="space-y-6">
                     
                     {{-- ROW 1: WO Information --}}
-                    <div class="bg-white dark:bg-slate-900 p-5 rounded-xs border border-slate-200 dark:border-slate-800 shadow-xs">
+                    <div class="bg-white dark:bg-slate-900 p-5 rounded-sm border border-slate-300 dark:border-slate-800 shadow-xs">
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
                             <div>
                                 <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Work Order No</span>
@@ -58,14 +58,14 @@
                             </div>
                             <div>
                                 <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Priority</span>
-                                <span class="inline-block px-2.5 py-0.5 text-[10px] font-extrabold border rounded-xs uppercase tracking-wide"
+                                <span class="inline-block px-2.5 py-0.5 text-[10px] font-extrabold border rounded-sm uppercase tracking-wide"
                                       :class="priorityClass" x-text="priority"></span>
                             </div>
                         </div>
                     </div>
 
                     {{-- ROW 2: Approval Status Stepper --}}
-                    <div class="bg-white dark:bg-slate-900 p-5 rounded-xs border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+                    <div class="bg-white dark:bg-slate-900 p-5 rounded-sm border border-slate-300 dark:border-slate-800 shadow-xs space-y-4">
                         <h5 class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
                             <i class="fa-solid fa-file-shield text-indigo-500"></i> Approval Progress Status
                         </h5>
@@ -120,13 +120,13 @@
                     </div>
 
                     {{-- ROW 3: Progress Task --}}
-                    <div class="bg-white dark:bg-slate-900 p-5 rounded-xs border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+                    <div class="bg-white dark:bg-slate-900 p-5 rounded-sm border border-slate-300 dark:border-slate-800 shadow-xs space-y-4">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-2">
                             <h5 class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                 <i class="fa-solid fa-route text-indigo-500"></i> Department Task Checklist &amp; Progress
                             </h5>
                             <template x-if="status !== 'Approved' && status !== 'Released'">
-                                <div class="px-2 py-0.5 text-[9px] bg-amber-50 dark:bg-amber-955/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900/30 rounded-xs flex items-center gap-1 font-bold">
+                                <div class="px-2 py-0.5 text-[9px] bg-amber-50 dark:bg-amber-955/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900/30 rounded-sm flex items-center gap-1 font-bold">
                                     <i class="fa-solid fa-lock text-[8px]"></i> Locked (Awaiting Approval)
                                 </div>
                             </template>
@@ -134,11 +134,11 @@
 
                         <div class="space-y-4">
                             <template x-for="(proc, pIdx) in processes" :key="pIdx">
-                                <div class="bg-slate-50/50 dark:bg-slate-900/20 border border-slate-200 dark:border-slate-800 rounded-xs overflow-hidden">
+                                <div class="bg-slate-50/50 dark:bg-slate-900/20 border border-slate-200 dark:border-slate-800 rounded-sm overflow-hidden">
                                     {{-- Process Title --}}
                                     <div class="bg-slate-100/50 dark:bg-slate-800/40 px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                                         <div class="flex items-center gap-2">
-                                            <div class="w-1.5 h-3 bg-indigo-600 rounded-xs"></div>
+                                            <div class="w-1.5 h-3 bg-indigo-600 rounded-sm"></div>
                                             <span class="text-xs font-extrabold text-slate-800 dark:text-slate-205 uppercase tracking-wider" x-text="proc.process_name"></span>
                                         </div>
                                     </div>
@@ -151,7 +151,7 @@
                                                 {{-- Dept Header info --}}
                                                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                                                     <div class="flex items-center gap-2.5">
-                                                        <div class="px-2 py-0.5 rounded-xs bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-400 font-extrabold text-[10px] tracking-wider border border-indigo-100/30" x-text="dept.department_code"></div>
+                                                        <div class="px-2 py-0.5 rounded-sm bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-400 font-extrabold text-[10px] tracking-wider border border-indigo-100/30" x-text="dept.department_code"></div>
                                                         <div class="text-[11px] text-slate-550 dark:text-slate-400 font-medium">
                                                             PIC: <span class="font-bold text-slate-700 dark:text-slate-200" x-text="dept.pic_name"></span>
                                                         </div>
@@ -161,12 +161,12 @@
                                                         <div class="flex-1 sm:flex-none w-48 bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden border border-slate-200 dark:border-slate-700/50">
                                                             <div class="bg-indigo-600 h-full rounded-full transition-all duration-150" :style="'width: ' + (products.length > 0 ? (dept.checked_product_ids.length / products.length * 100) : 0) + '%'"></div>
                                                         </div>
-                                                        <span class="font-mono text-[10px] font-extrabold text-slate-650 dark:text-slate-400 whitespace-nowrap bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-2 py-0.5 rounded-xs" x-text="dept.checked_product_ids.length + ' / ' + products.length + ' Done'"></span>
+                                                        <span class="font-mono text-[10px] font-extrabold text-slate-650 dark:text-slate-400 whitespace-nowrap bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-2 py-0.5 rounded-sm" x-text="dept.checked_product_ids.length + ' / ' + products.length + ' Done'"></span>
                                                     </div>
                                                 </div>
 
                                                 {{-- Accordion Parts checklist --}}
-                                                <div x-data="{ collapsed: true }" class="bg-white dark:bg-slate-900 p-2.5 border border-slate-200 dark:border-slate-800 rounded-xs">
+                                                <div x-data="{ collapsed: true }" class="bg-white dark:bg-slate-900 p-2.5 border border-slate-200 dark:border-slate-800 rounded-sm">
                                                     <button type="button" @click="collapsed = !collapsed" class="flex items-center gap-2 text-[10px] font-extrabold text-slate-400 hover:text-indigo-650 transition-colors uppercase cursor-pointer select-none">
                                                         <i class="fa-solid text-[9px]" :class="collapsed ? 'fa-chevron-right' : 'fa-chevron-down'"></i>
                                                         <span x-text="collapsed ? 'Show Checklist Parts' : 'Hide Checklist Parts'"></span>
@@ -177,14 +177,14 @@
                                                             @csrf
                                                             <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                                                                 <template x-for="p in products" :key="p.id">
-                                                                    <div class="flex items-center justify-between p-2.5 border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-955/20 rounded-xs hover:border-indigo-300 dark:hover:border-indigo-900/40 transition-all text-xs">
+                                                                    <div class="flex items-center justify-between p-2.5 border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-955/20 rounded-sm hover:border-indigo-300 dark:hover:border-indigo-900/40 transition-all text-xs">
                                                                         
                                                                         {{-- Checklist enabled if user is PIC AND WO is approved --}}
                                                                         <template x-if="(dept.is_my_pic_task === true || dept.is_my_pic_task === 1) && (status === 'Approved' || status === 'Released')">
                                                                             <label class="flex items-center gap-2.5 cursor-pointer w-full select-none text-slate-700 dark:text-slate-300">
                                                                                 <input type="checkbox" name="checked_product_ids[]" :value="p.id"
                                                                                        :checked="dept.checked_product_ids.includes(Number(p.id))"
-                                                                                       class="h-4 w-4 rounded-xs border-slate-300 dark:border-slate-700 text-indigo-600 focus:ring-0 cursor-pointer">
+                                                                                       class="h-4 w-4 rounded-sm border-slate-300 dark:border-slate-700 text-indigo-600 focus:ring-0 cursor-pointer">
                                                                                 <div class="min-w-0 flex-1">
                                                                                     <span class="font-bold text-slate-800 dark:text-slate-100 block" x-text="p.customer_part_no"></span>
                                                                                     <span class="text-[10px] text-slate-400 truncate block mt-0.5" x-text="p.customer_part_name"></span>
@@ -195,7 +195,7 @@
                                                                         {{-- Read-only checklist --}}
                                                                         <template x-if="!((dept.is_my_pic_task === true || dept.is_my_pic_task === 1) && (status === 'Approved' || status === 'Released'))">
                                                                             <div class="flex items-center gap-2.5 w-full min-w-0">
-                                                                                <div class="w-4 h-4 rounded-xs flex items-center justify-center flex-none border"
+                                                                                <div class="w-4 h-4 rounded-sm flex items-center justify-center flex-none border"
                                                                                      :class="dept.checked_product_ids.includes(Number(p.id)) ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-405 border-slate-200 dark:border-slate-700'">
                                                                                     <i class="fa-solid text-[8px]" :class="dept.checked_product_ids.includes(Number(p.id)) ? 'fa-check' : 'fa-xmark'"></i>
                                                                                 </div>
@@ -212,7 +212,7 @@
                                                             {{-- Actions button --}}
                                                             <template x-if="(dept.is_my_pic_task === true || dept.is_my_pic_task === 1) && (status === 'Approved' || status === 'Released')">
                                                                 <div class="flex justify-end pt-1">
-                                                                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[10px] uppercase tracking-wider rounded-xs shadow-sm hover:shadow transition-all cursor-pointer flex items-center gap-1.5">
+                                                                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[10px] uppercase tracking-wider rounded-sm shadow-sm hover:shadow transition-all cursor-pointer flex items-center gap-1.5">
                                                                         <i class="fa-solid fa-floppy-disk text-[9px]"></i> Save Progress
                                                                     </button>
                                                                 </div>

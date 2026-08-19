@@ -114,7 +114,7 @@ class ProductCostComparisonService
             $totals['cogs_sales'] += ($itemResult['sales']['cogs'] * $qty);
         }
 
-        // Calculate Overall Margins
+        // Calculate Overall Product Margins
         $marginIdr = $totals['cogs_sales'] - $totals['cogs_eng'];
         $marginPct = $totals['cogs_sales'] > 0 ? ($marginIdr / $totals['cogs_sales']) * 100 : 0.0;
 
@@ -135,21 +135,116 @@ class ProductCostComparisonService
             $statusText = 'MARGINAL (BELOW SALES TARGET)';
         }
 
+        // -------------------------------------------------------------
+        // Calculate Tooling Cost Comparison (Exact Match to Reference Formula)
+        // -------------------------------------------------------------
+        $toolingItems = [];
+        $totalToolingCostEng = 0.0;
+        $totalToolingCostSales = 0.0;
+        $toolingOhProfitEngPct = 0.0; // 0% per reference
+        $toolingOhProfitSalesPct = floatval($policySales->oh_profit_pct ?? 0.0);
+        if ($toolingOhProfitSalesPct <= 0) {
+            $toolingOhProfitSalesPct = floatval($policySales->min_std_margin_pct ?? 20.0);
+            if ($toolingOhProfitSalesPct <= 0) {
+                $toolingOhProfitSalesPct = 20.0;
+            }
+        }
+
+        foreach ($ebdHeader->items as $item) {
+            if ($item->toolingProcesses && $item->toolingProcesses->count() > 0) {
+                foreach ($item->toolingProcesses as $tp) {
+                    $toolPrice = floatval($tp->price_idr ?? 0.0);
+                    $toolQty = max(1, intval($tp->qty ?? 1));
+                    $costEng = $toolPrice * $toolQty;
+                    $ohSalesVal = $costEng * ($toolingOhProfitSalesPct / 100);
+                    $costSales = $costEng + $ohSalesVal;
+
+                    $totalToolingCostEng += $costEng;
+                    $totalToolingCostSales += $costSales;
+
+                    $toolingItems[] = [
+                        'ebd_item_id'      => $item->id,
+                        'part_no'          => $item->part_no,
+                        'part_name'        => $item->part_name,
+                        'tool_rank'        => $tp->tool_rank ?? '-',
+                        'category'         => $tp->category ?? 'DIE',
+                        'op'               => $tp->op ?? '-',
+                        'process_name'     => $tp->process_name ?? '-',
+                        'machine_type'     => $tp->machine_type ?? '-',
+                        'prod_homeline'    => $tp->prod_homeline ?? '-',
+                        'tonnage'          => $tp->tonnage ?? 0,
+                        'die_height'       => $tp->die_height ?? 0,
+                        'output'           => $tp->output ?? 1,
+                        'stroke'           => $tp->stroke ?? 1,
+                        'qty'              => $toolQty,
+                        'price_unit_eng'   => $toolPrice,
+                        'total_cost_eng'   => $costEng,
+                        'oh_profit_pct'    => $toolingOhProfitSalesPct,
+                        'oh_profit_val'    => $ohSalesVal,
+                        'total_cost_sales' => $costSales,
+                        'margin_idr'       => $costSales - $costEng,
+                        'margin_pct'       => $costSales > 0 ? (($costSales - $costEng) / $costSales) * 100 : 0.0,
+                    ];
+                }
+            }
+        }
+
+        $toolingCogmEng = $totalToolingCostEng;
+        $toolingCogmSales = $totalToolingCostEng;
+        $toolingOhProfitEngVal = 0.0;
+        $toolingOhProfitSalesVal = $toolingCogmSales * ($toolingOhProfitSalesPct / 100);
+        $toolingCogsEng = $toolingCogmEng + $toolingOhProfitEngVal;
+        $toolingCogsSales = $toolingCogmSales + $toolingOhProfitSalesVal;
+
+        $toolingMarginIdr = $toolingCogsSales - $toolingCogsEng;
+        $toolingMarginPct = $toolingCogsSales > 0 ? ($toolingMarginIdr / $toolingCogsSales) * 100 : 0.0;
+        $toolingTargetStdMargin = 20.00; // Std Margin = Min. 20%
+
+        $toolingStatus = 'PASSED';
+        $toolingStatusBadge = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300';
+        $toolingStatusText = 'TARGET ACHIEVED (PASSED)';
+
+        if ($toolingMarginPct < $toolingTargetStdMargin) {
+            $toolingStatus = 'WARNING';
+            $toolingStatusBadge = 'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300';
+            $toolingStatusText = 'BELOW TARGET MARGIN (< 20%)';
+        }
+
+        $toolingComparison = [
+            'items'                 => $toolingItems,
+            'total_items_count'     => count($toolingItems),
+            'cogm_eng'              => $toolingCogmEng,
+            'cogm_sales'            => $toolingCogmSales,
+            'oh_profit_eng_pct'     => $toolingOhProfitEngPct,
+            'oh_profit_eng_val'     => $toolingOhProfitEngVal,
+            'oh_profit_sales_pct'   => $toolingOhProfitSalesPct,
+            'oh_profit_sales_val'   => $toolingOhProfitSalesVal,
+            'cogs_eng'              => $toolingCogsEng,
+            'cogs_sales'            => $toolingCogsSales,
+            'margin_idr'            => $toolingMarginIdr,
+            'margin_pct'            => $toolingMarginPct,
+            'target_std_margin_pct' => $toolingTargetStdMargin,
+            'status'                => $toolingStatus,
+            'status_badge'          => $toolingStatusBadge,
+            'status_text'           => $toolingStatusText,
+        ];
+
         return [
-            'ebd_header' => $ebdHeader,
-            'customer' => $ebdHeader->customer,
-            'project_model' => $ebdHeader->projectModel,
-            'policy_eng' => $policyEng,
-            'policy_sales' => $policySales,
-            'totals' => $totals,
-            'margin_idr' => $marginIdr,
-            'margin_pct' => $marginPct,
+            'ebd_header'          => $ebdHeader,
+            'customer'            => $ebdHeader->customer,
+            'project_model'       => $ebdHeader->projectModel,
+            'policy_eng'          => $policyEng,
+            'policy_sales'        => $policySales,
+            'totals'              => $totals,
+            'margin_idr'          => $marginIdr,
+            'margin_pct'          => $marginPct,
             'target_margin_sales' => $targetMarginSales,
-            'target_margin_eng' => $targetMarginEng,
-            'status' => $status,
-            'status_badge' => $statusBadge,
-            'status_text' => $statusText,
-            'items' => $itemsCalculations,
+            'target_margin_eng'   => $targetMarginEng,
+            'status'              => $status,
+            'status_badge'        => $statusBadge,
+            'status_text'         => $statusText,
+            'items'               => $itemsCalculations,
+            'tooling'             => $toolingComparison,
         ];
     }
 
@@ -372,8 +467,8 @@ class ProductCostComparisonService
                 $stroke = ($tp->stroke !== null && $tp->stroke !== '') ? floatval($tp->stroke) : null;
                 $outputQty = max(1, intval($tp->output ?? 1));
 
-                $stpEng = $this->matchStampingRate($stampingRates, $machineType, $tonnage, $stroke, $partRank, 'Engineering');
-                $stpSales = $this->matchStampingRate($stampingRates, $machineType, $tonnage, $stroke, $partRank, 'Sales');
+                $stpEng = $this->matchStampingRate($stampingRates, $machineType, $tonnage, $stroke, $partRank, 'Engineering', null);
+                $stpSales = $this->matchStampingRate($stampingRates, $machineType, $tonnage, $stroke, $partRank, 'Sales', $customerId);
 
                 $strokeMultiplier = $stroke !== null ? $stroke : 1.0;
                 $rateValEng = $stpEng ? ($stpEng->std_cost_rate * $strokeMultiplier) : 0.0;
@@ -538,16 +633,48 @@ class ProductCostComparisonService
 
     /**
      * Match Stamping Process Rate from master data.
+     * Prioritizes Customer-Specific rate first, then falls back to Global rate.
      * Returns null if no match found.
      */
-    protected function matchStampingRate($rates, $machineType, $tonnage, $stroke, $partRank, $rateSource)
+    protected function matchStampingRate($rates, $machineType, $tonnage, $stroke, $partRank, $rateSource, $customerId = null)
     {
         if (empty($rates) || $rates->isEmpty()) {
             return null;
         }
 
-        // 1. Exact match: Machine Type + Tonnage Range + Complexity Alias/Rank + RateSource
+        // 1. Try Customer-Specific Exact Match: Customer + Machine Type + Tonnage + Rank + RateSource
+        if (!empty($customerId)) {
+            $match = $rates->where('rate_source', $rateSource)
+                ->where('customer_id', $customerId)
+                ->filter(function($r) use ($machineType, $partRank, $tonnage) {
+                    $machineMatch = empty($machineType) || strcasecmp($r->machine_type, $machineType) === 0;
+                    $rankMatch = empty($partRank) ||
+                        strcasecmp($r->complexity_alias, $partRank) === 0 ||
+                        stripos($r->process_complexity, $partRank) !== false;
+                    $tonnageMatch = empty($tonnage) || $r->tonnage >= ($tonnage - 50);
+                    return $machineMatch && $rankMatch && $tonnageMatch;
+                })->first();
+
+            if ($match) return $match;
+
+            // 1b. Try Customer-Specific Match by Rank & Tonnage
+            if (!empty($partRank)) {
+                $match = $rates->where('rate_source', $rateSource)
+                    ->where('customer_id', $customerId)
+                    ->filter(function($r) use ($partRank, $tonnage) {
+                        $rankMatch = strcasecmp($r->complexity_alias, $partRank) === 0 ||
+                            stripos($r->process_complexity, $partRank) !== false;
+                        $tonnageMatch = empty($tonnage) || $r->tonnage >= ($tonnage - 50);
+                        return $rankMatch && $tonnageMatch;
+                    })->first();
+
+                if ($match) return $match;
+            }
+        }
+
+        // 2. Global Rate Exact Match: Global (customer_id null) + Machine Type + Tonnage Range + Complexity Alias/Rank + RateSource
         $match = $rates->where('rate_source', $rateSource)
+            ->whereNull('customer_id')
             ->filter(function($r) use ($machineType, $partRank, $tonnage) {
                 $machineMatch = empty($machineType) || strcasecmp($r->machine_type, $machineType) === 0;
                 $rankMatch = empty($partRank) ||
@@ -559,9 +686,10 @@ class ProductCostComparisonService
 
         if ($match) return $match;
 
-        // 2. Match by Complexity Alias & Tonnage
+        // 3. Global Match by Complexity Alias & Tonnage
         if (!empty($partRank)) {
             $match = $rates->where('rate_source', $rateSource)
+                ->whereNull('customer_id')
                 ->filter(function($r) use ($partRank, $tonnage) {
                     $rankMatch = strcasecmp($r->complexity_alias, $partRank) === 0 ||
                         stripos($r->process_complexity, $partRank) !== false;

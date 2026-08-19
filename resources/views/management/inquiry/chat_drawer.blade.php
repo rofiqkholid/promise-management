@@ -1,4 +1,4 @@
-<!-- Slide-over Right Drawer for Inquiry Product Details and Chat -->
+﻿<!-- Slide-over Right Drawer for Inquiry Product Details and Chat -->
 <div x-data="inquiryProductChat()"
      x-show="showChatDrawer"
      @open-product-chat.window="openChat($event.detail.id)"
@@ -42,32 +42,32 @@
                 <div class="space-y-4 animate-pulse p-1">
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-2">
-                            <div class="h-2 bg-slate-200 dark:bg-slate-700 rounded-xs w-2/3"></div>
-                            <div class="h-3.5 bg-slate-200 dark:bg-slate-700 rounded-xs w-5/6"></div>
+                            <div class="h-2 bg-slate-200 dark:bg-slate-700 rounded-sm w-2/3"></div>
+                            <div class="h-3.5 bg-slate-200 dark:bg-slate-700 rounded-sm w-5/6"></div>
                         </div>
                         <div class="space-y-2">
-                            <div class="h-2 bg-slate-200 dark:bg-slate-700 rounded-xs w-1/2"></div>
-                            <div class="h-3.5 bg-slate-200 dark:bg-slate-700 rounded-xs w-2/3"></div>
+                            <div class="h-2 bg-slate-200 dark:bg-slate-700 rounded-sm w-1/2"></div>
+                            <div class="h-3.5 bg-slate-200 dark:bg-slate-700 rounded-sm w-2/3"></div>
                         </div>
                         <div class="space-y-2">
-                            <div class="h-2 bg-slate-200 dark:bg-slate-700 rounded-xs w-1/3"></div>
-                            <div class="h-3.5 bg-slate-200 dark:bg-slate-700 rounded-xs w-1/2"></div>
+                            <div class="h-2 bg-slate-200 dark:bg-slate-700 rounded-sm w-1/3"></div>
+                            <div class="h-3.5 bg-slate-200 dark:bg-slate-700 rounded-sm w-1/2"></div>
                         </div>
                         <div class="space-y-2">
-                            <div class="h-2 bg-slate-200 dark:bg-slate-700 rounded-xs w-1/2"></div>
-                            <div class="h-3.5 bg-slate-200 dark:bg-slate-700 rounded-xs w-3/4"></div>
+                            <div class="h-2 bg-slate-200 dark:bg-slate-700 rounded-sm w-1/2"></div>
+                            <div class="h-3.5 bg-slate-200 dark:bg-slate-700 rounded-sm w-3/4"></div>
                         </div>
                     </div>
                     <div class="border-t border-slate-200 dark:border-slate-700/80 pt-4 space-y-2">
-                        <div class="h-2 bg-slate-200 dark:bg-slate-700 rounded-xs w-1/3"></div>
+                        <div class="h-2 bg-slate-200 dark:bg-slate-700 rounded-sm w-1/3"></div>
                         <div class="flex gap-4">
-                            <div class="h-3.5 bg-slate-200 dark:bg-slate-700 rounded-xs w-16"></div>
-                            <div class="h-3.5 bg-slate-200 dark:bg-slate-700 rounded-xs w-16"></div>
+                            <div class="h-3.5 bg-slate-200 dark:bg-slate-700 rounded-sm w-16"></div>
+                            <div class="h-3.5 bg-slate-200 dark:bg-slate-700 rounded-sm w-16"></div>
                         </div>
                     </div>
                     <div class="border-t border-slate-200 dark:border-slate-700/80 pt-4 space-y-3">
-                        <div class="h-2 bg-slate-200 dark:bg-slate-700 rounded-xs w-1/3"></div>
-                        <div class="h-14 bg-slate-200 dark:bg-slate-700 rounded-xs w-full"></div>
+                        <div class="h-2 bg-slate-200 dark:bg-slate-700 rounded-sm w-1/3"></div>
+                        <div class="h-14 bg-slate-200 dark:bg-slate-700 rounded-sm w-full"></div>
                     </div>
                 </div>
             </template>
@@ -194,7 +194,7 @@
 
             <!-- Drag and Drop Overlay -->
             <div x-show="isDragging" 
-                 class="absolute inset-0 bg-indigo-600/10 dark:bg-indigo-600/20 backdrop-blur-xs flex flex-col items-center justify-center border-2 border-dashed border-indigo-500 z-[99] transition-all m-4 rounded-xs"
+                 class="absolute inset-0 bg-indigo-600/10 dark:bg-indigo-600/20 backdrop-blur-xs flex flex-col items-center justify-center border-2 border-dashed border-indigo-500 z-[99] transition-all m-4 rounded-sm"
                  @dragover.prevent
                  @dragleave.prevent="isDragging = false"
                  @drop.prevent="handleDrop($event); isDragging = false"
@@ -212,10 +212,10 @@
                     <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Discussion Board</span>
                 </div>
                 <!-- Filter Segmented Tabs -->
-                <div class="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xs border border-slate-200/60 dark:border-slate-700">
+                <div class="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-sm border border-slate-300/60 dark:border-slate-700">
                     <button @click="showOnlyMediaAndLinks = false" 
                             type="button" 
-                            class="px-2.5 py-0.5 text-[9.5px] font-bold rounded-xs transition-all cursor-pointer"
+                            class="px-2.5 py-0.5 text-[9.5px] font-bold rounded-sm transition-all cursor-pointer"
                             :class="!showOnlyMediaAndLinks 
                                 ? 'bg-white dark:bg-slate-700 text-indigo-650 dark:text-indigo-400 shadow-xs' 
                                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'">
@@ -223,7 +223,7 @@
                     </button>
                     <button @click="showOnlyMediaAndLinks = true" 
                             type="button" 
-                            class="px-2.5 py-0.5 text-[9.5px] font-bold rounded-xs transition-all cursor-pointer flex items-center gap-1"
+                            class="px-2.5 py-0.5 text-[9.5px] font-bold rounded-sm transition-all cursor-pointer flex items-center gap-1"
                             :class="showOnlyMediaAndLinks 
                                 ? 'bg-white dark:bg-slate-700 text-indigo-650 dark:text-indigo-400 shadow-xs' 
                                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'">
@@ -265,7 +265,7 @@
                         </template>
 
                         <!-- Chat bubble -->
-                        <div class="rounded-xs px-3.5 py-2 pb-5 text-xs shadow-xs relative flex flex-col min-w-[125px] w-auto max-w-full group"
+                        <div class="rounded-sm px-3.5 py-2 pb-5 text-xs shadow-xs relative flex flex-col min-w-[125px] w-auto max-w-full group"
                              :class="msg.user_id == {{ Auth::user()->id }} 
                                  ? 'bg-blue-600 dark:bg-indigo-600 text-white border-none bubble-out' 
                                  : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700 bubble-in'">
@@ -288,7 +288,7 @@
 
                             <!-- Image Preview in Chat Bubble (if it is an image file) -->
                             <template x-if="msg.file_path && isImageType(msg.file_type)">
-                                <div x-data="{ imageLoaded: false }" class="mt-1 mb-1.5 border border-slate-200/80 dark:border-slate-700 rounded-xs overflow-hidden bg-slate-100 dark:bg-slate-800 max-w-[220px] relative group min-h-[80px] flex items-center justify-center">
+                                <div x-data="{ imageLoaded: false }" class="mt-1 mb-1.5 border border-slate-200/80 dark:border-slate-700 rounded-sm overflow-hidden bg-slate-100 dark:bg-slate-800 max-w-[220px] relative group min-h-[80px] flex items-center justify-center">
                                     <!-- Loader Spinner -->
                                     <div x-show="!imageLoaded" class="absolute inset-0 flex items-center justify-center bg-slate-100/50 dark:bg-slate-800/50">
                                         <i class="fa-solid fa-spinner animate-spin text-indigo-500 text-sm"></i>
@@ -304,7 +304,7 @@
                                     <a x-show="imageLoaded"
                                        :href="msg.download_url" 
                                        download
-                                       class="absolute bottom-1.5 right-1.5 w-6.5 h-6.5 rounded-xs bg-slate-900/70 hover:bg-slate-900 text-white flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 cursor-pointer shadow-xs"
+                                       class="absolute bottom-1.5 right-1.5 w-6.5 h-6.5 rounded-sm bg-slate-900/70 hover:bg-slate-900 text-white flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 cursor-pointer shadow-xs"
                                        :title="'Download Image'">
                                         <i class="fa-solid fa-download text-[9px]"></i>
                                     </a>
@@ -313,7 +313,7 @@
 
                             <!-- Attachment (if non-image file) -->
                             <div x-show="msg.file_path && !isImageType(msg.file_type)" 
-                                  class="border rounded-xs p-2.5 flex items-center justify-between gap-3 text-xs mt-1 mb-1.5"
+                                  class="border rounded-sm p-2.5 flex items-center justify-between gap-3 text-xs mt-1 mb-1.5"
                                   :class="msg.user_id == {{ Auth::user()->id }} 
                                       ? 'bg-blue-700/50 border-blue-500/20 text-white' 
                                       : 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100'">
@@ -333,7 +333,7 @@
                                     <!-- Preview Button -->
                                     <template x-if="isFilePreviewable(msg.file_type)">
                                         <button @click="previewAttachment(msg)" 
-                                                class="w-7 h-7 flex items-center justify-center rounded-xs transition-colors border shadow-xs"
+                                                class="w-7 h-7 flex items-center justify-center rounded-sm transition-colors border shadow-xs"
                                                 :class="msg.user_id == {{ Auth::user()->id }}
                                                     ? 'bg-blue-800/90 hover:bg-blue-900 border-blue-700 text-white'
                                                     : 'bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200'"
@@ -345,7 +345,7 @@
                                     <!-- Download Button -->
                                     <a :href="msg.download_url" 
                                        download
-                                       class="w-7 h-7 flex items-center justify-center rounded-xs transition-colors border shadow-xs"
+                                       class="w-7 h-7 flex items-center justify-center rounded-sm transition-colors border shadow-xs"
                                        :class="msg.user_id == {{ Auth::user()->id }}
                                            ? 'bg-blue-800/90 hover:bg-blue-900 border-blue-700 text-white'
                                            : 'bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200'"
@@ -389,7 +389,7 @@
                 <!-- Pre-upload File Preview Cards (Multiple files support) -->
                 <div x-show="chatAttachments.length > 0" class="flex flex-col gap-1.5 mb-2.5 max-h-36 overflow-y-auto chat-files-scroll" x-cloak>
                     <template x-for="(file, index) in chatAttachments" :key="index">
-                        <div class="p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xs shadow-sm flex items-center justify-between gap-3 text-xs">
+                        <div class="p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm shadow-sm flex items-center justify-between gap-3 text-xs">
                             <div class="flex items-center gap-2 overflow-hidden">
                                 <span class="text-base flex-shrink-0" :class="getFileIcon(file.type)"></span>
                                 <div class="overflow-hidden">
@@ -397,7 +397,7 @@
                                     <span class="text-[9px] text-slate-400 block mt-0.5" x-text="(file.name.split('.').pop().toUpperCase() || 'FILE') + ' | ' + formatBytes(file.size)"></span>
                                 </div>
                             </div>
-                            <button @click="removeAttachment(index)" type="button" class="text-rose-500 hover:text-rose-700 font-bold text-sm w-5 h-5 flex items-center justify-center rounded-xs hover:bg-slate-100 dark:hover:bg-slate-855 cursor-pointer">
+                            <button @click="removeAttachment(index)" type="button" class="text-rose-500 hover:text-rose-700 font-bold text-sm w-5 h-5 flex items-center justify-center rounded-sm hover:bg-slate-100 dark:hover:bg-slate-855 cursor-pointer">
                                 &times;
                             </button>
                         </div>
@@ -407,47 +407,47 @@
                 <!-- Formatting Toolbar (shows when text is selected/blocked) -->
                 <div x-show="showFormatToolbar" 
                      x-transition 
-                     class="absolute bottom-[54px] left-[58px] z-20 p-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xs shadow-md flex items-center gap-1 w-fit" 
+                     class="absolute bottom-[54px] left-[58px] z-20 p-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm shadow-md flex items-center gap-1 w-fit" 
                      x-cloak>
                     <button type="button" @mousedown.prevent="applyFormatting('bold')" 
-                             class="w-6 h-6 flex items-center justify-center rounded-xs font-extrabold text-[11px] cursor-pointer" 
+                             class="w-6 h-6 flex items-center justify-center rounded-sm font-extrabold text-[11px] cursor-pointer" 
                              :class="isBoldActive ? 'bg-indigo-100 dark:bg-slate-700 text-indigo-600 dark:text-indigo-400' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700'"
                              title="Bold">
                         B
                     </button>
                     <button type="button" @mousedown.prevent="applyFormatting('italic')" 
-                             class="w-6 h-6 flex items-center justify-center rounded-xs italic font-serif text-[11px] cursor-pointer" 
+                             class="w-6 h-6 flex items-center justify-center rounded-sm italic font-serif text-[11px] cursor-pointer" 
                              :class="isItalicActive ? 'bg-indigo-100 dark:bg-slate-700 text-indigo-600 dark:text-indigo-400' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700'"
                              title="Italic">
                         I
                     </button>
                     <button type="button" @mousedown.prevent="applyFormatting('strike')" 
-                             class="w-6 h-6 flex items-center justify-center rounded-xs line-through text-[11px] cursor-pointer" 
+                             class="w-6 h-6 flex items-center justify-center rounded-sm line-through text-[11px] cursor-pointer" 
                              :class="isStrikeActive ? 'bg-indigo-100 dark:bg-slate-700 text-indigo-600 dark:text-indigo-400' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700'"
                              title="Strikethrough">
                         S
                     </button>
                     <button type="button" @mousedown.prevent="applyFormatting('code')" 
-                             class="w-6 h-6 flex items-center justify-center rounded-xs font-mono text-[10px] cursor-pointer" 
+                             class="w-6 h-6 flex items-center justify-center rounded-sm font-mono text-[10px] cursor-pointer" 
                              :class="isCodeActive ? 'bg-indigo-100 dark:bg-slate-700 text-indigo-600 dark:text-indigo-400' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700'"
                              title="Inline Code">
                         &lt;/&gt;
                     </button>
                     <div class="h-4 w-px bg-slate-200 dark:bg-slate-700 mx-0.5"></div>
                     <button type="button" @mousedown.prevent="applyFormatting('ol')" 
-                             class="w-6 h-6 flex items-center justify-center rounded-xs cursor-pointer" 
+                             class="w-6 h-6 flex items-center justify-center rounded-sm cursor-pointer" 
                              :class="isOlActive ? 'bg-indigo-100 dark:bg-slate-700 text-indigo-600 dark:text-indigo-400' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700'"
                              title="Ordered List">
                         <i class="fa-solid fa-list-ol text-[9.5px]"></i>
                     </button>
                     <button type="button" @mousedown.prevent="applyFormatting('ul')" 
-                             class="w-6 h-6 flex items-center justify-center rounded-xs cursor-pointer" 
+                             class="w-6 h-6 flex items-center justify-center rounded-sm cursor-pointer" 
                              :class="isUlActive ? 'bg-indigo-100 dark:bg-slate-700 text-indigo-600 dark:text-indigo-400' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700'"
                              title="Bullet List">
                         <i class="fa-solid fa-list-ul text-[9.5px]"></i>
                     </button>
                     <button type="button" @mousedown.prevent="applyFormatting('quote')" 
-                             class="w-6 h-6 flex items-center justify-center rounded-xs cursor-pointer" 
+                             class="w-6 h-6 flex items-center justify-center rounded-sm cursor-pointer" 
                              :class="isQuoteActive ? 'bg-indigo-100 dark:bg-slate-700 text-indigo-600 dark:text-indigo-400' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700'"
                              title="Blockquote">
                         <i class="fa-solid fa-quote-right text-[9.5px]"></i>
@@ -463,7 +463,7 @@
                            multiple>
                     <button type="button" 
                             @click="document.getElementById('chat-file-input').click()"
-                            class="w-9 h-9 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-350 hover:bg-slate-200/50 dark:hover:bg-slate-800 rounded-xs border border-slate-300 dark:border-slate-700 transition-colors cursor-pointer bg-white dark:bg-slate-800 flex-shrink-0"
+                            class="w-9 h-9 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-350 hover:bg-slate-200/50 dark:hover:bg-slate-800 rounded-sm border border-slate-300 dark:border-slate-700 transition-colors cursor-pointer bg-white dark:bg-slate-800 flex-shrink-0"
                             title="Attach files">
                         <i class="fa-solid fa-paperclip text-sm"></i>
                     </button>
@@ -479,13 +479,13 @@
                               @click="handleTextSelection($event)"
                               @blur="setTimeout(() => { showFormatToolbar = false; }, 200)"
                               placeholder="Write your message here... (Shift+Enter for newline)"
-                              class="flex-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xs px-3 py-2 text-xs focus:outline-none focus:border-indigo-500 dark:focus:border-indigo-500 text-slate-800 dark:text-slate-100 resize-none max-h-32 min-h-[36px] overflow-y-auto chat-textarea leading-relaxed"></textarea>
+                              class="flex-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-sm px-3 py-2 text-xs focus:outline-none focus:border-indigo-500 dark:focus:border-indigo-500 text-slate-800 dark:text-slate-100 resize-none max-h-32 min-h-[36px] overflow-y-auto chat-textarea leading-relaxed"></textarea>
 
                     <!-- Send Button -->
                     <button type="button" 
                             @click="sendChatMessage(); document.querySelector('.chat-textarea').style.height = '36px';"
                             :disabled="sendingMessage || (!chatInputMessage.trim() && chatAttachments.length === 0)"
-                            class="w-9 h-9 flex items-center justify-center bg-indigo-600 hover:bg-indigo-750 text-white rounded-xs transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-sm flex-shrink-0">
+                            class="w-9 h-9 flex items-center justify-center bg-indigo-600 hover:bg-indigo-750 text-white rounded-sm transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-sm flex-shrink-0">
                         <i class="fa-solid" :class="sendingMessage ? 'fa-spinner animate-spin text-xs' : 'fa-paper-plane text-xs'"></i>
                     </button>
                 </div>
@@ -498,7 +498,7 @@
          class="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-xs p-4" 
          x-cloak
          style="display: none;">
-        <div class="bg-white dark:bg-slate-800 w-full max-w-6xl h-[92vh] flex flex-col shadow-2xl border border-slate-200 dark:border-slate-700 rounded-xs overflow-hidden">
+        <div class="bg-white dark:bg-slate-800 w-full max-w-6xl h-[92vh] flex flex-col shadow-2xl border border-slate-200 dark:border-slate-700 rounded-sm overflow-hidden">
             <!-- Modal Header -->
             <div class="flex items-center justify-between px-5 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40">
                 <span class="text-xs font-bold text-slate-800 dark:text-white truncate flex items-center gap-2">
@@ -517,7 +517,7 @@
                     <i class="fa-solid fa-triangle-exclamation text-amber-500"></i>
                     <span><strong>Note:</strong> Microsoft Office Viewer cannot load files from <strong>localhost</strong>. Once deployed to a public server, the preview will render here automatically.</span>
                 </div>
-                <a :href="pdfPreviewUrl ? pdfPreviewUrl.split('?src=')[1] ? decodeURIComponent(pdfPreviewUrl.split('?src=')[1]) : pdfPreviewUrl : '#'" download class="px-2.5 py-1 bg-amber-600 hover:bg-amber-750 text-white rounded-xs font-bold whitespace-nowrap text-[10px]">
+                <a :href="pdfPreviewUrl ? pdfPreviewUrl.split('?src=')[1] ? decodeURIComponent(pdfPreviewUrl.split('?src=')[1]) : pdfPreviewUrl : '#'" download class="px-2.5 py-1 bg-amber-600 hover:bg-amber-750 text-white rounded-sm font-bold whitespace-nowrap text-[10px]">
                     Download instead
                 </a>
             </div>
@@ -1091,7 +1091,7 @@ window.inquiryProductChat = function() {
                   html = html.replace(/\n/g, '<br>');
               }
               const urlRegex = /(?<!href=")(https?:\/\/[^\s<]+)/g;
-              html = html.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-2 py-0.5 bg-sky-100 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400 rounded-xs border border-sky-200 dark:border-sky-800/30 hover:bg-sky-200 transition-colors font-semibold text-[11px] my-0.5 break-all max-w-full"><i class="fa-solid fa-link text-[9px]"></i>$1</a>');
+              html = html.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-2 py-0.5 bg-sky-100 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400 rounded-sm border border-sky-200 dark:border-sky-800/30 hover:bg-sky-200 transition-colors font-semibold text-[11px] my-0.5 break-all max-w-full"><i class="fa-solid fa-link text-[9px]"></i>$1</a>');
               return html;
           },
 

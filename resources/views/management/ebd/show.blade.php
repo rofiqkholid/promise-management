@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', 'EBD Detail · Promise Management')
 @section('page_title', 'EBD Detail')
@@ -13,20 +13,20 @@
         <div class="flex items-center pr-6 border-r border-slate-300 dark:border-slate-700 flex-shrink-0">
             <div class="flex gap-1.5">
                 <a href="{{ route('management.ebd.index') }}"
-                   class="inline-flex items-center justify-center gap-2 px-3 h-8 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 border border-slate-300 dark:border-slate-600 rounded-xs text-xs font-semibold text-slate-750 dark:text-slate-250 transition-all active:scale-98">
+                   class="inline-flex items-center justify-center gap-2 px-3 h-8 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 border border-slate-300 dark:border-slate-600 rounded-sm text-xs font-semibold text-slate-750 dark:text-slate-250 transition-all active:scale-98">
                     <i class="fa-solid fa-arrow-left text-[10px]"></i> Back
                 </a>
                 <button type="button" id="btn-open-import-modal"
-                        class="inline-flex items-center justify-center gap-2 px-3 h-8 bg-indigo-600 hover:bg-indigo-700 border border-transparent rounded-xs text-xs font-semibold text-white transition-all active:scale-98 cursor-pointer shadow-none">
+                        class="inline-flex items-center justify-center gap-2 px-3 h-8 bg-indigo-600 hover:bg-indigo-700 border border-transparent rounded-sm text-xs font-semibold text-white transition-all active:scale-98 cursor-pointer shadow-none">
                     <i class="fa-solid fa-file-import text-[10px]"></i> Import EBD
                 </button>
             </div>
         </div>        {{-- Metadata Row --}}
-        <div class="flex-1 flex flex-wrap lg:flex-nowrap items-center gap-y-3 px-4 py-2 border border-slate-300 dark:border-slate-800 rounded-xs bg-slate-50/40 dark:bg-slate-950/20 mx-2">
+        <div class="flex-1 flex flex-wrap lg:flex-nowrap items-center gap-y-3 px-4 py-2 border border-slate-300 dark:border-slate-800 rounded-sm bg-slate-50/40 dark:bg-slate-950/20 mx-2">
             
             {{-- WO Number --}}
             <div class="flex items-center gap-2.5 min-w-0 w-1/2 lg:w-[25%]">
-                <div class="w-8 h-8 flex items-center justify-center rounded-xs bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex-shrink-0">
+                <div class="w-8 h-8 flex items-center justify-center rounded-sm bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex-shrink-0">
                     <i class="fa-solid fa-file-invoice text-xs"></i>
                 </div>
                 <div class="min-w-0">
@@ -40,7 +40,7 @@
 
             {{-- Customer --}}
             <div class="flex items-center gap-2.5 min-w-0 w-1/2 lg:w-[40%] lg:px-4">
-                <div class="w-8 h-8 flex items-center justify-center rounded-xs bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex-shrink-0">
+                <div class="w-8 h-8 flex items-center justify-center rounded-sm bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex-shrink-0">
                     <i class="fa-solid fa-building text-xs"></i>
                 </div>
                 <div class="min-w-0 w-full">
@@ -59,7 +59,7 @@
 
             {{-- Project Model --}}
             <div class="flex items-center gap-2.5 min-w-0 w-1/2 lg:w-[20%] lg:px-4">
-                <div class="w-8 h-8 flex items-center justify-center rounded-xs bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex-shrink-0">
+                <div class="w-8 h-8 flex items-center justify-center rounded-sm bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex-shrink-0">
                     <i class="fa-solid fa-tags text-xs"></i>
                 </div>
                 <div class="min-w-0">
@@ -73,7 +73,7 @@
 
             {{-- EBD Date --}}
             <div class="flex items-center gap-2.5 min-w-0 w-1/2 lg:w-[15%] lg:pl-4">
-                <div class="w-8 h-8 flex items-center justify-center rounded-xs bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex-shrink-0">
+                <div class="w-8 h-8 flex items-center justify-center rounded-sm bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex-shrink-0">
                     <i class="fa-solid fa-calendar-days text-xs"></i>
                 </div>
                 <div class="min-w-0">
@@ -85,7 +85,7 @@
 
         {{-- Global Revision & Status --}}
         <div class="pl-6 border-l border-slate-300 dark:border-slate-700 flex-shrink-0 flex items-center gap-2.5">
-            <span class="px-2.5 py-1 text-xs font-mono font-bold border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-slate-850 dark:text-slate-100 rounded-xs tracking-wide">
+            <span class="px-2.5 py-1 text-xs font-mono font-bold border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-slate-850 dark:text-slate-100 rounded-sm tracking-wide">
                 REV: {{ $ebdHeader->revision }}
             </span>
             @php
@@ -94,7 +94,7 @@
                     default    => 'bg-blue-100/70 text-blue-700 border-blue-350/60 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-900/30',
                 };
             @endphp
-            <span class="px-2.5 py-1 text-xs font-semibold border rounded-xs tracking-wide {{ $statusCls }}">
+            <span class="px-2.5 py-1 text-xs font-semibold border rounded-sm tracking-wide {{ $statusCls }}">
                 {{ $ebdHeader->status ?? 'Draft' }}
             </span>
         </div>
@@ -111,10 +111,10 @@
                 </span>
                 <div class="flex items-center gap-1.5">
                     <button type="button" id="btn-add-root-part" title="Add Root Part"
-                            class="w-6 h-6 flex items-center justify-center bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-750 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xs transition-colors cursor-pointer">
+                            class="w-6 h-6 flex items-center justify-center bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-750 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-sm transition-colors cursor-pointer">
                         <i class="fa-solid fa-plus text-[10px]"></i>
                     </button>
-                    <span class="text-[10px] bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 px-2 py-0.5 rounded-xs font-mono font-semibold">
+                    <span class="text-[10px] bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 px-2 py-0.5 rounded-sm font-mono font-semibold">
                         {{ $ebdHeader->items->count() }} items
                     </span>
                 </div>
@@ -164,10 +164,10 @@
                     @endphp
                     <div data-item-id="{{ $item->id }}"
                          data-outline="{{ $outlineNumber }}"
-                         class="bom-item-row group flex items-center gap-2.5 p-2 rounded-xs cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/50 border-l-2 border-transparent transition-all"
+                         class="bom-item-row group flex items-center gap-2.5 p-2 rounded-sm cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/50 border-l-2 border-transparent transition-all"
                          style="padding-left: {{ max($paddingLeft + 8, 8) }}px">
                         
-                        <span class="flex-shrink-0 px-1.5 py-0.5 min-w-5 h-5 flex items-center justify-center rounded-xs text-[9px] font-bold bg-slate-200 dark:bg-slate-700 text-slate-750 dark:text-slate-300 group-hover:bg-slate-300 dark:group-hover:bg-slate-600 transition-colors">
+                        <span class="flex-shrink-0 px-1.5 py-0.5 min-w-5 h-5 flex items-center justify-center rounded-sm text-[9px] font-bold bg-slate-200 dark:bg-slate-700 text-slate-750 dark:text-slate-300 group-hover:bg-slate-300 dark:group-hover:bg-slate-600 transition-colors">
                             {{ $outlineNumber }}
                         </span>
                         
@@ -181,7 +181,7 @@
                         </div>
                         
                         <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-1 flex-shrink-0">
-                            <button type="button" class="btn-add-sub-part w-5 h-5 flex items-center justify-center bg-white dark:bg-slate-800 border border-slate-250 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-450 rounded-xs transition-colors cursor-pointer" title="Add sub-part" data-parent-id="{{ $item->id }}">
+                            <button type="button" class="btn-add-sub-part w-5 h-5 flex items-center justify-center bg-white dark:bg-slate-800 border border-slate-250 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-450 rounded-sm transition-colors cursor-pointer" title="Add sub-part" data-parent-id="{{ $item->id }}">
                                 <i class="fa-solid fa-plus text-[9px]"></i>
                             </button>
                         </div>
@@ -202,7 +202,7 @@
                 {{-- Card Title Bar (Active Part Identifiers) --}}
             <div class="px-5 py-4 bg-slate-100 dark:bg-slate-900/50 border-b border-slate-300 dark:border-slate-600 flex items-center justify-between flex-shrink-0">
                 <div class="flex items-stretch gap-3">
-                    <div id="active-part-outline" class="flex-shrink-0 px-2.5 flex items-center justify-center rounded-xs text-xs font-bold bg-slate-200 dark:bg-slate-700 text-slate-750 dark:text-slate-300 min-w-[54px]">
+                    <div id="active-part-outline" class="flex-shrink-0 px-2.5 flex items-center justify-center rounded-sm text-xs font-bold bg-slate-200 dark:bg-slate-700 text-slate-750 dark:text-slate-300 min-w-[54px]">
                         —
                     </div>
                     <div class="flex flex-col justify-center">
@@ -211,10 +211,10 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <button type="button" id="btn-edit-specs" class="hidden w-8 h-8 flex items-center justify-center bg-white hover:bg-slate-100 border border-slate-300 dark:border-slate-700 text-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-750 rounded-xs transition-all cursor-pointer" title="Edit Specs">
+                    <button type="button" id="btn-edit-specs" class="hidden w-8 h-8 flex items-center justify-center bg-white hover:bg-slate-100 border border-slate-300 dark:border-slate-700 text-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-750 rounded-sm transition-all cursor-pointer" title="Edit Specs">
                         <i class="fa-regular fa-pen-to-square text-[13px]"></i>
                     </button>
-                    <button type="button" id="btn-delete-part" class="hidden w-8 h-8 flex items-center justify-center bg-white hover:bg-rose-50 border border-slate-300 dark:border-slate-700 text-rose-600 dark:bg-slate-900 dark:text-rose-400 dark:hover:bg-rose-950/20 rounded-xs transition-all cursor-pointer" title="Delete Part">
+                    <button type="button" id="btn-delete-part" class="hidden w-8 h-8 flex items-center justify-center bg-white hover:bg-rose-50 border border-slate-300 dark:border-slate-700 text-rose-600 dark:bg-slate-900 dark:text-rose-400 dark:hover:bg-rose-950/20 rounded-sm transition-all cursor-pointer" title="Delete Part">
                         <i class="fa-regular fa-trash-can text-[13px]"></i>
                     </button>
                 </div>
@@ -263,35 +263,35 @@
                             <div>
                                 <h4 class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3 border-b border-slate-300 dark:border-slate-600 pb-1.5">Part Dimensions & Quantities</h4>
                                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-xs">
+                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-sm">
                                         <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">PART RANK</span>
                                         <span id="info-part-rank" class="font-medium text-slate-900 dark:text-slate-100 text-sm">—</span>
                                     </div>
-                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-xs">
+                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-sm">
                                         <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">PART STATUS</span>
                                         <span id="info-part-status" class="font-medium text-slate-900 dark:text-slate-100 text-sm">—</span>
                                     </div>
-                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-xs">
+                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-sm">
                                         <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">QTY/UNIT</span>
                                         <span id="spec-qty-unit" class="font-medium text-slate-900 dark:text-slate-100 text-sm">—</span>
                                     </div>
-                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-xs">
+                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-sm">
                                         <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">PCS/MONTH</span>
                                         <span id="spec-pcs-month" class="font-medium text-slate-900 dark:text-slate-100 text-sm">—</span>
                                     </div>
-                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-xs">
+                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-sm">
                                         <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">WIDTH (mm)</span>
                                         <span id="spec-width" class="font-medium text-slate-900 dark:text-slate-100 text-sm font-mono">—</span>
                                     </div>
-                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-xs">
+                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-sm">
                                         <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">LENGTH (mm)</span>
                                         <span id="spec-length" class="font-medium text-slate-900 dark:text-slate-100 text-sm font-mono">—</span>
                                     </div>
-                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-xs">
+                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-sm">
                                         <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">HEIGHT (mm)</span>
                                         <span id="spec-height" class="font-medium text-slate-900 dark:text-slate-100 text-sm font-mono">—</span>
                                     </div>
-                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-xs">
+                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-sm">
                                         <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">WEIGHT (kg)</span>
                                         <span id="spec-weight" class="font-medium text-slate-900 dark:text-slate-100 text-sm font-mono">—</span>
                                     </div>
@@ -302,31 +302,31 @@
                             <div>
                                 <h4 class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3 border-b border-slate-300 dark:border-slate-600 pb-1.5">Material Details</h4>
                                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-xs">
+                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-sm">
                                         <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">MATERIAL SPEC</span>
                                         <span id="mat-spec" class="font-semibold text-emerald-700 dark:text-emerald-300 text-sm">—</span>
                                     </div>
-                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-xs">
+                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-sm">
                                         <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">THICKNESS (mm)</span>
                                         <span id="mat-thick" class="font-medium text-slate-900 dark:text-slate-100 text-sm font-mono">—</span>
                                     </div>
-                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-xs">
+                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-sm">
                                         <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">SHEET WIDTH (mm)</span>
                                         <span id="mat-width" class="font-medium text-slate-900 dark:text-slate-100 text-sm font-mono">—</span>
                                     </div>
-                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-xs">
+                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-sm">
                                         <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">SHEET LENGTH (mm)</span>
                                         <span id="mat-length" class="font-medium text-slate-900 dark:text-slate-100 text-sm font-mono">—</span>
                                     </div>
-                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-xs">
+                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-sm">
                                         <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">PCS/SHEET</span>
                                         <span id="mat-pcs-sheet" class="font-medium text-slate-900 dark:text-slate-100 text-sm font-mono">—</span>
                                     </div>
-                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-xs">
+                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-sm">
                                         <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">WEIGHT/PCS</span>
                                         <span id="mat-weight-pcs" class="font-medium text-slate-900 dark:text-slate-100 text-sm font-mono">—</span>
                                     </div>
-                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-xs">
+                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-sm">
                                         <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">YIELD RATIO</span>
                                         <span id="mat-yield" class="font-semibold text-indigo-600 dark:text-indigo-400 text-sm">—</span>
                                     </div>
@@ -336,9 +336,9 @@
 
                         {{-- Sketch / Drawing (Right Side) --}}
                         <div class="w-full lg:w-[320px] flex-shrink-0">
-                            <div id="sketch-card" class="border border-slate-200 dark:border-slate-700 bg-slate-100/50 dark:bg-slate-900/30 p-4 rounded-xs w-full flex flex-col min-h-[300px]">
+                            <div id="sketch-card" class="border border-slate-200 dark:border-slate-700 bg-slate-100/50 dark:bg-slate-900/30 p-4 rounded-sm w-full flex flex-col min-h-[300px]">
                                 <h4 class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3 border-b border-slate-350 dark:border-slate-650 pb-1.5">Sketch / Drawing</h4>
-                                <div id="sketch-wrapper" class="flex-1 flex items-center justify-center bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-xs p-3 min-h-[220px]">
+                                <div id="sketch-wrapper" class="flex-1 flex items-center justify-center bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-sm p-3 min-h-[220px]">
                                     <x-image-viewer 
                                         id="sketch-img"
                                         placeholderId="sketch-placeholder"
@@ -357,20 +357,20 @@
                     <div class="space-y-6">
                         <div>
                             <h4 class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3 border-b border-slate-300 dark:border-slate-600 pb-1.5">Packing & Transport Details</h4>
-                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xs p-4 shadow-sm">
-                                <div class="p-3 bg-slate-100/50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xs">
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-sm p-4 shadow-sm">
+                                <div class="p-3 bg-slate-100/50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-sm">
                                     <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">PACKING TYPE</span>
                                     <span id="pack-type" class="font-medium text-slate-900 dark:text-slate-100 text-sm">—</span>
                                 </div>
-                                <div class="p-3 bg-slate-100/50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xs">
+                                <div class="p-3 bg-slate-100/50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-sm">
                                     <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">PCS/PACK</span>
                                     <span id="pack-pcs" class="font-medium text-slate-900 dark:text-slate-100 text-sm">—</span>
                                 </div>
-                                <div class="p-3 bg-slate-100/50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xs">
+                                <div class="p-3 bg-slate-100/50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-sm">
                                     <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">PART VOL (m²)</span>
                                     <span id="part-vol-m2" class="font-medium text-slate-900 dark:text-slate-100 text-sm font-mono">—</span>
                                 </div>
-                                <div class="p-3 bg-slate-100/50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xs">
+                                <div class="p-3 bg-slate-100/50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-sm">
                                     <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">TRUCK VOL (m²)</span>
                                     <span id="truck-vol-m2" class="font-medium text-slate-900 dark:text-slate-100 text-sm font-mono">—</span>
                                 </div>
@@ -383,11 +383,11 @@
                 <div id="card-tab-tooling" class="card-tab-panel hidden space-y-3">
                     <div class="flex justify-between items-center">
                         <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Tooling Processes</span>
-                        <button type="button" id="btn-add-tooling" class="px-3.5 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xs shadow-sm flex items-center gap-1.5 transition-all cursor-pointer">
+                        <button type="button" id="btn-add-tooling" class="px-3.5 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-sm shadow-sm flex items-center gap-1.5 transition-all cursor-pointer">
                             <i class="fa-solid fa-plus text-[10px]"></i> Add Tooling
                         </button>
                     </div>
-                    <div class="overflow-x-auto border border-slate-300 dark:border-slate-700 rounded-xs bg-white dark:bg-slate-900">
+                    <div class="overflow-x-auto border border-slate-300 dark:border-slate-700 rounded-sm bg-white dark:bg-slate-900">
                         <table class="w-full text-xs text-left border-collapse">
                             <thead>
                                 <tr class="bg-slate-100 dark:bg-slate-900 font-bold text-slate-500 uppercase tracking-wider text-[10px] divide-x divide-slate-300 dark:divide-slate-700 border-b border-slate-300 dark:border-slate-700">
@@ -421,11 +421,11 @@
                 <div id="card-tab-addprocess" class="card-tab-panel hidden space-y-3">
                     <div class="flex justify-between items-center">
                         <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Additional Processes</span>
-                        <button type="button" id="btn-add-addprocess" class="px-3.5 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xs shadow-sm flex items-center gap-1.5 transition-all cursor-pointer">
+                        <button type="button" id="btn-add-addprocess" class="px-3.5 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-sm shadow-sm flex items-center gap-1.5 transition-all cursor-pointer">
                             <i class="fa-solid fa-plus text-[10px]"></i> Add Process
                         </button>
                     </div>
-                    <div class="overflow-x-auto border border-slate-300 dark:border-slate-700 rounded-xs bg-white dark:bg-slate-900">
+                    <div class="overflow-x-auto border border-slate-300 dark:border-slate-700 rounded-sm bg-white dark:bg-slate-900">
                         <table class="w-full text-xs text-left border-collapse">
                             <thead>
                                 <tr class="bg-slate-100 dark:bg-slate-900 font-bold text-slate-500 uppercase tracking-wider text-[10px] divide-x divide-slate-300 dark:divide-slate-700 border-b border-slate-300 dark:border-slate-700">
@@ -454,20 +454,20 @@
                             <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">List of standard parts and components for this part</p>
                         </div>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xs p-4 shadow-sm">
-                        <div class="p-3 bg-slate-100/50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xs">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-sm p-4 shadow-sm">
+                        <div class="p-3 bg-slate-100/50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-sm">
                             <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">STD PART NO</span>
                             <span id="std-part-no" class="font-semibold text-indigo-600 dark:text-indigo-400 text-sm font-mono">—</span>
                         </div>
-                        <div class="p-3 bg-slate-100/50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xs">
+                        <div class="p-3 bg-slate-100/50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-sm">
                             <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">STD PART NAME</span>
                             <span id="std-part-name" class="font-semibold text-slate-900 dark:text-slate-100 text-sm">—</span>
                         </div>
-                        <div class="p-3 bg-slate-100/50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xs">
+                        <div class="p-3 bg-slate-100/50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-sm">
                             <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">STD QUANTITY</span>
                             <span id="std-qty" class="font-semibold text-emerald-600 dark:text-emerald-400 text-sm">—</span>
                         </div>
-                        <div class="p-3 bg-slate-100/50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-xs">
+                        <div class="p-3 bg-slate-100/50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-sm">
                             <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">UNIT OF MEASURE (UOM)</span>
                             <span id="std-uom" class="font-semibold text-slate-800 dark:text-slate-200 text-sm font-mono">—</span>
                         </div>
@@ -482,7 +482,7 @@
                         <h4 class="text-xs font-bold text-slate-700 dark:text-slate-350 uppercase tracking-wider flex items-center gap-2">
                             <i class="fa-solid fa-calculator text-indigo-500"></i> Tooling Cost/FG Summary
                         </h4>
-                        <div class="overflow-x-auto border border-slate-300 dark:border-slate-700 rounded-xs bg-white dark:bg-slate-900">
+                        <div class="overflow-x-auto border border-slate-300 dark:border-slate-700 rounded-sm bg-white dark:bg-slate-900">
                             <table class="w-full text-xs text-center border-collapse">
                                 <thead>
                                     <tr class="bg-slate-100 dark:bg-slate-800 font-bold text-slate-700 dark:text-slate-300 border-b border-slate-300 dark:border-slate-700">
@@ -546,7 +546,7 @@
                         <h4 class="text-xs font-bold text-slate-700 dark:text-slate-350 uppercase tracking-wider flex items-center gap-2">
                             <i class="fa-solid fa-cubes text-amber-500"></i> Product Data & Parameters Summary
                         </h4>
-                        <div class="overflow-x-auto border border-slate-300 dark:border-slate-700 rounded-xs bg-white dark:bg-slate-900">
+                        <div class="overflow-x-auto border border-slate-300 dark:border-slate-700 rounded-sm bg-white dark:bg-slate-900">
                             <table class="w-full text-xs border-collapse">
                                 <thead>
                                     <tr class="bg-slate-100 dark:bg-slate-800 font-bold text-slate-700 dark:text-slate-300 border-b border-slate-300 dark:border-slate-700">
@@ -614,7 +614,7 @@
 
 {{-- ===== IMPORT MODAL ===== --}}
 <div id="import-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm">
-    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-705 rounded-xs shadow-2xl w-full max-w-lg mx-4 animate-fade-in">
+    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-705 rounded-sm shadow-2xl w-full max-w-lg mx-4 animate-fade-in">
 
         {{-- Modal Header --}}
         <div class="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-700">
@@ -623,7 +623,7 @@
                 <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">Upload an XLSX file to update or create a new EBD revision</p>
             </div>
             <button type="button" id="btn-close-import-modal"
-                    class="w-7 h-7 flex items-center justify-center rounded-xs text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
+                    class="w-7 h-7 flex items-center justify-center rounded-sm text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
                 <i class="fa-solid fa-xmark text-sm"></i>
             </button>
         </div>
@@ -643,7 +643,7 @@
                     <label class="block text-[11px] font-semibold text-slate-605 dark:text-slate-400 uppercase tracking-wider">
                         Import Action
                     </label>
-                    <div class="flex flex-col gap-2 bg-slate-50 dark:bg-slate-900/30 p-2.5 border border-slate-200 dark:border-slate-700 rounded-xs">
+                    <div class="flex flex-col gap-2 bg-slate-50 dark:bg-slate-900/30 p-2.5 border border-slate-200 dark:border-slate-700 rounded-sm">
                         <label class="flex items-center gap-2.5 cursor-pointer text-xs font-semibold text-slate-700 dark:text-slate-205 select-none">
                             <input type="radio" name="import_mode" value="overwrite" checked
                                    class="h-3.5 w-3.5 border-slate-300 text-indigo-600 focus:ring-0 cursor-pointer">
@@ -658,7 +658,7 @@
                 </div>
 
                 {{-- Metadata Info Display --}}
-                <div class="bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700 rounded-xs p-3 text-xs space-y-1.5 select-none">
+                <div class="bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700 rounded-sm p-3 text-xs space-y-1.5 select-none">
                     <div class="flex justify-between">
                         <span class="text-slate-500">Work Order (SPK):</span>
                         <span class="font-semibold text-slate-800 dark:text-slate-200">{{ $ebdHeader->workOrder->wo_number ?? '—' }}</span>
@@ -681,7 +681,7 @@
                         </label>
                         <input type="date" name="date" id="input-date" required
                                value="{{ date('Y-m-d') }}"
-                               class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-205 focus:outline-none focus:border-indigo-500 transition-all">
+                               class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-205 focus:outline-none focus:border-indigo-500 transition-all">
                     </div>
                     <div>
                         <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
@@ -689,7 +689,7 @@
                         </label>
                         <input type="text" name="revision" id="input-revision" readonly
                                value="{{ $ebdHeader->revision }}" placeholder="e.g. 0, 1, A"
-                               class="w-full px-3 py-2 text-xs bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-205 focus:outline-none focus:border-indigo-500 transition-all">
+                               class="w-full px-3 py-2 text-xs bg-slate-100 dark:bg-slate-950 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-205 focus:outline-none focus:border-indigo-500 transition-all">
                     </div>
                 </div>
 
@@ -699,7 +699,7 @@
                         EBD File (XLSX) <span class="text-rose-500">*</span>
                     </label>
                     <div id="drop-zone"
-                         class="relative border border-dashed border-slate-300 dark:border-slate-600 rounded-xs p-5 text-center cursor-pointer hover:border-indigo-500 hover:bg-indigo-50/20 dark:hover:bg-indigo-950/20 transition-all group">
+                         class="relative border border-dashed border-slate-300 dark:border-slate-600 rounded-sm p-5 text-center cursor-pointer hover:border-indigo-500 hover:bg-indigo-50/20 dark:hover:bg-indigo-950/20 transition-all group">
                         <input type="file" name="file_ebd" id="input-file-ebd" required
                                accept=".xlsx,.zip"
                                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
@@ -719,18 +719,18 @@
                 </div>
 
                 {{-- Import Result Alert Container (Errors/Warnings) --}}
-                <div id="importResult" class="hidden text-xs rounded-xs border"></div>
+                <div id="importResult" class="hidden text-xs rounded-sm border"></div>
 
             </div>
 
             {{-- Modal Footer --}}
             <div class="px-5 py-3.5 bg-slate-50 dark:bg-slate-900/30 border-t border-slate-200 dark:border-slate-700 flex items-center justify-end gap-2 rounded-b-xs">
                 <button type="button" id="btn-cancel-import"
-                        class="px-4 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600 rounded-xs hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
+                        class="px-4 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600 rounded-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
                     Cancel
                 </button>
                 <button type="submit" id="btn-submit-import"
-                        class="px-4 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xs shadow-sm hover:shadow transition-all flex items-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed">
+                        class="px-4 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-sm shadow-sm hover:shadow transition-all flex items-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed">
                     <i class="fa-solid fa-file-import text-[10px]"></i>
                     <span id="btn-submit-text">Start Import</span>
                     <span id="btn-submit-spinner" class="hidden">
@@ -746,13 +746,13 @@
 
 {{-- ===== PART MODAL ===== --}}
 <div id="part-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm">
-    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xs shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] flex flex-col animate-fade-in">
+    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] flex flex-col animate-fade-in">
         <div class="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-700 flex-shrink-0">
             <div>
                 <h2 id="part-modal-title" class="text-sm font-bold text-slate-850 dark:text-white">Add Part</h2>
                 <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">Specify part details, dimensions, and specifications</p>
             </div>
-            <button type="button" class="btn-close-part-modal w-7 h-7 flex items-center justify-center rounded-xs text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
+            <button type="button" class="btn-close-part-modal w-7 h-7 flex items-center justify-center rounded-sm text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
                 <i class="fa-solid fa-xmark text-sm"></i>
             </button>
         </div>
@@ -768,11 +768,11 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Part No <span class="text-rose-500">*</span></label>
-                            <input type="text" name="part_no" id="part-input-no" required class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                            <input type="text" name="part_no" id="part-input-no" required class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                         </div>
                         <div>
                             <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Part Name <span class="text-rose-500">*</span></label>
-                            <input type="text" name="part_name" id="part-input-name" required class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                            <input type="text" name="part_name" id="part-input-name" required class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                         </div>
                     </div>
                 </div>
@@ -783,7 +783,7 @@
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                         <div>
                             <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Part Rank</label>
-                            <select name="part_rank" id="part-input-rank" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                            <select name="part_rank" id="part-input-rank" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                                 <option value="">—</option>
                                 <option value="A">A</option>
                                 <option value="B">B</option>
@@ -793,31 +793,31 @@
                         </div>
                         <div>
                             <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Part Status</label>
-                            <input type="text" name="status" id="part-input-status" placeholder="e.g. NEW PART" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                            <input type="text" name="status" id="part-input-status" placeholder="e.g. NEW PART" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                         </div>
                         <div>
                             <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Qty/Unit</label>
-                            <input type="number" name="qty_unit" id="part-input-qty" min="1" value="1" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                            <input type="number" name="qty_unit" id="part-input-qty" min="1" value="1" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                         </div>
                         <div>
                             <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Pcs/Month</label>
-                            <input type="text" name="pcs_month" id="part-input-pcs-month" value="0" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                            <input type="text" name="pcs_month" id="part-input-pcs-month" value="0" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                         </div>
                         <div>
                             <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Width (mm)</label>
-                            <input type="number" step="0.1" name="width" id="part-input-width" value="0.0" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                            <input type="number" step="0.1" name="width" id="part-input-width" value="0.0" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                         </div>
                         <div>
                             <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Length (mm)</label>
-                            <input type="number" step="0.1" name="length" id="part-input-length" value="0.0" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                            <input type="number" step="0.1" name="length" id="part-input-length" value="0.0" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                         </div>
                         <div>
                             <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Height (mm)</label>
-                            <input type="number" step="0.1" name="height" id="part-input-height" value="0.0" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                            <input type="number" step="0.1" name="height" id="part-input-height" value="0.0" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                         </div>
                         <div>
                             <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Weight (kg)</label>
-                            <input type="number" step="0.001" name="weight" id="part-input-weight" value="0.000" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                            <input type="number" step="0.001" name="weight" id="part-input-weight" value="0.000" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                         </div>
                     </div>
                 </div>
@@ -828,31 +828,31 @@
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                         <div class="col-span-2">
                             <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Material Spec</label>
-                            <input type="text" name="mat_spec" id="part-input-mat-spec" placeholder="e.g. SPCC, SAPH440" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                            <input type="text" name="mat_spec" id="part-input-mat-spec" placeholder="e.g. SPCC, SAPH440" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                         </div>
                         <div>
                             <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-405 uppercase tracking-wider mb-1">Thickness (mm)</label>
-                            <input type="number" step="0.01" name="mat_thick" id="part-input-mat-thick" value="0.00" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                            <input type="number" step="0.01" name="mat_thick" id="part-input-mat-thick" value="0.00" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                         </div>
                         <div>
                             <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-405 uppercase tracking-wider mb-1">Yield Ratio (%)</label>
-                            <input type="number" step="0.01" name="mat_yield_ratio" id="part-input-mat-yield" value="0.00" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                            <input type="number" step="0.01" name="mat_yield_ratio" id="part-input-mat-yield" value="0.00" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                         </div>
                         <div>
                             <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-405 uppercase tracking-wider mb-1">Sheet Width (mm)</label>
-                            <input type="number" step="1" name="mat_width" id="part-input-mat-width" value="0" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                            <input type="number" step="1" name="mat_width" id="part-input-mat-width" value="0" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                         </div>
                         <div>
                             <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-405 uppercase tracking-wider mb-1">Sheet Length (mm)</label>
-                            <input type="number" step="1" name="mat_length" id="part-input-mat-length" value="0" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                            <input type="number" step="1" name="mat_length" id="part-input-mat-length" value="0" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                         </div>
                         <div>
                             <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-405 uppercase tracking-wider mb-1">Pcs / Sheet</label>
-                            <input type="number" step="1" name="mat_pcs_sheet" id="part-input-mat-pcs" value="0" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                            <input type="number" step="1" name="mat_pcs_sheet" id="part-input-mat-pcs" value="0" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                         </div>
                         <div>
                             <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-450 uppercase tracking-wider mb-1">Weight / Pcs (kg)</label>
-                            <input type="number" step="0.001" name="mat_weight_pcs" id="part-input-mat-weight" value="0.000" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                            <input type="number" step="0.001" name="mat_weight_pcs" id="part-input-mat-weight" value="0.000" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                         </div>
                     </div>
                 </div>
@@ -863,27 +863,27 @@
                     <div class="grid grid-cols-2 sm:grid-cols-6 gap-3">
                         <div>
                             <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Packing Type</label>
-                            <input type="text" name="packing_type" id="part-input-packing-type" placeholder="e.g. Box" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                            <input type="text" name="packing_type" id="part-input-packing-type" placeholder="e.g. Box" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                         </div>
                         <div>
                             <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Pcs / Packing</label>
-                            <input type="number" step="1" name="pcs_packing" id="part-input-pcs-packing" value="0" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                            <input type="number" step="1" name="pcs_packing" id="part-input-pcs-packing" value="0" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                         </div>
                         <div>
                             <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Std Part No</label>
-                            <input type="text" name="std_part_no" id="part-input-std-no" placeholder="e.g. Std-01" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                            <input type="text" name="std_part_no" id="part-input-std-no" placeholder="e.g. Std-01" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                         </div>
                         <div>
                             <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Std Part Name</label>
-                            <input type="text" name="std_part_name" id="part-input-std-name" placeholder="e.g. Bolt M8x25" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                            <input type="text" name="std_part_name" id="part-input-std-name" placeholder="e.g. Bolt M8x25" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                         </div>
                         <div>
                             <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Std Qty</label>
-                            <input type="number" step="1" name="std_qty" id="part-input-std-qty" value="0" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                            <input type="number" step="1" name="std_qty" id="part-input-std-qty" value="0" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                         </div>
                         <div>
                             <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Std UoM</label>
-                            <input type="text" name="std_uom" id="part-input-std-uom" placeholder="e.g. pcs, meter" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                            <input type="text" name="std_uom" id="part-input-std-uom" placeholder="e.g. pcs, meter" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                         </div>
                     </div>
                 </div>
@@ -891,7 +891,7 @@
                 <!-- Sketch File Upload -->
                 <div>
                     <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Sketch Image (PNG/JPG)</label>
-                    <div id="sketch-dropzone" class="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-400 rounded-xs p-4 flex flex-col items-center justify-center transition-colors cursor-pointer bg-slate-50/50 dark:bg-slate-900/50 min-h-[100px] relative">
+                    <div id="sketch-dropzone" class="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-400 rounded-sm p-4 flex flex-col items-center justify-center transition-colors cursor-pointer bg-slate-50/50 dark:bg-slate-900/50 min-h-[100px] relative">
                         <input type="file" name="sketch" id="part-input-sketch" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20">
                         <div class="flex flex-col items-center justify-center gap-1.5 text-center pointer-events-none text-slate-500 dark:text-slate-400" id="sketch-dropzone-prompt">
                             <i class="fa-solid fa-cloud-arrow-up text-xl text-slate-400 dark:text-slate-500"></i>
@@ -915,10 +915,10 @@
             </div>
             
             <div class="px-5 py-3.5 bg-slate-50 dark:bg-slate-900/30 border-t border-slate-200 dark:border-slate-700 flex items-center justify-end gap-2 rounded-b-xs flex-shrink-0">
-                <button type="button" class="btn-close-part-modal px-4 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600 rounded-xs hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
+                <button type="button" class="btn-close-part-modal px-4 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600 rounded-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
                     Cancel
                 </button>
-                <button type="submit" class="px-4 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xs shadow-sm hover:shadow transition-all flex items-center gap-1.5 cursor-pointer">
+                <button type="submit" class="px-4 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-sm shadow-sm hover:shadow transition-all flex items-center gap-1.5 cursor-pointer">
                     <i class="fa-regular fa-floppy-disk text-[10px]"></i> Save Part
                 </button>
             </div>
@@ -928,13 +928,13 @@
 
 {{-- ===== TOOLING PROCESS MODAL ===== --}}
 <div id="tooling-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm">
-    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xs shadow-2xl w-full max-w-lg mx-4 flex flex-col animate-fade-in">
+    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm shadow-2xl w-full max-w-lg mx-4 flex flex-col animate-fade-in">
         <div class="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-700">
             <div>
                 <h2 id="tooling-modal-title" class="text-sm font-bold text-slate-850 dark:text-white">Add Tooling Process</h2>
                 <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">Specify press tooling operations and dimensions</p>
             </div>
-            <button type="button" class="btn-close-tooling-modal w-7 h-7 flex items-center justify-center rounded-xs text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
+            <button type="button" class="btn-close-tooling-modal w-7 h-7 flex items-center justify-center rounded-sm text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
                 <i class="fa-solid fa-xmark text-sm"></i>
             </button>
         </div>
@@ -946,24 +946,24 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Rank</label>
-                        <input type="text" name="tool_rank" id="tooling-input-rank" placeholder="e.g. A" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                        <input type="text" name="tool_rank" id="tooling-input-rank" placeholder="e.g. A" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                     </div>
                     <div>
                         <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Category</label>
-                        <input type="text" name="category" id="tooling-input-cat" placeholder="e.g. Press" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                        <input type="text" name="category" id="tooling-input-cat" placeholder="e.g. Press" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                     </div>
                     <div>
                         <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">OP</label>
-                        <input type="number" step="1" name="op" id="tooling-input-op" placeholder="e.g. 10" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                        <input type="number" step="1" name="op" id="tooling-input-op" placeholder="e.g. 10" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                     </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Process Name <span class="text-rose-500">*</span></label>
-                        <input type="text" name="process_name" id="tooling-input-name" required placeholder="e.g. Blanking" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                        <input type="text" name="process_name" id="tooling-input-name" required placeholder="e.g. Blanking" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                     </div>
                     <div>
                         <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Machine Type</label>
-                        <input type="text" name="machine_type" id="tooling-input-machinetype" list="list-stp-machines" placeholder="e.g. Tandem" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                        <input type="text" name="machine_type" id="tooling-input-machinetype" list="list-stp-machines" placeholder="e.g. Tandem" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                         <datalist id="list-stp-machines">
                             <option value="Tandem">
                             <option value="Transfer">
@@ -975,50 +975,50 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Homeline</label>
-                        <input type="text" name="prod_homeline" id="tooling-input-home" placeholder="e.g. L-01" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                        <input type="text" name="prod_homeline" id="tooling-input-home" placeholder="e.g. L-01" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                     </div>
                     <div>
                         <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Tonnage (T)</label>
-                        <input type="number" name="tonnage" id="tooling-input-ton" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                        <input type="number" name="tonnage" id="tooling-input-ton" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                     </div>
                     <div>
                         <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Die Height (mm)</label>
-                        <input type="number" step="0.1" name="die_height" id="tooling-input-height" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                        <input type="number" step="0.1" name="die_height" id="tooling-input-height" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                     </div>
                     <div>
                         <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Status</label>
-                        <input type="text" name="tooling_status" id="tooling-input-status" placeholder="e.g. New" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                        <input type="text" name="tooling_status" id="tooling-input-status" placeholder="e.g. New" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                     </div>
                 </div>
                 <div class="grid grid-cols-5 gap-3">
                     <div>
                         <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Output</label>
-                        <input type="number" name="output" id="tooling-input-output" min="1" placeholder="e.g. 1" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                        <input type="number" name="output" id="tooling-input-output" min="1" placeholder="e.g. 1" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                     </div>
                     <div>
                         <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Output Type</label>
-                        <input type="text" name="output_type" id="tooling-input-output-type" placeholder="e.g. Cav, Part" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                        <input type="text" name="output_type" id="tooling-input-output-type" placeholder="e.g. Cav, Part" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                     </div>
                     <div>
                         <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Stroke</label>
-                        <input type="number" step="0.01" name="stroke" id="tooling-input-stroke" min="0.01" value="1.00" placeholder="1.00" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                        <input type="number" step="0.01" name="stroke" id="tooling-input-stroke" min="0.01" value="1.00" placeholder="1.00" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                     </div>
                     <div>
                         <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Qty</label>
-                        <input type="number" name="qty" id="tooling-input-qty" min="1" value="1" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                        <input type="number" name="qty" id="tooling-input-qty" min="1" value="1" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                     </div>
                     <div>
                         <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Price (IDR)</label>
-                        <input type="text" name="price_idr" id="tooling-input-price" placeholder="0" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                        <input type="text" name="price_idr" id="tooling-input-price" placeholder="0" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                     </div>
                 </div>
             </div>
             
             <div class="px-5 py-3.5 bg-slate-50 dark:bg-slate-900/30 border-t border-slate-200 dark:border-slate-700 flex items-center justify-end gap-2 rounded-b-xs">
-                <button type="button" class="btn-close-tooling-modal px-4 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600 rounded-xs hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
+                <button type="button" class="btn-close-tooling-modal px-4 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600 rounded-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
                     Cancel
                 </button>
-                <button type="submit" class="px-4 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xs shadow-sm hover:shadow transition-all flex items-center gap-1.5 cursor-pointer">
+                <button type="submit" class="px-4 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-sm shadow-sm hover:shadow transition-all flex items-center gap-1.5 cursor-pointer">
                     <i class="fa-regular fa-floppy-disk text-[10px]"></i> Save Tooling
                 </button>
             </div>
@@ -1028,13 +1028,13 @@
 
 {{-- ===== ADDITIONAL PROCESS MODAL ===== --}}
 <div id="addprocess-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm">
-    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xs shadow-2xl w-full max-w-sm mx-4 flex flex-col animate-fade-in">
+    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm shadow-2xl w-full max-w-sm mx-4 flex flex-col animate-fade-in">
         <div class="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-700">
             <div>
                 <h2 id="addprocess-modal-title" class="text-sm font-bold text-slate-850 dark:text-white">Add Process</h2>
                 <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">Specify auxiliary/manual operation cost details</p>
             </div>
-            <button type="button" class="btn-close-addprocess-modal w-7 h-7 flex items-center justify-center rounded-xs text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
+            <button type="button" class="btn-close-addprocess-modal w-7 h-7 flex items-center justify-center rounded-sm text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
                 <i class="fa-solid fa-xmark text-sm"></i>
             </button>
         </div>
@@ -1045,29 +1045,29 @@
             <div class="px-5 py-4 space-y-4">
                 <div>
                     <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Process Name <span class="text-rose-500">*</span></label>
-                    <input type="text" name="process_name" id="addprocess-input-name" required placeholder="e.g. Spot Welding" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                    <input type="text" name="process_name" id="addprocess-input-name" required placeholder="e.g. Spot Welding" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Qty</label>
-                        <input type="number" name="qty" id="addprocess-input-qty" min="1" value="1" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                        <input type="number" name="qty" id="addprocess-input-qty" min="1" value="1" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                     </div>
                     <div>
                         <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Unit</label>
-                        <input type="text" name="unit" id="addprocess-input-unit" placeholder="pcs" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                        <input type="text" name="unit" id="addprocess-input-unit" placeholder="pcs" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                     </div>
                 </div>
                 <div>
                     <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Cost (IDR)</label>
-                    <input type="text" name="cost_idr" id="addprocess-input-cost" placeholder="0" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                    <input type="text" name="cost_idr" id="addprocess-input-cost" placeholder="0" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                 </div>
             </div>
             
             <div class="px-5 py-3.5 bg-slate-50 dark:bg-slate-900/30 border-t border-slate-200 dark:border-slate-700 flex items-center justify-end gap-2 rounded-b-xs">
-                <button type="button" class="btn-close-addprocess-modal px-4 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600 rounded-xs hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
+                <button type="button" class="btn-close-addprocess-modal px-4 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600 rounded-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
                     Cancel
                 </button>
-                <button type="submit" class="px-4 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xs shadow-sm hover:shadow transition-all flex items-center gap-1.5 cursor-pointer">
+                <button type="submit" class="px-4 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-sm shadow-sm hover:shadow transition-all flex items-center gap-1.5 cursor-pointer">
                     <i class="fa-regular fa-floppy-disk text-[10px]"></i> Save Process
                 </button>
             </div>
@@ -1235,15 +1235,15 @@ $(function () {
                         <td class="p-2 text-center">${tp.qty ?? 1}</td>
                         <td class="p-2 text-right font-bold font-mono text-slate-800 dark:text-slate-300">${priceVal}</td>
                         <td class="p-2">
-                            ${tp.tooling_status ? `<span class="px-1.5 py-0.5 text-[9px] font-bold bg-amber-100/70 text-amber-700 dark:bg-amber-955/40 dark:text-amber-400 rounded-xs">${tp.tooling_status}</span>` : '—'}
+                            ${tp.tooling_status ? `<span class="px-1.5 py-0.5 text-[9px] font-bold bg-amber-100/70 text-amber-700 dark:bg-amber-955/40 dark:text-amber-400 rounded-sm">${tp.tooling_status}</span>` : '—'}
                         </td>
                         <td class="p-2 text-slate-500 dark:text-slate-400 text-[10px] max-w-[160px] truncate" title="${tp.information || ''}">${tp.information || '—'}</td>
                         <td class="p-2 text-center">
                             <div class="flex items-center justify-center gap-1.5">
-                                <button type="button" class="btn-edit-tooling w-7 h-7 flex items-center justify-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xs transition-colors cursor-pointer" title="Edit Tooling" data-id="${tp.id}">
+                                <button type="button" class="btn-edit-tooling w-7 h-7 flex items-center justify-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-sm transition-colors cursor-pointer" title="Edit Tooling" data-id="${tp.id}">
                                     <i class="fa-regular fa-pen-to-square text-xs"></i>
                                 </button>
-                                <button type="button" class="btn-delete-tooling w-7 h-7 flex items-center justify-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-rose-600 dark:text-rose-450 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-xs transition-colors cursor-pointer" title="Delete Tooling" data-id="${tp.id}">
+                                <button type="button" class="btn-delete-tooling w-7 h-7 flex items-center justify-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-rose-600 dark:text-rose-450 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-sm transition-colors cursor-pointer" title="Delete Tooling" data-id="${tp.id}">
                                     <i class="fa-regular fa-trash-can text-xs"></i>
                                 </button>
                             </div>
@@ -1274,10 +1274,10 @@ $(function () {
                         <td class="p-2 text-right font-bold text-teal-600 dark:text-teal-400 font-mono">${costVal}</td>
                         <td class="p-2 text-center">
                             <div class="flex items-center justify-center gap-1.5">
-                                <button type="button" class="btn-edit-addprocess w-7 h-7 flex items-center justify-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xs transition-colors cursor-pointer" title="Edit Process" data-id="${ap.id}">
+                                <button type="button" class="btn-edit-addprocess w-7 h-7 flex items-center justify-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-sm transition-colors cursor-pointer" title="Edit Process" data-id="${ap.id}">
                                     <i class="fa-regular fa-pen-to-square text-xs"></i>
                                 </button>
-                                <button type="button" class="btn-delete-addprocess w-7 h-7 flex items-center justify-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-rose-600 dark:text-rose-450 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-xs transition-colors cursor-pointer" title="Delete Process" data-id="${ap.id}">
+                                <button type="button" class="btn-delete-addprocess w-7 h-7 flex items-center justify-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-rose-600 dark:text-rose-450 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-sm transition-colors cursor-pointer" title="Delete Process" data-id="${ap.id}">
                                     <i class="fa-regular fa-trash-can text-xs"></i>
                                 </button>
                             </div>
@@ -1766,9 +1766,9 @@ $(function () {
             cancelButtonColor: '#475569',
             confirmButtonText: 'Yes, delete it!',
             customClass: {
-                popup: 'rounded-xs border border-slate-205 dark:border-slate-705 bg-white dark:bg-slate-805 text-slate-805 dark:text-white',
-                confirmButton: 'rounded-xs font-bold text-xs px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white',
-                cancelButton: 'rounded-xs font-semibold text-xs px-4 py-2 bg-slate-200 hover:bg-slate-350 text-slate-700'
+                popup: 'rounded-sm border border-slate-205 dark:border-slate-705 bg-white dark:bg-slate-805 text-slate-805 dark:text-white',
+                confirmButton: 'rounded-sm font-bold text-xs px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white',
+                cancelButton: 'rounded-sm font-semibold text-xs px-4 py-2 bg-slate-200 hover:bg-slate-350 text-slate-700'
             }
         }).then((result) => {
             if (result.isConfirmed) {
@@ -1885,9 +1885,9 @@ $(function () {
             cancelButtonColor: '#475569',
             confirmButtonText: 'Yes, delete it!',
             customClass: {
-                popup: 'rounded-xs border border-slate-205 dark:border-slate-705 bg-white dark:bg-slate-805 text-slate-805 dark:text-white',
-                confirmButton: 'rounded-xs font-bold text-xs px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white',
-                cancelButton: 'rounded-xs font-semibold text-xs px-4 py-2 bg-slate-200 hover:bg-slate-355 text-slate-700'
+                popup: 'rounded-sm border border-slate-205 dark:border-slate-705 bg-white dark:bg-slate-805 text-slate-805 dark:text-white',
+                confirmButton: 'rounded-sm font-bold text-xs px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white',
+                cancelButton: 'rounded-sm font-semibold text-xs px-4 py-2 bg-slate-200 hover:bg-slate-355 text-slate-700'
             }
         }).then((result) => {
             if (result.isConfirmed) {
@@ -1989,9 +1989,9 @@ $(function () {
             cancelButtonColor: '#475569',
             confirmButtonText: 'Yes, delete it!',
             customClass: {
-                popup: 'rounded-xs border border-slate-205 dark:border-slate-705 bg-white dark:bg-slate-805 text-slate-805 dark:text-white',
-                confirmButton: 'rounded-xs font-bold text-xs px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white',
-                cancelButton: 'rounded-xs font-semibold text-xs px-4 py-2 bg-slate-200 hover:bg-slate-355 text-slate-700'
+                popup: 'rounded-sm border border-slate-205 dark:border-slate-705 bg-white dark:bg-slate-805 text-slate-805 dark:text-white',
+                confirmButton: 'rounded-sm font-bold text-xs px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white',
+                cancelButton: 'rounded-sm font-semibold text-xs px-4 py-2 bg-slate-200 hover:bg-slate-355 text-slate-700'
             }
         }).then((result) => {
             if (result.isConfirmed) {

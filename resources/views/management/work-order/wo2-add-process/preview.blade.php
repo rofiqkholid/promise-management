@@ -1,4 +1,4 @@
-<style>
+﻿<style>
     /* -------------------------------------------------------------------------
        1. SCREEN ONLY STYLES (Frontend A4 Pages Preview)
        ------------------------------------------------------------------------- */
@@ -637,7 +637,7 @@
                                     <div class="table-cell p-2 border-r border-slate-900 last:border-r-0 align-top" :style="{ width: (100 / (1 + approvals.length)) + '%' }">
                                         <div class="flex flex-col justify-between items-center h-24 w-full">
                                             <div class="flex flex-col items-center">
-                                                <div class="inline-block border-2 border-emerald-600 text-emerald-600 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-xs transform -rotate-3 select-none origin-center">PREPARED</div>
+                                                <div class="inline-block border-2 border-emerald-600 text-emerald-600 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-sm transform -rotate-3 select-none origin-center">PREPARED</div>
                                                 <div class="text-[9px] text-slate-500 mt-1" x-text="formatDateStr(created_at)"></div>
                                             </div>
                                             <div class="mt-auto">
@@ -653,7 +653,7 @@
                                                 <div class="flex flex-col items-center w-full">
                                                     <template x-if="step.status === 'Approved'">
                                                         <div class="flex flex-col items-center">
-                                                            <div class="inline-block border-2 border-emerald-600 text-emerald-600 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-xs transform -rotate-3 select-none origin-center" x-text="(step.action_label || 'Checked').toUpperCase()"></div>
+                                                            <div class="inline-block border-2 border-emerald-600 text-emerald-600 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-sm transform -rotate-3 select-none origin-center" x-text="(step.action_label || 'Checked').toUpperCase()"></div>
                                                             <div class="text-[9px] text-slate-500 mt-1" x-text="step.approved_at"></div>
                                                             <div x-show="step.due_date_closed" class="text-[9px] text-rose-600 font-bold mt-1">
                                                                 Due Close: <span x-text="formatDateStr(step.due_date_closed)"></span>
@@ -662,7 +662,7 @@
                                                     </template>
                                                     <template x-if="step.status === 'Rejected'">
                                                         <div class="flex flex-col items-center">
-                                                            <div class="inline-block border-2 border-rose-600 text-rose-600 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-xs transform -rotate-3 select-none origin-center">REJECTED</div>
+                                                            <div class="inline-block border-2 border-rose-600 text-rose-600 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-sm transform -rotate-3 select-none origin-center">REJECTED</div>
                                                             <div class="text-[9px] text-slate-500 mt-1" x-text="step.approved_at"></div>
                                                         </div>
                                                     </template>
@@ -902,7 +902,7 @@
                     <div class="table-cell p-2 border-r border-slate-900 last:border-r-0 align-top" :style="{ width: (100 / (1 + approvals.length)) + '%' }">
                         <div class="flex flex-col justify-between items-center h-24 w-full">
                             <div class="flex flex-col items-center">
-                                <div class="inline-block border-2 border-emerald-600 text-emerald-600 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-xs transform -rotate-3 select-none origin-center">PREPARED</div>
+                                <div class="inline-block border-2 border-emerald-600 text-emerald-600 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-sm transform -rotate-3 select-none origin-center">PREPARED</div>
                                 <div class="text-[9px] text-slate-500 mt-1" x-text="formatDateStr(created_at)"></div>
                             </div>
                             <div class="mt-auto">
@@ -917,7 +917,7 @@
                                 <div class="flex flex-col items-center w-full">
                                     <template x-if="step.status === 'Approved'">
                                         <div class="flex flex-col items-center">
-                                            <div class="inline-block border-2 border-emerald-600 text-emerald-600 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-xs transform -rotate-3 select-none origin-center" x-text="(step.action_label || 'Checked').toUpperCase()"></div>
+                                            <div class="inline-block border-2 border-emerald-600 text-emerald-600 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-sm transform -rotate-3 select-none origin-center" x-text="(step.action_label || 'Checked').toUpperCase()"></div>
                                             <div class="text-[9px] text-slate-500 mt-1" x-text="step.approved_at"></div>
                                             <div x-show="step.due_date_closed" class="text-[9px] text-rose-600 font-bold mt-1">
                                                 Due Close: <span x-text="formatDateStr(step.due_date_closed)"></span>
@@ -926,7 +926,7 @@
                                     </template>
                                     <template x-if="step.status === 'Rejected'">
                                         <div class="flex flex-col items-center">
-                                            <div class="inline-block border-2 border-rose-600 text-rose-600 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-xs transform -rotate-3 select-none origin-center">REJECTED</div>
+                                            <div class="inline-block border-2 border-rose-600 text-rose-600 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-sm transform -rotate-3 select-none origin-center">REJECTED</div>
                                             <div class="text-[9px] text-slate-500 mt-1" x-text="step.approved_at"></div>
                                         </div>
                                     </template>

@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', 'Supplier Quotation Comparison Detail · Promise Management')
 @section('page_title', 'Supplier Quotation Comparison Detail')
@@ -14,16 +14,16 @@
         <div class="flex items-center pr-6 border-r border-slate-300 dark:border-slate-700 flex-shrink-0">
             <div class="flex gap-1.5">
                 <a href="{{ route('management.tooling-quotation.index') }}"
-                   class="inline-flex items-center justify-center gap-2 px-3 h-8 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 border border-slate-300 dark:border-slate-600 rounded-xs text-xs font-normal text-slate-700 dark:text-slate-200 transition-all active:scale-98">
+                   class="inline-flex items-center justify-center gap-2 px-3 h-8 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 border border-slate-300 dark:border-slate-600 rounded-sm text-xs font-normal text-slate-700 dark:text-slate-200 transition-all active:scale-98">
                     <i class="fa-solid fa-arrow-left text-[10px]"></i> Back
                 </a>
                 @if($selectedEbd)
                     <button type="button" onclick="openQuotationExportModal('{{ route('management.work-order-tooling.quotation', $encryptedWoId) }}')"
-                            class="inline-flex items-center justify-center gap-1.5 px-3 h-8 bg-emerald-600 hover:bg-emerald-700 border border-transparent rounded-xs text-xs font-normal text-white transition-all active:scale-98 cursor-pointer">
+                            class="inline-flex items-center justify-center gap-1.5 px-3 h-8 bg-emerald-600 hover:bg-emerald-700 border border-transparent rounded-sm text-xs font-normal text-white transition-all active:scale-98 cursor-pointer">
                         <i class="fa-solid fa-file-excel text-[10px]"></i> Download Template
                     </button>
                     <button type="button" onclick="$('#import-quotation-modal').removeClass('hidden').addClass('flex')"
-                            class="inline-flex items-center justify-center gap-1.5 px-3 h-8 bg-indigo-600 hover:bg-indigo-700 border border-transparent rounded-xs text-xs font-normal text-white transition-all active:scale-98 cursor-pointer shadow-none">
+                            class="inline-flex items-center justify-center gap-1.5 px-3 h-8 bg-indigo-600 hover:bg-indigo-700 border border-transparent rounded-sm text-xs font-normal text-white transition-all active:scale-98 cursor-pointer shadow-none">
                         <i class="fa-solid fa-file-import text-[10px]"></i> Import Supplier Quote
                     </button>
                 @endif
@@ -31,11 +31,11 @@
         </div>
 
         {{-- Metadata Row --}}
-        <div class="flex-1 flex flex-wrap lg:flex-nowrap items-center gap-y-3 px-4 py-2 border border-slate-300 dark:border-slate-800 rounded-xs bg-slate-50/40 dark:bg-slate-950/20 mx-2">
+        <div class="flex-1 flex flex-wrap lg:flex-nowrap items-center gap-y-3 px-4 py-2 border border-slate-300 dark:border-slate-800 rounded-sm bg-slate-50/40 dark:bg-slate-950/20 mx-2">
             
             {{-- WO Number --}}
             <div class="flex items-center gap-2.5 min-w-0 w-1/2 lg:w-[25%]">
-                <div class="w-8 h-8 flex items-center justify-center rounded-xs bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex-shrink-0">
+                <div class="w-8 h-8 flex items-center justify-center rounded-sm bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex-shrink-0">
                     <i class="fa-solid fa-file-invoice text-xs"></i>
                 </div>
                 <div class="min-w-0">
@@ -49,7 +49,7 @@
 
             {{-- Customer --}}
             <div class="flex items-center gap-2.5 min-w-0 w-1/2 lg:w-[40%] lg:px-4">
-                <div class="w-8 h-8 flex items-center justify-center rounded-xs bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex-shrink-0">
+                <div class="w-8 h-8 flex items-center justify-center rounded-sm bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex-shrink-0">
                     <i class="fa-solid fa-building text-xs"></i>
                 </div>
                 <div class="min-w-0 w-full">
@@ -70,7 +70,7 @@
 
             {{-- Project Model --}}
             <div class="flex items-center gap-2.5 min-w-0 w-1/2 lg:w-[20%] lg:px-4">
-                <div class="w-8 h-8 flex items-center justify-center rounded-xs bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex-shrink-0">
+                <div class="w-8 h-8 flex items-center justify-center rounded-sm bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex-shrink-0">
                     <i class="fa-solid fa-tags text-xs"></i>
                 </div>
                 <div class="min-w-0">
@@ -84,7 +84,7 @@
 
             {{-- Total Items --}}
             <div class="flex items-center gap-2.5 min-w-0 w-1/2 lg:w-[15%] lg:pl-4">
-                <div class="w-8 h-8 flex items-center justify-center rounded-xs bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex-shrink-0">
+                <div class="w-8 h-8 flex items-center justify-center rounded-sm bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex-shrink-0">
                     <i class="fa-solid fa-cubes text-xs"></i>
                 </div>
                 <div class="min-w-0">
@@ -96,10 +96,10 @@
 
         {{-- Global Revision & Status --}}
         <div class="pl-6 border-l border-slate-300 dark:border-slate-700 flex-shrink-0 flex items-center gap-2.5">
-            <span class="px-2.5 py-1 text-xs font-mono font-normal border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xs">
+            <span class="px-2.5 py-1 text-xs font-mono font-normal border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-sm">
                 REV: {{ $selectedEbd?->revision ?? '0' }}
             </span>
-            <span class="px-2.5 py-1 text-xs font-normal border rounded-xs bg-emerald-100/70 text-emerald-700 border-emerald-350/60 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900/30">
+            <span class="px-2.5 py-1 text-xs font-normal border rounded-sm bg-emerald-100/70 text-emerald-700 border-emerald-350/60 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900/30">
                 {{ $selectedEbd?->status ?? 'Released' }}
             </span>
         </div>
@@ -114,7 +114,7 @@
                 <span class="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-200 flex items-center gap-2">
                     <i class="fa-solid fa-cubes text-indigo-600 dark:text-indigo-400 text-xs"></i> Part Numbers
                 </span>
-                <span class="text-[10px] bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 px-2 py-0.5 rounded-xs font-mono font-semibold">
+                <span class="text-[10px] bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 px-2 py-0.5 rounded-sm font-mono font-semibold">
                     {{ $ebdItems->count() }} items
                 </span>
             </div>
@@ -123,7 +123,7 @@
                 {{-- ALL PARTS SUMMARY BUTTON --}}
                 <button type="button" 
                         data-part-id="all-summary"
-                        class="btn-select-part w-full text-left p-3 rounded-xs border transition-all cursor-pointer flex flex-col gap-1 active-part bg-indigo-50 dark:bg-indigo-950/60 border-indigo-500 dark:border-indigo-500 shadow-xs mb-2">
+                        class="btn-select-part w-full text-left p-3 rounded-sm border transition-all cursor-pointer flex flex-col gap-1 active-part bg-indigo-50 dark:bg-indigo-950/60 border-indigo-500 dark:border-indigo-500 shadow-xs mb-2">
                     <div class="flex items-center justify-between">
                         <span class="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
                             <i class="fa-solid fa-chart-pie text-xs"></i> All Parts Summary
@@ -138,7 +138,7 @@
                 @foreach($ebdItems as $idx => $item)
                     <button type="button" 
                             data-part-id="{{ $item->id }}"
-                            class="btn-select-part w-full text-left p-3 rounded-xs border transition-all cursor-pointer flex flex-col gap-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-750">
+                            class="btn-select-part w-full text-left p-3 rounded-sm border transition-all cursor-pointer flex flex-col gap-1 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-750">
                         <div class="flex items-center justify-between">
                             <span class="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400">{{ $item->part_no }}</span>
                             <span class="text-[9px] font-mono text-slate-400">#{{ $idx + 1 }}</span>
@@ -159,7 +159,7 @@
                 <div class="relative min-w-[240px]">
                     <button type="button" 
                             id="btn-custom-supplier-dropdown"
-                            class="w-full flex items-center justify-between gap-2 px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xs text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-750 transition-all cursor-pointer">
+                            class="w-full flex items-center justify-between gap-2 px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-sm text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-750 transition-all cursor-pointer">
                         <span id="lbl-custom-supplier-dropdown" class="truncate font-semibold text-indigo-600 dark:text-indigo-400">
                             <i class="fa-solid fa-filter text-[10px] mr-1"></i> Filter & Revisions
                         </span>
@@ -167,7 +167,7 @@
                     </button>
 
                     {{-- DROPDOWN MENU PANEL (FLOATING) --}}
-                    <div id="panel-custom-supplier-dropdown" class="hidden absolute top-full left-0 mt-1 w-72 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xs shadow-2xl z-50 overflow-hidden">
+                    <div id="panel-custom-supplier-dropdown" class="hidden absolute top-full left-0 mt-1 w-72 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-sm shadow-2xl z-50 overflow-hidden">
                         
                         {{-- 1. EBD REVISION SELECTOR --}}
                         <div class="p-2.5 bg-slate-100/70 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-700">
@@ -175,7 +175,7 @@
                                 Target EBD Revision
                             </label>
                             @if(isset($availableEbdRevisions) && $availableEbdRevisions->count() > 1)
-                                <select onchange="window.location.href='?ebd_id=' + this.value" class="w-full text-xs font-mono font-bold px-2 py-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:border-indigo-500 cursor-pointer">
+                                <select onchange="window.location.href='?ebd_id=' + this.value" class="w-full text-xs font-mono font-bold px-2 py-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-indigo-500 cursor-pointer">
                                     @foreach($availableEbdRevisions as $revEbd)
                                         <option value="{{ $revEbd->id }}" {{ $revEbd->id == ($selectedEbd?->id ?? null) ? 'selected' : '' }}>
                                             Rev {{ $revEbd->revision }} {{ $revEbd->id == ($workOrder?->ebd_header_id ?? null) ? '★ (Active WO)' : '' }}
@@ -183,7 +183,7 @@
                                     @endforeach
                                 </select>
                             @else
-                                <div class="text-xs font-mono font-semibold text-slate-700 dark:text-slate-300 px-2 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xs">
+                                <div class="text-xs font-mono font-semibold text-slate-700 dark:text-slate-300 px-2 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-sm">
                                     Rev {{ $selectedEbd?->revision ?? '0' }} (Latest)
                                 </div>
                             @endif
@@ -194,7 +194,7 @@
                             <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
                                 Sort Suppliers By
                             </label>
-                            <select onchange="window.location.href=updateQueryStringParam('sort', this.value)" class="w-full text-xs font-semibold px-2 py-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:border-indigo-500 cursor-pointer">
+                            <select onchange="window.location.href=updateQueryStringParam('sort', this.value)" class="w-full text-xs font-semibold px-2 py-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-indigo-500 cursor-pointer">
                                 <option value="worth" {{ request('sort', 'worth') == 'worth' ? 'selected' : '' }}>Lowest Cost (Best Value)</option>
                                 <option value="highest" {{ request('sort') == 'highest' ? 'selected' : '' }}>Highest Cost</option>
                                 <option value="name" {{ request('sort') == 'name' ? 'selected' : '' }}>Supplier Name (A-Z)</option>
@@ -205,10 +205,10 @@
                         <div class="p-2 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 flex items-center justify-between gap-2">
                             <div class="relative flex-1">
                                 <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]"></i>
-                                <input type="text" id="input-search-supplier-filter" placeholder="Search supplier..." class="w-full pl-7 pr-2 py-1 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                                <input type="text" id="input-search-supplier-filter" placeholder="Search supplier..." class="w-full pl-7 pr-2 py-1 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                             </div>
                             <label class="flex items-center gap-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 cursor-pointer flex-shrink-0 pr-1">
-                                <input type="checkbox" id="chk-toggle-all-suppliers" checked class="rounded-xs border-slate-300 text-indigo-600 focus:ring-indigo-500" {{ $quotations->count() === 0 ? 'disabled' : '' }}>
+                                <input type="checkbox" id="chk-toggle-all-suppliers" checked class="rounded-sm border-slate-300 text-indigo-600 focus:ring-indigo-500" {{ $quotations->count() === 0 ? 'disabled' : '' }}>
                                 <span>All</span>
                             </label>
                         </div>
@@ -217,18 +217,18 @@
                         <div class="max-h-64 overflow-y-auto p-1.5 space-y-1">
                             <div id="supplier-items-container" class="space-y-1">
                                 @forelse($quotations as $q)
-                                    <div class="supp-item-label p-2 rounded-xs hover:bg-slate-50 dark:hover:bg-slate-750/60 border border-slate-100 dark:border-slate-750 bg-slate-50/30 dark:bg-slate-900/30 space-y-1">
+                                    <div class="supp-item-label p-2 rounded-sm hover:bg-slate-50 dark:hover:bg-slate-750/60 border border-slate-100 dark:border-slate-750 bg-slate-50/30 dark:bg-slate-900/30 space-y-1">
                                         <div class="flex items-center justify-between gap-2">
                                             <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-800 dark:text-slate-100 min-w-0">
-                                                <input type="checkbox" class="chk-supp-filter rounded-xs border-slate-300 text-indigo-600 focus:ring-indigo-500" data-supp-id="{{ $q->id }}" data-supp-name="{{ $q->supplier_name }}" checked>
+                                                <input type="checkbox" class="chk-supp-filter rounded-sm border-slate-300 text-indigo-600 focus:ring-indigo-500" data-supp-id="{{ $q->id }}" data-supp-name="{{ $q->supplier_name }}" checked>
                                                 <span class="supp-name-text truncate">{{ $q->supplier_name }}</span>
                                             </label>
                                             <div class="flex items-center gap-1 flex-shrink-0">
                                                 @if(isset($q->worth_rank))
                                                     @if($q->worth_rank === 1)
-                                                        <span class="px-1.5 py-0.5 text-[9px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 rounded-xs">Best Value</span>
+                                                        <span class="px-1.5 py-0.5 text-[9px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 rounded-sm">Best Value</span>
                                                     @else
-                                                        <span class="px-1.5 py-0.5 text-[9px] font-medium bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700 rounded-xs">#{{ $q->worth_rank }}</span>
+                                                        <span class="px-1.5 py-0.5 text-[9px] font-medium bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700 rounded-sm">#{{ $q->worth_rank }}</span>
                                                     @endif
                                                 @endif
                                                 <span class="text-[10px] text-slate-400 font-mono">({{ $q->currency_code ?? 'IDR' }})</span>
@@ -238,7 +238,7 @@
                                         @if(isset($q->all_revisions) && count($q->all_revisions) > 1)
                                             <div class="flex items-center gap-1.5 pl-6">
                                                 <span class="text-[9px] font-medium text-slate-400 uppercase">Rev:</span>
-                                                <select onchange="switchSupplierRevision('{{ $q->supplier_id }}', this.value)" class="w-full text-[10px] font-mono font-bold px-1.5 py-0.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xs text-indigo-600 dark:text-indigo-400 focus:outline-none cursor-pointer">
+                                                <select onchange="switchSupplierRevision('{{ $q->supplier_id }}', this.value)" class="w-full text-[10px] font-mono font-bold px-1.5 py-0.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-sm text-indigo-600 dark:text-indigo-400 focus:outline-none cursor-pointer">
                                                     @foreach($q->all_revisions as $revQuote)
                                                         <option value="{{ $revQuote->id }}" {{ $revQuote->id == $q->id ? 'selected' : '' }}>
                                                             Rev {{ $revQuote->revision }} ({{ $revQuote->created_at ? $revQuote->created_at->format('d/m') : '' }})
@@ -265,14 +265,14 @@
                     {{-- Summary Tab --}}
                     <button type="button" 
                             data-tab-target="tab-summary"
-                            class="btn-tab-quote px-3.5 py-1.5 rounded-xs text-xs font-semibold border transition-all cursor-pointer bg-indigo-600 text-white border-indigo-600 shadow-xs">
+                            class="btn-tab-quote px-3.5 py-1.5 rounded-sm text-xs font-semibold border transition-all cursor-pointer bg-indigo-600 text-white border-indigo-600 shadow-xs">
                         <i class="fa-solid fa-chart-pie text-[10px] mr-1"></i> Summary
                     </button>
 
                     {{-- Side-by-Side Detailed Comparison Tab --}}
                     <button type="button" 
                             data-tab-target="tab-comparison-matrix"
-                            class="btn-tab-quote px-3.5 py-1.5 rounded-xs text-xs font-normal border transition-all cursor-pointer bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-1.5">
+                            class="btn-tab-quote px-3.5 py-1.5 rounded-sm text-xs font-normal border transition-all cursor-pointer bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-1.5">
                         <i class="fa-solid fa-code-compare text-purple-600 text-[10px]"></i>
                         <span>Side-by-Side Detailed Comparison</span>
                     </button>
@@ -284,7 +284,7 @@
                 
                 {{-- ===== GLOBAL ALL PARTS SUMMARY CONTAINER ===== --}}
                 <div id="part-container-all-summary" class="part-container space-y-4">
-                    <div class="px-4 py-3 bg-indigo-50/80 dark:bg-indigo-950/60 border border-indigo-300 dark:border-indigo-800 rounded-xs flex items-center justify-between">
+                    <div class="px-4 py-3 bg-indigo-50/80 dark:bg-indigo-950/60 border border-indigo-300 dark:border-indigo-800 rounded-sm flex items-center justify-between">
                         <div>
                             <span class="text-[10px] font-medium uppercase tracking-wider text-indigo-600 dark:text-indigo-400">Global Overview</span>
                             <div class="flex items-center gap-2">
@@ -293,13 +293,13 @@
                                 <span class="text-indigo-800 dark:text-indigo-200 text-xs font-medium">Total cost & process accumulation of all parts</span>
                             </div>
                         </div>
-                        <span class="text-xs font-mono font-semibold text-indigo-700 dark:text-indigo-300 bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800 px-3 py-1 rounded-xs">
+                        <span class="text-xs font-mono font-semibold text-indigo-700 dark:text-indigo-300 bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800 px-3 py-1 rounded-sm">
                             {{ $ebdItems->count() }} Parts Total
                         </span>
                     </div>
 
                     {{-- GLOBAL SUMMARY TABLE --}}
-                    <div class="tab-content-view tab-summary border border-slate-300 dark:border-slate-800 rounded-xs overflow-hidden bg-white dark:bg-slate-900 shadow-xs">
+                    <div class="tab-content-view tab-summary border border-slate-300 dark:border-slate-800 rounded-sm overflow-hidden bg-white dark:bg-slate-900 shadow-xs">
                         <table class="w-full text-xs text-left border-collapse">
                             <thead class="bg-slate-50 dark:bg-slate-900/80 border-b border-slate-300 dark:border-slate-800 text-[10px] uppercase font-semibold text-slate-500 dark:text-slate-400">
                                 <tr>
@@ -446,15 +446,15 @@
                                         @endphp
                                         <td class="col-supp-{{ $q->id }} p-3 border-r border-slate-300 dark:border-slate-800 font-mono text-xs font-bold">
                                             @if($gVariance > 0)
-                                                <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-xs font-mono font-bold text-xs bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+                                                <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm font-mono font-bold text-xs bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
                                                     + {{ number_format($gVariancePct, 1, ',', '.') }}% <i class="fa-solid fa-arrow-up text-[10px]"></i>
                                                 </span>
                                             @elseif($gVariance < 0)
-                                                <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-xs font-mono font-bold text-xs bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                                                <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm font-mono font-bold text-xs bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                                                     - {{ number_format(abs($gVariancePct), 1, ',', '.') }}% <i class="fa-solid fa-arrow-down text-[10px]"></i>
                                                 </span>
                                             @else
-                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-xs font-mono font-medium text-xs bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700">0.0%</span>
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm font-mono font-medium text-xs bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700">0.0%</span>
                                             @endif
                                         </td>
                                     @endforeach
@@ -472,7 +472,7 @@
                     <div id="part-container-{{ $item->id }}" class="part-container space-y-4 hidden">
                         
                         {{-- PART INFO BANNER --}}
-                        <div class="px-4 py-3 bg-slate-100/70 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-xs flex items-center justify-between">
+                        <div class="px-4 py-3 bg-slate-100/70 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-sm flex items-center justify-between">
                             <div>
                                 <span class="text-[10px] font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500">Selected Part</span>
                                 <div class="flex items-center gap-2">
@@ -481,13 +481,13 @@
                                     <span class="text-slate-800 dark:text-slate-200 text-xs font-semibold">{{ $item->part_name }}</span>
                                 </div>
                             </div>
-                            <span class="text-xs font-mono font-medium text-slate-500 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-2.5 py-1 rounded-xs">
+                            <span class="text-xs font-mono font-medium text-slate-500 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-2.5 py-1 rounded-sm">
                                 {{ $toolingProcs->count() }} Process Items
                             </span>
                         </div>
 
                         {{-- 1. TAB SUMMARY VIEW (PARAMETERS TOTAL DIE, JIG, CF, CURRENCY FOR SELECTED SUPPLIERS) --}}
-                        <div class="tab-content-view tab-summary border border-slate-300 dark:border-slate-800 rounded-xs overflow-hidden bg-white dark:bg-slate-900 shadow-xs">
+                        <div class="tab-content-view tab-summary border border-slate-300 dark:border-slate-800 rounded-sm overflow-hidden bg-white dark:bg-slate-900 shadow-xs">
                             <table class="w-full text-xs text-left border-collapse">
                                 <thead class="bg-slate-50 dark:bg-slate-900/80 border-b border-slate-300 dark:border-slate-800 text-[10px] uppercase font-semibold text-slate-500 dark:text-slate-400">
                                     <tr>
@@ -657,15 +657,15 @@
                                             @endphp
                                             <td class="col-supp-{{ $q->id }} p-3 border-r border-slate-300 dark:border-slate-800 font-mono text-xs font-bold">
                                                 @if($variance > 0)
-                                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-xs font-mono font-bold text-xs bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+                                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm font-mono font-bold text-xs bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
                                                         + {{ number_format($variancePct, 1, ',', '.') }}% <i class="fa-solid fa-arrow-up text-[10px]"></i>
                                                     </span>
                                                 @elseif($variance < 0)
-                                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-xs font-mono font-bold text-xs bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm font-mono font-bold text-xs bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                                                         - {{ number_format(abs($variancePct), 1, ',', '.') }}% <i class="fa-solid fa-arrow-down text-[10px]"></i>
                                                     </span>
                                                 @else
-                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-xs font-mono font-medium text-xs bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700">0.0%</span>
+                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm font-mono font-medium text-xs bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700">0.0%</span>
                                                 @endif
                                             </td>
                                         @endforeach
@@ -675,7 +675,7 @@
                         </div>
 
                         {{-- 2. SIDE-BY-SIDE DETAILED COMPARISON MATRIX VIEW --}}
-                        <div class="tab-content-view tab-comparison-matrix hidden border border-slate-300 dark:border-slate-800 rounded-xs overflow-hidden bg-white dark:bg-slate-900 shadow-xs">
+                        <div class="tab-content-view tab-comparison-matrix hidden border border-slate-300 dark:border-slate-800 rounded-sm overflow-hidden bg-white dark:bg-slate-900 shadow-xs">
                             <table class="w-full text-xs text-left border-collapse">
                                 <thead class="bg-slate-50 dark:bg-slate-900/80 border-b border-slate-300 dark:border-slate-800 text-[10px] uppercase font-semibold text-slate-500 dark:text-slate-400">
                                     <tr>
@@ -734,7 +734,7 @@
                                                     @if($param['key'] === 'process_name')
                                                         <span class="font-normal text-slate-800 dark:text-slate-100 font-sans">{{ $ebdProcNames ?: '—' }}</span>
                                                     @elseif($param['key'] === 'tooling_type')
-                                                        <span class="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xs text-[10px]">{{ $ebdTypes }}</span>
+                                                        <span class="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-sm text-[10px]">{{ $ebdTypes }}</span>
                                                     @elseif($param['key'] === 'tonnage')
                                                         {{ $ebdTonnage ? $ebdTonnage . ' T' : '—' }}
                                                     @elseif($param['key'] === 'die_height')
@@ -766,7 +766,7 @@
                                                             @if($param['key'] === 'process_name')
                                                                 <div class="font-normal text-slate-800 dark:text-slate-100 font-sans">{{ $suppProcNames ?: '—' }}</div>
                                                             @elseif($param['key'] === 'tooling_type')
-                                                                <span class="px-1.5 py-0.5 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded-xs text-[10px]">{{ $suppTypes ?: 'DIE' }}</span>
+                                                                <span class="px-1.5 py-0.5 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded-sm text-[10px]">{{ $suppTypes ?: 'DIE' }}</span>
                                                             @elseif($param['key'] === 'tonnage')
                                                                 {{ $suppTonnage ? $suppTonnage . ' T' : '—' }}
                                                             @elseif($param['key'] === 'die_height')
@@ -807,13 +807,13 @@
 {{-- ===== IMPORT MODAL ===== --}}
 @if($selectedEbd)
 <div id="import-quotation-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm">
-    <div class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xs shadow-2xl w-full max-w-md mx-4 overflow-hidden animate-fade-in">
+    <div class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-sm shadow-2xl w-full max-w-md mx-4 overflow-hidden animate-fade-in">
         <div class="flex items-center justify-between px-5 py-4 border-b border-slate-300 dark:border-slate-700">
             <div>
                 <h3 class="text-sm font-bold text-slate-800 dark:text-white">Import Supplier Quotation Excel</h3>
                 <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">Upload completed Excel quotation file from supplier</p>
             </div>
-            <button type="button" onclick="$('#import-quotation-modal').addClass('hidden').removeClass('flex')" class="w-7 h-7 flex items-center justify-center rounded-xs text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
+            <button type="button" onclick="$('#import-quotation-modal').addClass('hidden').removeClass('flex')" class="w-7 h-7 flex items-center justify-center rounded-sm text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
                 <i class="fa-solid fa-xmark text-sm"></i>
             </button>
         </div>
@@ -838,14 +838,14 @@
                         Mode Import <span class="text-rose-500">*</span>
                     </label>
                     <div class="grid grid-cols-2 gap-2 text-xs">
-                        <label class="flex items-center gap-2 p-2.5 border border-indigo-200 dark:border-indigo-800 rounded-xs bg-indigo-50/40 dark:bg-indigo-950/40 cursor-pointer hover:border-indigo-400">
+                        <label class="flex items-center gap-2 p-2.5 border border-indigo-200 dark:border-indigo-800 rounded-sm bg-indigo-50/40 dark:bg-indigo-950/40 cursor-pointer hover:border-indigo-400">
                             <input type="radio" name="import_mode" value="new_revision" checked class="text-indigo-600 focus:ring-indigo-500">
                             <div>
                                 <span class="block font-bold text-slate-800 dark:text-slate-100 text-[11px]">Revisi Baru</span>
                                 <span class="block text-[9px] text-slate-500">Simpan sebagai Rev 1, Rev 2...</span>
                             </div>
                         </label>
-                        <label class="flex items-center gap-2 p-2.5 border border-slate-200 dark:border-slate-700 rounded-xs bg-white dark:bg-slate-900 cursor-pointer hover:border-indigo-400">
+                        <label class="flex items-center gap-2 p-2.5 border border-slate-200 dark:border-slate-700 rounded-sm bg-white dark:bg-slate-900 cursor-pointer hover:border-indigo-400">
                             <input type="radio" name="import_mode" value="overwrite" class="text-indigo-600 focus:ring-indigo-500">
                             <div>
                                 <span class="block font-bold text-slate-800 dark:text-slate-100 text-[11px]">Timpa / Overwrite</span>
@@ -890,12 +890,12 @@
                 </div>
 
                 {{-- IMPORT ERROR / SUCCESS RESULT CONTAINER --}}
-                <div id="importResult" class="hidden text-xs font-medium p-3.5 rounded-xs border"></div>
+                <div id="importResult" class="hidden text-xs font-medium p-3.5 rounded-sm border"></div>
             </div>
 
             <div class="flex items-center justify-end gap-2 px-5 py-3.5 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-300 dark:border-slate-700">
-                <button type="button" onclick="$('#import-quotation-modal').addClass('hidden').removeClass('flex')" class="px-3.5 h-8 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xs transition-colors cursor-pointer">Batal</button>
-                <button type="submit" id="btn-submit-import" class="inline-flex items-center justify-center gap-1.5 px-4 h-8 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xs text-xs font-normal active:scale-98 transition-all cursor-pointer">
+                <button type="button" onclick="$('#import-quotation-modal').addClass('hidden').removeClass('flex')" class="px-3.5 h-8 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-sm transition-colors cursor-pointer">Batal</button>
+                <button type="submit" id="btn-submit-import" class="inline-flex items-center justify-center gap-1.5 px-4 h-8 bg-indigo-600 hover:bg-indigo-700 text-white rounded-sm text-xs font-normal active:scale-98 transition-all cursor-pointer">
                     <i class="fa-solid fa-cloud-arrow-up text-xs"></i> Proses Import & Compare
                 </button>
             </div>

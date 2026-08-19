@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', 'Engineering Breakdown (EBD) · Promise Management')
 @section('page_title', 'Engineering Breakdown (EBD)')
@@ -12,12 +12,12 @@
     {{-- ===== HEADER ACTIONS ===== --}}
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-            <h1 class="text-2xl font-bold tracking-tight text-slate-800 dark:text-white">Engineering Breakdown (EBD)</h1>
-            <p class="text-sm text-slate-500 dark:text-slate-400">Manage engineering breakdown specifications and BOM lists</p>
+            <h1 class="text-lg font-bold tracking-tight text-slate-800 dark:text-white">Engineering Breakdown (EBD)</h1>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Manage engineering breakdown specifications and BOM lists</p>
         </div>
         <div class="mt-4 sm:mt-0 flex gap-2">
             <button type="button" id="btn-open-import-modal"
-                    class="inline-flex items-center justify-center gap-2 px-4 h-9 bg-indigo-600 hover:bg-indigo-700 border border-transparent rounded-xs text-xs font-medium text-white active:scale-[0.98] transition-all cursor-pointer">
+                    class="inline-flex items-center justify-center gap-2 px-4 h-9 bg-indigo-600 hover:bg-indigo-700 border border-transparent rounded-sm text-xs font-medium text-white active:scale-[0.98] transition-all cursor-pointer">
                 <i class="fa-solid fa-file-import"></i>
                 Import EBD File
             </button>
@@ -46,7 +46,7 @@
 
 {{-- ===== IMPORT MODAL ===== --}}
 <div id="import-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm">
-    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xs shadow-2xl w-full max-w-lg mx-4 animate-fade-in">
+    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm shadow-2xl w-full max-w-lg mx-4 animate-fade-in">
 
         {{-- Modal Header --}}
         <div class="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-700">
@@ -55,7 +55,7 @@
                 <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">Upload an XLSX file to create a new EBD document</p>
             </div>
             <button type="button" id="btn-close-import-modal"
-                    class="w-7 h-7 flex items-center justify-center rounded-xs text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
+                    class="w-7 h-7 flex items-center justify-center rounded-sm text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
                 <i class="fa-solid fa-xmark text-sm"></i>
             </button>
         </div>
@@ -71,7 +71,7 @@
                         Work Order (SPK) <span class="text-slate-400 font-normal normal-case">(Optional)</span>
                     </label>
                     <select name="wo_id" id="input-wo-id"
-                            class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                            class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
                         <option value="">— No Work Order —</option>
                         @foreach($workOrders as $wo)
                             <option value="{{ $wo->id }}"
@@ -89,7 +89,7 @@
                         Customer <span class="text-rose-500">*</span>
                     </label>
                     <select name="customer_id" id="input-customer-id" required
-                            class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                            class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
                         <option value="">— Select Customer —</option>
                         @foreach($customers as $customer)
                             <option value="{{ $customer->id }}">{{ $customer->code }} — {{ $customer->name }}</option>
@@ -103,7 +103,7 @@
                         Model <span class="text-rose-500">*</span>
                     </label>
                     <select name="model_id" id="input-model-id" required
-                            class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                            class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
                         <option value="">— Select Model —</option>
                         @foreach($models as $model)
                             <option value="{{ $model->id }}">{{ $model->name }}</option>
@@ -119,7 +119,7 @@
                         </label>
                         <input type="date" name="date" id="input-date" required
                                value="{{ date('Y-m-d') }}"
-                               class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                               class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
                     </div>
                     <div>
                         <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
@@ -127,7 +127,7 @@
                         </label>
                         <input type="text" name="revision" id="input-revision"
                                value="0" placeholder="e.g. 0, 1, A"
-                               class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                               class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
                     </div>
                 </div>
 
@@ -137,7 +137,7 @@
                         EBD File (XLSX) <span class="text-rose-500">*</span>
                     </label>
                     <div id="drop-zone"
-                         class="relative border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xs p-5 text-center cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/30 dark:hover:bg-indigo-950/20 transition-all group">
+                         class="relative border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-sm p-5 text-center cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/30 dark:hover:bg-indigo-950/20 transition-all group">
                         <input type="file" name="file_ebd" id="input-file-ebd" required
                                accept=".xlsx,.zip"
                                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
@@ -157,18 +157,18 @@
                 </div>
 
                 {{-- Import Result Alert Container (Errors/Warnings) --}}
-                <div id="importResult" class="hidden text-xs rounded-xs border"></div>
+                <div id="importResult" class="hidden text-xs rounded-sm border"></div>
 
             </div>
 
             {{-- Modal Footer --}}
             <div class="px-5 py-3.5 bg-slate-50 dark:bg-slate-900/30 border-t border-slate-200 dark:border-slate-700 flex items-center justify-end gap-2 rounded-b-xs">
                 <button type="button" id="btn-cancel-import"
-                        class="px-4 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600 rounded-xs hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
+                        class="px-4 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600 rounded-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
                     Cancel
                 </button>
                 <button type="submit" id="btn-submit-import"
-                        class="px-4 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xs shadow-sm hover:shadow transition-all flex items-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed">
+                        class="px-4 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-sm shadow-sm hover:shadow transition-all flex items-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed">
                     <i class="fa-solid fa-file-import text-[10px]"></i>
                     <span id="btn-submit-text">Start Import</span>
                     <span id="btn-submit-spinner" class="hidden">
@@ -182,7 +182,7 @@
 
 {{-- ===== EDIT MODAL ===== --}}
 <div id="edit-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm">
-    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xs shadow-2xl w-full max-w-lg mx-4 animate-fade-in">
+    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm shadow-2xl w-full max-w-lg mx-4 animate-fade-in">
         {{-- Modal Header --}}
         <div class="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-700">
             <div>
@@ -190,7 +190,7 @@
                 <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">Update EBD header metadata</p>
             </div>
             <button type="button" id="btn-close-edit-modal"
-                    class="w-7 h-7 flex items-center justify-center rounded-xs text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
+                    class="w-7 h-7 flex items-center justify-center rounded-sm text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
                 <i class="fa-solid fa-xmark text-sm"></i>
             </button>
         </div>
@@ -206,7 +206,7 @@
                         Work Order (SPK) <span class="text-slate-400 font-normal normal-case">(Optional)</span>
                     </label>
                     <select name="wo_id" id="edit-wo-id"
-                            class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                            class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
                         <option value="">— No Work Order —</option>
                         @foreach($workOrders as $wo)
                             <option value="{{ $wo->id }}"
@@ -224,7 +224,7 @@
                         Customer <span class="text-rose-500">*</span>
                     </label>
                     <select name="customer_id" id="edit-customer-id" required
-                            class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                            class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
                         <option value="">— Select Customer —</option>
                         @foreach($customers as $customer)
                             <option value="{{ $customer->id }}">{{ $customer->code }} — {{ $customer->name }}</option>
@@ -238,7 +238,7 @@
                         Model <span class="text-rose-500">*</span>
                     </label>
                     <select name="model_id" id="edit-model-id" required
-                            class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                            class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
                         <option value="">— Select Model —</option>
                         @foreach($models as $model)
                             <option value="{{ $model->id }}">{{ $model->name }}</option>
@@ -253,7 +253,7 @@
                             EBD Date <span class="text-rose-500">*</span>
                         </label>
                         <input type="date" name="date" id="edit-date" required
-                               class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                               class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
                     </div>
                     <div>
                         <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
@@ -261,7 +261,7 @@
                         </label>
                         <input type="text" name="revision" id="edit-revision" required
                                placeholder="e.g. 0, 1, A"
-                               class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                               class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
                     </div>
                 </div>
             </div>
@@ -269,11 +269,11 @@
             {{-- Modal Footer --}}
             <div class="px-5 py-3.5 bg-slate-50 dark:bg-slate-900/30 border-t border-slate-200 dark:border-slate-700 flex items-center justify-end gap-2 rounded-b-xs">
                 <button type="button" id="btn-cancel-edit"
-                        class="px-4 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600 rounded-xs hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
+                        class="px-4 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600 rounded-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
                     Cancel
                 </button>
                 <button type="submit" id="btn-submit-edit"
-                        class="px-4 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xs shadow-sm hover:shadow transition-all flex items-center gap-2 cursor-pointer">
+                        class="px-4 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-sm shadow-sm hover:shadow transition-all flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-floppy-disk text-[10px]"></i>
                     <span>Save Changes</span>
                 </button>
@@ -330,7 +330,7 @@ $(function () {
                     let statusCls = data === 'Released' 
                         ? 'bg-emerald-100/70 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-900/30'
                         : 'bg-blue-100/70 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-200/60 dark:border-blue-900/30';
-                    return `<span class="inline-block px-2 py-0.5 text-[10px] font-bold border rounded-xs ${statusCls}">${data}</span>`;
+                    return `<span class="inline-block px-2 py-0.5 text-[10px] font-bold border rounded-sm ${statusCls}">${data}</span>`;
                 }
             },
             { data: 'created_by', name: 'created_by', className: 'text-slate-500 dark:text-slate-400 text-xs' },
@@ -344,19 +344,19 @@ $(function () {
                     return `<div class="flex justify-end gap-1.5 align-middle">
                         <a href="${row.show_url}"
                            title="View BOM Detail"
-                           class="w-6 h-6 flex items-center justify-center bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 hover:border-blue-400 hover:text-blue-700 text-slate-600 dark:text-slate-300 transition-colors rounded-xs">
-                            <i class="fa-solid fa-eye text-[10px]"></i>
+                           class="w-6 h-6 flex items-center justify-center bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 hover:border-blue-400 hover:text-blue-700 text-slate-600 dark:text-slate-300 transition-colors rounded-sm">
+                            <i class="fa-solid fa-arrow-right text-[10px]"></i>
                         </a>
                         <button type="button"
                                 title="Edit EBD Header"
                                 onclick="openEditModal(${row.id}, ${row.wo_id || 'null'}, ${row.customer_id || 'null'}, ${row.model_id || 'null'}, '${row.date_raw || ''}', '${row.revision || '0'}')"
-                                class="w-6 h-6 flex items-center justify-center bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 hover:border-indigo-400 hover:text-indigo-700 text-slate-600 dark:text-slate-300 transition-colors rounded-xs cursor-pointer">
+                                class="w-6 h-6 flex items-center justify-center bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 hover:border-indigo-400 hover:text-indigo-700 text-slate-600 dark:text-slate-300 transition-colors rounded-sm cursor-pointer">
                             <i class="fa-solid fa-pencil text-[10px]"></i>
                         </button>
                         <button type="button"
                                 title="Delete EBD"
                                 onclick="confirmDeleteEbd(${data})"
-                                class="w-6 h-6 flex items-center justify-center bg-rose-100/60 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/30 hover:bg-rose-500 hover:border-rose-500 hover:text-white text-rose-600 dark:text-rose-450 transition-colors cursor-pointer rounded-xs">
+                                class="w-6 h-6 flex items-center justify-center bg-rose-100/60 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/30 hover:bg-rose-500 hover:border-rose-500 hover:text-white text-rose-600 dark:text-rose-450 transition-colors cursor-pointer rounded-sm">
                             <i class="fa-solid fa-trash text-[10px]"></i>
                         </button>
                     </div>`;

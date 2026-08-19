@@ -21,4 +21,9 @@ class Customer extends Model
     {
         return $this->hasMany(ProjectModel::class, 'customer_id');
     }
+
+    public function inquiries()
+    {
+        return $this->hasMany(ProjectInquiry::class, 'customer_id');
+    }
 }

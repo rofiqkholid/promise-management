@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', 'Master Data Material Cost · Promise Management')
 
@@ -9,27 +9,21 @@
     {{-- Page Header --}}
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-            <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none mb-1">
-                Master Data Configuration
-            </div>
-            <h1 class="text-xl font-extrabold tracking-tight text-slate-800 dark:text-white leading-none flex items-center gap-2">
-                <i class="fa-solid fa-boxes-stacked text-blue-600 dark:text-blue-400 text-lg"></i>
-                Material Cost Rate
-            </h1>
-            <p class="text-xs text-slate-400 mt-1">
+            <h1 class="text-lg font-bold tracking-tight text-slate-800 dark:text-white">Material Cost Rate</h1>
+            <p class="text-xs text-slate-500 dark:text-slate-400">
                 Manage master material rates (Spec, Type, Thickness, Price/Kg, Scrap Price, & Rate Source).
             </p>
         </div>
 
         <div class="flex items-center gap-2">
             <a href="{{ route('management.material-cost.export') }}"
-               class="inline-flex items-center gap-2 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xs shadow-xs transition-colors">
-                <i class="fa-solid fa-file-excel text-[11px]"></i> Export CSV
+               class="inline-flex items-center gap-2 px-3.5 h-9 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-sm transition-colors">
+                <i class="fa-solid fa-file-excel text-xs"></i> Export CSV
             </a>
 
             <button onclick="openAddModal()"
-                    class="inline-flex items-center gap-2 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xs shadow-xs transition-colors cursor-pointer">
-                <i class="fa-solid fa-plus text-[10px]"></i> Add Material Rate
+                    class="inline-flex items-center gap-2 px-3.5 h-9 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-sm transition-colors cursor-pointer">
+                <i class="fa-solid fa-plus text-xs"></i> Add Material Rate
             </button>
         </div>
     </div>
@@ -46,57 +40,57 @@
         </div>
     @endif
 
-    {{-- KPI Cards --}}
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="p-4 bg-white dark:bg-slate-800 rounded-xs border border-slate-200 dark:border-slate-700 shadow-xs flex items-center justify-between">
+    {{-- KPI Summary Cards --}}
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+        <div class="p-3 bg-white dark:bg-slate-800 rounded-sm border border-slate-300 dark:border-slate-700 flex items-center justify-between">
             <div>
                 <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Total Material Rates</span>
-                <div class="text-xl font-black text-slate-800 dark:text-white mt-0.5" id="stat-total">{{ $totalItems }}</div>
+                <div class="text-lg font-black text-slate-800 dark:text-white mt-0.5" id="stat-total">{{ $totalItems }}</div>
             </div>
-            <div class="w-10 h-10 rounded-xs bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
-                <i class="fa-solid fa-boxes-stacked text-base"></i>
+            <div class="w-8 h-8 rounded-none bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
+                <i class="fa-solid fa-boxes-stacked text-sm"></i>
             </div>
         </div>
 
-        <div class="p-4 bg-white dark:bg-slate-800 rounded-xs border border-slate-200 dark:border-slate-700 shadow-xs flex items-center justify-between">
+        <div class="p-3 bg-white dark:bg-slate-800 rounded-sm border border-slate-300 dark:border-slate-700 flex items-center justify-between">
             <div>
                 <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Global Standard Rates</span>
-                <div class="text-xl font-black text-slate-800 dark:text-white mt-0.5" id="stat-general">{{ $generalCount }}</div>
+                <div class="text-lg font-black text-slate-800 dark:text-white mt-0.5" id="stat-general">{{ $generalCount }}</div>
             </div>
-            <div class="w-10 h-10 rounded-xs bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
-                <i class="fa-solid fa-globe text-base"></i>
+            <div class="w-8 h-8 rounded-none bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
+                <i class="fa-solid fa-globe text-sm"></i>
             </div>
         </div>
 
-        <div class="p-4 bg-white dark:bg-slate-800 rounded-xs border border-slate-200 dark:border-slate-700 shadow-xs flex items-center justify-between">
+        <div class="p-3 bg-white dark:bg-slate-800 rounded-sm border border-slate-300 dark:border-slate-700 flex items-center justify-between">
             <div>
                 <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Customer Specific Rates</span>
-                <div class="text-xl font-black text-slate-800 dark:text-white mt-0.5" id="stat-custom">{{ $customCount }}</div>
+                <div class="text-lg font-black text-slate-800 dark:text-white mt-0.5" id="stat-custom">{{ $customCount }}</div>
             </div>
-            <div class="w-10 h-10 rounded-xs bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">
-                <i class="fa-solid fa-user-tag text-base"></i>
+            <div class="w-8 h-8 rounded-none bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">
+                <i class="fa-solid fa-user-tag text-sm"></i>
             </div>
         </div>
 
-        <div class="p-4 bg-white dark:bg-slate-800 rounded-xs border border-slate-200 dark:border-slate-700 shadow-xs flex items-center justify-between">
+        <div class="p-3 bg-white dark:bg-slate-800 rounded-sm border border-slate-300 dark:border-slate-700 flex items-center justify-between">
             <div>
                 <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Sheet Material</span>
-                <div class="text-xl font-black text-slate-800 dark:text-white mt-0.5" id="stat-sheet">{{ $sheetCount }}</div>
+                <div class="text-lg font-black text-slate-800 dark:text-white mt-0.5" id="stat-sheet">{{ $sheetCount }}</div>
             </div>
-            <div class="w-10 h-10 rounded-xs bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold">
-                <i class="fa-solid fa-layer-group text-base"></i>
+            <div class="w-8 h-8 rounded-none bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold">
+                <i class="fa-solid fa-layer-group text-sm"></i>
             </div>
         </div>
     </div>
 
-    {{-- Filter Toolbar --}}
-    <div class="p-4 bg-white dark:bg-slate-800 rounded-xs border border-slate-200 dark:border-slate-700 shadow-xs space-y-3">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-            <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+    {{-- Main DataTable with Filter Popover --}}
+    <x-table id="material-cost-table" class="w-full text-xs text-left border-collapse">
+        <x-slot:filters>
+            <div class="space-y-3">
                 {{-- Customer Filter --}}
-                <div class="w-full sm:w-48">
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Customer Context</label>
-                    <select id="filter-customer" class="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xs text-xs font-semibold text-slate-700 dark:text-slate-200">
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Customer Context</label>
+                    <select id="filter-customer" class="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-sm text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:border-blue-500">
                         <option value="">All Contexts</option>
                         <option value="general">Global (Standard)</option>
                         @foreach($customers as $c)
@@ -106,9 +100,9 @@
                 </div>
 
                 {{-- Material Type Filter --}}
-                <div class="w-full sm:w-40">
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Material Type</label>
-                    <select id="filter-type" class="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xs text-xs font-semibold text-slate-700 dark:text-slate-200">
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Material Type</label>
+                    <select id="filter-type" class="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-sm text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:border-blue-500">
                         <option value="">All Types</option>
                         @foreach($materialTypes as $type)
                             <option value="{{ $type }}">{{ $type }}</option>
@@ -117,38 +111,28 @@
                 </div>
 
                 {{-- Rate Source Filter --}}
-                <div class="w-full sm:w-40">
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Rate Source</label>
-                    <select id="filter-source" class="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xs text-xs font-semibold text-slate-700 dark:text-slate-200">
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Rate Source</label>
+                    <select id="filter-source" class="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-sm text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:border-blue-500">
                         <option value="">All Sources</option>
                         <option value="Sales">Sales</option>
                         <option value="Engineering">Engineering</option>
                     </select>
                 </div>
             </div>
-
-            <div class="flex items-end gap-2">
-                <button type="button" id="btn-reset-filters" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xs transition-colors cursor-pointer">
-                    <i class="fa-solid fa-rotate-left mr-1"></i> Reset
-                </button>
-            </div>
-        </div>
-    </div>
-
-    {{-- Main DataTable --}}
-    <x-table id="material-cost-table" class="w-full text-xs text-left border-collapse">
+        </x-slot:filters>
         <thead>
-            <tr class="border-b-2 border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900/60 text-[11px] font-extrabold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
-                <th class="px-3 py-3 w-12 text-center border-r border-slate-200 dark:border-slate-700">No.</th>
-                <th class="px-4 py-3 border-r border-slate-200 dark:border-slate-700">Customer Context</th>
-                <th class="px-4 py-3 border-r border-slate-200 dark:border-slate-700">Material Spec</th>
-                <th class="px-3 py-3 text-center border-r border-slate-200 dark:border-slate-700">Type</th>
-                <th class="px-3 py-3 text-right border-r border-slate-200 dark:border-slate-700">Thickness (mm)</th>
-                <th class="px-4 py-3 text-right border-r border-slate-200 dark:border-slate-700 bg-blue-50/70 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300">Price / Kg (IDR) <span class="text-rose-500">*</span></th>
-                <th class="px-4 py-3 text-right border-r border-slate-200 dark:border-slate-700 bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300">Scrap / Kg (IDR)</th>
-                <th class="px-4 py-3 border-r border-slate-200 dark:border-slate-700">Rate Source</th>
-                <th class="px-3 py-3 text-center border-r border-slate-200 dark:border-slate-700">Valid From</th>
-                <th class="px-3 py-3 text-center w-24">Actions</th>
+            <tr class="border-b-2 border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900 text-[10px] font-extrabold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                <th class="px-3 py-2.5 w-12 text-center border-r border-slate-200 dark:border-slate-700">No.</th>
+                <th class="px-4 py-2.5 border-r border-slate-200 dark:border-slate-700">Customer Context</th>
+                <th class="px-4 py-2.5 border-r border-slate-200 dark:border-slate-700">Material Spec</th>
+                <th class="px-3 py-2.5 text-center border-r border-slate-200 dark:border-slate-700">Type</th>
+                <th class="px-3 py-2.5 text-right border-r border-slate-200 dark:border-slate-700">Thickness (mm)</th>
+                <th class="px-4 py-2.5 text-right border-r border-slate-200 dark:border-slate-700 font-extrabold text-slate-800 dark:text-slate-100">Price / Kg (IDR) <span class="text-rose-500">*</span></th>
+                <th class="px-4 py-2.5 text-right border-r border-slate-200 dark:border-slate-700">Scrap / Kg (IDR)</th>
+                <th class="px-4 py-2.5 border-r border-slate-200 dark:border-slate-700">Rate Source</th>
+                <th class="px-3 py-2.5 text-center border-r border-slate-200 dark:border-slate-700">Valid From</th>
+                <th class="px-3 py-2.5 text-center w-20">Actions</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -159,7 +143,7 @@
 
 {{-- ── ADD MODAL ────────────────────────────────────────────────── --}}
 <div id="modal-add" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs">
-    <div class="bg-white dark:bg-slate-800 rounded-xs shadow-2xl w-full max-w-lg border border-slate-200 dark:border-slate-700 overflow-hidden my-6 max-h-[90vh] flex flex-col">
+    <div class="bg-white dark:bg-slate-800 rounded-sm shadow-2xl w-full max-w-lg border border-slate-200 dark:border-slate-700 overflow-hidden my-6 max-h-[90vh] flex flex-col">
         <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-900/50">
             <h3 class="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-2">
                 <i class="fa-solid fa-plus-circle text-blue-600"></i> Add Material Cost Rate
@@ -170,11 +154,11 @@
             @include('management.material-cost._form', ['item' => null])
             <div class="flex justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-700">
                 <button type="button" onclick="closeAddModal()"
-                        class="px-4 py-2 text-xs font-bold border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xs transition-colors">
+                        class="px-4 py-2 text-xs font-bold border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-sm transition-colors">
                     Cancel
                 </button>
                 <button type="submit"
-                        class="px-4 py-2 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xs shadow-xs transition-colors cursor-pointer flex items-center gap-1.5">
+                        class="px-4 py-2 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-sm shadow-xs transition-colors cursor-pointer flex items-center gap-1.5">
                     <i class="fa-solid fa-floppy-disk"></i> Save Master Data
                 </button>
             </div>
@@ -184,7 +168,7 @@
 
 {{-- ── EDIT MODAL ───────────────────────────────────────────────── --}}
 <div id="modal-edit" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs">
-    <div class="bg-white dark:bg-slate-800 rounded-xs shadow-2xl w-full max-w-lg border border-slate-200 dark:border-slate-700 overflow-hidden my-6 max-h-[90vh] flex flex-col">
+    <div class="bg-white dark:bg-slate-800 rounded-sm shadow-2xl w-full max-w-lg border border-slate-200 dark:border-slate-700 overflow-hidden my-6 max-h-[90vh] flex flex-col">
         <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-900/50">
             <h3 class="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-2">
                 <i class="fa-solid fa-pen-to-square text-amber-500"></i> Edit Material Cost Rate
@@ -199,11 +183,11 @@
             </div>
             <div class="flex justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-700">
                 <button type="button" onclick="closeEditModal()"
-                        class="px-4 py-2 text-xs font-bold border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xs transition-colors">
+                        class="px-4 py-2 text-xs font-bold border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-sm transition-colors">
                     Cancel
                 </button>
                 <button type="submit"
-                        class="px-4 py-2 text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white rounded-xs shadow-xs transition-colors cursor-pointer flex items-center gap-1.5">
+                        class="px-4 py-2 text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white rounded-sm shadow-xs transition-colors cursor-pointer flex items-center gap-1.5">
                     <i class="fa-solid fa-check"></i> Update Master Data
                 </button>
             </div>
@@ -253,9 +237,9 @@
                     className: 'text-center font-semibold',
                     render: function(data) {
                         if (data === 'Sheet') {
-                            return `<span class="px-2 py-0.5 text-[10px] font-bold rounded-xs bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">Sheet</span>`;
+                            return `<span class="px-2 py-0.5 text-[10px] font-bold rounded-sm bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">Sheet</span>`;
                         } else if (data === 'Coil') {
-                            return `<span class="px-2 py-0.5 text-[10px] font-bold rounded-xs bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">Coil</span>`;
+                            return `<span class="px-2 py-0.5 text-[10px] font-bold rounded-sm bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">Coil</span>`;
                         }
                         return data;
                     }
@@ -293,11 +277,11 @@
                     className: 'font-semibold text-slate-700 dark:text-slate-300',
                     render: function(data) {
                         if (data === 'Engineering') {
-                            return `<span class="px-2 py-0.5 text-[10px] font-bold rounded-xs bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">Engineering</span>`;
+                            return `<span class="px-2 py-0.5 text-[10px] font-bold rounded-sm bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">Engineering</span>`;
                         } else if (data === 'Sales') {
-                            return `<span class="px-2 py-0.5 text-[10px] font-bold rounded-xs bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300">Sales</span>`;
+                            return `<span class="px-2 py-0.5 text-[10px] font-bold rounded-sm bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300">Sales</span>`;
                         }
-                        return `<span class="px-2 py-0.5 text-[10px] font-bold rounded-xs bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300">${data}</span>`;
+                        return `<span class="px-2 py-0.5 text-[10px] font-bold rounded-sm bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300">${data}</span>`;
                     }
                 },
                 {
@@ -318,11 +302,11 @@
                         return `
                             <div class="flex items-center justify-center gap-1.5">
                                 <button type="button" onclick='openEditModal(${rowJson})'
-                                        class="p-1.5 text-amber-600 hover:text-amber-800 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 rounded-xs transition-colors cursor-pointer" title="Edit Data">
+                                        class="p-1.5 text-amber-600 hover:text-amber-800 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 rounded-sm transition-colors cursor-pointer" title="Edit Data">
                                     <i class="fa-solid fa-pen-to-square"></i>
                                 </button>
                                 <button type="button" onclick="deleteItem(${row.id})"
-                                        class="p-1.5 text-rose-600 hover:text-rose-800 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xs transition-colors cursor-pointer" title="Delete Data">
+                                        class="p-1.5 text-rose-600 hover:text-rose-800 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-sm transition-colors cursor-pointer" title="Delete Data">
                                     <i class="fa-solid fa-trash-can"></i>
                                 </button>
                             </div>
@@ -365,7 +349,7 @@
             <div class="space-y-4 text-xs">
                 <div>
                     <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Customer Context</label>
-                    <select name="customer_id" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xs font-medium">
+                    <select name="customer_id" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-sm font-medium">
                         <option value="">Global (General Standard)</option>
                         @foreach($customers as $c)
                             <option value="{{ $c->id }}" ${item.customer_id == {{ $c->id }} ? 'selected' : ''}>{{ $c->name }} ({{ $c->code ?? '-' }})</option>
@@ -376,11 +360,11 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Material Spec <span class="text-rose-500">*</span></label>
-                        <input type="text" name="material_spec" value="${item.material_spec || ''}" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xs font-semibold">
+                        <input type="text" name="material_spec" value="${item.material_spec || ''}" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-sm font-semibold">
                     </div>
                     <div>
                         <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Material Type <span class="text-rose-500">*</span></label>
-                        <select name="material_type" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xs font-medium">
+                        <select name="material_type" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-sm font-medium">
                             <option value="Sheet" ${item.material_type === 'Sheet' ? 'selected' : ''}>Sheet</option>
                             <option value="Coil" ${item.material_type === 'Coil' ? 'selected' : ''}>Coil</option>
                         </select>
@@ -389,21 +373,21 @@
 
                 <div>
                     <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Thickness (mm)</label>
-                    <input type="number" step="0.01" name="thickness" value="${item.thickness !== null ? item.thickness : ''}" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xs font-medium">
+                    <input type="number" step="0.01" name="thickness" value="${item.thickness !== null ? item.thickness : ''}" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-sm font-medium">
                 </div>
 
-                <div class="p-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xs space-y-3">
+                <div class="p-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-sm space-y-3">
                     <span class="block font-extrabold text-[11px] uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
                         <i class="fa-solid fa-money-bill-wave text-emerald-500"></i> Material Price & Scrap Rate per Kg (IDR)
                     </span>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                             <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Price per Kg (IDR) <span class="text-rose-500">*</span></label>
-                            <input type="number" step="0.01" name="price_per_kg" value="${item.price_per_kg || ''}" required class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xs font-bold">
+                            <input type="number" step="0.01" name="price_per_kg" value="${item.price_per_kg || ''}" required class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-sm font-bold">
                         </div>
                         <div>
                             <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Scrap Price per Kg (IDR)</label>
-                            <input type="number" step="0.01" name="scrap_price_per_kg" value="${item.scrap_price_per_kg || 0}" class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xs font-semibold">
+                            <input type="number" step="0.01" name="scrap_price_per_kg" value="${item.scrap_price_per_kg || 0}" class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-sm font-semibold">
                         </div>
                     </div>
                 </div>
@@ -411,14 +395,14 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Rate Source <span class="text-rose-500">*</span></label>
-                        <select name="rate_source" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xs font-medium">
+                        <select name="rate_source" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-sm font-medium">
                             <option value="Sales" ${item.rate_source === 'Sales' ? 'selected' : ''}>Sales</option>
                             <option value="Engineering" ${item.rate_source === 'Engineering' ? 'selected' : ''}>Engineering</option>
                         </select>
                     </div>
                     <div>
                         <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Valid From</label>
-                        <input type="date" name="valid_from" value="${validFromStr}" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xs font-medium">
+                        <input type="date" name="valid_from" value="${validFromStr}" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-sm font-medium">
                     </div>
                 </div>
             </div>

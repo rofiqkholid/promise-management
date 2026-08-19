@@ -1,4 +1,4 @@
-<!-- Assessment Configuration Modal -->
+﻿<!-- Assessment Configuration Modal -->
 <div x-show="showAssessmentConfigModal" 
      class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4" 
      style="display: none;"
@@ -136,7 +136,7 @@
                                         <div>
                                             <div class="font-bold text-slate-800 dark:text-white text-xs">
                                                 {{ $opt->option_name }}
-                                                <span class="ml-1 px-1.5 py-0.5 bg-blue-50 dark:bg-blue-900/50 text-blue-800 dark:text-blue-300 font-extrabold border border-blue-200/55 text-[9px] rounded-xs">
+                                                <span class="ml-1 px-1.5 py-0.5 bg-blue-50 dark:bg-blue-900/50 text-blue-800 dark:text-blue-300 font-extrabold border border-blue-200/55 text-[9px] rounded-sm">
                                                     +{{ $opt->score_value }}
                                                 </span>
                                             </div>
@@ -191,7 +191,7 @@
                             <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 text-slate-800 dark:text-slate-100 transition-colors duration-150">
                                 <td class="p-3 font-bold text-blue-650 dark:text-blue-450">{{ $rank->rank_code }}</td>
                                 <td class="p-3">
-                                    <span class="px-2 py-0.5 bg-blue-50 dark:bg-blue-905 text-blue-700 dark:text-blue-300 font-bold border border-blue-200 dark:border-blue-800/60 rounded-xs">
+                                    <span class="px-2 py-0.5 bg-blue-50 dark:bg-blue-905 text-blue-700 dark:text-blue-300 font-bold border border-blue-200 dark:border-blue-800/60 rounded-sm">
                                         {{ $rank->priority_label }}
                                     </span>
                                 </td>

@@ -270,6 +270,83 @@ class ProductCostComparisonController extends Controller
                 ]);
             }
 
+            // Tooling Cost Comparison Section
+            if (!empty($comparison['tooling'])) {
+                $tooling = $comparison['tooling'];
+                fputcsv($file, []);
+                fputcsv($file, ['========================================================================']);
+                fputcsv($file, ['TOOLING COST COMPARISON MATRIX (ENGINEERING VS SALES)']);
+                fputcsv($file, ['Total Tooling Items:', $tooling['total_items_count']]);
+                fputcsv($file, ['Tooling Evaluation Status:', $tooling['status_text']]);
+                fputcsv($file, []);
+
+                fputcsv($file, ['COST STAGE', 'CRITERIA', 'ENGINEERING (HPP)', 'SALES (COMMERCIAL)', 'VARIANCE / NOTES']);
+                fputcsv($file, [
+                    'COGM',
+                    'Tooling Cost',
+                    number_format($tooling['cogm_eng'], 2, '.', ''),
+                    number_format($tooling['cogm_sales'], 2, '.', ''),
+                    'Total Tooling Investment'
+                ]);
+                fputcsv($file, [
+                    'Others',
+                    'O/H + Profit (0% vs ' . $tooling['oh_profit_sales_pct'] . '%)',
+                    number_format($tooling['oh_profit_eng_val'], 2, '.', ''),
+                    number_format($tooling['oh_profit_sales_val'], 2, '.', ''),
+                    'Follow Sales Strategy'
+                ]);
+                fputcsv($file, [
+                    'COGS TOTAL',
+                    'Total Tooling COGS',
+                    number_format($tooling['cogs_eng'], 2, '.', ''),
+                    number_format($tooling['cogs_sales'], 2, '.', ''),
+                    '( COGM + O/H Profit )'
+                ]);
+                fputcsv($file, [
+                    'PROFITABILITY',
+                    'Margin (IDR)',
+                    '-',
+                    number_format($tooling['margin_idr'], 2, '.', ''),
+                    '= COGS Sales - COGS Eng'
+                ]);
+                fputcsv($file, [
+                    'PROFITABILITY',
+                    'Std Margin (%)',
+                    '-',
+                    number_format($tooling['margin_pct'], 2, '.', '') . '%',
+                    'Std Margin: Min ' . $tooling['target_std_margin_pct'] . '%'
+                ]);
+                fputcsv($file, []);
+
+                // Detail Tooling Breakdown
+                fputcsv($file, ['DETAILED TOOLING PROCESS BREAKDOWN']);
+                fputcsv($file, [
+                    'No', 'Part No', 'Part Name', 'Rank', 'Category', 'OP', 'Process Name', 'Machine Type', 'Tonnage', 'Qty',
+                    'Tooling Cost (Eng)', 'O/H (%)', 'Tooling Cost (Sales)', 'Margin (IDR)', 'Margin (%)'
+                ]);
+
+                $tNo = 1;
+                foreach ($tooling['items'] as $tItem) {
+                    fputcsv($file, [
+                        $tNo++,
+                        $tItem['part_no'] ?? '-',
+                        $tItem['part_name'] ?? '-',
+                        $tItem['tool_rank'] ?? '-',
+                        $tItem['category'] ?? '-',
+                        $tItem['op'] ?? '-',
+                        $tItem['process_name'] ?? '-',
+                        $tItem['machine_type'] ?? '-',
+                        $tItem['tonnage'] ?? 0,
+                        $tItem['qty'] ?? 1,
+                        number_format($tItem['total_cost_eng'], 2, '.', ''),
+                        number_format($tItem['oh_profit_pct'], 2, '.', '') . '%',
+                        number_format($tItem['total_cost_sales'], 2, '.', ''),
+                        number_format($tItem['margin_idr'], 2, '.', ''),
+                        number_format($tItem['margin_pct'], 2, '.', '') . '%'
+                    ]);
+                }
+            }
+
             fclose($file);
         };
 

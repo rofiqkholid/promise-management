@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', 'WO Inbox · Promise Management')
 
@@ -109,8 +109,8 @@
                         <div class="flex items-center justify-between mt-2 select-none">
                             <span class="text-xs text-slate-500 dark:text-slate-555 font-medium" x-text="'To: ' + item.target_departments"></span>
                             <div class="flex gap-1.5">
-                                <span class="px-1.5 py-0.5 text-[9px] font-extrabold rounded-xs uppercase tracking-wider" :class="getPriorityClass(item.priority)" x-text="item.priority"></span>
-                                <span class="px-1.5 py-0.5 text-[9px] font-extrabold rounded-xs uppercase tracking-wider" :class="getStatusClass(item.status)" x-text="item.status"></span>
+                                <span class="px-1.5 py-0.5 text-[9px] font-extrabold rounded-sm uppercase tracking-wider" :class="getPriorityClass(item.priority)" x-text="item.priority"></span>
+                                <span class="px-1.5 py-0.5 text-[9px] font-extrabold rounded-sm uppercase tracking-wider" :class="getStatusClass(item.status)" x-text="item.status"></span>
                             </div>
                         </div>
                     </div>
@@ -152,7 +152,7 @@
                         <div class="flex items-center gap-3">
                             {{-- Mobile back button --}}
                             <button type="button" @click="selectedHashedId = null"
-                                    class="lg:hidden w-7 h-7 flex items-center justify-center border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 rounded-xs">
+                                    class="lg:hidden w-7 h-7 flex items-center justify-center border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 rounded-sm">
                                 <i class="fa-solid fa-arrow-left text-xs"></i>
                             </button>
                             <div class="flex gap-4">
@@ -215,7 +215,7 @@
                                     {{-- Tab 2: PIC Checklist --}}
                         <div x-show="activeRightTab === 'checklist'" class="w-full max-w-[760px] space-y-4">
                             {{-- Checklist Product Search --}}
-                            <div class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-xs p-2.5 shadow-2xs flex items-center gap-2">
+                            <div class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-sm p-2.5 shadow-2xs flex items-center gap-2">
                                 <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs ml-1"></i>
                                 <input type="text" x-model="checklistSearchQuery" placeholder="Search product by part no or name..."
                                        class="w-full text-xs text-slate-800 dark:text-slate-100 bg-transparent focus:outline-none border-none p-0">
@@ -225,21 +225,21 @@
                             </div>
 
                             <template x-for="(proc, pIdx) in detailData.processes" :key="pIdx">
-                                <div class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-xs overflow-hidden shadow-2xs">
+                                <div class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-sm overflow-hidden shadow-2xs">
                                     <div class="bg-slate-50 dark:bg-slate-800 px-4 py-2 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                                         <span class="text-xs font-bold text-slate-800 dark:text-slate-200" x-text="proc.process_name"></span>
                                     </div>
                                     <div class="p-4 space-y-3">
                                         <template x-for="(dept, dIdx) in proc.assigned_departments" :key="dIdx">
-                                            <div class="border border-slate-200 dark:border-slate-800 rounded-xs overflow-hidden">
+                                            <div class="border border-slate-200 dark:border-slate-800 rounded-sm overflow-hidden">
                                                 {{-- Accordion Header --}}
                                                 <button type="button" @click="toggleDept(proc.process_id, dept.department_id)"
                                                         class="w-full flex justify-between items-center bg-slate-50 dark:bg-slate-800 hover:bg-slate-100/70 dark:hover:bg-slate-800/70 p-2.5 border-b border-slate-200 dark:border-slate-800 text-xs font-semibold cursor-pointer select-none">
                                                     <div class="flex items-center gap-2">
-                                                        <span class="px-2 py-0.5 rounded-xs bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold" x-text="dept.department_code"></span>
+                                                        <span class="px-2 py-0.5 rounded-sm bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold" x-text="dept.department_code"></span>
                                                         <span class="text-slate-500 dark:text-slate-400" x-text="'(PIC: ' + dept.pic_name + ')'"></span>
                                                         <template x-if="dept.is_my_pic_task === true || dept.is_my_pic_task === 1">
-                                                            <span class="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50 font-extrabold text-[9px] rounded-xs uppercase tracking-wider font-mono">My Task</span>
+                                                            <span class="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50 font-extrabold text-[9px] rounded-sm uppercase tracking-wider font-mono">My Task</span>
                                                         </template>
                                                     </div>
                                                     <div class="flex items-center gap-3 select-none">
@@ -257,7 +257,7 @@
                                                 <div x-show="isDeptExpanded(proc.process_id, dept.department_id)" class="p-3 space-y-2.5 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
                                                     {{-- Lock Warning if not approved --}}
                                                     <template x-if="detailData.status !== 'Approved' && detailData.status !== 'Released'">
-                                                        <div class="px-2.5 py-1.5 text-[10px] bg-amber-50 dark:bg-amber-955/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900/40 rounded-xs flex items-center gap-1.5 font-bold mb-2">
+                                                        <div class="px-2.5 py-1.5 text-[10px] bg-amber-50 dark:bg-amber-955/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900/40 rounded-sm flex items-center gap-1.5 font-bold mb-2">
                                                             <i class="fa-solid fa-lock"></i> Progress checklist is locked during approval process.
                                                         </div>
                                                     </template>
@@ -269,16 +269,16 @@
                                                                 <input type="checkbox" 
                                                                        :checked="isAllProductsChecked(proc.process_id, dept.department_id)"
                                                                        @change="toggleSelectAllProducts(proc.process_id, dept.department_id, $event.target.checked)"
-                                                                       class="h-3.5 w-3.5 rounded-xs border-slate-300 dark:border-slate-700 text-[#0c4da2] dark:text-blue-500 focus:ring-0 cursor-pointer bg-white dark:bg-slate-900">
+                                                                       class="h-3.5 w-3.5 rounded-sm border-slate-300 dark:border-slate-700 text-[#0c4da2] dark:text-blue-500 focus:ring-0 cursor-pointer bg-white dark:bg-slate-900">
                                                                 <span>Select All Products</span>
                                                             </label>
                                                         </div>
                                                     </template>
                                                     
-                                                    <div class="bg-slate-50 dark:bg-slate-900/40 p-2.5 border border-slate-200 dark:border-slate-800 rounded-xs">
+                                                    <div class="bg-slate-50 dark:bg-slate-900/40 p-2.5 border border-slate-200 dark:border-slate-800 rounded-sm">
                                                         <div class="grid grid-cols-2 gap-2">
                                                             <template x-for="p in detailData.products.filter(p => !checklistSearchQuery || p.customer_part_no.toLowerCase().includes(checklistSearchQuery.toLowerCase()) || p.customer_part_name.toLowerCase().includes(checklistSearchQuery.toLowerCase()))" :key="p.id">
-                                                                <div class="flex items-center justify-between p-2 border rounded-xs text-xs transition-colors duration-200 shadow-2xs"
+                                                                <div class="flex items-center justify-between p-2 border rounded-sm text-xs transition-colors duration-200 shadow-2xs"
                                                                      :class="dept.checked_product_ids.includes(Number(p.id)) ? 'border-emerald-200 dark:border-emerald-800 bg-emerald-50/20 dark:bg-emerald-950/10' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900'">
                                                                     
                                                                     {{-- Checkbox for PIC (Enabled only if approved) --}}
@@ -287,7 +287,7 @@
                                                                             <input type="checkbox" name="checked_product_ids[]" :value="p.id"
                                                                                    :checked="dept.checked_product_ids.includes(Number(p.id))"
                                                                                    @change="toggleProductChecked(proc.process_id, dept.department_id, p.id, $event.target.checked)"
-                                                                                   class="h-3.5 w-3.5 rounded-xs border-slate-300 dark:border-slate-750 text-[#0c4da2] dark:text-blue-500 focus:ring-0 cursor-pointer bg-white dark:bg-slate-900">
+                                                                                   class="h-3.5 w-3.5 rounded-sm border-slate-300 dark:border-slate-750 text-[#0c4da2] dark:text-blue-500 focus:ring-0 cursor-pointer bg-white dark:bg-slate-900">
                                                                             <div class="min-w-0 flex-1">
                                                                                 <span class="font-extrabold block text-slate-800 dark:text-slate-200" :class="dept.checked_product_ids.includes(Number(p.id)) ? 'text-emerald-800 dark:text-emerald-450' : 'text-slate-800 dark:text-slate-200'" x-text="p.customer_part_no"></span>
                                                                                 <span class="text-[10px] text-slate-455 dark:text-slate-400 truncate block" x-text="p.customer_part_name"></span>
@@ -298,7 +298,7 @@
                                                                     {{-- Read-only or Disabled checklist if not PIC or not approved --}}
                                                                     <template x-if="!((dept.is_my_pic_task === true || dept.is_my_pic_task === 1) && (detailData.status === 'Approved' || detailData.status === 'Released'))">
                                                                         <div class="flex items-center gap-2.5 w-full">
-                                                                            <div class="w-4 h-4 rounded-xs flex items-center justify-center flex-none border"
+                                                                            <div class="w-4 h-4 rounded-sm flex items-center justify-center flex-none border"
                                                                                  :class="dept.checked_product_ids.includes(Number(p.id)) ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-700'">
                                                                                 <i class="fa-solid text-[8px]" :class="dept.checked_product_ids.includes(Number(p.id)) ? 'fa-check' : 'fa-xmark'"></i>
                                                                             </div>
@@ -328,10 +328,10 @@
                             <div class="flex flex-col gap-2.5 w-full">
                                 {{-- Redesigned Premium Urgent Priority Confirmation for Marketing GM --}}
                                 <template x-if="detailData.is_marketing_gm_step">
-                                    <div class="p-3 bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/80 rounded-xs space-y-2 w-full">
+                                    <div class="p-3 bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/80 rounded-sm space-y-2 w-full">
                                         <div class="flex items-center justify-between text-xs">
                                             <label class="flex items-center gap-2 font-bold text-rose-900 dark:text-rose-300 cursor-pointer select-none">
-                                                <input type="checkbox" x-model="urgentConfirmed" class="w-4 h-4 text-rose-600 focus:ring-rose-500 rounded-xs cursor-pointer accent-rose-600">
+                                                <input type="checkbox" x-model="urgentConfirmed" class="w-4 h-4 text-rose-600 focus:ring-rose-500 rounded-sm cursor-pointer accent-rose-600">
                                                 <span>I confirm this Work Order is URGENT</span>
                                             </label>
                                             <span class="text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider">Marketing GM Confirmation</span>
@@ -339,7 +339,7 @@
                                         <div class="flex flex-col gap-1">
                                             <span class="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Urgent Reason / Note <span class="text-rose-500">*</span></span>
                                             <input type="text" x-model="urgentReason" placeholder="Enter reason why this SPK is urgent..."
-                                                   class="w-full px-2.5 py-1.5 text-xs border border-rose-300 dark:border-rose-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-xs focus:outline-none focus:border-rose-500">
+                                                   class="w-full px-2.5 py-1.5 text-xs border border-rose-300 dark:border-rose-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-sm focus:outline-none focus:border-rose-500">
                                         </div>
                                     </div>
                                 </template>
@@ -349,22 +349,22 @@
                                     <div class="flex flex-col gap-1 flex-1">
                                         <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Remarks</span>
                                         <input type="text" x-model="approvalRemarks" placeholder="Add approval comments/remarks here..."
-                                               class="w-full px-2.5 py-1.5 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-xs focus:outline-none focus:border-[#0c4da2] dark:focus:border-blue-500">
+                                               class="w-full px-2.5 py-1.5 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-sm focus:outline-none focus:border-[#0c4da2] dark:focus:border-blue-500">
                                     </div>
                                     {{-- Due Date Closed --}}
                                     <div class="flex flex-col gap-1 shrink-0" x-show="isLastApprovalLevel()">
                                         <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Due Date Closed</span>
                                         <input type="date" x-model="dueDateClosed"
-                                               class="px-2.5 py-1.5 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-xs focus:outline-none focus:border-[#0c4da2] dark:focus:border-blue-500">
+                                               class="px-2.5 py-1.5 text-xs border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-sm focus:outline-none focus:border-[#0c4da2] dark:focus:border-blue-500">
                                     </div>
                                     {{-- Action Buttons --}}
                                     <div class="flex items-center gap-1.5 shrink-0">
                                         <button type="button" @click="submitApproval('approve')"
-                                                class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xs cursor-pointer flex items-center gap-1.5 transition-colors">
+                                                class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-sm cursor-pointer flex items-center gap-1.5 transition-colors">
                                             <i class="fa-solid fa-check"></i> Approve
                                         </button>
                                         <button type="button" @click="submitApproval('reject')"
-                                                class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xs cursor-pointer flex items-center gap-1.5 transition-colors">
+                                                class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-sm cursor-pointer flex items-center gap-1.5 transition-colors">
                                             <i class="fa-solid fa-xmark"></i> Reject
                                         </button>
                                     </div>
@@ -394,7 +394,7 @@
                                 <button type="button" @click="saveAllMyProgress()"
                                         :disabled="!hasUnsavedChanges()"
                                         :class="hasUnsavedChanges() ? 'bg-indigo-600 hover:bg-indigo-750 text-white cursor-pointer shadow-xs hover:shadow' : 'bg-slate-300 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed'"
-                                        class="px-4 py-2 font-bold text-xs rounded-xs transition-all flex items-center gap-1.5">
+                                        class="px-4 py-2 font-bold text-xs rounded-sm transition-all flex items-center gap-1.5">
                                     <i class="fa-solid fa-floppy-disk"></i> Save Progress
                                 </button>
                             </div>
@@ -415,7 +415,7 @@
                                 </span>
                                 <button type="button"
                                         @click="openQuotationExportModal(WO_BASE_URL + '/work-order-tooling/' + selectedHashedId + '/quotation')"
-                                        class="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xs shadow-xs hover:shadow transition-all shrink-0 cursor-pointer"
+                                        class="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-sm shadow-xs hover:shadow transition-all shrink-0 cursor-pointer"
                                         title="Download Quotation Tooling Attachment">
                                     <i class="fa-solid fa-file-excel text-base"></i>
                                     <span>Download Quotation Tooling</span>

@@ -13,6 +13,7 @@ class MfgProcessStpCost extends Model
     protected $table = 'mng_mfg_process_stp_costs';
 
     protected $fillable = [
+        'customer_id',
         'machine_type',
         'tonnage',
         'machine_category',
@@ -28,6 +29,7 @@ class MfgProcessStpCost extends Model
     ];
 
     protected $casts = [
+        'customer_id' => 'integer',
         'tonnage' => 'integer',
         'output_qty' => 'integer',
         'stroke' => 'float',
@@ -35,6 +37,11 @@ class MfgProcessStpCost extends Model
         'std_cost_rate' => 'float',
         'is_active' => 'boolean',
     ];
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class, 'customer_id');
+    }
 
     public function scopeActive($query)
     {
