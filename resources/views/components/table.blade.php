@@ -279,7 +279,15 @@
                         }
                     });
 
-                    $(`#${popoverId}-close, #${popoverId}-apply`).on('click', function() {
+                    $(`#${popoverId}-close`).on('click', function() {
+                        closePopover();
+                    });
+
+                    $(`#${popoverId}-apply`).on('click', function() {
+                        const $form = $panelContent.find('form');
+                        if ($form.length) {
+                            $form.submit();
+                        }
                         closePopover();
                     });
 
@@ -294,7 +302,10 @@
                             $el.trigger('change');
                         });
                         updateActiveBadge();
-                        if (typeof dt.draw === 'function') {
+                        const $form = $panelContent.find('form');
+                        if ($form.length) {
+                            window.location.href = $form.attr('action') || window.location.pathname;
+                        } else if (typeof dt.draw === 'function') {
                             dt.draw();
                         }
                     });

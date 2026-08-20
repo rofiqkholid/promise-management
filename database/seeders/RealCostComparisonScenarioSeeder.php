@@ -47,6 +47,8 @@ class RealCostComparisonScenarioSeeder extends Seeder
                 'admin_mfg_pct' => 4.00,
                 'oh_profit_pct' => 0.00,
                 'min_std_margin_pct' => 8.00,
+                'tooling_oh_profit_pct' => 0.00,
+                'tooling_min_std_margin_pct' => 20.00,
                 'notes' => 'Internal Engineering Cost Baseline (Admin Matrl 2%, Admin Mfg 4%, OH 0%).',
             ]
         );
@@ -62,7 +64,9 @@ class RealCostComparisonScenarioSeeder extends Seeder
                 'admin_mfg_pct' => 4.50,
                 'oh_profit_pct' => 12.00,
                 'min_std_margin_pct' => 12.00,
-                'notes' => 'Commercial Sales Policy for MMKI (Target Margin 12.00%, Markup OH 12.00%).',
+                'tooling_oh_profit_pct' => 20.00,
+                'tooling_min_std_margin_pct' => 20.00,
+                'notes' => 'Commercial Sales Policy for MMKI (Target Margin 12.00%, Markup OH 12.00%, Tooling OH 20%).',
             ]
         );
 

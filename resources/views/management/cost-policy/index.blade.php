@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', 'Master Data Cost Policy & Markup · Promise Management')
 
@@ -116,8 +116,10 @@
                 <th class="px-4 py-2.5 border-r border-slate-200 dark:border-slate-700">Customer Context</th>
                 <th class="px-3 py-2.5 text-right border-r border-slate-200 dark:border-slate-700">Admin Matrl (%)</th>
                 <th class="px-3 py-2.5 text-right border-r border-slate-200 dark:border-slate-700">Admin Mfg (%)</th>
-                <th class="px-3 py-2.5 text-right border-r border-slate-200 dark:border-slate-700">O/H + Profit (%)</th>
-                <th class="px-3 py-2.5 text-right border-r border-slate-200 dark:border-slate-700 font-extrabold text-slate-800 dark:text-slate-100">Target Margin (%)</th>
+                <th class="px-3 py-2.5 text-right border-r border-slate-200 dark:border-slate-700">Prod O/H (%)</th>
+                <th class="px-3 py-2.5 text-right border-r border-slate-200 dark:border-slate-700 font-extrabold text-slate-800 dark:text-slate-100">Prod Margin (%)</th>
+                <th class="px-3 py-2.5 text-right border-r border-slate-200 dark:border-slate-700 text-indigo-600 dark:text-indigo-400">Tool O/H (%)</th>
+                <th class="px-3 py-2.5 text-right border-r border-slate-200 dark:border-slate-700 font-extrabold text-indigo-700 dark:text-indigo-300">Tool Margin (%)</th>
                 <th class="px-4 py-2.5 border-r border-slate-200 dark:border-slate-700">Rate Source</th>
                 <th class="px-4 py-2.5 border-r border-slate-200 dark:border-slate-700">Notes</th>
                 <th class="px-3 py-2.5 text-center w-20">Actions</th>
@@ -250,6 +252,22 @@
                     }
                 },
                 {
+                    data: 'tooling_oh_profit_pct',
+                    orderable: true,
+                    className: 'text-right font-bold text-indigo-700 dark:text-indigo-400 bg-indigo-50/30 dark:bg-indigo-950/10',
+                    render: function(data) {
+                        return `${parseFloat(data || 20.0).toFixed(2)}%`;
+                    }
+                },
+                {
+                    data: 'tooling_min_std_margin_pct',
+                    orderable: true,
+                    className: 'text-right font-black text-purple-600 dark:text-purple-400 bg-purple-50/30 dark:bg-purple-950/10',
+                    render: function(data) {
+                        return `${parseFloat(data || 20.0).toFixed(2)}%`;
+                    }
+                },
+                {
                     data: 'rate_source',
                     orderable: true,
                     className: 'font-semibold text-slate-700 dark:text-slate-300',
@@ -314,19 +332,29 @@
             @csrf
             @method('PUT')
             <div class="space-y-4 text-xs">
-                <div>
-                    <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Customer Context</label>
-                    <select name="customer_id" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-sm font-medium">
-                        <option value="">Global (General Standard Eng / Sales)</option>
-                        @foreach($customers as $c)
-                            <option value="{{ $c->id }}" ${item.customer_id == {{ $c->id }} ? 'selected' : ''}>{{ $c->name }} ({{ $c->code ?? '-' }})</option>
-                        @endforeach
-                    </select>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Customer Context</label>
+                        <select name="customer_id" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-sm font-medium">
+                            <option value="">Global (General Standard Eng / Sales)</option>
+                            @foreach($customers as $c)
+                                <option value="{{ $c->id }}" ${item.customer_id == {{ $c->id }} ? 'selected' : ''}>{{ $c->name }} ({{ $c->code ?? '-' }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Rate Source <span class="text-rose-500">*</span></label>
+                        <select name="rate_source" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-sm font-medium">
+                            <option value="Sales" ${item.rate_source === 'Sales' ? 'selected' : ''}>Sales</option>
+                            <option value="Engineering" ${item.rate_source === 'Engineering' ? 'selected' : ''}>Engineering</option>
+                        </select>
+                    </div>
                 </div>
 
-                <div class="p-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-sm space-y-3">
-                    <span class="block font-extrabold text-[11px] uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
-                        <i class="fa-solid fa-percent text-blue-500"></i> Admin / Handling Rates (%)
+                {{-- Product Policy Group --}}
+                <div class="p-3 bg-blue-50/40 dark:bg-slate-900/60 border border-blue-200/60 dark:border-blue-900/40 rounded-sm space-y-3">
+                    <span class="block font-extrabold text-[11px] uppercase tracking-wider text-blue-700 dark:text-blue-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-cube text-blue-600 dark:text-blue-400"></i> Product Cost Policy (Parts)
                     </span>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
@@ -337,37 +365,37 @@
                             <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Admin Mfg Rate (%) <span class="text-rose-500">*</span></label>
                             <input type="number" step="0.01" name="admin_mfg_pct" value="${item.admin_mfg_pct || 0}" required class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-sm font-semibold">
                         </div>
-                    </div>
-                </div>
-
-                <div class="p-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-sm space-y-3">
-                    <span class="block font-extrabold text-[11px] uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
-                        <i class="fa-solid fa-chart-line text-emerald-500"></i> Overhead, Profit & Target Margin (%)
-                    </span>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">O/H + Profit Rate (%) <span class="text-rose-500">*</span></label>
+                            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Product O/H + Profit (%) <span class="text-rose-500">*</span></label>
                             <input type="number" step="0.01" name="oh_profit_pct" value="${item.oh_profit_pct || 0}" required class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-sm font-semibold">
                         </div>
                         <div>
-                            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Target Std Margin (%) <span class="text-rose-500">*</span></label>
+                            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Product Target Std Margin (%) <span class="text-rose-500">*</span></label>
                             <input type="number" step="0.01" name="min_std_margin_pct" value="${item.min_std_margin_pct || 12.00}" required class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-sm font-bold">
                         </div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                        <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Rate Source <span class="text-rose-500">*</span></label>
-                        <select name="rate_source" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-sm font-medium">
-                            <option value="Sales" ${item.rate_source === 'Sales' ? 'selected' : ''}>Sales</option>
-                            <option value="Engineering" ${item.rate_source === 'Engineering' ? 'selected' : ''}>Engineering</option>
-                        </select>
+                {{-- Tooling Policy Group --}}
+                <div class="p-3 bg-indigo-50/40 dark:bg-slate-900/60 border border-indigo-200/60 dark:border-indigo-900/40 rounded-sm space-y-3">
+                    <span class="block font-extrabold text-[11px] uppercase tracking-wider text-indigo-700 dark:text-indigo-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-wrench text-indigo-600 dark:text-indigo-400"></i> Tooling Cost Policy (Dies / Mold)
+                    </span>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Tooling O/H + Profit (%) <span class="text-rose-500">*</span></label>
+                            <input type="number" step="0.01" name="tooling_oh_profit_pct" value="${item.tooling_oh_profit_pct != null ? item.tooling_oh_profit_pct : 20.00}" required class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-sm font-semibold">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Tooling Target Std Margin (%) <span class="text-rose-500">*</span></label>
+                            <input type="number" step="0.01" name="tooling_min_std_margin_pct" value="${item.tooling_min_std_margin_pct != null ? item.tooling_min_std_margin_pct : 20.00}" required class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-sm font-bold">
+                        </div>
                     </div>
-                    <div>
-                        <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Notes</label>
-                        <input type="text" name="notes" value="${item.notes || ''}" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-sm font-medium">
-                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Notes</label>
+                    <input type="text" name="notes" value="${item.notes || ''}" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-sm font-medium">
                 </div>
             </div>
         `;

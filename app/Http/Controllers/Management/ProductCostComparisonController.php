@@ -18,21 +18,22 @@ class ProductCostComparisonController extends Controller
         $this->comparisonService = $comparisonService;
     }
 
-    /**
-     * Display Header List of all EBD Projects for Cost Comparison.
-     */
     public function index(Request $request)
     {
-        $customers = Customer::orderBy('name', 'asc')->get();
+        // 1. Only fetch Customers that have actual EBD records
+        $customerIdsWithEbd = MngEbdHeader::whereNotNull('customer_id')->distinct()->pluck('customer_id');
+        $customers = Customer::whereIn('id', $customerIdsWithEbd)->orderBy('name', 'asc')->get();
 
         $selectedCustomerId = $request->input('customer_id');
         $selectedModelId = $request->input('model_id');
 
-        // Models list based on customer
-        $models = collect();
+        // 2. Only fetch Project Models that have actual EBD records (and matching customer if selected)
+        $modelIdsWithEbd = MngEbdHeader::whereNotNull('model_id');
         if ($selectedCustomerId) {
-            $models = ProjectModel::where('customer_id', $selectedCustomerId)->orderBy('name', 'asc')->get();
+            $modelIdsWithEbd->where('customer_id', $selectedCustomerId);
         }
+        $modelIds = $modelIdsWithEbd->distinct()->pluck('model_id');
+        $models = ProjectModel::whereIn('id', $modelIds)->orderBy('name', 'asc')->get();
 
         // Query EBD Headers
         $ebdQuery = MngEbdHeader::with(['customer', 'projectModel', 'items.toolingProcesses', 'items.addProcesses'])->orderByDesc('id');
@@ -108,12 +109,17 @@ class ProductCostComparisonController extends Controller
     }
 
     /**
-     * AJAX endpoint to get models by customer.
+     * AJAX endpoint to get models by customer from existing EBD records.
      */
     public function getModelsByCustomer(Request $request)
     {
         $customerId = $request->input('customer_id');
-        $models = ProjectModel::where('customer_id', $customerId)->orderBy('name', 'asc')->get(['id', 'name']);
+        $modelIdsQuery = MngEbdHeader::whereNotNull('model_id');
+        if ($customerId) {
+            $modelIdsQuery->where('customer_id', $customerId);
+        }
+        $modelIds = $modelIdsQuery->distinct()->pluck('model_id');
+        $models = ProjectModel::whereIn('id', $modelIds)->orderBy('name', 'asc')->get(['id', 'name']);
         return response()->json($models);
     }
 

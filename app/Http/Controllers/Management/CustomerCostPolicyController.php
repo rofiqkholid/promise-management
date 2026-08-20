@@ -67,6 +67,8 @@ class CustomerCostPolicyController extends Controller
                   ->orWhere('admin_mfg_pct', 'like', "%{$searchValue}%")
                   ->orWhere('oh_profit_pct', 'like', "%{$searchValue}%")
                   ->orWhere('min_std_margin_pct', 'like', "%{$searchValue}%")
+                  ->orWhere('tooling_oh_profit_pct', 'like', "%{$searchValue}%")
+                  ->orWhere('tooling_min_std_margin_pct', 'like', "%{$searchValue}%")
                   ->orWhere('rate_source', 'like', "%{$searchValue}%")
                   ->orWhere('notes', 'like', "%{$searchValue}%")
                   ->orWhereHas('customer', function ($cq) use ($searchValue) {
@@ -86,8 +88,10 @@ class CustomerCostPolicyController extends Controller
             3 => 'admin_mfg_pct',
             4 => 'oh_profit_pct',
             5 => 'min_std_margin_pct',
-            6 => 'rate_source',
-            7 => 'notes',
+            6 => 'tooling_oh_profit_pct',
+            7 => 'tooling_min_std_margin_pct',
+            8 => 'rate_source',
+            9 => 'notes',
         ];
 
         $orderColumnIndex = $request->input('order.0.column');
@@ -125,6 +129,8 @@ class CustomerCostPolicyController extends Controller
             'admin_mfg_pct' => 'required|numeric|min:0|max:100',
             'oh_profit_pct' => 'required|numeric|min:0|max:100',
             'min_std_margin_pct' => 'required|numeric|min:0|max:100',
+            'tooling_oh_profit_pct' => 'required|numeric|min:0|max:100',
+            'tooling_min_std_margin_pct' => 'required|numeric|min:0|max:100',
             'rate_source' => 'required|string|in:Engineering,Sales',
             'notes' => 'nullable|string|max:500',
             'is_active' => 'nullable|boolean',
@@ -151,6 +157,8 @@ class CustomerCostPolicyController extends Controller
             'admin_mfg_pct' => 'required|numeric|min:0|max:100',
             'oh_profit_pct' => 'required|numeric|min:0|max:100',
             'min_std_margin_pct' => 'required|numeric|min:0|max:100',
+            'tooling_oh_profit_pct' => 'required|numeric|min:0|max:100',
+            'tooling_min_std_margin_pct' => 'required|numeric|min:0|max:100',
             'rate_source' => 'required|string|in:Engineering,Sales',
             'notes' => 'nullable|string|max:500',
             'is_active' => 'nullable|boolean',
@@ -198,7 +206,9 @@ class CustomerCostPolicyController extends Controller
 
         $columns = array(
             'No', 'Customer Context', 'Admin Matrl (%)', 'Admin Mfg (%)',
-            'Overhead + Profit (%)', 'Min Std Margin (%)', 'Rate Source', 'Notes'
+            'Product O/H + Profit (%)', 'Product Min Std Margin (%)',
+            'Tooling O/H + Profit (%)', 'Tooling Min Std Margin (%)',
+            'Rate Source', 'Notes'
         );
 
         $callback = function () use ($items, $columns) {
@@ -215,6 +225,8 @@ class CustomerCostPolicyController extends Controller
                     number_format($item->admin_mfg_pct, 2, '.', '') . '%',
                     number_format($item->oh_profit_pct, 2, '.', '') . '%',
                     number_format($item->min_std_margin_pct, 2, '.', '') . '%',
+                    number_format($item->tooling_oh_profit_pct ?? 20.0, 2, '.', '') . '%',
+                    number_format($item->tooling_min_std_margin_pct ?? 20.0, 2, '.', '') . '%',
                     $item->rate_source,
                     $item->notes ?? '-'
                 ));

@@ -33,6 +33,8 @@ class ProductCostComparisonService
                 'admin_mfg_pct' => 0.00,
                 'oh_profit_pct' => 0.00,
                 'min_std_margin_pct' => 0.00,
+                'tooling_oh_profit_pct' => 0.00,
+                'tooling_min_std_margin_pct' => 0.00,
             ];
 
         $policySales = null;
@@ -49,6 +51,8 @@ class ProductCostComparisonService
                     'admin_mfg_pct' => 0.00,
                     'oh_profit_pct' => 0.00,
                     'min_std_margin_pct' => 0.00,
+                    'tooling_oh_profit_pct' => 20.00,
+                    'tooling_min_std_margin_pct' => 20.00,
                 ];
         }
 
@@ -141,14 +145,9 @@ class ProductCostComparisonService
         $toolingItems = [];
         $totalToolingCostEng = 0.0;
         $totalToolingCostSales = 0.0;
-        $toolingOhProfitEngPct = 0.0; // 0% per reference
-        $toolingOhProfitSalesPct = floatval($policySales->oh_profit_pct ?? 0.0);
-        if ($toolingOhProfitSalesPct <= 0) {
-            $toolingOhProfitSalesPct = floatval($policySales->min_std_margin_pct ?? 20.0);
-            if ($toolingOhProfitSalesPct <= 0) {
-                $toolingOhProfitSalesPct = 20.0;
-            }
-        }
+        $toolingOhProfitEngPct = floatval($policyEng->tooling_oh_profit_pct ?? 0.0);
+        $toolingOhProfitSalesPct = floatval($policySales->tooling_oh_profit_pct ?? 20.0);
+        $toolingTargetStdMargin = floatval($policySales->tooling_min_std_margin_pct ?? 20.0);
 
         foreach ($ebdHeader->items as $item) {
             if ($item->toolingProcesses && $item->toolingProcesses->count() > 0) {
@@ -191,14 +190,13 @@ class ProductCostComparisonService
 
         $toolingCogmEng = $totalToolingCostEng;
         $toolingCogmSales = $totalToolingCostEng;
-        $toolingOhProfitEngVal = 0.0;
+        $toolingOhProfitEngVal = $toolingCogmEng * ($toolingOhProfitEngPct / 100);
         $toolingOhProfitSalesVal = $toolingCogmSales * ($toolingOhProfitSalesPct / 100);
         $toolingCogsEng = $toolingCogmEng + $toolingOhProfitEngVal;
         $toolingCogsSales = $toolingCogmSales + $toolingOhProfitSalesVal;
 
         $toolingMarginIdr = $toolingCogsSales - $toolingCogsEng;
         $toolingMarginPct = $toolingCogsSales > 0 ? ($toolingMarginIdr / $toolingCogsSales) * 100 : 0.0;
-        $toolingTargetStdMargin = 20.00; // Std Margin = Min. 20%
 
         $toolingStatus = 'PASSED';
         $toolingStatusBadge = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300';
@@ -207,7 +205,7 @@ class ProductCostComparisonService
         if ($toolingMarginPct < $toolingTargetStdMargin) {
             $toolingStatus = 'WARNING';
             $toolingStatusBadge = 'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300';
-            $toolingStatusText = 'BELOW TARGET MARGIN (< 20%)';
+            $toolingStatusText = 'BELOW TARGET MARGIN (< ' . number_format($toolingTargetStdMargin, 1) . '%)';
         }
 
         $toolingComparison = [

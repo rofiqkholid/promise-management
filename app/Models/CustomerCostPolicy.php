@@ -18,6 +18,8 @@ class CustomerCostPolicy extends Model
         'admin_mfg_pct',
         'oh_profit_pct',
         'min_std_margin_pct',
+        'tooling_oh_profit_pct',
+        'tooling_min_std_margin_pct',
         'rate_source',
         'notes',
         'is_active',
@@ -28,6 +30,8 @@ class CustomerCostPolicy extends Model
         'admin_mfg_pct' => 'float',
         'oh_profit_pct' => 'float',
         'min_std_margin_pct' => 'float',
+        'tooling_oh_profit_pct' => 'float',
+        'tooling_min_std_margin_pct' => 'float',
         'is_active' => 'boolean',
     ];
 

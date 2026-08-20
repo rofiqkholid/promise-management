@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', 'Cost Comparison Matrix Detail · Promise Management')
 
@@ -494,10 +494,10 @@
                                 O/H + Profit
                             </td>
                             <td class="border border-slate-300 dark:border-slate-700 p-2.5 text-center font-bold text-slate-700 dark:text-slate-300 bg-slate-50/30 dark:bg-slate-900/20">
-                                0.00%
+                                {{ number_format($comparisonResult['tooling']['oh_profit_eng_pct'], 2) }}%
                             </td>
                             <td class="border border-slate-300 dark:border-slate-700 p-2.5 text-right font-medium text-slate-800 dark:text-slate-200">
-                                Rp 0,00
+                                Rp {{ number_format($comparisonResult['tooling']['oh_profit_eng_val'], 2, ',', '.') }}
                             </td>
                             <td class="border border-slate-300 dark:border-slate-700 p-2.5 text-center font-bold text-slate-700 dark:text-slate-300 bg-slate-50/30 dark:bg-slate-900/20">
                                 {{ number_format($comparisonResult['tooling']['oh_profit_sales_pct'], 2) }}%
