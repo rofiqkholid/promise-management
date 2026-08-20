@@ -193,7 +193,6 @@ Route::middleware('auth')->prefix('management')->name('management.')->group(func
 
     // Dynamic Excel Template Engine & Visual Mapping Studio Routes
     Route::get('excel-templates', [\App\Http\Controllers\Admin\ExcelTemplateController::class, 'index'])->name('excel-templates.index');
-    Route::get('excel-templates/create', [\App\Http\Controllers\Admin\ExcelTemplateController::class, 'create'])->name('excel-templates.create');
     Route::post('excel-templates', [\App\Http\Controllers\Admin\ExcelTemplateController::class, 'store'])->name('excel-templates.store');
     Route::post('excel-templates/{id}/update', [\App\Http\Controllers\Admin\ExcelTemplateController::class, 'update'])->name('excel-templates.update');
     Route::post('excel-templates/{id}/delete', [\App\Http\Controllers\Admin\ExcelTemplateController::class, 'destroy'])->name('excel-templates.destroy');
@@ -252,6 +251,7 @@ Route::middleware('auth')->prefix('management')->name('management.')->group(func
         Route::get('product-cost-comparison/ebds', [ProductCostComparisonController::class, 'getEbdsByModel'])->name('product-cost-comparison.ebds');
         Route::get('product-cost-comparison/export', [ProductCostComparisonController::class, 'export'])->name('product-cost-comparison.export');
         Route::get('product-cost-comparison/{id}', [ProductCostComparisonController::class, 'show'])->name('product-cost-comparison.show');
+        Route::get('product-cost-comparison/{id}/quotation', [ProductCostComparisonController::class, 'exportQuotation'])->name('product-cost-comparison.quotation');
         Route::get('product-cost-comparison/{id}/items-data', [ProductCostComparisonController::class, 'itemsData'])->name('product-cost-comparison.items-data');
     });
 });

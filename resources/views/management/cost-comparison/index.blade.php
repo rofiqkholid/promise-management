@@ -166,11 +166,19 @@
                         </span>
                     </td>
                     <td class="px-3 py-2.5 text-center">
-                        <a href="{{ route('management.product-cost-comparison.show', $row['ebd']->id) }}"
-                           class="inline-flex items-center justify-center w-7 h-7 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-sm border border-slate-300 dark:border-slate-600 transition-colors"
-                           title="Lihat Detail Matrix">
-                            <i class="fa-solid fa-arrow-right text-xs"></i>
-                        </a>
+                        <div class="flex items-center justify-center gap-1.5">
+                            <button type="button"
+                                    onclick="openIndexQuotationModal('{{ route('management.product-cost-comparison.quotation', $row['ebd']->id) }}', '{{ addslashes($row['customer']->name ?? 'Customer') }} ({{ $row['customer']->code ?? '—' }})', '{{ addslashes($row['model']->name ?? 'Model') }}', 'Rev {{ $row['ebd']->revision ?? '0' }}', '{{ $row['customer']->id ?? '' }}')"
+                                    class="inline-flex items-center justify-center w-7 h-7 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 rounded-sm border border-emerald-300 dark:border-emerald-800 transition-colors cursor-pointer"
+                                    title="Export Quotation Excel">
+                                <i class="fa-solid fa-file-excel text-xs"></i>
+                            </button>
+                            <a href="{{ route('management.product-cost-comparison.show', $row['ebd']->id) }}"
+                               class="inline-flex items-center justify-center w-7 h-7 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-sm border border-slate-300 dark:border-slate-600 transition-colors"
+                               title="Lihat Detail Matrix">
+                                <i class="fa-solid fa-arrow-right text-xs"></i>
+                            </a>
+                        </div>
                     </td>
                 </tr>
             @empty
@@ -185,6 +193,73 @@
 
 </div>
 
+{{-- ===== DYNAMIC EXPORT MODAL ===== --}}
+<div id="exportIndexQuotationModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm shadow-2xl w-full max-w-md mx-4 overflow-hidden animate-fade-in">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-700">
+            <div>
+                <h3 class="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                    <i class="fa-solid fa-file-excel text-emerald-600 dark:text-emerald-400"></i> Export Customer Quotation
+                </h3>
+                <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">Generate customized quotation Excel spreadsheet</p>
+            </div>
+            <button type="button" onclick="$('#exportIndexQuotationModal').addClass('hidden').removeClass('flex')" class="w-7 h-7 flex items-center justify-center rounded-sm text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+        </div>
+
+        <form id="exportIndexQuotationForm" action="" method="GET" target="_blank">
+            <div class="px-5 py-4 space-y-4">
+                {{-- Target Info Box --}}
+                <div class="p-3 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-sm space-y-1">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-slate-500">Customer:</span>
+                        <span id="modal-lbl-customer" class="font-bold text-slate-800 dark:text-slate-100">—</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-slate-500">Project Model:</span>
+                        <span id="modal-lbl-model" class="font-bold text-slate-800 dark:text-slate-100">—</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-slate-500">EBD Revision:</span>
+                        <span id="modal-lbl-revision" class="font-bold font-mono text-slate-800 dark:text-slate-100">—</span>
+                    </div>
+                </div>
+
+                {{-- Template Selection --}}
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">
+                        Select Output Template <span class="text-rose-500">*</span>
+                    </label>
+                    <select name="template_id" id="modal_template_select" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-3 py-2 text-xs font-medium text-slate-800 dark:text-slate-100 rounded-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                        <option value="">-- Standard System Template (Default Format) --</option>
+                        @foreach($exportTemplates ?? [] as $tpl)
+                            <option value="{{ $tpl->id }}" data-customer-id="{{ $tpl->customer_id ?? '' }}">
+                                {{ $tpl->template_name }} (Rev {{ $tpl->revision ?? '0' }})
+                                @if($tpl->customer)
+                                    [{{ $tpl->customer->code ?? $tpl->customer->name }}]
+                                @else
+                                    [Universal]
+                                @endif
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 px-5 py-3.5 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-200 dark:border-slate-700">
+                <button type="button" onclick="$('#exportIndexQuotationModal').addClass('hidden').removeClass('flex')" class="px-3.5 h-8 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-sm transition-colors cursor-pointer">
+                    Cancel
+                </button>
+                <button type="submit" onclick="setTimeout(function(){ $('#exportIndexQuotationModal').addClass('hidden').removeClass('flex'); }, 500)" class="inline-flex items-center justify-center gap-1.5 px-4 h-8 bg-emerald-600 hover:bg-emerald-700 text-white rounded-sm text-xs font-semibold shadow-xs active:scale-98 transition-all cursor-pointer">
+                    <i class="fa-solid fa-file-excel text-xs"></i>
+                    <span>Generate & Download Excel</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         if (typeof window.defaultDataTable === 'function') {
@@ -195,6 +270,30 @@
             });
         }
     });
+
+    function openIndexQuotationModal(actionUrl, customerName, modelName, revision, customerId) {
+        $('#exportIndexQuotationForm').attr('action', actionUrl);
+        $('#modal-lbl-customer').text(customerName);
+        $('#modal-lbl-model').text(modelName);
+        $('#modal-lbl-revision').text(revision);
+
+        // Auto select template matching customer if available
+        let matched = false;
+        if (customerId) {
+            $('#modal_template_select option').each(function() {
+                if ($(this).data('customer-id') == customerId) {
+                    $(this).prop('selected', true);
+                    matched = true;
+                    return false;
+                }
+            });
+        }
+        if (!matched) {
+            $('#modal_template_select').val('');
+        }
+
+        $('#exportIndexQuotationModal').removeClass('hidden').addClass('flex');
+    }
 
     function loadModelsForCustomer(customerId) {
         const modelSelect = document.getElementById('sel-model');

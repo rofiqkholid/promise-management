@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', 'Visual Mapping Studio · Promise Management')
 @section('page_title', 'Visual Mapping Studio')

@@ -12,8 +12,12 @@
         {{-- Card Header Halaman (40% -> lg:col-span-5) --}}
         <div class="lg:col-span-5 bg-white dark:bg-slate-800 rounded-sm border border-slate-300 dark:border-slate-700 overflow-hidden flex flex-col justify-between">
             {{-- Header Strip Judul --}}
-            <div class="px-3 py-1.5 bg-slate-50 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                Cost Estimation Comparison Matrix
+            <div class="px-3 py-1.5 bg-slate-50 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                <span>Cost Estimation Comparison Matrix</span>
+                <button type="button" onclick="openQuotationExportModal()"
+                        class="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-sm text-[11px] font-semibold transition-all cursor-pointer shadow-xs active:scale-98">
+                    <i class="fa-solid fa-file-excel text-[10px]"></i> Export Quotation
+                </button>
             </div>
 
             {{-- Table Grid Structure --}}
@@ -914,5 +918,90 @@
             });
         }
     });
+
+    function openQuotationExportModal() {
+        $('#exportQuotationModal').removeClass('hidden').addClass('flex');
+    }
 </script>
+
+{{-- ===== DYNAMIC EXPORT MODAL ===== --}}
+<div id="exportQuotationModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm shadow-2xl w-full max-w-md mx-4 overflow-hidden animate-fade-in">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-700">
+            <div>
+                <h3 class="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                    <i class="fa-solid fa-file-excel text-emerald-600 dark:text-emerald-400"></i> Export Customer Quotation
+                </h3>
+                <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">Generate customized quotation Excel spreadsheet</p>
+            </div>
+            <button type="button" onclick="$('#exportQuotationModal').addClass('hidden').removeClass('flex')" class="w-7 h-7 flex items-center justify-center rounded-sm text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+        </div>
+
+        <form id="exportQuotationForm" action="{{ route('management.product-cost-comparison.quotation', $comparisonResult['ebd_header']->id) }}" method="GET" target="_blank">
+            <div class="px-5 py-4 space-y-4">
+                {{-- Target Info Box --}}
+                <div class="p-3 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-sm space-y-1">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-slate-500">Customer:</span>
+                        <span class="font-bold text-slate-800 dark:text-slate-100">{{ $comparisonResult['customer']->name ?? '—' }} ({{ $comparisonResult['customer']->code ?? '—' }})</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-slate-500">Project Model:</span>
+                        <span class="font-bold text-slate-800 dark:text-slate-100">{{ $comparisonResult['project_model']->name ?? '—' }}</span>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-slate-500">EBD Revision:</span>
+                        <span class="font-bold font-mono text-slate-800 dark:text-slate-100">Rev {{ $comparisonResult['ebd_header']->revision ?? '0' }}</span>
+                    </div>
+                </div>
+
+                {{-- Template Selection --}}
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                            Select Output Template <span class="text-rose-500">*</span>
+                        </label>
+                        @if($defaultTemplateId)
+                            <span class="text-[9px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.5 rounded-sm border border-emerald-200 dark:border-emerald-800">
+                                <i class="fa-solid fa-wand-magic-sparkles text-[8px]"></i> Auto-Matched Customer
+                            </span>
+                        @endif
+                    </div>
+                    <select name="template_id" id="export_template_id" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-3 py-2 text-xs font-medium text-slate-800 dark:text-slate-100 rounded-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+                        <option value="">-- Standard System Template (Default Format) --</option>
+                        @foreach($exportTemplates ?? [] as $tpl)
+                            @php
+                                $isCustomerMatch = ($comparisonResult['customer']->id && $tpl->customer_id == $comparisonResult['customer']->id);
+                                $isSelected = ($tpl->id == ($defaultTemplateId ?? null));
+                            @endphp
+                            <option value="{{ $tpl->id }}" {{ $isSelected ? 'selected' : '' }}>
+                                {{ $tpl->template_name }} (Rev {{ $tpl->revision ?? '0' }})
+                                @if($tpl->customer)
+                                    [{{ $tpl->customer->code ?? $tpl->customer->name }}]
+                                @else
+                                    [Universal]
+                                @endif
+                                @if($isCustomerMatch)
+                                    ★ (Matched Customer)
+                                @endif
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 px-5 py-3.5 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-200 dark:border-slate-700">
+                <button type="button" onclick="$('#exportQuotationModal').addClass('hidden').removeClass('flex')" class="px-3.5 h-8 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-sm transition-colors cursor-pointer">
+                    Cancel
+                </button>
+                <button type="submit" onclick="setTimeout(function(){ $('#exportQuotationModal').addClass('hidden').removeClass('flex'); }, 500)" class="inline-flex items-center justify-center gap-1.5 px-4 h-8 bg-emerald-600 hover:bg-emerald-700 text-white rounded-sm text-xs font-semibold shadow-xs active:scale-98 transition-all cursor-pointer">
+                    <i class="fa-solid fa-file-excel text-xs"></i>
+                    <span>Generate & Download Excel</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 @endsection

@@ -117,7 +117,7 @@ class ToolingQuotationCompareController extends Controller
     }
 
     /**
-     * Halaman Utama Index: List SPK 2 Tooling Cost yang sudah Finish / Approved
+     * Halaman Utama Index: List EBD Header (Engineering Breakdown Data) siap untuk Quotation Compare
      */
     public function index(Request $request)
     {
@@ -127,38 +127,52 @@ class ToolingQuotationCompareController extends Controller
             $length = $request->input('length', 10);
             $search = $request->input('search.value');
 
-            // Query hanya SPK 2 Tooling Cost dengan status Approved atau Released
-            $query = WorkOrder::where('wo_type', 'SPK_2_TOOLING')
-                ->whereIn('status', ['Approved', 'Released'])
-                ->with(['inquiry.customer', 'inquiry.projectModel', 'ebdHeader']);
+            // Query seluruh EBD Header
+            $query = MngEbdHeader::with(['customer', 'projectModel', 'workOrder', 'quotations'])
+                ->orderBy('id', 'desc');
 
             if ($search) {
                 $query->where(function($q) use ($search) {
-                    $q->where('wo_number', 'LIKE', "%{$search}%")
-                      ->orWhereHas('inquiry.customer', fn($c) => $c->where('code', 'LIKE', "%{$search}%"))
-                      ->orWhereHas('inquiry.projectModel', fn($m) => $m->where('name', 'LIKE', "%{$search}%"));
+                    $q->where('revision', 'LIKE', "%{$search}%")
+                      ->orWhereHas('customer', fn($c) => $c->where('code', 'LIKE', "%{$search}%")->orWhere('name', 'LIKE', "%{$search}%"))
+                      ->orWhereHas('projectModel', fn($m) => $m->where('name', 'LIKE', "%{$search}%"))
+                      ->orWhereHas('workOrder', fn($w) => $w->where('wo_number', 'LIKE', "%{$search}%"));
                 });
             }
 
             $totalRecords = $query->count();
-            $workOrders = $query->skip($start)->take($length)->get();
+            $ebdHeaders = $query->skip($start)->take($length)->get();
 
             $data = [];
-            foreach ($workOrders as $wo) {
-                $ebdId = $wo->ebd_header_id;
-                $quotationCount = $ebdId ? ToolingQuotation::where('ebd_header_id', $ebdId)->count() : 0;
-                $customerCode = $wo->inquiry->customer->code ?? '—';
-                $modelName = $wo->inquiry->projectModel->name ?? '—';
+            foreach ($ebdHeaders as $ebd) {
+                $customerCode = $ebd->customer->code ?? ($ebd->customer->name ?? '—');
+                $modelName = $ebd->projectModel->name ?? '—';
+                
+                $suppCount = $ebd->quotations->where('source_type', 'supplier')->count();
+                $custCount = $ebd->quotations->where('source_type', 'customer')->count();
+
+                $quotesSummary = [];
+                if ($custCount > 0) {
+                    $quotesSummary[] = "<span class='px-1.5 py-0.5 text-[9px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 rounded-sm border border-amber-200 dark:border-amber-800'>Target Customer</span>";
+                }
+                if ($suppCount > 0) {
+                    $quotesSummary[] = "<span class='font-semibold text-slate-700 dark:text-slate-300'>{$suppCount} Supplier</span>";
+                }
+                if (empty($quotesSummary)) {
+                    $quotesSummary[] = "<span class='text-slate-400 italic text-[11px]'>0 Quote</span>";
+                }
+
+                $woNumber = $ebd->workOrder ? $ebd->workOrder->wo_number : null;
 
                 $data[] = [
                     'index_num' => $start + count($data) + 1,
-                    'wo_number' => $wo->wo_number,
+                    'ebd_ref' => "<strong>EBD Rev. {$ebd->revision}</strong>" . ($ebd->date ? "<div class='text-[10px] text-slate-400 font-mono'>" . $ebd->date->format('d/m/Y') . "</div>" : ""),
                     'customer_model' => "<strong>{$customerCode}</strong> • {$modelName}",
-                    'ebd_ref' => $ebdId ? "EBD Rev. " . ($wo->ebdHeader->revision ?? '0') : '—',
-                    'status' => $wo->status,
-                    'quotation_count' => $quotationCount . ' Supplier',
-                    'download_template_url' => route('management.work-order-tooling.quotation', $this->encryptId($wo->id)),
-                    'compare_url' => route('management.tooling-quotation.show', $this->encryptId($wo->id)),
+                    'wo_ref' => $woNumber ? "<span class='font-mono font-medium text-indigo-600 dark:text-indigo-400'>{$woNumber}</span>" : "<span class='px-1.5 py-0.5 text-[9px] text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 rounded-sm font-mono'>No WO</span>",
+                    'status' => $ebd->status ?? 'Draft',
+                    'quotation_count' => implode(' • ', $quotesSummary),
+                    'download_template_url' => $ebd->wo_id ? route('management.work-order-tooling.quotation', $this->encryptId($ebd->wo_id)) : '#',
+                    'compare_url' => route('management.tooling-quotation.show', $this->encryptId($ebd->id)),
                 ];
             }
 
@@ -180,25 +194,43 @@ class ToolingQuotationCompareController extends Controller
     }
 
     /**
-     * Halaman Detail Comparison per SPK Tooling Approved
+     * Halaman Detail Comparison per EBD / SPK Tooling
      */
     public function show($id, Request $request)
     {
-        $decryptedWoId = $this->decryptId($id);
-        $workOrder = WorkOrder::with(['ebdHeader.customer', 'ebdHeader.projectModel'])->findOrFail($decryptedWoId);
+        $decryptedId = $this->decryptId($id);
+        
+        // Coba load sebagai MngEbdHeader terlebih dahulu, jika bukan fallback ke WorkOrder
+        $selectedEbd = MngEbdHeader::with(['customer', 'projectModel', 'workOrder'])->find($decryptedId);
+        $workOrder = null;
 
-        $defaultEbd = $workOrder->ebdHeader;
+        if ($selectedEbd) {
+            $workOrder = $selectedEbd->workOrder;
+        } else {
+            $workOrder = WorkOrder::with(['ebdHeader.customer', 'ebdHeader.projectModel'])->find($decryptedId);
+            if ($workOrder) {
+                $selectedEbd = $workOrder->ebdHeader;
+            }
+        }
+
+        if (!$selectedEbd && !$workOrder) {
+            abort(404, 'Data EBD atau Work Order tidak ditemukan.');
+        }
+
+        $defaultEbd = $selectedEbd;
         $availableEbdRevisions = collect();
 
-        if ($defaultEbd) {
+        if ($selectedEbd) {
             // Find all EBD headers for this Customer & Model (or tied to this WorkOrder)
-            $availableEbdRevisions = \App\Models\MngEbdHeader::where(function($q) use ($workOrder, $defaultEbd) {
-                    $q->where('wo_id', $workOrder->id);
-                    if ($defaultEbd->customer_id && $defaultEbd->model_id) {
-                        $q->orWhere(function($sub) use ($defaultEbd) {
-                            $sub->where('customer_id', $defaultEbd->customer_id)
-                                ->where('model_id', $defaultEbd->model_id);
-                        });
+            $availableEbdRevisions = MngEbdHeader::where(function($q) use ($selectedEbd) {
+                    if ($selectedEbd->customer_id && $selectedEbd->model_id) {
+                        $q->where('customer_id', $selectedEbd->customer_id)
+                          ->where('model_id', $selectedEbd->model_id);
+                    } else {
+                        $q->where('id', $selectedEbd->id);
+                    }
+                    if ($selectedEbd->wo_id) {
+                        $q->orWhere('wo_id', $selectedEbd->wo_id);
                     }
                 })
                 ->orderBy('revision', 'desc')
@@ -207,143 +239,162 @@ class ToolingQuotationCompareController extends Controller
         }
 
         $selectedEbdId = $request->query('ebd_id');
-        $selectedEbd   = $selectedEbdId 
-            ? ($availableEbdRevisions->firstWhere('id', $selectedEbdId) ?? \App\Models\MngEbdHeader::find($selectedEbdId))
-            : $defaultEbd;
+        if ($selectedEbdId) {
+            $selectedEbd = $availableEbdRevisions->firstWhere('id', $selectedEbdId) ?? MngEbdHeader::find($selectedEbdId);
+        }
 
         $quotations = collect();
         $ebdItems = collect();
+        $activeCustomerQuote = null;
+        $supplierQuotations = collect();
 
         if ($selectedEbd) {
             $selectedEbd->load(['items.toolingProcesses', 'items.addProcesses', 'customer', 'projectModel', 'workOrder']);
             
-            // Get all supplier quotations for this EBD sorted by revision
-            $allQuotations = ToolingQuotation::with(['details', 'importer', 'supplier'])
+            // Get all quotations for this EBD sorted by revision
+            $allQuotations = ToolingQuotation::with(['details', 'importer', 'supplier', 'customer'])
                 ->where('ebd_header_id', $selectedEbd->id)
                 ->orderBy('revision', 'desc')
                 ->orderBy('id', 'desc')
                 ->get();
 
-            // Group quotations by supplier_id and attach all_revisions to activeQuote for dropdown switcher
-            $groupedBySupplier = $allQuotations->groupBy('supplier_id');
+            // 1. Separate Customer Quotations vs Supplier Quotations
+            $customerQuotes = $allQuotations->filter(function($q) {
+                return $q->source_type === 'customer' || (!empty($q->customer_id) && empty($q->supplier_id));
+            });
+
+            $supplierQuotes = $allQuotations->filter(function($q) {
+                return $q->source_type === 'supplier' || !empty($q->supplier_id);
+            });
+
+            // 2. Active Customer Quote (with revision switcher if multiple revisions exist)
+            if ($customerQuotes->isNotEmpty()) {
+                $selectedCustQuoteId = $request->query("cust_quote");
+                $activeCustomerQuote = $selectedCustQuoteId ? ($customerQuotes->firstWhere('id', $selectedCustQuoteId) ?? $customerQuotes->first()) : $customerQuotes->first();
+                $activeCustomerQuote->all_revisions = $customerQuotes;
+            }
+
+            // 3. Group supplier quotations by supplier_id and attach all_revisions to activeQuote for dropdown switcher
+            $groupedBySupplier = $supplierQuotes->groupBy('supplier_id');
             foreach ($groupedBySupplier as $supplierId => $suppQuotes) {
                 $selectedQuoteId = $request->query("supp_quote_{$supplierId}");
                 $activeQuote = $selectedQuoteId ? ($suppQuotes->firstWhere('id', $selectedQuoteId) ?? $suppQuotes->first()) : $suppQuotes->first();
                 $activeQuote->all_revisions = $suppQuotes;
-                $quotations->push($activeQuote);
+                $supplierQuotations->push($activeQuote);
             }
 
-            // Sort supplier columns by user selection ('worth' / 'cheapest', 'highest', 'name')
+            // 4. Sort supplier columns by user selection ('worth' / 'cheapest' / best price first, 'highest', 'name')
             $sortMode = $request->query('sort', 'worth');
             if ($sortMode === 'highest') {
-                $quotations = $quotations->sortByDesc('total_cost_idr')->values();
+                $supplierQuotations = $supplierQuotations->sortByDesc('total_cost_idr')->values();
             } elseif ($sortMode === 'name') {
-                $quotations = $quotations->sortBy(fn($q) => strtolower($q->supplier_name))->values();
+                $supplierQuotations = $supplierQuotations->sortBy(fn($q) => strtolower($q->supplier_name))->values();
             } else {
-                // Default: 'worth' (Lowest Total Cost IDR first / Best Value)
-                $quotations = $quotations->sortBy('total_cost_idr')->values();
-                foreach ($quotations as $rankIdx => $q) {
-                    $q->worth_rank = $rankIdx + 1;
-                }
+                // Default: 'worth' (Lowest Total Cost IDR first / Best Price)
+                $supplierQuotations = $supplierQuotations->sortBy('total_cost_idr')->values();
+            }
+
+            foreach ($supplierQuotations as $rankIdx => $q) {
+                $q->worth_rank = $rankIdx + 1;
+            }
+
+            // 5. Sequence columns strictly: EBD > Customer (if imported) > Suppliers (Ranked by Best Price)
+            $quotations = collect();
+            if ($activeCustomerQuote) {
+                $quotations->push($activeCustomerQuote);
+            }
+            foreach ($supplierQuotations as $sq) {
+                $quotations->push($sq);
             }
 
             $ebdItems = $selectedEbd->items;
         }
 
-        $encryptedWoId = $id;
+        $encryptedWoId = $selectedEbd ? $this->encryptId($selectedEbd->id) : $id;
+
+        // Query active Import templates for tooling quotation & auto-select based on Customer
+        $customerId = $selectedEbd->customer_id ?? $workOrder->ebdHeader->customer_id ?? $workOrder->inquiry->customer_id ?? null;
+
+        $importTemplates = \App\Models\MngCfgTemplate::where('is_active', true)
+            ->where('direction', 'import')
+            ->whereIn('template_type', ['tooling_quotation', 'quotation'])
+            ->with('customer')
+            ->get()
+            ->sortByDesc(function($tpl) use ($customerId) {
+                $isMatchedCustomer = ($customerId && $tpl->customer_id == $customerId) ? 1 : 0;
+                $revNum = (int)preg_replace('/[^0-9]/', '', $tpl->revision ?? '0');
+                return sprintf('%d_%05d_%010d', $isMatchedCustomer, $revNum, $tpl->id);
+            })
+            ->values();
+
+        $defaultImportTemplateId = null;
+        if ($customerId) {
+            $custTemplate = $importTemplates->firstWhere('customer_id', $customerId);
+            if ($custTemplate) {
+                $defaultImportTemplateId = $custTemplate->id;
+            }
+        }
+        if (!$defaultImportTemplateId && $importTemplates->isNotEmpty()) {
+            $defaultImportTemplateId = $importTemplates->first()->id;
+        }
+
+        // Available suppliers for import dropdown
+        $suppliers = \App\Models\Suppliers::orderBy('name', 'asc')->get();
 
         return view('management.tooling-quotation.detail', compact(
             'workOrder',
             'selectedEbd',
             'availableEbdRevisions',
             'quotations',
+            'activeCustomerQuote',
+            'supplierQuotations',
             'ebdItems',
-            'encryptedWoId'
+            'encryptedWoId',
+            'importTemplates',
+            'defaultImportTemplateId',
+            'suppliers'
         ));
     }
 
     /**
-     * Import File Excel Quotation Supplier
+     * Import File Excel Quotation Supplier or Customer
      */
     public function import(Request $request)
     {
         $request->validate([
             'ebd_header_id'  => 'required|exists:mng_ebd_headers,id',
-            'supplier_id'    => 'required|exists:suppliers,id',
+            'source_type'    => 'nullable|in:supplier,customer',
+            'supplier_id'    => 'nullable|required_if:source_type,supplier|exists:suppliers,id',
+            'customer_id'    => 'nullable|required_if:source_type,customer|exists:customers,id',
             'quotation_file' => 'required|file|mimes:xlsx,xls,csv',
+            'template_id'    => 'nullable|exists:mng_cfg_templates,id',
         ]);
 
         DB::beginTransaction();
         try {
             $ebdHeaderId = $request->input('ebd_header_id');
+            $sourceType  = $request->input('source_type', 'supplier');
             $supplierId  = $request->input('supplier_id');
+            $customerId  = $request->input('customer_id');
+            $templateId  = $request->input('template_id');
             $importMode  = $request->input('import_mode', 'new_revision'); // 'new_revision' or 'overwrite'
+
+            // If customer source, fallback customer_id to EBD customer if not explicitly passed
+            if ($sourceType === 'customer') {
+                if (empty($customerId)) {
+                    $ebdHead = MngEbdHeader::findOrFail($ebdHeaderId);
+                    $customerId = $ebdHead->customer_id;
+                }
+                $customer = \App\Models\Customer::findOrFail($customerId);
+                $entityName = "Customer ({$customer->code} - {$customer->name})";
+                $supplierId = null;
+            } else {
+                $supplier = \App\Models\Suppliers::findOrFail($supplierId);
+                $entityName = "Supplier ({$supplier->name})";
+                $customerId = null;
+            }
             
-            $supplier     = \App\Models\Suppliers::findOrFail($supplierId);
-            $supplierName = $supplier->name;
-
-            // Membaca file excel yang diupload secara langsung tanpa menyimpan file ke disk storage
-            $file        = $request->file('quotation_file');
-            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file->getPathname());
-            $sheet       = $spreadsheet->getActiveSheet();
-            $highestRow  = $sheet->getHighestRow();
-
-            // Read Currency & Exchange Rate directly from Excel Header Cells X4 and X5
-            $excelCurrency = trim((string) $sheet->getCell('X4')->getCalculatedValue());
-            $excelRate     = $sheet->getCell('X5')->getCalculatedValue();
-
-            if (!empty($excelCurrency)) {
-                $currencyCode = \App\Helpers\CurrencyHelper::getCode($excelCurrency) ?: strtoupper(substr($excelCurrency, 0, 10));
-            } else {
-                $currencyCode = 'IDR';
-            }
-
-            if (is_numeric($excelRate) && (float)$excelRate > 0) {
-                $exchangeRate = (float) $excelRate;
-            } else {
-                $exchangeRate = 1.0;
-            }
-
-            // Cek apakah data quotation untuk EBD & Supplier ini sudah pernah di-import
-            $existingQuotation = ToolingQuotation::where('ebd_header_id', $ebdHeaderId)
-                ->where('supplier_id', $supplierId)
-                ->orderBy('id', 'desc')
-                ->first();
-
-            if ($existingQuotation && $importMode === 'overwrite') {
-                // Overwrite Mode: Hapus detail quotation lama & update record yang ada
-                ToolingQuotationDetail::where('tooling_quotation_id', $existingQuotation->id)->delete();
-
-                $quotation = $existingQuotation;
-                $quotation->update([
-                    'currency_code'      => $currencyCode,
-                    'exchange_rate'      => $exchangeRate,
-                    'total_cost_foreign' => 0,
-                    'total_cost_idr'     => 0,
-                    'file_path'          => null,
-                    'status'             => 'IMPORTED',
-                    'imported_by'        => auth()->user() ? auth()->user()->id : null,
-                    'imported_at'        => now(),
-                ]);
-            } else {
-                // New Revision Mode: Buat record revisi baru (Rev 0, Rev 1, Rev 2...)
-                $nextRevision = $existingQuotation ? (string)((int)$existingQuotation->revision + 1) : '0';
-
-                $quotation = ToolingQuotation::create([
-                    'ebd_header_id'      => $ebdHeaderId,
-                    'supplier_id'        => $supplierId,
-                    'quotation_no'       => 'QUO-' . strtoupper(substr(md5(uniqid()), 0, 8)),
-                    'revision'           => $nextRevision,
-                    'currency_code'      => $currencyCode,
-                    'exchange_rate'      => $exchangeRate,
-                    'total_cost_foreign' => 0,
-                    'total_cost_idr'     => 0,
-                    'file_path'          => null,
-                    'status'             => 'IMPORTED',
-                    'imported_by'        => auth()->user() ? auth()->user()->id : null,
-                    'imported_at'        => now(),
-                ]);
-            }
+            $file = $request->file('quotation_file');
 
             // Load EBD Items & Tooling Processes
             $ebdItems = MngEbdItem::with('toolingProcesses')
@@ -351,149 +402,216 @@ class ToolingQuotationCompareController extends Controller
                 ->get();
 
             $totalCostForeign = 0;
-            $totalCostIdr = 0;
-
+            $totalCostIdr     = 0;
             $importedRowsCount = 0;
-            $currentPartNo = null;
-            $currentPartName = null;
+            $currencyCode     = 'IDR';
+            $exchangeRate     = 1.0;
 
-            // Loop membaca baris data Excel (Data dimulai pada baris 11 di mana Row 1-10 adalah Header & Filter)
-            for ($row = 11; $row <= $highestRow; $row++) {
-                // Kolom di Excel:
-                // A (1)  : No
-                // B-G (2-7): Status Item
-                // H (8)  : Part No.
-                // I (9)  : Part Name
-                // J (10) : Material Spec
-                // K (11) : Thickness
-                // L (12) : Main Process Name
-                // M (13) : Homeline / Process
-                // N (14) : Tooling Status & Info (NEW DIES / MODIF / COMMON - INFORMATION)
-                // O (15) : OP (10, 20, 30, 40...)
-                // P (16) : Tooling Process Name (DRAW, TRIM, FLG, JIG ALIGNMENT...)
-                // Q (17) : Category (TOOL RANK / Category e.g. DIE, JIG, CF)
-                // R (18) : Dies Qty
-                // S (19) : Jig Qty
-                // T (20) : CF Qty
-                // U (21) : Tonnage
-                // V (22) : Die Height
-                // W (23) : Supplier Category
-                // X (24) : Currency Amount (Valas)
-                // Y (25) : IDR Amount
+            // Check if user selected a dynamic mapping template from MngCfgTemplate
+            $templateConfig = $templateId ? \App\Models\MngCfgTemplate::find($templateId) : null;
 
-                $partNoRaw       = trim((string) $sheet->getCell("H{$row}")->getCalculatedValue());
-                $partNameRaw     = trim((string) $sheet->getCell("I{$row}")->getCalculatedValue());
+            if ($templateConfig && !empty($templateConfig->mapping_config)) {
+                // ── A. DYNAMIC EXCEL ENGINE IMPORT ─────────────────────────
+                $importEngine = new \App\Services\ExcelEngine\ExcelImportEngineService();
+                $extracted = $importEngine->import($file->getPathname(), $templateConfig->mapping_config);
 
-                // Jika Part No di baris ini terisi, perbarui $currentPartNo
-                if (!empty($partNoRaw)) {
-                    $currentPartNo   = $partNoRaw;
-                    $currentPartName = $partNameRaw;
+                // 1. Extract Single Fields (Currency & Exchange Rate)
+                $singleFields = $extracted['single_fields'] ?? [];
+                $rawCurrency = $singleFields['currency_code'] ?? $singleFields['currency'] ?? $extracted['currency_code'] ?? $extracted['currency'] ?? null;
+                $rawRate     = $singleFields['exchange_rate'] ?? $singleFields['rate'] ?? $extracted['exchange_rate'] ?? $extracted['rate'] ?? null;
+
+                if (!empty($rawCurrency)) {
+                    $currencyCode = \App\Helpers\CurrencyHelper::getCode(trim((string)$rawCurrency)) ?: strtoupper(substr(trim((string)$rawCurrency), 0, 10));
                 }
 
-                $mainProcName    = trim((string) $sheet->getCell("L{$row}")->getCalculatedValue());
-                $homeline        = trim((string) $sheet->getCell("M{$row}")->getCalculatedValue());
-                $supplierStatus  = trim((string) $sheet->getCell("N{$row}")->getCalculatedValue());
-                
-                $opVal           = $sheet->getCell("O{$row}")->getCalculatedValue();
-                $opNo            = is_numeric($opVal) ? (int)$opVal : null;
-                
-                $toolingProcName = trim((string) $sheet->getCell("P{$row}")->getCalculatedValue());
-                $toolCategory    = trim((string) $sheet->getCell("Q{$row}")->getCalculatedValue());
-                $qtyDies         = trim((string) $sheet->getCell("R{$row}")->getCalculatedValue());
-                $qtyJig          = trim((string) $sheet->getCell("S{$row}")->getCalculatedValue());
-                $qtyCf           = trim((string) $sheet->getCell("T{$row}")->getCalculatedValue());
-                
-                $tonnage         = trim((string) $sheet->getCell("U{$row}")->getCalculatedValue());
-                $dieHeightVal    = $sheet->getCell("V{$row}")->getCalculatedValue();
-                $dieCategory     = trim((string) $sheet->getCell("W{$row}")->getCalculatedValue());
-                $costForeignVal  = $sheet->getCell("X{$row}")->getCalculatedValue();
-                $costIdrVal      = $sheet->getCell("Y{$row}")->getCalculatedValue();
+                if (is_numeric($rawRate) && (float)$rawRate > 0) {
+                    $exchangeRate = (float)$rawRate;
+                }
 
-                // 1. Baca seluruh teks di seluruh kolom (A s/d Z) pada baris ini untuk mendeteksi kata TOTAL / SUM
-                $fullRowText = '';
-                foreach (range('A', 'Z') as $colLetter) {
-                    $cellVal = trim((string) $sheet->getCell("{$colLetter}{$row}")->getCalculatedValue());
-                    if (!empty($cellVal)) {
-                        $fullRowText .= ' ' . $cellVal;
+                // 2. Prepare Quotation Header Record
+                $quotation = $this->resolveQuotationHeader($ebdHeaderId, $sourceType, $supplierId, $customerId, $importMode, $currencyCode, $exchangeRate);
+
+                // 3. Process Table Loops Data
+                $tableLoops = $extracted['table_loops'] ?? [];
+                $recordsList = [];
+
+                if (!empty($tableLoops)) {
+                    // Gather all records from all table loop groups (e.g. 'items', 'ebd_items', 'processes', 'parts')
+                    foreach ($tableLoops as $groupKey => $groupRows) {
+                        if (is_array($groupRows)) {
+                            $recordsList = array_merge($recordsList, $groupRows);
+                        }
                     }
-                }
-                $fullRowTextUpper = strtoupper($fullRowText);
-
-                // Skip baris jika terdapat kata TOTAL / SUB TOTAL / GRAND TOTAL / SUM di manapun dalam baris ini
-                if (str_contains($fullRowTextUpper, 'TOTAL') || str_contains($fullRowTextUpper, 'SUM')) {
-                    continue;
+                } elseif (!empty($extracted['items']) && is_array($extracted['items'])) {
+                    $recordsList = $extracted['items'];
+                } elseif (!empty($extracted['processes']) && is_array($extracted['processes'])) {
+                    $recordsList = $extracted['processes'];
                 }
 
-                // 2. Skip jika baris ini tidak memiliki OP No, Tooling Process Name, maupun Main Process Name
-                if ($opNo === null && empty($toolingProcName) && empty($mainProcName)) {
-                    continue;
-                }
+                foreach ($recordsList as $row) {
+                    $partNo = trim((string)($row['part_no'] ?? $row['part_number'] ?? $row['ebd_part_no'] ?? ''));
+                    $matchedEbdItem = null;
 
-                // 3. Skip jika harga kosong / null
-                if ($costForeignVal === null && $costIdrVal === null) {
-                    continue;
-                }
-
-                // Cari EBD Item matching (by $currentPartNo atau $partNoRaw)
-                $targetPartNo = $currentPartNo ?: $partNoRaw;
-                $matchedEbdItem = $ebdItems->first(fn($item) => strtolower(trim($item->part_no)) === strtolower(trim($targetPartNo)));
-                $ebdItemId = $matchedEbdItem->id ?? null;
-
-                // Jika baris ini tidak cocok dengan Part No EBD manapun, skip
-                if (!$ebdItemId) {
-                    continue;
-                }
-
-                // Cari EBD Process matching (by OP atau Tooling Process Name dari Kolom P)
-                $ebdProcessId = null;
-                if ($matchedEbdItem) {
-                    if ($opNo !== null) {
-                        $matchedProc = $matchedEbdItem->toolingProcesses->first(fn($tp) => (int)$tp->op === (int)$opNo);
-                        $ebdProcessId = $matchedProc->id ?? null;
+                    if (!empty($partNo)) {
+                        $matchedEbdItem = $ebdItems->first(fn($item) => strtolower(trim($item->part_no)) === strtolower($partNo));
                     }
-                    if (!$ebdProcessId && !empty($toolingProcName)) {
-                        $matchedProc = $matchedEbdItem->toolingProcesses->first(fn($tp) => strtolower(trim($tp->process_name)) === strtolower(trim($toolingProcName)));
-                        $ebdProcessId = $matchedProc->id ?? null;
+
+                    // Check if this row contains child processes array (nested block loop)
+                    $childProcesses = $row['processes'] ?? $row['children'] ?? null;
+
+                    if (is_array($childProcesses) && !empty($childProcesses)) {
+                        foreach ($childProcesses as $procRow) {
+                            $res = $this->createQuotationDetailFromRow($quotation->id, $matchedEbdItem, $procRow, $exchangeRate);
+                            if ($res) {
+                                $totalCostForeign += $res['cost_foreign'];
+                                $totalCostIdr     += $res['cost_idr'];
+                                $importedRowsCount++;
+                            }
+                        }
+                    } else {
+                        // Flat row structure
+                        $res = $this->createQuotationDetailFromRow($quotation->id, $matchedEbdItem, $row, $exchangeRate);
+                        if ($res) {
+                            $totalCostForeign += $res['cost_foreign'];
+                            $totalCostIdr     += $res['cost_idr'];
+                            $importedRowsCount++;
+                        }
                     }
                 }
 
-                // Deteksi Tooling Type (DIE, JIG, CF)
-                $toolType = 'DIE';
-                $combinedType = strtoupper("{$toolCategory} {$toolingProcName}");
-                if (!empty($qtyJig) || str_contains($combinedType, 'JIG')) {
-                    $toolType = 'JIG';
-                } elseif (!empty($qtyCf) || str_contains($combinedType, 'CF')) {
-                    $toolType = 'CF';
+            } else {
+                // ── B. DEFAULT / LEGACY EXCEL PARSER ───────────────────────
+                $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file->getPathname());
+                $sheet       = $spreadsheet->getActiveSheet();
+                $highestRow  = $sheet->getHighestRow();
+
+                // Read Currency & Exchange Rate directly from Excel Header Cells X4 and X5
+                $excelCurrency = trim((string) $sheet->getCell('X4')->getCalculatedValue());
+                $excelRate     = $sheet->getCell('X5')->getCalculatedValue();
+
+                if (!empty($excelCurrency)) {
+                    $currencyCode = \App\Helpers\CurrencyHelper::getCode($excelCurrency) ?: strtoupper(substr($excelCurrency, 0, 10));
+                } else {
+                    $currencyCode = 'IDR';
                 }
 
-                $costForeign = is_numeric($costForeignVal) ? (float)$costForeignVal : 0;
-                $costIdr = is_numeric($costIdrVal) ? (float)$costIdrVal : ($costForeign * $exchangeRate);
+                if (is_numeric($excelRate) && (float)$excelRate > 0) {
+                    $exchangeRate = (float) $excelRate;
+                } else {
+                    $exchangeRate = 1.0;
+                }
 
-                $totalCostForeign += $costForeign;
-                $totalCostIdr += $costIdr;
+                $quotation = $this->resolveQuotationHeader($ebdHeaderId, $sourceType, $supplierId, $customerId, $importMode, $currencyCode, $exchangeRate);
 
-                ToolingQuotationDetail::create([
-                    'tooling_quotation_id'   => $quotation->id,
-                    'ebd_item_id'            => $ebdItemId,
-                    'ebd_tooling_process_id' => $ebdProcessId,
-                    'homeline'               => $homeline,
-                    'supplier_status'        => $supplierStatus,
-                    'op'                     => $opNo,
-                    'tooling_process_name'   => $toolingProcName ?: ($mainProcName ?: 'STAMPING'),
-                    'tooling_type'           => $toolType,
-                    'tonnage'                => $tonnage,
-                    'die_height'             => is_numeric($dieHeightVal) ? (float)$dieHeightVal : null,
-                    'die_category'           => $dieCategory ?: $toolCategory,
-                    'cost_foreign'           => $costForeign,
-                    'cost_idr'               => $costIdr,
-                    'remarks'                => null,
-                ]);
+                $currentPartNo = null;
+                $currentPartName = null;
 
-                $importedRowsCount++;
+                for ($row = 11; $row <= $highestRow; $row++) {
+                    $partNoRaw       = trim((string) $sheet->getCell("H{$row}")->getCalculatedValue());
+                    $partNameRaw     = trim((string) $sheet->getCell("I{$row}")->getCalculatedValue());
+
+                    if (!empty($partNoRaw)) {
+                        $currentPartNo   = $partNoRaw;
+                        $currentPartName = $partNameRaw;
+                    }
+
+                    $mainProcName    = trim((string) $sheet->getCell("L{$row}")->getCalculatedValue());
+                    $homeline        = trim((string) $sheet->getCell("M{$row}")->getCalculatedValue());
+                    $supplierStatus  = trim((string) $sheet->getCell("N{$row}")->getCalculatedValue());
+                    
+                    $opVal           = $sheet->getCell("O{$row}")->getCalculatedValue();
+                    $opNo            = is_numeric($opVal) ? (int)$opVal : null;
+                    
+                    $toolingProcName = trim((string) $sheet->getCell("P{$row}")->getCalculatedValue());
+                    $toolCategory    = trim((string) $sheet->getCell("Q{$row}")->getCalculatedValue());
+                    $qtyDies         = trim((string) $sheet->getCell("R{$row}")->getCalculatedValue());
+                    $qtyJig          = trim((string) $sheet->getCell("S{$row}")->getCalculatedValue());
+                    $qtyCf           = trim((string) $sheet->getCell("T{$row}")->getCalculatedValue());
+                    
+                    $tonnage         = trim((string) $sheet->getCell("U{$row}")->getCalculatedValue());
+                    $dieHeightVal    = $sheet->getCell("V{$row}")->getCalculatedValue();
+                    $dieCategory     = trim((string) $sheet->getCell("W{$row}")->getCalculatedValue());
+                    $costForeignVal  = $sheet->getCell("X{$row}")->getCalculatedValue();
+                    $costIdrVal      = $sheet->getCell("Y{$row}")->getCalculatedValue();
+
+                    $fullRowText = '';
+                    foreach (range('A', 'Z') as $colLetter) {
+                        $cellVal = trim((string) $sheet->getCell("{$colLetter}{$row}")->getCalculatedValue());
+                        if (!empty($cellVal)) {
+                            $fullRowText .= ' ' . $cellVal;
+                        }
+                    }
+                    $fullRowTextUpper = strtoupper($fullRowText);
+
+                    if (str_contains($fullRowTextUpper, 'TOTAL') || str_contains($fullRowTextUpper, 'SUM')) {
+                        continue;
+                    }
+
+                    if ($opNo === null && empty($toolingProcName) && empty($mainProcName)) {
+                        continue;
+                    }
+
+                    if ($costForeignVal === null && $costIdrVal === null) {
+                        continue;
+                    }
+
+                    $targetPartNo = $currentPartNo ?: $partNoRaw;
+                    $matchedEbdItem = $ebdItems->first(fn($item) => strtolower(trim($item->part_no)) === strtolower(trim($targetPartNo)));
+                    $ebdItemId = $matchedEbdItem->id ?? null;
+
+                    if (!$ebdItemId) {
+                        continue;
+                    }
+
+                    $ebdProcessId = null;
+                    if ($matchedEbdItem) {
+                        if ($opNo !== null) {
+                            $matchedProc = $matchedEbdItem->toolingProcesses->first(fn($tp) => (int)$tp->op === (int)$opNo);
+                            $ebdProcessId = $matchedProc->id ?? null;
+                        }
+                        if (!$ebdProcessId && !empty($toolingProcName)) {
+                            $matchedProc = $matchedEbdItem->toolingProcesses->first(fn($tp) => strtolower(trim($tp->process_name)) === strtolower(trim($toolingProcName)));
+                            $ebdProcessId = $matchedProc->id ?? null;
+                        }
+                    }
+
+                    $toolType = 'DIE';
+                    $combinedType = strtoupper("{$toolCategory} {$toolingProcName}");
+                    if (!empty($qtyJig) || str_contains($combinedType, 'JIG')) {
+                        $toolType = 'JIG';
+                    } elseif (!empty($qtyCf) || str_contains($combinedType, 'CF')) {
+                        $toolType = 'CF';
+                    }
+
+                    $costForeign = is_numeric($costForeignVal) ? (float)$costForeignVal : 0;
+                    $costIdr = is_numeric($costIdrVal) ? (float)$costIdrVal : ($costForeign * $exchangeRate);
+
+                    $totalCostForeign += $costForeign;
+                    $totalCostIdr += $costIdr;
+
+                    ToolingQuotationDetail::create([
+                        'tooling_quotation_id'   => $quotation->id,
+                        'ebd_item_id'            => $ebdItemId,
+                        'ebd_tooling_process_id' => $ebdProcessId,
+                        'homeline'               => $homeline,
+                        'supplier_status'        => $supplierStatus,
+                        'op'                     => $opNo,
+                        'tooling_process_name'   => $toolingProcName ?: ($mainProcName ?: 'STAMPING'),
+                        'tooling_type'           => $toolType,
+                        'tonnage'                => $tonnage,
+                        'die_height'             => is_numeric($dieHeightVal) ? (float)$dieHeightVal : null,
+                        'die_category'           => $dieCategory ?: $toolCategory,
+                        'cost_foreign'           => $costForeign,
+                        'cost_idr'               => $costIdr,
+                        'remarks'                => null,
+                    ]);
+
+                    $importedRowsCount++;
+                }
             }
 
             if ($importedRowsCount === 0) {
-                throw new \Exception("Tidak ada baris data quotation yang terbaca dari file Excel. Pastikan data dimulai pada baris 11 dengan kolom Part No (kolom H) atau OP (kolom M) yang terisi.");
+                throw new \Exception("Tidak ada baris data quotation yang terbaca dari file Excel. Pastikan data file sesuai dengan template mapping yang dipilih.");
             }
 
             // Update Total Header
@@ -511,13 +629,13 @@ class ToolingQuotationCompareController extends Controller
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => "Quotation supplier {$supplierName} berhasil di-import! {$importedRowsCount} baris terproses.",
+                    'message' => "Quotation {$entityName} berhasil di-import! {$importedRowsCount} baris terproses.",
                     'redirect_url' => $redirectUrl
                 ]);
             }
 
             return redirect($redirectUrl)
-                ->with('success', "Quotation supplier {$supplierName} berhasil di-import dan di-compare!");
+                ->with('success', "Quotation {$entityName} berhasil di-import dan di-compare!");
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -532,6 +650,127 @@ class ToolingQuotationCompareController extends Controller
 
             return redirect()->back()->with('error', 'Gagal import quotation: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Resolve or Create Tooling Quotation Header (Overwrite or New Revision)
+     */
+    private function resolveQuotationHeader($ebdHeaderId, $sourceType, $supplierId, $customerId, $importMode, $currencyCode, $exchangeRate)
+    {
+        $query = ToolingQuotation::where('ebd_header_id', $ebdHeaderId)
+            ->where('source_type', $sourceType);
+
+        if ($sourceType === 'customer') {
+            $query->where('customer_id', $customerId);
+        } else {
+            $query->where('supplier_id', $supplierId);
+        }
+
+        $existingQuotation = $query->orderBy('id', 'desc')->first();
+
+        if ($existingQuotation && $importMode === 'overwrite') {
+            ToolingQuotationDetail::where('tooling_quotation_id', $existingQuotation->id)->delete();
+
+            $quotation = $existingQuotation;
+            $quotation->update([
+                'currency_code'      => $currencyCode,
+                'exchange_rate'      => $exchangeRate,
+                'total_cost_foreign' => 0,
+                'total_cost_idr'     => 0,
+                'file_path'          => null,
+                'status'             => 'IMPORTED',
+                'imported_by'        => auth()->user() ? auth()->user()->id : null,
+                'imported_at'        => now(),
+            ]);
+            return $quotation;
+        }
+
+        $nextRevision = $existingQuotation ? (string)((int)$existingQuotation->revision + 1) : '0';
+        $prefix = ($sourceType === 'customer') ? 'CUST-' : 'QUO-';
+
+        return ToolingQuotation::create([
+            'ebd_header_id'      => $ebdHeaderId,
+            'source_type'        => $sourceType,
+            'supplier_id'        => $sourceType === 'supplier' ? $supplierId : null,
+            'customer_id'        => $sourceType === 'customer' ? $customerId : null,
+            'quotation_no'       => $prefix . strtoupper(substr(md5(uniqid()), 0, 8)),
+            'revision'           => $nextRevision,
+            'currency_code'      => $currencyCode,
+            'exchange_rate'      => $exchangeRate,
+            'total_cost_foreign' => 0,
+            'total_cost_idr'     => 0,
+            'file_path'          => null,
+            'status'             => 'IMPORTED',
+            'imported_by'        => auth()->user() ? auth()->user()->id : null,
+            'imported_at'        => now(),
+        ]);
+    }
+
+    /**
+     * Create ToolingQuotationDetail record from generic extracted row
+     */
+    private function createQuotationDetailFromRow($quotationId, $matchedEbdItem, array $row, $exchangeRate)
+    {
+        $opRaw = $row['op'] ?? $row['ebd_tool_op'] ?? null;
+        $opNo = is_numeric($opRaw) ? (int)$opRaw : null;
+
+        $procName = trim((string)($row['tooling_process_name'] ?? $row['process_name'] ?? $row['ebd_tool_process_name'] ?? ''));
+        $mainProcName = trim((string)($row['main_process_name'] ?? ''));
+
+        $costForeignVal = $row['cost_foreign'] ?? $row['currency_amount'] ?? $row['price_foreign'] ?? null;
+        $costIdrVal = $row['cost_idr'] ?? $row['ebd_tool_price_idr'] ?? $row['price_idr'] ?? $row['cost'] ?? null;
+
+        if ($costForeignVal === null && $costIdrVal === null && $opNo === null && empty($procName)) {
+            return null;
+        }
+
+        $ebdItemId = $matchedEbdItem->id ?? null;
+        $ebdProcessId = null;
+
+        if ($matchedEbdItem) {
+            if ($opNo !== null) {
+                $matchedProc = $matchedEbdItem->toolingProcesses->first(fn($tp) => (int)$tp->op === (int)$opNo);
+                $ebdProcessId = $matchedProc->id ?? null;
+            }
+            if (!$ebdProcessId && !empty($procName)) {
+                $matchedProc = $matchedEbdItem->toolingProcesses->first(fn($tp) => strtolower(trim($tp->process_name)) === strtolower(trim($procName)));
+                $ebdProcessId = $matchedProc->id ?? null;
+            }
+        }
+
+        $toolCategory = trim((string)($row['tooling_type'] ?? $row['tool_category'] ?? $row['category'] ?? $row['ebd_tool_category'] ?? ''));
+        $toolType = 'DIE';
+        $combinedType = strtoupper("{$toolCategory} {$procName}");
+        if (str_contains($combinedType, 'JIG') || !empty($row['qty_jig'])) {
+            $toolType = 'JIG';
+        } elseif (str_contains($combinedType, 'CF') || !empty($row['qty_cf'])) {
+            $toolType = 'CF';
+        }
+
+        $costForeign = is_numeric($costForeignVal) ? (float)$costForeignVal : 0;
+        $costIdr = is_numeric($costIdrVal) ? (float)$costIdrVal : ($costForeign * $exchangeRate);
+
+        ToolingQuotationDetail::create([
+            'tooling_quotation_id'   => $quotationId,
+            'ebd_item_id'            => $ebdItemId,
+            'ebd_tooling_process_id' => $ebdProcessId,
+            'homeline'               => trim((string)($row['homeline'] ?? $row['ebd_tool_homeline'] ?? '')),
+            'supplier_status'        => trim((string)($row['supplier_status'] ?? $row['ebd_tool_status'] ?? '')),
+            'op'                     => $opNo,
+            'tooling_process_name'   => $procName ?: ($mainProcName ?: 'STAMPING'),
+            'tooling_type'           => $toolType,
+            'tonnage'                => trim((string)($row['tonnage'] ?? $row['ebd_tool_tonnage'] ?? '')),
+            'die_height'             => is_numeric($row['die_height'] ?? null) ? (float)$row['die_height'] : null,
+            'die_category'           => trim((string)($row['die_category'] ?? $row['supplier_category'] ?? $toolCategory)),
+            'cost_foreign'           => $costForeign,
+            'cost_idr'               => $costIdr,
+            'remarks'                => trim((string)($row['remarks'] ?? $row['information'] ?? $row['ebd_tool_information'] ?? '')),
+        ]);
+
+        return [
+            'cost_foreign' => $costForeign,
+            'cost_idr'     => $costIdr,
+        ];
     }
 
     /**

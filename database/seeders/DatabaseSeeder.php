@@ -15,8 +15,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-                // Seed Master Configs
+        // Seed Master Configs
         $this->call([
+            SystemFieldsSeeder::class,
             AssessmentRankingSeeder::class,
             ScoreCategoryAndOptionSeeder::class,
             WorkOrderProcessSeeder::class,

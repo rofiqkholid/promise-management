@@ -23,4 +23,9 @@ class MngCfgTemplate extends Model
         'mapping_config' => 'array',
         'is_active' => 'boolean',
     ];
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class, 'customer_id');
+    }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Customer;
 use App\Models\MngCfgSystemField;
 use App\Models\MngCfgTemplate;
 use Illuminate\Http\Request;
@@ -13,13 +14,9 @@ class ExcelTemplateController extends Controller
 {
     public function index()
     {
-        $templates = MngCfgTemplate::latest()->paginate(10);
-        return view('management.excel-templates.index', compact('templates'));
-    }
-
-    public function create()
-    {
-        return view('management.excel-templates.create');
+        $templates = MngCfgTemplate::with('customer')->latest()->paginate(10);
+        $customers = Customer::orderBy('name', 'asc')->get();
+        return view('management.excel-templates.index', compact('templates', 'customers'));
     }
 
     public function store(Request $request)
@@ -28,6 +25,7 @@ class ExcelTemplateController extends Controller
             'template_name' => 'required|string|max:255',
             'template_type' => 'required|string',
             'direction'     => 'nullable|string|in:export,import',
+            'customer_id'   => 'nullable|exists:customers,id',
             'revision'      => 'nullable|string|max:20',
             'file'          => 'required|file|mimes:xlsx',
         ]);
@@ -63,6 +61,7 @@ class ExcelTemplateController extends Controller
             'template_name' => 'required|string|max:255',
             'template_type' => 'required|string',
             'direction'     => 'nullable|string|in:export,import',
+            'customer_id'   => 'nullable|exists:customers,id',
             'revision'      => 'nullable|string|max:20',
             'file'          => 'nullable|file|mimes:xlsx',
         ]);
@@ -72,7 +71,7 @@ class ExcelTemplateController extends Controller
             'template_type' => $request->template_type,
             'direction'     => $request->direction ?? $template->direction ?? 'export',
             'revision'      => $request->revision ?? $template->revision ?? '0',
-            'customer_id'   => $request->customer_id ?? $template->customer_id,
+            'customer_id'   => $request->has('customer_id') ? ($request->filled('customer_id') ? $request->customer_id : null) : $template->customer_id,
         ];
 
         // If a new master file is uploaded, delete old file from storage & save new file

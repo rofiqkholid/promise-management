@@ -15,6 +15,8 @@ class ToolingQuotation extends Model
     protected $fillable = [
         'ebd_header_id',
         'supplier_id',
+        'customer_id',
+        'source_type',
         'quotation_no',
         'revision',
         'currency_code',
@@ -75,11 +77,22 @@ class ToolingQuotation extends Model
     }
 
     /**
-     * Accessor untuk supplier_name
+     * Relasi ke Master Customer
+     */
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class, 'customer_id');
+    }
+
+    /**
+     * Accessor untuk supplier_name / display name
      */
     public function getSupplierNameAttribute()
     {
-        return $this->supplier->name ?? '—';
+        if ($this->source_type === 'customer' || $this->customer_id) {
+            return $this->customer ? ($this->customer->code ?? $this->customer->name) : 'Customer Target';
+        }
+        return $this->supplier ? $this->supplier->name : '—';
     }
 
     /**

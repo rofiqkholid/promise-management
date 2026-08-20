@@ -417,16 +417,25 @@ class WorkOrderToolingController extends Controller
     }
 
     /**
-     * Export Quotation Tooling Excel attachment for SPK 2 Tooling Cost.
+     * Export Quotation Tooling Excel attachment for EBD or SPK 2 Tooling Cost.
      */
     public function exportQuotation(Request $request, $id)
     {
         try {
             $decryptedId = $this->decryptId($id);
-            $workOrder = WorkOrder::findOrFail($decryptedId);
-            $sanitizedNo = str_replace(['/', '\\', ' '], '_', $workOrder->wo_number);
-            $filename = 'Quotation_Tooling_' . $sanitizedNo . '.xlsx';
+            $workOrder = WorkOrder::find($decryptedId);
+            $ebdHeader = null;
 
+            if ($workOrder) {
+                $ebdHeader = $workOrder->ebdHeader;
+                $sanitizedNo = str_replace(['/', '\\', ' '], '_', $workOrder->wo_number);
+            } else {
+                $ebdHeader = MngEbdHeader::with(['customer', 'projectModel', 'workOrder', 'items.toolingProcesses'])->findOrFail($decryptedId);
+                $workOrder = $ebdHeader->workOrder;
+                $sanitizedNo = 'EBD_Rev_' . ($ebdHeader->revision ?? '0');
+            }
+
+            $filename = 'Quotation_Tooling_' . $sanitizedNo . '.xlsx';
             $templateId = $request->input('template_id');
 
             // If user selected a configured dynamic template from MngCfgTemplate
@@ -438,18 +447,18 @@ class WorkOrderToolingController extends Controller
 
                     if (file_exists($templatePath)) {
                         // Gather EBD & WorkOrder Payload Data for Excel Engine
-                        $ebdHeader = $workOrder->ebdHeader;
                         $ebdItems = $ebdHeader ? $ebdHeader->items()->with(['toolingProcesses', 'addProcesses'])->get() : collect();
 
                         $payloadData = [
                             // Single Header Fields
-                            'quotation_no' => 'QT-' . $workOrder->wo_number,
-                            'revision' => $workOrder->ebdHeader->revision ?? '0',
+                            'quotation_no' => $workOrder ? ('QT-' . $workOrder->wo_number) : ('QT-EBD-' . ($ebdHeader->revision ?? '0')),
+                            'revision' => $ebdHeader->revision ?? '0',
                             'quote_date' => now()->format('Y-m-d'),
                             'supplier_name' => 'Supplier Name',
-                            'ebd_date' => $workOrder->ebdHeader->date ?? now()->format('Y-m-d'),
-                            'ebd_revision' => $workOrder->ebdHeader->revision ?? '0',
-                            'ebd_status' => $workOrder->ebdHeader->status ?? 'Active',
+                            'ebd_date' => $ebdHeader->date ? $ebdHeader->date->format('Y-m-d') : now()->format('Y-m-d'),
+                            'currency_code' => 'IDR',
+                            'exchange_rate' => 1.0,
+                            'ebd_status' => $ebdHeader->status ?? 'Active',
                             
                             // Loops Data Array
                             'items' => [],
@@ -486,20 +495,66 @@ class WorkOrderToolingController extends Controller
                             }
 
                             $itemData = [
-                                'ebd_part_no' => $item->part_no,
-                                'part_number' => $item->part_no,
-                                'ebd_part_name' => $item->part_name,
-                                'part_name' => $item->part_name,
-                                'ebd_active_level' => $item->active_level,
-                                'ebd_pcs_month' => $item->pcs_month,
-                                'ebd_qty_unit' => $item->qty_unit,
-                                'ebd_part_width' => $item->width,
-                                'ebd_part_length' => $item->length,
-                                'ebd_part_height' => $item->height,
-                                'ebd_part_weight' => $item->weight,
-                                'ebd_mat_spec' => $item->mat_spec,
-                                'ebd_mat_thick' => $item->mat_thick,
-                                'processes' => $processes // Child array for nested block repeater
+                                'ebd_part_no'          => $item->part_no,
+                                'part_no'              => $item->part_no,
+                                'part_number'          => $item->part_no,
+                                'ebd_part_name'        => $item->part_name,
+                                'part_name'            => $item->part_name,
+                                'ebd_part_rank'        => $item->part_rank,
+                                'part_rank'            => $item->part_rank,
+                                'ebd_active_level'     => $item->active_level,
+                                'active_level'         => $item->active_level,
+                                'ebd_pcs_month'        => $item->pcs_month,
+                                'pcs_month'            => $item->pcs_month,
+                                'ebd_qty_unit'         => $item->qty_unit,
+                                'qty_unit'             => $item->qty_unit,
+
+                                // Dimensions
+                                'ebd_part_width'       => $item->width,
+                                'width'                => $item->width,
+                                'ebd_part_length'      => $item->length,
+                                'length'               => $item->length,
+                                'ebd_part_height'      => $item->height,
+                                'height'               => $item->height,
+                                'ebd_part_weight'      => $item->weight,
+                                'weight'               => $item->weight,
+
+                                // Material Specifications & Dimensions
+                                'ebd_mat_spec'         => $item->mat_spec,
+                                'mat_spec'             => $item->mat_spec,
+                                'material_spec'        => $item->mat_spec,
+                                'ebd_mat_thick'        => $item->mat_thick,
+                                'mat_thick'            => $item->mat_thick,
+                                'material_thick'       => $item->mat_thick,
+                                'ebd_mat_width'        => $item->mat_width,
+                                'mat_width'            => $item->mat_width,
+                                'material_width'       => $item->mat_width,
+                                'ebd_mat_length'       => $item->mat_length,
+                                'mat_length'           => $item->mat_length,
+                                'material_length'      => $item->mat_length,
+                                'ebd_mat_pcs_sheet'    => $item->mat_pcs_sheet,
+                                'mat_pcs_sheet'        => $item->mat_pcs_sheet,
+                                'material_pcs_sheet'   => $item->mat_pcs_sheet,
+                                'pcs_sheet'            => $item->mat_pcs_sheet,
+                                'ebd_mat_weight_pcs'   => $item->mat_weight_pcs,
+                                'mat_weight_pcs'       => $item->mat_weight_pcs,
+                                'material_weight_pcs'  => $item->mat_weight_pcs,
+                                'ebd_mat_yield_ratio'  => $item->mat_yield_ratio,
+                                'mat_yield_ratio'      => $item->mat_yield_ratio,
+                                'material_yield_ratio' => $item->mat_yield_ratio,
+                                'yield_ratio'          => $item->mat_yield_ratio,
+
+                                // Standard Parts
+                                'ebd_std_part_no'      => $item->std_part_no,
+                                'std_part_no'          => $item->std_part_no,
+                                'ebd_std_part_name'    => $item->std_part_name,
+                                'std_part_name'        => $item->std_part_name,
+                                'ebd_std_qty'          => $item->std_qty,
+                                'std_qty'              => $item->std_qty,
+                                'ebd_std_uom'          => $item->std_uom,
+                                'std_uom'              => $item->std_uom,
+
+                                'processes'            => $processes // Child array for nested block repeater
                             ];
 
                             $payloadData['items'][] = $itemData;

@@ -10,8 +10,10 @@ class SystemFieldController extends Controller
 {
     public function index()
     {
-        $fields = MngCfgSystemField::orderBy('group')->orderBy('label')->paginate(15);
-        return view('management.system-fields.index', compact('fields'));
+        $fields = MngCfgSystemField::orderBy('group')->orderBy('label')->get();
+        $groups = MngCfgSystemField::select('group')->distinct()->whereNotNull('group')->where('group', '!=', '')->pluck('group');
+        $targetTables = MngCfgSystemField::select('target_table')->distinct()->whereNotNull('target_table')->where('target_table', '!=', '')->pluck('target_table');
+        return view('management.system-fields.index', compact('fields', 'groups', 'targetTables'));
     }
 
     public function store(Request $request)
