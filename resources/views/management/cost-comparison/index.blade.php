@@ -9,7 +9,7 @@
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
             <h1 class="text-lg font-bold tracking-tight text-slate-800 dark:text-white">Product Cost Comparison</h1>
-            <p class="text-xs text-slate-500 dark:text-slate-400">Perbandingan biaya HPP Engineering vs Harga Penawaran Sales per Customer dan Project Model EBD</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Engineering COGS vs Sales Quotation cost comparison matrix per customer and project model EBD</p>
         </div>
     </div>
 
@@ -182,11 +182,6 @@
                     </td>
                 </tr>
             @empty
-                <tr>
-                    <td colspan="10" class="p-8 text-center text-slate-400">
-                        Belum ada dokumen EBD yang tersedia untuk perbandingan biaya.
-                    </td>
-                </tr>
             @endforelse
         </tbody>
     </x-table>
@@ -266,7 +261,13 @@
             window.defaultDataTable('#comparison-header-table', {
                 pageLength: 10,
                 ordering: true,
-                order: [[0, 'asc']]
+                order: [[0, 'asc']],
+                columnDefs: [
+                    { orderable: false, targets: [9] }
+                ],
+                language: {
+                    emptyTable: "No EBD documents available for cost comparison."
+                }
             });
         }
     });
