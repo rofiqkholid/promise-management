@@ -108,7 +108,7 @@
         </div>
     </div>
 
-    <!-- Search Bar Banner (Expandable with Real-time Optimized Search) -->
+    <!-- Search Bar Banner (WhatsApp-style Direct Jump Navigation) -->
     <div x-show="showSearchBar" 
          x-transition:enter="transition ease-out duration-150"
          x-transition:enter-start="opacity-0 -translate-y-2"
@@ -116,7 +116,7 @@
          x-transition:leave="transition ease-in duration-100"
          x-transition:leave-start="opacity-100 translate-y-0"
          x-transition:leave-end="opacity-0 -translate-y-2"
-         class="px-4 py-2 bg-slate-50 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 z-10 flex-shrink-0"
+         class="px-4 py-2 bg-slate-50 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 z-10 flex-shrink-0"
          x-cloak>
         <div class="relative flex-1 flex items-center">
             <i class="fa-solid fa-magnifying-glass absolute left-2.5 text-slate-400 text-xs"></i>
@@ -124,7 +124,8 @@
                    x-ref="chatSearchInput"
                    x-model="searchQuery"
                    @input="onSearchInput()"
-                   placeholder="Search in messages, files, or usernames..."
+                   @keydown.enter.prevent="searchNext()"
+                   placeholder="Find in chat..."
                    class="w-full pl-8 pr-8 py-1 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-sm focus:outline-hidden focus:border-indigo-500 text-slate-800 dark:text-slate-200 shadow-2xs">
             <button x-show="searchQuery" 
                     @click="clearSearch()" 
@@ -134,18 +135,42 @@
             </button>
         </div>
 
-        <div class="flex items-center gap-2 flex-shrink-0">
-            <!-- Results Badge -->
-            <span class="text-[10.5px] font-bold px-2 py-0.5 rounded-full"
-                  :class="getFilteredMessages().length > 0 ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300' : 'bg-rose-100 text-rose-700 dark:bg-rose-900/60 dark:text-rose-300'"
-                  x-show="searchQuery"
-                  x-text="getFilteredMessages().length + ' found'"></span>
+        <div class="flex items-center gap-1.5 flex-shrink-0">
+            <!-- WhatsApp Match Counter (e.g., 2 of 5 or 0 results) -->
+            <span class="text-[11px] font-semibold px-1.5 py-0.5 text-slate-600 dark:text-slate-300 font-mono"
+                  x-show="searchQuery">
+                <template x-if="searchResults.length > 0">
+                    <span x-text="(currentSearchIndex + 1) + ' of ' + searchResults.length"></span>
+                </template>
+                <template x-if="searchResults.length === 0">
+                    <span class="text-rose-500 font-sans">0 found</span>
+                </template>
+            </span>
+
+            <!-- Up Arrow: Previous (Older) Match -->
+            <button @click="searchPrev()" 
+                    :disabled="searchResults.length === 0 || currentSearchIndex <= 0"
+                    type="button" 
+                    class="w-7 h-7 rounded-sm flex items-center justify-center border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors shadow-2xs cursor-pointer"
+                    title="Previous match (Older)">
+                <i class="fa-solid fa-chevron-up text-[10px]"></i>
+            </button>
+
+            <!-- Down Arrow: Next (Newer) Match -->
+            <button @click="searchNext()" 
+                    :disabled="searchResults.length === 0 || currentSearchIndex >= searchResults.length - 1"
+                    type="button" 
+                    class="w-7 h-7 rounded-sm flex items-center justify-center border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors shadow-2xs cursor-pointer"
+                    title="Next match (Newer)">
+                <i class="fa-solid fa-chevron-down text-[10px]"></i>
+            </button>
 
             <!-- Close Search Bar -->
             <button @click="showSearchBar = false; clearSearch();" 
                     type="button" 
-                    class="text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 font-bold px-1.5 py-1 cursor-pointer">
-                Done
+                    class="w-7 h-7 rounded-sm flex items-center justify-center text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-700 transition-colors cursor-pointer ml-1"
+                    title="Close search">
+                <i class="fa-solid fa-xmark text-xs font-bold"></i>
             </button>
         </div>
     </div>

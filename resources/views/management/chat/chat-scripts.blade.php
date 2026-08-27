@@ -215,6 +215,8 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
         showFormatToolbar: false,
         searchQuery: '',
         showSearchBar: false,
+        searchResults: [],
+        currentSearchIndex: -1,
         searchDebounceTimer: null,
         currentUserId: {{ Auth::check() ? Auth::user()->id : 0 }},
 
@@ -461,7 +463,30 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
         onSearchInput() {
             if (this.searchDebounceTimer) clearTimeout(this.searchDebounceTimer);
             const query = (this.searchQuery || '').trim();
-            if (!query) return;
+            if (!query) {
+                this.searchResults = [];
+                this.currentSearchIndex = -1;
+                return;
+            }
+
+            // Immediately scan local chatMessages in memory
+            const q = query.toLowerCase();
+            const localMatches = this.chatMessages.filter(m => {
+                const matchMsg = m.message && m.message.toLowerCase().includes(q);
+                const matchUser = m.user_name && m.user_name.toLowerCase().includes(q);
+                const matchFile = (m.file_name && m.file_name.toLowerCase().includes(q)) ||
+                                  (Array.isArray(m.attachments) && m.attachments.some(a => (a.name || a.file_name || '').toLowerCase().includes(q)));
+                return matchMsg || matchUser || matchFile;
+            }).map(m => m.id);
+
+            this.searchResults = localMatches;
+            if (this.searchResults.length > 0) {
+                // Focus on the newest matched message
+                this.currentSearchIndex = this.searchResults.length - 1;
+                this.jumpToMessage(this.searchResults[this.currentSearchIndex]);
+            } else {
+                this.currentSearchIndex = -1;
+            }
 
             // Debounced server search across full history if query is 2+ chars
             if (query.length >= 2) {
@@ -471,8 +496,22 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
             }
         },
 
+        searchPrev() {
+            if (this.searchResults.length === 0 || this.currentSearchIndex <= 0) return;
+            this.currentSearchIndex--;
+            this.jumpToMessage(this.searchResults[this.currentSearchIndex]);
+        },
+
+        searchNext() {
+            if (this.searchResults.length === 0 || this.currentSearchIndex >= this.searchResults.length - 1) return;
+            this.currentSearchIndex++;
+            this.jumpToMessage(this.searchResults[this.currentSearchIndex]);
+        },
+
         clearSearch() {
             this.searchQuery = '';
+            this.searchResults = [];
+            this.currentSearchIndex = -1;
             if (this.searchDebounceTimer) clearTimeout(this.searchDebounceTimer);
         },
 
@@ -485,12 +524,15 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
             .then(r => r.json())
             .then(data => {
                 if (data.success && Array.isArray(data.messages) && data.messages.length > 0) {
-                    const existingMap = new Map(this.chatMessages.map(m => [m.id, m]));
-                    data.messages.forEach(m => existingMap.set(m.id, m));
-                    this.chatMessages = Array.from(existingMap.values()).sort((a, b) => a.id - b.id);
-                    this.$nextTick(() => {
-                        this.initViewer();
-                    });
+                    const serverIds = data.messages.map(m => m.id);
+                    const mergedSet = new Set([...this.searchResults, ...serverIds]);
+                    this.searchResults = Array.from(mergedSet).sort((a, b) => a - b);
+
+                    // If currently no selection, select latest match
+                    if (this.currentSearchIndex === -1 && this.searchResults.length > 0) {
+                        this.currentSearchIndex = this.searchResults.length - 1;
+                        this.jumpToMessage(this.searchResults[this.currentSearchIndex]);
+                    }
                 }
             })
             .catch(() => {});
@@ -641,19 +683,7 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
         getFilteredMessages() {
             let list = this.chatMessages;
 
-            // 1. Search Query Filter (Messages, User Names, File Names)
-            if (this.searchQuery && this.searchQuery.trim().length > 0) {
-                const q = this.searchQuery.trim().toLowerCase();
-                list = list.filter(msg => {
-                    const matchMsg = msg.message && msg.message.toLowerCase().includes(q);
-                    const matchUser = msg.user_name && msg.user_name.toLowerCase().includes(q);
-                    const matchFile = (msg.file_name && msg.file_name.toLowerCase().includes(q)) ||
-                                      (Array.isArray(msg.attachments) && msg.attachments.some(a => (a.name || a.file_name || '').toLowerCase().includes(q)));
-                    return matchMsg || matchUser || matchFile;
-                });
-            }
-
-            // 2. Filter by Media / Links
+            // 1. Filter by Media / Links
             if (this.showOnlyMediaAndLinks) {
                 list = list.filter(msg => {
                     const hasFile = !!msg.file_path;
