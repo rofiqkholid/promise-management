@@ -3,7 +3,7 @@ import Pusher from 'pusher-js';
 
 window.Pusher = Pusher;
 
-if (import.meta.env.VITE_REVERB_APP_KEY) {
+function initEcho() {
     try {
         const csrfMeta = document.querySelector('meta[name="csrf-token"]');
         const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
@@ -18,16 +18,36 @@ if (import.meta.env.VITE_REVERB_APP_KEY) {
             authEndpoint = (appPrefix ? appPrefix.replace(/\/$/, '') : '') + '/broadcasting/auth';
         }
 
-        const wsHost = (import.meta.env.VITE_REVERB_HOST && import.meta.env.VITE_REVERB_HOST !== '127.0.0.1' && import.meta.env.VITE_REVERB_HOST !== 'localhost')
-            ? import.meta.env.VITE_REVERB_HOST
+        const keyMeta = document.querySelector('meta[name="reverb-key"]');
+        const hostMeta = document.querySelector('meta[name="reverb-host"]');
+        const portMeta = document.querySelector('meta[name="reverb-port"]');
+        const schemeMeta = document.querySelector('meta[name="reverb-scheme"]');
+
+        const reverbKey = (keyMeta && keyMeta.getAttribute('content')) || import.meta.env.VITE_REVERB_APP_KEY;
+        if (!reverbKey) return;
+
+        const customHost = (hostMeta && hostMeta.getAttribute('content')) || import.meta.env.VITE_REVERB_HOST;
+        const wsHost = (customHost && customHost !== '127.0.0.1' && customHost !== 'localhost')
+            ? customHost
             : window.location.hostname;
-        const wsScheme = import.meta.env.VITE_REVERB_SCHEME || (window.location.protocol === 'https:' ? 'https' : 'http');
+
+        const wsScheme = (schemeMeta && schemeMeta.getAttribute('content')) 
+            || import.meta.env.VITE_REVERB_SCHEME 
+            || (window.location.protocol === 'https:' ? 'https' : 'http');
         const isTls = wsScheme === 'https' || window.location.protocol === 'https:';
-        const wsPort = import.meta.env.VITE_REVERB_PORT ? Number(import.meta.env.VITE_REVERB_PORT) : 8443;
+
+        let wsPort = 443;
+        if (portMeta && portMeta.getAttribute('content')) {
+            wsPort = Number(portMeta.getAttribute('content')) || (isTls ? 443 : 80);
+        } else if (import.meta.env.VITE_REVERB_PORT) {
+            wsPort = Number(import.meta.env.VITE_REVERB_PORT);
+        } else {
+            wsPort = window.location.port ? Number(window.location.port) : (isTls ? 443 : 80);
+        }
 
         window.Echo = new Echo({
             broadcaster: 'reverb',
-            key: import.meta.env.VITE_REVERB_APP_KEY,
+            key: reverbKey,
             wsHost: wsHost,
             wsPort: wsPort,
             wssPort: wsPort,
@@ -45,5 +65,12 @@ if (import.meta.env.VITE_REVERB_APP_KEY) {
         console.warn('Laravel Echo Reverb initialization failed (running in fallback mode):', e);
     }
 }
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initEcho);
+} else {
+    initEcho();
+}
+
 
 

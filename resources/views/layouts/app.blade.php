@@ -7,6 +7,10 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="base-url" content="{{ url('/') }}">
     <meta name="broadcasting-auth-url" content="{{ url('broadcasting/auth') }}">
+    <meta name="reverb-key" content="{{ config('reverb.apps.apps.0.key') }}">
+    <meta name="reverb-host" content="{{ config('reverb.apps.apps.0.options.host') }}">
+    <meta name="reverb-port" content="{{ config('reverb.apps.apps.0.options.port', 443) }}">
+    <meta name="reverb-scheme" content="{{ config('reverb.apps.apps.0.options.scheme', 'https') }}">
     
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ asset('assets/image/logo-promise.png') }}">
