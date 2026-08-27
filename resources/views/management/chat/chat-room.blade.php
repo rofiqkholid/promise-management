@@ -173,9 +173,19 @@
 
                                 <!-- Quoted / Reply Preview Box -->
                                 <template x-if="msg.reply_to">
-                                    <div class="mb-1.5 p-2 rounded-xs border-l-3 bg-black/5 dark:bg-white/5 border-indigo-500 text-[11px] select-none">
-                                        <span class="block font-bold text-[10px] text-indigo-600 dark:text-indigo-400" x-text="msg.reply_to.user_name"></span>
-                                        <p class="text-[10px] truncate opacity-85 mt-0.5" x-text="msg.reply_to.message || (msg.reply_to.file_name ? '📎 ' + msg.reply_to.file_name : 'Quoted Message')"></p>
+                                    <div class="mb-1.5 px-2.5 py-1.5 rounded-sm border-l-4 text-[11px] select-none transition-colors duration-150"
+                                         :class="msg.user_id == currentUserId 
+                                             ? 'bg-black/20 dark:bg-black/35 border-l-amber-300 dark:border-l-amber-400 text-white' 
+                                             : 'bg-black/5 dark:bg-white/10 border-l-indigo-600 dark:border-l-indigo-400 text-slate-800 dark:text-slate-100'">
+                                        <div class="flex items-center gap-1.5">
+                                            <i class="fa-solid fa-reply text-[9px]" :class="msg.user_id == currentUserId ? 'text-amber-300' : 'text-indigo-600 dark:text-indigo-400'"></i>
+                                            <span class="font-extrabold text-[10.5px] leading-tight"
+                                                  :class="msg.user_id == currentUserId ? 'text-amber-200 dark:text-amber-300' : 'text-indigo-600 dark:text-indigo-400'"
+                                                  x-text="msg.reply_to.user_name"></span>
+                                        </div>
+                                        <p class="text-[10.5px] truncate mt-0.5"
+                                           :class="msg.user_id == currentUserId ? 'text-white/90 font-medium' : 'text-slate-600 dark:text-slate-300 font-medium'"
+                                           x-text="msg.reply_to.message || (msg.reply_to.file_name ? '📎 ' + msg.reply_to.file_name : 'Quoted Message')"></p>
                                     </div>
                                 </template>
 
