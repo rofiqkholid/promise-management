@@ -200,6 +200,7 @@ Route::middleware('auth')->prefix('management')->name('management.')->group(func
     Route::get('excel-templates/{id}/builder', [\App\Http\Controllers\Admin\ExcelTemplateController::class, 'builder'])->name('excel-templates.builder');
     Route::get('excel-templates/{id}/preview', [\App\Http\Controllers\Admin\ExcelTemplateController::class, 'preview'])->name('excel-templates.preview');
     Route::post('excel-templates/{id}/mapping', [\App\Http\Controllers\Admin\ExcelTemplateController::class, 'saveMapping'])->name('excel-templates.save-mapping');
+    Route::post('excel-templates/{id}/toggle-status', [\App\Http\Controllers\Admin\ExcelTemplateController::class, 'toggleStatus'])->name('excel-templates.toggle-status');
 
     Route::get('system-fields', [\App\Http\Controllers\Admin\SystemFieldController::class, 'index'])->name('system-fields.index');
     Route::post('system-fields', [\App\Http\Controllers\Admin\SystemFieldController::class, 'store'])->name('system-fields.store');

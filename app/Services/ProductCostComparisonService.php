@@ -544,10 +544,18 @@ class ProductCostComparisonService
         $itemMarginIdr = $cogsSales - $cogsEng;
         $itemMarginPct = $cogsSales > 0 ? ($itemMarginIdr / $cogsSales) * 100 : 0.0;
 
+        $scrapPriceEng = $rateMatEng ? floatval($rateMatEng->scrap_price_per_kg) : 0.0;
+        $scrapPriceSales = $rateMatSales ? floatval($rateMatSales->scrap_price_per_kg) : 0.0;
+
         return [
             'item' => $item,
             'eng' => [
                 'material_rate' => $matPriceEng,
+                'material_price' => $matPriceEng,
+                'mat_price_per_kg' => $matPriceEng,
+                'scrap_rate' => $scrapPriceEng,
+                'scrap_price' => $scrapPriceEng,
+                'scrap_price_per_kg' => $scrapPriceEng,
                 'material_cost' => $matCostEng,
                 'stamping_cost' => $stampingCostEng,
                 'add_proc_cost' => $addProcCostEng,
@@ -563,6 +571,11 @@ class ProductCostComparisonService
             ],
             'sales' => [
                 'material_rate' => $matPriceSales,
+                'material_price' => $matPriceSales,
+                'mat_price_per_kg' => $matPriceSales,
+                'scrap_rate' => $scrapPriceSales,
+                'scrap_price' => $scrapPriceSales,
+                'scrap_price_per_kg' => $scrapPriceSales,
                 'material_cost' => $matCostSales,
                 'stamping_cost' => $stampingCostSales,
                 'add_proc_cost' => $addProcCostSales,
@@ -585,7 +598,7 @@ class ProductCostComparisonService
      * Match closest Material Rate from master data.
      * Returns null if no match found.
      */
-    protected function matchMaterialRate($materials, $spec, $thick, $rateSource, $customerId = null)
+    public function matchMaterialRate($materials, $spec, $thick, $rateSource, $customerId = null)
     {
         if (empty($spec) && empty($thick)) {
             return null;
@@ -634,7 +647,7 @@ class ProductCostComparisonService
      * Prioritizes Customer-Specific rate first, then falls back to Global rate.
      * Returns null if no match found.
      */
-    protected function matchStampingRate($rates, $machineType, $tonnage, $stroke, $partRank, $rateSource, $customerId = null)
+    public function matchStampingRate($rates, $machineType, $tonnage, $stroke, $partRank, $rateSource, $customerId = null)
     {
         if (empty($rates) || $rates->isEmpty()) {
             return null;

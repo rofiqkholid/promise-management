@@ -155,6 +155,9 @@ class ProductCostComparisonController extends Controller
                     $templatePath = \Illuminate\Support\Facades\Storage::disk('public')->path($templateConfig->file_path);
 
                     if (file_exists($templatePath)) {
+                        $stampingRates = \App\Models\MfgProcessStpCost::all();
+                        $generalMfgRates = \App\Models\MfgProcessCost::all();
+
                         // Build comprehensive items loop payload with exact correct keys
                         $itemsPayload = [];
                         foreach ($comparison['items'] as $it) {
@@ -165,6 +168,17 @@ class ProductCostComparisonController extends Controller
                             $processes = [];
                             if ($mItem->toolingProcesses && $mItem->toolingProcesses->count() > 0) {
                                 foreach ($mItem->toolingProcesses as $tp) {
+                                    $tonnage = $tp->tonnage ? intval($tp->tonnage) : null;
+                                    $machineType = ($tp->machine_type && !in_array($tp->machine_type, ['M', 'JW'])) ? $tp->machine_type : 'Tandem';
+                                    $stroke = ($tp->stroke !== null && $tp->stroke !== '') ? floatval($tp->stroke) : 1.0;
+                                    $partRank = trim($mItem->part_rank ?? '');
+
+                                    $stpSales = $tonnage ? $this->comparisonService->matchStampingRate($stampingRates, $machineType, $tonnage, $stroke, $partRank, 'Sales', $customer->id ?? null) : null;
+                                    $stpEng = $tonnage ? $this->comparisonService->matchStampingRate($stampingRates, $machineType, $tonnage, $stroke, $partRank, 'Engineering', null) : null;
+
+                                    $costRateSales = $stpSales ? floatval($stpSales->std_cost_rate) : ($stpEng ? floatval($stpEng->std_cost_rate) : 0.0);
+                                    $minCostRateSales = $stpSales ? floatval($stpSales->min_cost_rate) : ($stpEng ? floatval($stpEng->min_cost_rate) : 0.0);
+
                                     $processes[] = [
                                         'op'                    => $tp->op,
                                         'ebd_tool_op'           => $tp->op,
@@ -179,7 +193,7 @@ class ProductCostComparisonController extends Controller
                                         'tonnage'               => $tp->tonnage,
                                         'ebd_tool_tonnage'      => $tp->tonnage,
                                         'machine_type'          => $tp->machine_type,
-                                        'stroke'                => $tp->stroke,
+                                        'stroke'                => $tp->stroke ?? $stroke,
                                         'die_height'            => $tp->die_height,
                                         'ebd_tool_die_height'   => $tp->die_height,
                                         'output'                => $tp->output,
@@ -187,10 +201,67 @@ class ProductCostComparisonController extends Controller
                                         'price_idr'             => $tp->price_idr,
                                         'ebd_tool_price_idr'    => $tp->price_idr,
                                         'cost_idr'              => $tp->price_idr,
+                                        'cost_rate'             => $costRateSales,
+                                        'std_cost_rate'         => $costRateSales,
+                                        'min_cost_rate'         => $minCostRateSales,
+                                        'stamping_cost'         => ($costRateSales * $stroke) / max(1, intval($tp->output ?? 1)),
                                         'ebd_tool_status'       => $tp->tooling_status,
                                         'supplier_status'       => $tp->tooling_status,
                                         'remarks'               => $tp->information,
                                         'ebd_tool_information'  => $tp->information,
+                                    ];
+                                }
+                            }
+
+                            // Extract Additional / Subcon Processes
+                            $additionalProcesses = [];
+                            if ($mItem->addProcesses && $mItem->addProcesses->count() > 0) {
+                                foreach ($mItem->addProcesses as $ap) {
+                                    $procName = trim($ap->process_name ?? '');
+                                    $rawQty = floatval($ap->qty ?? 0.0);
+                                    $qtyMultiplier = $rawQty > 0 ? $rawQty : 1.0;
+
+                                    $apEng = $generalMfgRates->where('rate_source', 'Engineering')
+                                        ->first(function($r) use ($procName) {
+                                            if (empty($procName)) return false;
+                                            $mfgName = trim($r->process_name);
+                                            return strcasecmp($mfgName, $procName) === 0 ||
+                                                   stripos($mfgName, $procName) !== false ||
+                                                   stripos($procName, $mfgName) !== false;
+                                        });
+
+                                    $apSales = $generalMfgRates->where('rate_source', 'Sales')
+                                        ->first(function($r) use ($procName) {
+                                            if (empty($procName)) return false;
+                                            $mfgName = trim($r->process_name);
+                                            return strcasecmp($mfgName, $procName) === 0 ||
+                                                   stripos($mfgName, $procName) !== false ||
+                                                   stripos($procName, $mfgName) !== false;
+                                        });
+
+                                    $valEng = $apEng ? (floatval($apEng->std_cost_rate) * $qtyMultiplier) : floatval($ap->cost_idr ?? 0.0);
+                                    $valSales = $apSales ? (floatval($apSales->std_cost_rate) * $qtyMultiplier) : floatval($ap->cost_idr ?? 0.0);
+                                    $rateStd = $apSales ? floatval($apSales->std_cost_rate) : ($apEng ? floatval($apEng->std_cost_rate) : floatval($ap->cost_idr ?? 0.0));
+
+                                    $additionalProcesses[] = [
+                                        'add_process_name'         => $procName,
+                                        'ebd_add_process_name'     => $procName,
+                                        'process_name'             => $procName,
+                                        'add_qty'                  => $rawQty,
+                                        'ebd_add_process_qty'      => $rawQty,
+                                        'qty'                      => $rawQty,
+                                        'add_unit'                 => $ap->unit ?? 'PCS',
+                                        'ebd_add_process_unit'     => $ap->unit ?? 'PCS',
+                                        'unit'                     => $ap->unit ?? 'PCS',
+                                        'add_proc_sales'           => $valSales,
+                                        'add_proc_eng'             => $valEng,
+                                        'add_proc_cost'            => $valSales,
+                                        'add_cost_idr'             => $valSales,
+                                        'ebd_add_process_cost_idr' => $valSales,
+                                        'cost_idr'                 => $valSales,
+                                        'price_idr'                => $valSales,
+                                        'cost_rate'                => $rateStd,
+                                        'std_cost_rate'            => $rateStd,
                                     ];
                                 }
                             }
@@ -263,10 +334,19 @@ class ProductCostComparisonController extends Controller
                                 'ebd_std_uom'          => $mItem->std_uom ?? '-',
 
                                 // Costs Breakdown
+                                'material_cost'        => $sales['material_cost'] ?? 0.0,
                                 'material_eng'         => $eng['material_cost'] ?? 0.0,
                                 'material_sales'       => $sales['material_cost'] ?? 0.0,
                                 'mat_price_eng'        => $eng['mat_price_per_kg'] ?? ($eng['material_price'] ?? 0.0),
                                 'mat_price_sales'      => $sales['mat_price_per_kg'] ?? ($sales['material_price'] ?? 0.0),
+                                'mat_price_per_kg'     => $sales['mat_price_per_kg'] ?? ($sales['material_price'] ?? 0.0),
+                                'material_price'       => $sales['mat_price_per_kg'] ?? ($sales['material_price'] ?? 0.0),
+                                'material_rate'        => $sales['mat_price_per_kg'] ?? ($sales['material_price'] ?? 0.0),
+                                'scrap_price_eng'      => $eng['scrap_price_per_kg'] ?? 0.0,
+                                'scrap_price_sales'    => $sales['scrap_price_per_kg'] ?? 0.0,
+                                'scrap_price_per_kg'   => $sales['scrap_price_per_kg'] ?? 0.0,
+                                'scrap_price'          => $sales['scrap_price_per_kg'] ?? 0.0,
+                                'scrap_rate'           => $sales['scrap_price_per_kg'] ?? 0.0,
                                 'stamping_eng'         => $eng['stamping_cost'] ?? 0.0,
                                 'stamping_sales'       => $sales['stamping_cost'] ?? 0.0,
                                 'add_proc_eng'         => $eng['add_proc_cost'] ?? 0.0,
@@ -288,7 +368,10 @@ class ProductCostComparisonController extends Controller
                                 'selling_price'        => $sales['cogs'] ?? 0.0,
                                 'item_margin_idr'      => ($sales['cogs'] ?? 0.0) - ($eng['cogs'] ?? 0.0),
                                 'item_margin_pct'      => ($sales['cogs'] ?? 0.0) > 0 ? ((($sales['cogs'] ?? 0.0) - ($eng['cogs'] ?? 0.0)) / ($sales['cogs'] ?? 0.0)) * 100 : 0.0,
-                                'processes'            => $processes
+                                'processes'            => $processes,
+                                'additional_processes' => $additionalProcesses,
+                                'add_processes'        => $additionalProcesses,
+                                'tooling_processes'    => $processes,
                             ];
                         }
 

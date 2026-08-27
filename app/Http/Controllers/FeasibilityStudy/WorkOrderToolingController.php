@@ -465,34 +465,131 @@ class WorkOrderToolingController extends Controller
                             'ebd_items' => []
                         ];
 
+                        $stampingRates = \App\Models\MfgProcessStpCost::all();
+                        $generalMfgRates = \App\Models\MfgProcessCost::all();
+                        $materials = \App\Models\MaterialCost::all();
+                        $customerId = optional(optional($workOrder->inquiry)->customer)->id ?? null;
+
                         // Build Parent-Child Data Structures for EBD Items & Tooling OP Processes
                         foreach ($ebdItems as $item) {
                             $processes = [];
                             foreach ($item->toolingProcesses as $tp) {
+                                $tonnage = $tp->tonnage ? intval($tp->tonnage) : null;
+                                $machineType = ($tp->machine_type && !in_array($tp->machine_type, ['M', 'JW'])) ? $tp->machine_type : 'Tandem';
+                                $stroke = ($tp->stroke !== null && $tp->stroke !== '') ? floatval($tp->stroke) : 1.0;
+                                $partRank = trim($item->part_rank ?? '');
+
+                                $stpRate = null;
+                                if ($tonnage) {
+                                    $stpRate = $stampingRates->first(function($r) use ($machineType, $tonnage, $partRank, $customerId) {
+                                        if ($r->machine_type !== $machineType) return false;
+                                        if (intval($r->tonnage) !== $tonnage) return false;
+                                        if ($r->part_rank && $r->part_rank !== $partRank) return false;
+                                        if ($customerId && $r->customer_id && $r->customer_id != $customerId) return false;
+                                        return true;
+                                    }) ?? $stampingRates->first(function($r) use ($machineType, $tonnage) {
+                                        return $r->machine_type === $machineType && intval($r->tonnage) === $tonnage;
+                                    });
+                                }
+
+                                $costRateVal = $stpRate ? floatval($stpRate->std_cost_rate) : 0.0;
+                                $minCostRateVal = $stpRate ? floatval($stpRate->min_cost_rate) : 0.0;
+
                                 $processes[] = [
-                                    'ebd_tool_op' => $tp->op,
-                                    'op' => $tp->op,
+                                    'ebd_tool_op'           => $tp->op,
+                                    'op'                    => $tp->op,
                                     'ebd_tool_process_name' => $tp->process_name,
-                                    'process_name' => $tp->process_name,
-                                    'tooling_process_name' => $tp->process_name,
-                                    'ebd_tool_category' => $tp->category,
-                                    'tooling_type' => $tp->category,
-                                    'ebd_tool_homeline' => $tp->prod_homeline,
-                                    'homeline' => $tp->prod_homeline,
-                                    'ebd_tool_tonnage' => $tp->tonnage,
-                                    'tonnage' => $tp->tonnage,
-                                    'ebd_tool_die_height' => $tp->die_height,
-                                    'die_height' => $tp->die_height,
-                                    'ebd_tool_output' => $tp->output,
-                                    'output' => $tp->output,
-                                    'ebd_tool_price_idr' => $tp->price_idr,
-                                    'cost_idr' => $tp->price_idr,
-                                    'ebd_tool_status' => $tp->tooling_status,
-                                    'supplier_status' => $tp->tooling_status,
-                                    'ebd_tool_information' => $tp->information,
-                                    'remarks' => $tp->information,
+                                    'process_name'          => $tp->process_name,
+                                    'tooling_process_name'  => $tp->process_name,
+                                    'ebd_tool_category'     => $tp->category,
+                                    'category'              => $tp->category,
+                                    'tooling_type'          => $tp->category,
+                                    'ebd_tool_homeline'     => $tp->prod_homeline,
+                                    'homeline'              => $tp->prod_homeline,
+                                    'ebd_tool_tonnage'      => $tp->tonnage,
+                                    'tonnage'               => $tp->tonnage,
+                                    'machine_type'          => $tp->machine_type,
+                                    'stroke'                => $tp->stroke ?? $stroke,
+                                    'ebd_tool_die_height'   => $tp->die_height,
+                                    'die_height'            => $tp->die_height,
+                                    'ebd_tool_output'       => $tp->output,
+                                    'output'                => $tp->output,
+                                    'ebd_tool_price_idr'    => $tp->price_idr,
+                                    'price_idr'             => $tp->price_idr,
+                                    'cost_idr'              => $tp->price_idr,
+                                    'cost_rate'             => $costRateVal,
+                                    'std_cost_rate'         => $costRateVal,
+                                    'min_cost_rate'         => $minCostRateVal,
+                                    'stamping_cost'         => ($costRateVal * $stroke) / max(1, intval($tp->output ?? 1)),
+                                    'ebd_tool_status'       => $tp->tooling_status,
+                                    'supplier_status'       => $tp->tooling_status,
+                                    'ebd_tool_information'  => $tp->information,
+                                    'remarks'               => $tp->information,
                                 ];
                             }
+
+                            // Extract Additional / Subcon Processes
+                            $additionalProcesses = [];
+                            if ($item->addProcesses && $item->addProcesses->count() > 0) {
+                                foreach ($item->addProcesses as $ap) {
+                                    $procName = trim($ap->process_name ?? '');
+                                    $rawQty = floatval($ap->qty ?? 0.0);
+                                    $qtyMultiplier = $rawQty > 0 ? $rawQty : 1.0;
+
+                                    $apRate = $generalMfgRates->first(function($r) use ($procName) {
+                                        if (empty($procName)) return false;
+                                        $mfgName = trim($r->process_name);
+                                        return strcasecmp($mfgName, $procName) === 0 ||
+                                               stripos($mfgName, $procName) !== false ||
+                                               stripos($procName, $mfgName) !== false;
+                                    });
+
+                                    $rateStd = $apRate ? floatval($apRate->std_cost_rate) : floatval($ap->cost_idr ?? 0.0);
+                                    $valCalc = $rateStd * $qtyMultiplier;
+
+                                    $additionalProcesses[] = [
+                                        'add_process_name'         => $procName,
+                                        'ebd_add_process_name'     => $procName,
+                                        'process_name'             => $procName,
+                                        'add_qty'                  => $rawQty,
+                                        'ebd_add_process_qty'      => $rawQty,
+                                        'qty'                      => $rawQty,
+                                        'add_unit'                 => $ap->unit ?? 'PCS',
+                                        'ebd_add_process_unit'     => $ap->unit ?? 'PCS',
+                                        'unit'                     => $ap->unit ?? 'PCS',
+                                        'add_proc_sales'           => $valCalc,
+                                        'add_proc_eng'             => $valCalc,
+                                        'add_proc_cost'            => $valCalc,
+                                        'add_cost_idr'             => $valCalc,
+                                        'ebd_add_process_cost_idr' => $valCalc,
+                                        'cost_idr'                 => $valCalc,
+                                        'price_idr'                => $valCalc,
+                                        'cost_rate'                => $rateStd,
+                                        'std_cost_rate'            => $rateStd,
+                                    ];
+                                }
+                            }
+
+                            // Match Material Cost from Master Data
+                            $matSpec = trim($item->mat_spec ?? '');
+                            $matThick = floatval($item->mat_thick ?? 0.0);
+                            $rateMat = null;
+                            if (!empty($matSpec) || !empty($matThick)) {
+                                $rateMat = $materials->first(function($m) use ($matSpec, $matThick, $customerId) {
+                                    if ($customerId && $m->customer_id && $m->customer_id != $customerId) return false;
+                                    $specMatch = !empty($matSpec) && (stripos($m->material_spec, $matSpec) !== false || stripos($matSpec, $m->material_spec) !== false);
+                                    $thickMatch = empty($matThick) || empty($m->thickness) || abs($m->thickness - $matThick) < 0.05;
+                                    return $specMatch && $thickMatch;
+                                }) ?? $materials->first(function($m) use ($matSpec, $matThick) {
+                                    $specMatch = !empty($matSpec) && (stripos($m->material_spec, $matSpec) !== false || stripos($matSpec, $m->material_spec) !== false);
+                                    $thickMatch = empty($matThick) || empty($m->thickness) || abs($m->thickness - $matThick) < 0.05;
+                                    return $specMatch && $thickMatch;
+                                });
+                            }
+
+                            $matPricePerKg = $rateMat ? floatval($rateMat->price_per_kg) : 0.0;
+                            $scrapPricePerKg = $rateMat ? floatval($rateMat->scrap_price_per_kg) : 0.0;
+                            $matCostVal = floatval($item->weight ?? 0.0) * $matPricePerKg;
 
                             $itemData = [
                                 'ebd_part_no'          => $item->part_no,
@@ -544,6 +641,21 @@ class WorkOrderToolingController extends Controller
                                 'material_yield_ratio' => $item->mat_yield_ratio,
                                 'yield_ratio'          => $item->mat_yield_ratio,
 
+                                // Master Matched Material & Scrap Prices
+                                'mat_price_per_kg'     => $matPricePerKg,
+                                'mat_price_sales'      => $matPricePerKg,
+                                'mat_price_eng'        => $matPricePerKg,
+                                'material_price'       => $matPricePerKg,
+                                'material_rate'        => $matPricePerKg,
+                                'scrap_price_per_kg'   => $scrapPricePerKg,
+                                'scrap_price_sales'    => $scrapPricePerKg,
+                                'scrap_price_eng'      => $scrapPricePerKg,
+                                'scrap_price'          => $scrapPricePerKg,
+                                'scrap_rate'           => $scrapPricePerKg,
+                                'material_cost'        => $matCostVal,
+                                'material_sales'       => $matCostVal,
+                                'material_eng'         => $matCostVal,
+
                                 // Standard Parts
                                 'ebd_std_part_no'      => $item->std_part_no,
                                 'std_part_no'          => $item->std_part_no,
@@ -554,7 +666,10 @@ class WorkOrderToolingController extends Controller
                                 'ebd_std_uom'          => $item->std_uom,
                                 'std_uom'              => $item->std_uom,
 
-                                'processes'            => $processes // Child array for nested block repeater
+                                'processes'            => $processes,
+                                'additional_processes' => $additionalProcesses,
+                                'add_processes'        => $additionalProcesses,
+                                'tooling_processes'    => $processes,
                             ];
 
                             $payloadData['items'][] = $itemData;

@@ -14,7 +14,7 @@
             {{-- Header Strip Judul --}}
             <div class="px-3 py-1.5 bg-slate-50 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center justify-between">
                 <span>Cost Estimation Comparison Matrix</span>
-                <button type="button" onclick="openQuotationExportModal()"
+                <button type="button" onclick="openCostComparisonExportModal()"
                         class="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-sm text-[11px] font-semibold transition-all cursor-pointer shadow-xs active:scale-98">
                     <i class="fa-solid fa-file-excel text-[10px]"></i> Export Quotation
                 </button>
@@ -161,7 +161,7 @@
         {{-- ══════════════════════════════════════════════════════════════ --}}
         <div id="tab-content-product-cost" class="p-4 space-y-5">
             {{-- Main Product Cost Matrix (Neutral Styling) --}}
-            <div class="overflow-x-auto rounded-sm border border-slate-300 dark:border-slate-700">
+            <div class="overflow-x-auto rounded-sm">
                 <table class="w-full text-xs text-left border-collapse">
                     <thead>
                         <tr class="bg-slate-100 dark:bg-slate-900 border-b border-slate-300 dark:border-slate-700">
@@ -434,7 +434,7 @@
         {{-- ══════════════════════════════════════════════════════════════ --}}
         <div id="tab-content-tooling-cost" class="hidden p-4 space-y-5">
             {{-- Main Tooling Cost Matrix (Neutral Styling) --}}
-            <div class="overflow-x-auto rounded-sm border border-slate-300 dark:border-slate-700">
+            <div class="overflow-x-auto rounded-sm">
                 <table class="w-full text-xs text-left border-collapse">
                     <thead>
                         <tr class="bg-slate-100 dark:bg-slate-900 border-b border-slate-300 dark:border-slate-700">
@@ -919,13 +919,13 @@
         }
     });
 
-    function openQuotationExportModal() {
-        $('#exportQuotationModal').removeClass('hidden').addClass('flex');
+    function openCostComparisonExportModal() {
+        $('#exportCostComparisonModal').removeClass('hidden').addClass('flex');
     }
 </script>
 
 {{-- ===== DYNAMIC EXPORT MODAL ===== --}}
-<div id="exportQuotationModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+<div id="exportCostComparisonModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
     <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm shadow-2xl w-full max-w-md mx-4 overflow-hidden animate-fade-in">
         <div class="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-700">
             <div>
@@ -934,12 +934,12 @@
                 </h3>
                 <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">Generate customized quotation Excel spreadsheet</p>
             </div>
-            <button type="button" onclick="$('#exportQuotationModal').addClass('hidden').removeClass('flex')" class="w-7 h-7 flex items-center justify-center rounded-sm text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
+            <button type="button" onclick="$('#exportCostComparisonModal').addClass('hidden').removeClass('flex')" class="w-7 h-7 flex items-center justify-center rounded-sm text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
                 <i class="fa-solid fa-xmark text-sm"></i>
             </button>
         </div>
 
-        <form id="exportQuotationForm" action="{{ route('management.product-cost-comparison.quotation', $comparisonResult['ebd_header']->id) }}" method="GET" target="_blank">
+        <form id="exportCostComparisonForm" action="{{ route('management.product-cost-comparison.quotation', $comparisonResult['ebd_header']->id) }}" method="GET" target="_blank">
             <div class="px-5 py-4 space-y-4">
                 {{-- Target Info Box --}}
                 <div class="p-3 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-sm space-y-1">
@@ -993,10 +993,10 @@
             </div>
 
             <div class="flex items-center justify-end gap-2 px-5 py-3.5 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-200 dark:border-slate-700">
-                <button type="button" onclick="$('#exportQuotationModal').addClass('hidden').removeClass('flex')" class="px-3.5 h-8 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-sm transition-colors cursor-pointer">
+                <button type="button" onclick="$('#exportCostComparisonModal').addClass('hidden').removeClass('flex')" class="px-3.5 h-8 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-sm transition-colors cursor-pointer">
                     Cancel
                 </button>
-                <button type="submit" onclick="setTimeout(function(){ $('#exportQuotationModal').addClass('hidden').removeClass('flex'); }, 500)" class="inline-flex items-center justify-center gap-1.5 px-4 h-8 bg-emerald-600 hover:bg-emerald-700 text-white rounded-sm text-xs font-semibold shadow-xs active:scale-98 transition-all cursor-pointer">
+                <button type="submit" onclick="setTimeout(function(){ $('#exportCostComparisonModal').addClass('hidden').removeClass('flex'); }, 500)" class="inline-flex items-center justify-center gap-1.5 px-4 h-8 bg-emerald-600 hover:bg-emerald-700 text-white rounded-sm text-xs font-semibold shadow-xs active:scale-98 transition-all cursor-pointer">
                     <i class="fa-solid fa-file-excel text-xs"></i>
                     <span>Generate & Download Excel</span>
                 </button>

@@ -23,7 +23,7 @@
            {{ $disabled ? 'disabled' : '' }}
            @if($placeholder) placeholder="{{ $placeholder }}" @endif
            {{ $attributes->merge([
-               'class' => 'w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-3 py-2 text-xs text-slate-900 dark:text-slate-100 focus:bg-white focus:border-blue-500 focus:outline-none disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed transition-colors duration-150'
+               'class' => 'w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-sm px-3 py-2 text-xs text-slate-900 dark:text-slate-100 focus:bg-white focus:border-blue-500 focus:outline-none disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed transition-colors duration-150'
            ]) }}>
     @error($name)
         <span class="text-rose-500 text-[10px] mt-1 block font-medium">{{ $message }}</span>

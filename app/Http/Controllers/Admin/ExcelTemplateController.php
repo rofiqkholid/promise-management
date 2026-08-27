@@ -7,6 +7,7 @@ use App\Models\Customer;
 use App\Models\MngCfgSystemField;
 use App\Models\MngCfgTemplate;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
@@ -129,17 +130,36 @@ class ExcelTemplateController extends Controller
             ->with('success', "Template '{$original->template_name}' successfully duplicated!");
     }
 
+    public function toggleStatus($id)
+    {
+        $template = MngCfgTemplate::findOrFail($id);
+        $template->is_active = !$template->is_active;
+        $template->save();
+
+        $statusLabel = $template->is_active ? 'activated' : 'deactivated';
+        return redirect()->route('management.excel-templates.index')
+            ->with('success', "Template '{$template->template_name}' successfully {$statusLabel}!");
+    }
+
     public function builder(Request $request, $id)
     {
         $template = MngCfgTemplate::findOrFail($id);
-        $systemFields = MngCfgSystemField::orderBy('group')->orderBy('label')->get();
+        $systemFields = Cache::remember('excel_builder_system_fields', 3600, function() {
+            return MngCfgSystemField::orderBy('group')->orderBy('label')->get();
+        });
+        $groupedFields = $systemFields->groupBy('group');
         $filePath = Storage::disk('public')->path($template->file_path);
         
         $sheetIndex = (int) $request->get('sheet', 0);
-        $sheetData = $this->parseExcelSheetWithStyles($filePath, $sheetIndex);
+        $fileMtime = file_exists($filePath) ? filemtime($filePath) : 0;
+        $cacheKey = "excel_builder_sheet_{$template->id}_{$sheetIndex}_{$fileMtime}";
+
+        $sheetData = Cache::remember($cacheKey, 1800, function () use ($filePath, $sheetIndex) {
+            return $this->parseExcelSheetWithStyles($filePath, $sheetIndex);
+        });
 
         return view('management.excel-templates.builder', array_merge(
-            compact('template', 'systemFields'),
+            compact('template', 'systemFields', 'groupedFields'),
             $sheetData
         ));
     }
@@ -149,7 +169,12 @@ class ExcelTemplateController extends Controller
         $template = MngCfgTemplate::findOrFail($id);
         $filePath = Storage::disk('public')->path($template->file_path);
         $sheetIndex = (int) $request->get('sheet', 0);
-        $sheetData = $this->parseExcelSheetWithStyles($filePath, $sheetIndex);
+        $fileMtime = file_exists($filePath) ? filemtime($filePath) : 0;
+        $cacheKey = "excel_builder_sheet_{$template->id}_{$sheetIndex}_{$fileMtime}";
+
+        $sheetData = Cache::remember($cacheKey, 1800, function () use ($filePath, $sheetIndex) {
+            return $this->parseExcelSheetWithStyles($filePath, $sheetIndex);
+        });
 
         return response()->json([
             'template' => $template,
@@ -711,18 +736,34 @@ class ExcelTemplateController extends Controller
 
     public function saveMapping(Request $request, $id)
     {
-        $template = MngCfgTemplate::findOrFail($id);
-        
-        $request->validate([
-            'mapping_config' => 'required|array'
-        ]);
+        try {
+            $template = MngCfgTemplate::findOrFail($id);
+            
+            $request->validate([
+                'mapping_config' => 'required|array'
+            ]);
 
-        $template->mapping_config = $request->mapping_config;
-        $template->save();
+            $template->mapping_config = $request->mapping_config;
+            $template->save();
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Visual Mapping Configuration saved successfully!'
-        ]);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Visual Mapping Configuration saved successfully!'
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $ve) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Validation error: ' . implode(', ', $ve->validator->errors()->all()),
+                'errors' => $ve->validator->errors()
+            ], 422);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error("Failed to save mapping for template {$id}: " . $e->getMessage(), [
+                'exception' => $e
+            ]);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to save mapping: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

@@ -15,7 +15,7 @@
     </div>
     @endif
 
-    <div class="p-4">
+    <div class="p-3 sm:p-4">
         <table id="{{ $tableId }}" {{ $attributes->merge(['class' => 'custom-table w-full text-left']) }}>
             {{ $slot }}
         </table>
@@ -39,8 +39,8 @@
             order: [[0, 'desc']],
             pageLength: 10,
             lengthMenu: [10, 25, 50, 100],
-            // Top: Buttons on left, Search, Columns & Filters grouped on right. Bottom: Rows Select & Info on left, Pagination on right
-            dom: "<'flex flex-col sm:flex-row justify-between items-center mb-4 gap-3'<'dt-top-left flex flex-wrap items-center gap-2'B><'dt-top-right flex flex-wrap items-center justify-end gap-2'f>>r<'overflow-x-auto w-full relative border border-slate-300 dark:border-slate-700 rounded-sm't><'flex flex-col sm:flex-row justify-between items-center mt-4 gap-4 text-xs text-slate-500 dark:text-slate-400'<'flex flex-wrap items-center gap-3'l i><'flex items-center'p>>",
+            // Top: Search & Tools first on mobile, Exports second on mobile. Desktop: Exports left, Search/Tools right.
+            dom: "<'dt-top-toolbar flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 mb-4'<'dt-top-right w-full sm:w-auto order-1 sm:order-2 flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-end gap-2'f<'dt-top-tools flex items-center gap-2'>><'dt-top-left w-full sm:w-auto order-2 sm:order-1 flex items-center gap-1.5'B>>r<'overflow-x-auto w-full relative border border-slate-300 dark:border-slate-700 rounded-sm my-4't><'flex flex-col sm:flex-row justify-between items-center mt-4 gap-3 text-xs text-slate-500 dark:text-slate-400'<'flex flex-wrap items-center justify-between sm:justify-start w-full sm:w-auto gap-3'l i><'flex items-center justify-center sm:justify-end w-full sm:w-auto'p>>",
             buttons: [
                 { extend: 'excel', text: '<i class="fa-solid fa-file-excel"></i>', className: 'dt-button buttons-excel' },
                 { extend: 'pdf', text: '<i class="fa-solid fa-file-pdf"></i>', className: 'dt-button buttons-pdf' },
@@ -89,12 +89,15 @@
 
         function setupToolbarControls() {
             const $wrapper = $table.closest('.dataTables_wrapper');
-            let $topRight = $wrapper.find('.dt-top-right');
-            if (!$topRight.length) {
-                const $filter = $wrapper.find('.dataTables_filter');
-                $topRight = $filter.length ? $filter.parent() : $wrapper.find('> div:first-child');
+            let $toolsContainer = $wrapper.find('.dt-top-tools');
+            if (!$toolsContainer.length) {
+                $toolsContainer = $wrapper.find('.dt-top-right');
             }
-            if (!$topRight.length) return;
+            if (!$toolsContainer.length) {
+                const $filter = $wrapper.find('.dataTables_filter');
+                $toolsContainer = $filter.length ? $filter.parent() : $wrapper.find('> div:first-child');
+            }
+            if (!$toolsContainer.length) return;
 
             // 1. Column Visibility (ColVis) Dropdown
             const colvisId = 'dt-colvis-' + tableId;
@@ -102,7 +105,7 @@
                 const colvisBtnHtml = `
                     <div class="relative inline-block text-left dt-colvis-dropdown-wrapper shrink-0">
                         <button type="button" id="${colvisId}-btn"
-                                class="inline-flex items-center gap-2 px-3 h-9 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-sm text-xs font-medium text-slate-700 dark:text-slate-200 transition-colors shadow-2xs cursor-pointer">
+                                class="inline-flex items-center gap-1.5 px-2.5 sm:px-3 h-[2.125rem] bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-sm text-xs font-medium text-slate-700 dark:text-slate-200 transition-colors shadow-2xs cursor-pointer">
                             <i class="fa-solid fa-table-columns text-slate-400 text-xs"></i>
                             <span>Columns</span>
                         </button>
@@ -127,7 +130,7 @@
                         </div>
                     </div>
                 `;
-                $topRight.append(colvisBtnHtml);
+                $toolsContainer.append(colvisBtnHtml);
 
                 const $colvisList = $(`#${colvisId}-list`);
                 dt.columns().every(function(colIdx) {
@@ -205,7 +208,7 @@
                     const filterBtnHtml = `
                         <div class="relative inline-block text-left dt-filter-dropdown-wrapper shrink-0">
                             <button type="button" id="${popoverId}-btn"
-                                    class="inline-flex items-center gap-2 px-3 h-9 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-sm text-xs font-medium text-slate-700 dark:text-slate-200 transition-colors shadow-2xs cursor-pointer">
+                                    class="inline-flex items-center gap-1.5 px-2.5 sm:px-3 h-[2.125rem] bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-sm text-xs font-medium text-slate-700 dark:text-slate-200 transition-colors shadow-2xs cursor-pointer">
                                 <i class="fa-solid fa-filter text-slate-400 text-xs"></i>
                                 <span>Filters</span>
                                 <span id="${popoverId}-badge" class="hidden inline-flex items-center justify-center px-1.5 min-w-4 h-4 text-[10px] font-extrabold text-white bg-blue-600 rounded-full">0</span>
@@ -231,7 +234,7 @@
                             </div>
                         </div>
                     `;
-                    $topRight.append(filterBtnHtml);
+                    $toolsContainer.append(filterBtnHtml);
 
                     const $panelContent = $(`#${popoverId}-content`);
                     $filterSource.children().appendTo($panelContent);

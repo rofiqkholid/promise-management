@@ -8,6 +8,7 @@
 @import './datatables-custom.css';
 @import './select2-base.css';
 @import './select2-custom.css';
+@import './tooltip.css';
 
 :root {
     --primary-50: #eff6ff;
