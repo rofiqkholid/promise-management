@@ -24,14 +24,28 @@ class ChatController extends Controller
             ->where('chatable_type', $type)
             ->where('chatable_id', $id);
 
-        if ($request->has('target_id') && $request->input('target_id')) {
+        if ($request->has('q') && filled($request->input('q'))) {
+            $searchTerm = '%' . trim($request->input('q')) . '%';
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('message', 'like', $searchTerm)
+                  ->orWhere('file_name', 'like', $searchTerm)
+                  ->orWhereHas('user', function ($uq) use ($searchTerm) {
+                      $uq->where('name', 'like', $searchTerm);
+                  });
+            });
+            $messages = $query->orderBy('id', 'desc')
+                ->take(50)
+                ->get()
+                ->reverse()
+                ->values();
+        } elseif ($request->has('target_id') && $request->input('target_id')) {
             $targetId = (int) $request->input('target_id');
             if ($request->has('before_id') && $request->input('before_id')) {
                 $query->where('id', '<', $request->input('before_id'));
             }
             $query->where('id', '>=', $targetId);
             $messages = $query->orderBy('id', 'desc')
-                ->take(60)
+                ->take(50)
                 ->get()
                 ->reverse()
                 ->values();
@@ -40,8 +54,8 @@ class ChatController extends Controller
                 $query->where('id', '<', $request->input('before_id'));
             }
 
-            // Load 30 chats at a time for optimal performance
-            $limit = (int) $request->input('limit', 30);
+            // Load 20 chats at a time for fast initial loading
+            $limit = (int) $request->input('limit', 20);
             $messages = $query->orderBy('id', 'desc')
                 ->take($limit)
                 ->get()
@@ -50,7 +64,7 @@ class ChatController extends Controller
         }
 
         $hasMore = false;
-        if ($messages->isNotEmpty()) {
+        if ($messages->isNotEmpty() && !$request->has('q')) {
             $oldestId = $messages->first()->id;
             $hasMore = Chat::where('chatable_type', $type)
                 ->where('chatable_id', $id)

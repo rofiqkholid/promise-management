@@ -93,6 +93,60 @@
                     <i class="fa-solid fa-paperclip text-[8.5px]"></i> Files &amp; Links
                 </button>
             </div>
+
+            <!-- Search Toggle Button -->
+            <button @click="showSearchBar = !showSearchBar; if (showSearchBar) { $nextTick(() => { $refs.chatSearchInput?.focus(); }); }"
+                    type="button" 
+                    class="px-2.5 py-1 text-[9.5px] font-bold rounded-sm border transition-all flex items-center gap-1 cursor-pointer shadow-2xs"
+                    :class="showSearchBar || searchQuery 
+                        ? 'bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 border-indigo-300 dark:border-indigo-800' 
+                        : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750'"
+                    title="Search messages">
+                <i class="fa-solid fa-magnifying-glass text-[9px] text-indigo-500"></i>
+                <span class="hidden sm:inline">Search</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Search Bar Banner (Expandable with Real-time Optimized Search) -->
+    <div x-show="showSearchBar" 
+         x-transition:enter="transition ease-out duration-150"
+         x-transition:enter-start="opacity-0 -translate-y-2"
+         x-transition:enter-end="opacity-100 translate-y-0"
+         x-transition:leave="transition ease-in duration-100"
+         x-transition:leave-start="opacity-100 translate-y-0"
+         x-transition:leave-end="opacity-0 -translate-y-2"
+         class="px-4 py-2 bg-slate-50 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 z-10 flex-shrink-0"
+         x-cloak>
+        <div class="relative flex-1 flex items-center">
+            <i class="fa-solid fa-magnifying-glass absolute left-2.5 text-slate-400 text-xs"></i>
+            <input type="text"
+                   x-ref="chatSearchInput"
+                   x-model="searchQuery"
+                   @input="onSearchInput()"
+                   placeholder="Search in messages, files, or usernames..."
+                   class="w-full pl-8 pr-8 py-1 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-sm focus:outline-hidden focus:border-indigo-500 text-slate-800 dark:text-slate-200 shadow-2xs">
+            <button x-show="searchQuery" 
+                    @click="clearSearch()" 
+                    type="button" 
+                    class="absolute right-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs font-bold cursor-pointer">
+                &times;
+            </button>
+        </div>
+
+        <div class="flex items-center gap-2 flex-shrink-0">
+            <!-- Results Badge -->
+            <span class="text-[10.5px] font-bold px-2 py-0.5 rounded-full"
+                  :class="getFilteredMessages().length > 0 ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300' : 'bg-rose-100 text-rose-700 dark:bg-rose-900/60 dark:text-rose-300'"
+                  x-show="searchQuery"
+                  x-text="getFilteredMessages().length + ' found'"></span>
+
+            <!-- Close Search Bar -->
+            <button @click="showSearchBar = false; clearSearch();" 
+                    type="button" 
+                    class="text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 font-bold px-1.5 py-1 cursor-pointer">
+                Done
+            </button>
         </div>
     </div>
 

@@ -213,6 +213,9 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
         customDateFilter: '',
         showScrollToBottomBtn: false,
         showFormatToolbar: false,
+        searchQuery: '',
+        showSearchBar: false,
+        searchDebounceTimer: null,
         currentUserId: {{ Auth::check() ? Auth::user()->id : 0 }},
 
         // User Avatar Colors
@@ -399,7 +402,7 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
             const params = new URLSearchParams();
             if (beforeId) params.append('before_id', beforeId);
             if (targetId) params.append('target_id', targetId);
-            params.append('limit', '30');
+            params.append('limit', '20');
             url += '?' + params.toString();
 
             const container = this.$refs.chatContainer || document.getElementById('chat-messages-container');
@@ -413,7 +416,7 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
                 if (data.success && Array.isArray(data.messages)) {
                     if (data.has_more !== undefined) {
                         this.hasMoreChats = data.has_more;
-                    } else if (data.messages.length < 30) {
+                    } else if (data.messages.length < 20) {
                         this.hasMoreChats = false;
                     }
 
@@ -436,6 +439,10 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
                         this.$nextTick(() => {
                             this.scrollToBottom();
                             this.initViewer();
+                            // Multi-stage scroll to guarantee viewport lands at newest message after images/DOM render
+                            setTimeout(() => { this.scrollToBottom(); }, 60);
+                            setTimeout(() => { this.scrollToBottom(); }, 200);
+                            setTimeout(() => { this.scrollToBottom(); }, 500);
                             if (typeof callback === 'function') callback();
                         });
                     }
@@ -449,6 +456,44 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
             .finally(() => {
                 this.loadingChats = false;
             });
+        },
+
+        onSearchInput() {
+            if (this.searchDebounceTimer) clearTimeout(this.searchDebounceTimer);
+            const query = (this.searchQuery || '').trim();
+            if (!query) return;
+
+            // Debounced server search across full history if query is 2+ chars
+            if (query.length >= 2) {
+                this.searchDebounceTimer = setTimeout(() => {
+                    this.searchServer(query);
+                }, 350);
+            }
+        },
+
+        clearSearch() {
+            this.searchQuery = '';
+            if (this.searchDebounceTimer) clearTimeout(this.searchDebounceTimer);
+        },
+
+        searchServer(query) {
+            if (!this.chatId || !query) return;
+            const url = `{{ url('management/chats') }}/${this.chatType}/${this.chatId}?q=${encodeURIComponent(query)}`;
+            fetch(url, {
+                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success && Array.isArray(data.messages) && data.messages.length > 0) {
+                    const existingMap = new Map(this.chatMessages.map(m => [m.id, m]));
+                    data.messages.forEach(m => existingMap.set(m.id, m));
+                    this.chatMessages = Array.from(existingMap.values()).sort((a, b) => a.id - b.id);
+                    this.$nextTick(() => {
+                        this.initViewer();
+                    });
+                }
+            })
+            .catch(() => {});
         },
 
         handleChatScroll(e) {
@@ -596,7 +641,19 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
         getFilteredMessages() {
             let list = this.chatMessages;
 
-            // 1. Filter by Media / Links
+            // 1. Search Query Filter (Messages, User Names, File Names)
+            if (this.searchQuery && this.searchQuery.trim().length > 0) {
+                const q = this.searchQuery.trim().toLowerCase();
+                list = list.filter(msg => {
+                    const matchMsg = msg.message && msg.message.toLowerCase().includes(q);
+                    const matchUser = msg.user_name && msg.user_name.toLowerCase().includes(q);
+                    const matchFile = (msg.file_name && msg.file_name.toLowerCase().includes(q)) ||
+                                      (Array.isArray(msg.attachments) && msg.attachments.some(a => (a.name || a.file_name || '').toLowerCase().includes(q)));
+                    return matchMsg || matchUser || matchFile;
+                });
+            }
+
+            // 2. Filter by Media / Links
             if (this.showOnlyMediaAndLinks) {
                 list = list.filter(msg => {
                     const hasFile = !!msg.file_path;
@@ -605,7 +662,7 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
                 });
             }
 
-            // 2. Filter by Day / Date
+            // 3. Filter by Day / Date
             if (this.selectedDateFilter !== 'all') {
                 const now = new Date();
                 const pad = n => String(n).padStart(2, '0');
