@@ -462,6 +462,10 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
             
             // If next message is sent in a different minute, show footer
             const curTime = current.created_at ? current.created_at.substring(0, 16) : '';
+            const nextTime = next.created_at ? next.created_at.substring(0, 16) : '';
+            return curTime !== nextTime;
+        },
+
         shouldShowAvatar(messages, index) {
             if (!messages || index === 0) return true;
             const current = messages[index];
