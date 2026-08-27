@@ -257,13 +257,17 @@
                                 <template x-if="getDocAttachments(msg).length > 0">
                                     <div class="flex flex-col gap-1 mt-1 mb-1">
                                         <template x-for="(doc, docIdx) in getDocAttachments(msg)" :key="doc.f || doc.file_url || (msg.id + '-doc-' + (doc.index !== undefined ? doc.index : docIdx))">
-                                            <div class="flex items-center gap-2 p-2 rounded-lg border"
+                                            <div class="flex items-center gap-2 p-2 rounded-lg border transition-colors duration-150"
                                                  :class="msg.user_id == currentUserId 
-                                                     ? 'bg-blue-700/60 dark:bg-indigo-700/60 border-blue-400/40 text-white' 
-                                                     : 'bg-slate-100 dark:bg-slate-700/60 border-slate-200 dark:border-slate-600 text-slate-800 dark:text-slate-100'">
+                                                     ? 'bg-black/15 hover:bg-black/25 dark:bg-black/25 border-white/20 text-white' 
+                                                     : 'bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-700/60 dark:hover:bg-slate-700/90 border-slate-200 dark:border-slate-600 text-slate-800 dark:text-slate-100'">
                                                 <div class="w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0"
-                                                     :class="isPdfType(doc.file_type, doc.file_name) ? 'bg-rose-500 text-white' : 'bg-slate-500 dark:bg-slate-600 text-white'">
-                                                    <i class="fa-solid text-sm" :class="isPdfType(doc.file_type, doc.file_name) ? 'fa-file-pdf' : 'fa-file'"></i>
+                                                     :class="isPdfType(doc.file_type, doc.file_name) 
+                                                         ? 'bg-rose-500 text-white shadow-xs' 
+                                                         : (msg.user_id == currentUserId 
+                                                             ? 'bg-white/20 text-white border border-white/30 backdrop-blur-xs' 
+                                                             : 'bg-indigo-50 dark:bg-slate-600 text-indigo-600 dark:text-indigo-300 border border-indigo-100 dark:border-slate-500')">
+                                                    <i class="fa-solid text-sm" :class="isPdfType(doc.file_type, doc.file_name) ? 'fa-file-pdf' : 'fa-file-lines'"></i>
                                                 </div>
                                                 <div class="flex-1 min-w-0 pr-1">
                                                     <span class="block text-xs font-semibold truncate leading-tight" x-text="doc.file_name"></span>
