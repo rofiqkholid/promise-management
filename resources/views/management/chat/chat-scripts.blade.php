@@ -391,14 +391,16 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
             .catch(e => console.error(e));
         },
 
-        loadChats(beforeId = null) {
+        loadChats(beforeId = null, targetId = null, callback = null) {
             if (!this.chatId) return;
             this.loadingChats = true;
 
             let url = `{{ url('management/chats') }}/${this.chatType}/${this.chatId}`;
-            if (beforeId) {
-                url += `?before_id=${beforeId}`;
-            }
+            const params = new URLSearchParams();
+            if (beforeId) params.append('before_id', beforeId);
+            if (targetId) params.append('target_id', targetId);
+            params.append('limit', '30');
+            url += '?' + params.toString();
 
             const container = this.$refs.chatContainer || document.getElementById('chat-messages-container');
             const prevScrollHeight = container ? container.scrollHeight : 0;
@@ -408,30 +410,42 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
             })
             .then(r => r.json())
             .then(data => {
-                if (data.success && data.messages) {
-                    if (data.messages.length < 20) {
+                if (data.success && Array.isArray(data.messages)) {
+                    if (data.has_more !== undefined) {
+                        this.hasMoreChats = data.has_more;
+                    } else if (data.messages.length < 30) {
                         this.hasMoreChats = false;
                     }
-                    if (beforeId) {
-                        this.chatMessages = [...data.messages, ...this.chatMessages];
+
+                    if (beforeId || targetId) {
+                        // Merge and deduplicate by id
+                        const existingMap = new Map(this.chatMessages.map(m => [m.id, m]));
+                        data.messages.forEach(m => existingMap.set(m.id, m));
+                        const merged = Array.from(existingMap.values()).sort((a, b) => a.id - b.id);
+                        this.chatMessages = merged;
+
                         this.$nextTick(() => {
-                            if (container) {
+                            if (container && !targetId) {
                                 container.scrollTop = container.scrollHeight - prevScrollHeight;
                             }
                             this.initViewer();
+                            if (typeof callback === 'function') callback();
                         });
                     } else {
                         this.chatMessages = data.messages;
                         this.$nextTick(() => {
                             this.scrollToBottom();
                             this.initViewer();
+                            if (typeof callback === 'function') callback();
                         });
                     }
-                    if (data.messages.length > 0) {
-                        this.oldestChatId = data.messages[0].id;
+
+                    if (this.chatMessages.length > 0) {
+                        this.oldestChatId = this.chatMessages[0].id;
                     }
                 }
             })
+            .catch(e => console.error('Error loading chats:', e))
             .finally(() => {
                 this.loadingChats = false;
             });
@@ -439,7 +453,7 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
 
         handleChatScroll(e) {
             const el = e.target;
-            if (el.scrollTop === 0 && this.hasMoreChats && !this.loadingChats && this.oldestChatId) {
+            if (el.scrollTop <= 40 && this.hasMoreChats && !this.loadingChats && this.oldestChatId) {
                 this.loadChats(this.oldestChatId);
             }
             this.showScrollToBottomBtn = (el.scrollHeight - el.scrollTop - el.clientHeight) > 180;
@@ -464,6 +478,23 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
                 setTimeout(() => {
                     bubbleBox.classList.remove('chat-bubble-highlight');
                 }, 2400);
+            } else {
+                // Target message is not in currently loaded window -> load history up to targetId!
+                this.loadChats(this.oldestChatId, targetId, () => {
+                    setTimeout(() => {
+                        const newTargetRow = document.getElementById('chat-bubble-' + targetId);
+                        if (newTargetRow) {
+                            newTargetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            const bubbleBox = newTargetRow.querySelector('.chat-bubble-in, .chat-bubble-out') || newTargetRow;
+                            bubbleBox.classList.remove('chat-bubble-highlight');
+                            void bubbleBox.offsetWidth;
+                            bubbleBox.classList.add('chat-bubble-highlight');
+                            setTimeout(() => {
+                                bubbleBox.classList.remove('chat-bubble-highlight');
+                            }, 2400);
+                        }
+                    }, 150);
+                });
             }
         },
 

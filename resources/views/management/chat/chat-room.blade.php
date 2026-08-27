@@ -111,6 +111,16 @@
          class="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-1 flex flex-col chat-scroll min-h-0 h-full select-text"
          style="overscroll-behavior-y: contain; touch-action: pan-y;">
         
+        <!-- Top Loading Indicator for Infinite Scroll Up -->
+        <div x-show="loadingChats && chatMessages.length > 0" 
+             class="flex items-center justify-center py-2 flex-shrink-0" 
+             x-cloak>
+            <div class="flex items-center gap-2 px-3 py-1 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xs rounded-full shadow-xs border border-slate-200 dark:border-slate-700 text-[11px] font-semibold text-slate-600 dark:text-slate-300 select-none">
+                <i class="fa-solid fa-circle-notch fa-spin text-indigo-600 dark:text-indigo-400 text-xs"></i>
+                <span>Loading older messages...</span>
+            </div>
+        </div>
+
         <!-- Empty Placeholder -->
         <template x-if="getFilteredMessages().length === 0 && !loadingChats">
             <div class="flex flex-col items-center justify-center h-full py-12 text-slate-400 dark:text-slate-500 select-none">

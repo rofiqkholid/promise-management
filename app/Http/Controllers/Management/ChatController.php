@@ -24,16 +24,39 @@ class ChatController extends Controller
             ->where('chatable_type', $type)
             ->where('chatable_id', $id);
 
-        if ($request->has('before_id') && $request->input('before_id')) {
-            $query->where('id', '<', $request->input('before_id'));
+        if ($request->has('target_id') && $request->input('target_id')) {
+            $targetId = (int) $request->input('target_id');
+            if ($request->has('before_id') && $request->input('before_id')) {
+                $query->where('id', '<', $request->input('before_id'));
+            }
+            $query->where('id', '>=', $targetId);
+            $messages = $query->orderBy('id', 'desc')
+                ->take(60)
+                ->get()
+                ->reverse()
+                ->values();
+        } else {
+            if ($request->has('before_id') && $request->input('before_id')) {
+                $query->where('id', '<', $request->input('before_id'));
+            }
+
+            // Load 30 chats at a time for optimal performance
+            $limit = (int) $request->input('limit', 30);
+            $messages = $query->orderBy('id', 'desc')
+                ->take($limit)
+                ->get()
+                ->reverse()
+                ->values();
         }
 
-        // Load 20 chats at a time
-        $messages = $query->orderBy('id', 'desc')
-            ->take(20)
-            ->get()
-            ->reverse()
-            ->values();
+        $hasMore = false;
+        if ($messages->isNotEmpty()) {
+            $oldestId = $messages->first()->id;
+            $hasMore = Chat::where('chatable_type', $type)
+                ->where('chatable_id', $id)
+                ->where('id', '<', $oldestId)
+                ->exists();
+        }
 
         $formatted = $messages->map(function ($chat) {
             return $this->formatChatPayload($chat);
@@ -42,6 +65,7 @@ class ChatController extends Controller
         return response()->json([
             'success' => true,
             'messages' => $formatted,
+            'has_more' => $hasMore,
         ]);
     }
 
