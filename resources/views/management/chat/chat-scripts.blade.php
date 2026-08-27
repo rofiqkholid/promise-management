@@ -108,6 +108,15 @@
     .viewer-container {
         z-index: 99999 !important;
     }
+
+    .chat-bubble-highlight {
+        animation: chatBubbleFlash 2s ease-out;
+    }
+    @keyframes chatBubbleFlash {
+        0% { transform: scale(1.03); filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.85)); }
+        40% { transform: scale(1.02); filter: drop-shadow(0 0 5px rgba(99, 102, 241, 0.6)); }
+        100% { transform: scale(1); filter: none; }
+    }
 </style>
 @endpush
 
@@ -388,6 +397,20 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
             const container = this.$refs.chatContainer || document.getElementById('chat-messages-container');
             if (container) {
                 container.scrollTop = container.scrollHeight;
+            }
+        },
+
+        jumpToMessage(targetId) {
+            if (!targetId) return;
+            const targetEl = document.getElementById('chat-bubble-' + targetId);
+            if (targetEl) {
+                targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                targetEl.classList.remove('chat-bubble-highlight');
+                void targetEl.offsetWidth; // trigger reflow
+                targetEl.classList.add('chat-bubble-highlight');
+                setTimeout(() => {
+                    targetEl.classList.remove('chat-bubble-highlight');
+                }, 2000);
             }
         },
 

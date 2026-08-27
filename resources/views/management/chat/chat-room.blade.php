@@ -157,11 +157,11 @@
                     <div class="flex flex-col min-w-0 max-w-full"
                          :class="msg.user_id == currentUserId ? 'items-end' : 'items-start'">
                         
-                        <!-- Sender Name (Placed Outside and ABOVE the Bubble, "You" for self) -->
+                        <!-- Sender Name (Placed Outside and ABOVE the Bubble, real name always) -->
                         <template x-if="shouldShowAvatar(getFilteredMessages(), index)">
                             <span class="block text-[10.5px] font-extrabold mb-1 px-1 tracking-wide select-none" 
-                                  :class="msg.user_id == currentUserId ? 'text-blue-600 dark:text-blue-400 text-right' : getUserColor(msg.user_id).name"
-                                  x-text="msg.user_id == currentUserId ? 'You' : msg.user_name"></span>
+                                  :class="msg.user_id == currentUserId ? (getUserColor(msg.user_id).name + ' text-right') : getUserColor(msg.user_id).name"
+                                  x-text="msg.user_name || (msg.user_id == currentUserId ? 'Me' : 'User')"></span>
                         </template>
 
                         <!-- Bubble & Hover Action Container (Action buttons appear in front of bubble) -->
@@ -172,12 +172,14 @@
                             <div class="px-3.5 py-2 text-xs shadow-xs relative flex flex-col w-auto max-w-full"
                                  :class="msg.user_id == currentUserId ? 'chat-bubble-out' : 'chat-bubble-in'">
                                 
-                                <!-- Quoted / Reply Preview Box -->
+                                <!-- Quoted / Reply Preview Box (Clickable to jump to original message) -->
                                 <template x-if="msg.reply_to">
-                                    <div class="mb-1.5 px-2.5 py-1.5 rounded-sm border-l-4 text-[11px] select-none transition-colors duration-150"
+                                    <div @click.stop="jumpToMessage(msg.reply_to.id)"
+                                         class="mb-1.5 px-2.5 py-1.5 rounded-sm border-l-4 text-[11px] select-none transition-all duration-150 cursor-pointer hover:opacity-90 active:scale-[0.98]"
                                          :class="msg.user_id == currentUserId 
                                              ? 'bg-black/20 dark:bg-black/35 border-l-amber-300 dark:border-l-amber-400 text-white' 
-                                             : 'bg-black/5 dark:bg-white/10 border-l-indigo-600 dark:border-l-indigo-400 text-slate-800 dark:text-slate-100'">
+                                             : 'bg-black/5 dark:bg-white/10 border-l-indigo-600 dark:border-l-indigo-400 text-slate-800 dark:text-slate-100'"
+                                         title="Click to jump to quoted message">
                                         <div class="flex items-center gap-1.5">
                                             <i class="fa-solid fa-reply text-[9px]" :class="msg.user_id == currentUserId ? 'text-amber-300' : 'text-indigo-600 dark:text-indigo-400'"></i>
                                             <span class="font-extrabold text-[10.5px] leading-tight"
@@ -260,8 +262,8 @@
                                                      ? 'bg-blue-700/60 dark:bg-indigo-700/60 border-blue-400/40 text-white' 
                                                      : 'bg-slate-100 dark:bg-slate-700/60 border-slate-200 dark:border-slate-600 text-slate-800 dark:text-slate-100'">
                                                 <div class="w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0"
-                                                     :class="isPdfType(doc.file_type, doc.file_name) ? 'bg-rose-500 text-white' : (isDocType(doc.file_type, doc.file_name) ? 'bg-blue-600 text-white' : 'bg-slate-500 text-white')">
-                                                    <i class="fa-solid text-sm" :class="isPdfType(doc.file_type, doc.file_name) ? 'fa-file-pdf' : (isDocType(doc.file_type, doc.file_name) ? 'fa-file-word' : 'fa-file-lines')"></i>
+                                                     :class="isPdfType(doc.file_type, doc.file_name) ? 'bg-rose-500 text-white' : 'bg-slate-500 dark:bg-slate-600 text-white'">
+                                                    <i class="fa-solid text-sm" :class="isPdfType(doc.file_type, doc.file_name) ? 'fa-file-pdf' : 'fa-file'"></i>
                                                 </div>
                                                 <div class="flex-1 min-w-0 pr-1">
                                                     <span class="block text-xs font-semibold truncate leading-tight" x-text="doc.file_name"></span>
