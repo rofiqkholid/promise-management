@@ -47,13 +47,13 @@
     .chat-bubble-out {
         background-color: #007aff !important;
         color: #ffffff !important;
-        border-radius: 1.15rem 1.15rem 0.25rem 1.15rem !important;
+        border-radius: 1.15rem 0.25rem 1.15rem 1.15rem !important;
         box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
     }
     .chat-bubble-in {
         background-color: #ffffff !important;
         color: #1e293b !important;
-        border-radius: 1.15rem 1.15rem 1.15rem 0.25rem !important;
+        border-radius: 0.25rem 1.15rem 1.15rem 1.15rem !important;
         border: 1px solid rgba(226, 232, 240, 0.85) !important;
         box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04) !important;
     }
@@ -462,12 +462,19 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
             
             // If next message is sent in a different minute, show footer
             const curTime = current.created_at ? current.created_at.substring(0, 16) : '';
-            const nextTime = next.created_at ? next.created_at.substring(0, 16) : '';
-            return curTime !== nextTime;
-        },
-
         shouldShowAvatar(messages, index) {
-            return this.shouldShowMessageFooter(messages, index);
+            if (!messages || index === 0) return true;
+            const current = messages[index];
+            const prev = messages[index - 1];
+            if (!current || !prev) return true;
+
+            // If current message has a date divider above it, show avatar
+            if (this.shouldShowDateDivider(messages, index)) return true;
+
+            // If previous message is from a different user, show avatar
+            if (Number(current.user_id) !== Number(prev.user_id)) return true;
+
+            return false;
         },
 
         getFilteredMessages() {

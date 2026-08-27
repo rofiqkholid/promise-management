@@ -134,17 +134,17 @@
                     </div>
                 </template>
 
-                <!-- Message Row -->
-                <div class="flex items-end gap-2 max-w-[85%] w-full"
+                <!-- Message Row (Top-aligned with Avatar on Top) -->
+                <div class="flex items-start gap-2 max-w-[85%] w-full"
                      :id="'chat-bubble-' + msg.id"
                      :class="[
                          msg.user_id == currentUserId ? 'self-end flex-row-reverse' : 'self-start flex-row',
                          shouldShowMessageFooter(getFilteredMessages(), index) ? 'mb-2' : 'mb-0.5'
                      ]">
                     
-                    <!-- Avatar (Bottom aligned next to bubble, shown only on bottom of message group) -->
+                    <!-- Avatar (Top aligned next to bubble, shown on top/first of message group) -->
                     <template x-if="shouldShowAvatar(getFilteredMessages(), index)">
-                        <div class="w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] flex-shrink-0 select-none shadow-xs border mb-3"
+                        <div class="w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] flex-shrink-0 select-none shadow-xs border mt-0.5"
                              :class="getUserColor(msg.user_id).avatar"
                              x-text="msg.user_name ? msg.user_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : (msg.user_id == currentUserId ? 'ME' : 'U')">
                         </div>
