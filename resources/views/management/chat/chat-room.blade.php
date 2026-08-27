@@ -157,6 +157,13 @@
                     <div class="flex flex-col min-w-0 max-w-full"
                          :class="msg.user_id == currentUserId ? 'items-end' : 'items-start'">
                         
+                        <!-- Sender Name (Placed Outside and ABOVE the Bubble, "You" for self) -->
+                        <template x-if="shouldShowAvatar(getFilteredMessages(), index)">
+                            <span class="block text-[10.5px] font-extrabold mb-1 px-1 tracking-wide select-none" 
+                                  :class="msg.user_id == currentUserId ? 'text-blue-600 dark:text-blue-400 text-right' : getUserColor(msg.user_id).name"
+                                  x-text="msg.user_id == currentUserId ? 'You' : msg.user_name"></span>
+                        </template>
+
                         <!-- Bubble & Hover Action Container (Action buttons appear in front of bubble) -->
                         <div class="flex items-center gap-1.5 group max-w-full"
                              :class="msg.user_id == currentUserId ? 'flex-row-reverse' : 'flex-row'">
@@ -165,13 +172,6 @@
                             <div class="px-3.5 py-2 text-xs shadow-xs relative flex flex-col w-auto max-w-full"
                                  :class="msg.user_id == currentUserId ? 'chat-bubble-out' : 'chat-bubble-in'">
                                 
-                                <!-- Sender Name (Shown on the first message of each time/user block, "You" for self) -->
-                                <template x-if="shouldShowAvatar(getFilteredMessages(), index)">
-                                    <span class="block text-[10.5px] font-extrabold mb-1 pr-6 tracking-wide" 
-                                          :class="msg.user_id == currentUserId ? 'text-cyan-200 dark:text-cyan-300' : getUserColor(msg.user_id).name"
-                                          x-text="msg.user_id == currentUserId ? 'You' : msg.user_name"></span>
-                                </template>
-
                                 <!-- Quoted / Reply Preview Box -->
                                 <template x-if="msg.reply_to">
                                     <div class="mb-1.5 px-2.5 py-1.5 rounded-sm border-l-4 text-[11px] select-none transition-colors duration-150"
