@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', 'WO Inbox · Promise Management')
 
@@ -34,7 +34,7 @@
 @endphp
 
 {{-- Main Container: Matches the structural layout pattern in form.blade.php (mt-16 and h-[calc(100vh-64px)]) --}}
-<div class="flex h-[calc(100vh-64px)] mt-15 overflow-hidden bg-white dark:bg-slate-900" x-data="outlookInbox()" x-init="initInbox()">
+<div class="flex h-[calc(100vh-64px)] mt-15 overflow-hidden bg-white dark:bg-slate-900" x-data="Object.assign(outlookInbox(), chatRoomEngine('work_order', null))" x-init="initInbox()">
     
     <x-sweetalert />
 
@@ -166,12 +166,18 @@
                                         :class="activeRightTab === 'checklist' ? 'border-[#0c4da2] dark:border-blue-500 text-[#0c4da2] dark:text-blue-400' : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'">
                                     Task Progress Checklist
                                 </button>
+                                <button type="button" @click="activeRightTab = 'chat'; if (chatId !== detailData.id) { initRoom('work_order', detailData.id, detailData.wo_number, (detailData.inquiry?.customer?.code || '') + ' • ' + (detailData.inquiry?.project_model?.name || '')); }" 
+                                        class="py-2 text-xs font-bold border-b-2 transition-all cursor-pointer flex items-center gap-1.5"
+                                        :class="activeRightTab === 'chat' ? 'border-[#0c4da2] dark:border-blue-500 text-[#0c4da2] dark:text-blue-400' : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'">
+                                    <i class="fa-solid fa-comments text-xs"></i>
+                                    <span>Discussion Room</span>
+                                </button>
                             </div>
                         </div>
                     </div>
                     
-                    {{-- Scrollable preview content --}}
-                    <div class="flex-1 overflow-auto p-4 bg-slate-100 dark:bg-slate-950 flex flex-col items-center min-h-0">
+                    {{-- Scrollable preview content for Document & Checklist --}}
+                    <div x-show="activeRightTab !== 'chat'" class="flex-1 overflow-auto p-4 bg-slate-100 dark:bg-slate-950 flex flex-col items-center min-h-0">
                         {{-- Tab 1: WO Document Preview --}}
                         <div x-show="activeRightTab === 'doc'" class="w-full max-w-[760px]" :key="selectedHashedId" 
                              x-data="{ 
@@ -321,8 +327,13 @@
                         </div>
                     </div>
 
+                    {{-- Tab 3: Discussion Room (Full height) --}}
+                    <div x-show="activeRightTab === 'chat'" class="flex-1 flex flex-col min-h-0 overflow-hidden bg-slate-100 dark:bg-slate-950" :key="'chat-' + selectedHashedId">
+                        @include('management.chat.chat-room')
+                    </div>
+
                     {{-- Sticky Footer Actions --}}
-                    <div class="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 flex-none select-none shadow-lg">
+                    <div x-show="activeRightTab !== 'chat'" class="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 flex-none select-none shadow-lg">
                         {{-- 1. Document / Approval Tab Footer --}}
                         <template x-if="activeRightTab === 'doc' && detailData.can_approve">
                             <div class="flex flex-col gap-2.5 w-full">
@@ -604,6 +615,10 @@ function outlookInbox() {
                         this.urgentReason = this.detailData.urgent_reason || '';
                         this.urgentConfirmed = !!(this.detailData.urgent_reason || this.detailData.urgent_confirmed_by);
                         this.activeRightTab = 'doc'; // Default tab always display WO document
+
+                        // Init chat room for this WO
+                        const chatSubtitle = (this.detailData.inquiry?.customer?.code || '') + ' • ' + (this.detailData.inquiry?.project_model?.name || '');
+                        this.initRoom('work_order', this.detailData.id, this.detailData.wo_number, chatSubtitle);
                         
                         // Sort departments (my task first) and set default expanded state
                         this.expandedDepts = {};
@@ -902,5 +917,6 @@ function outlookInbox() {
     };
 }
 </script>
+@include('management.chat.chat-scripts')
 @endpush
 @endsection

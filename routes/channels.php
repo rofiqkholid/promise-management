@@ -10,3 +10,7 @@ Broadcast::channel('inquiry-product-chat.{productId}', function ($user, $product
     return true;
 });
 
+Broadcast::channel('chat.{type}.{id}', function ($user, $type, $id) {
+    return true;
+});
+

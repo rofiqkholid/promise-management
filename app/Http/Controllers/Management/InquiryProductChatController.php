@@ -102,8 +102,12 @@ class InquiryProductChatController extends Controller
 
         $chat->load('user');
 
-        // Broadcast event to other users
-        broadcast(new InquiryProductChatMessageSent($chat))->toOthers();
+        // Broadcast event to other users (graceful fallback if Reverb is offline)
+        try {
+            broadcast(new InquiryProductChatMessageSent($chat))->toOthers();
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('InquiryProductChat Reverb broadcast error on send: ' . $e->getMessage());
+        }
 
         return response()->json([
             'success' => true,
@@ -176,8 +180,12 @@ class InquiryProductChatController extends Controller
 
         $chat->delete();
 
-        // Broadcast deletion to other users
-        broadcast(new \App\Events\InquiryProductChatMessageDeleted($chatId, $productId))->toOthers();
+        // Broadcast deletion to other users (graceful fallback if Reverb is offline)
+        try {
+            broadcast(new \App\Events\InquiryProductChatMessageDeleted($chatId, $productId))->toOthers();
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('InquiryProductChat Reverb broadcast error on delete: ' . $e->getMessage());
+        }
 
         return response()->json([
             'success' => true,

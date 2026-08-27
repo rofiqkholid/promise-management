@@ -58,6 +58,16 @@ Route::middleware('auth')->prefix('management')->name('management.')->group(func
     Route::get('ajax/processes', [WorkOrderController::class, 'apiGetProcesses'])->name('api.processes');
     Route::get('ajax/approval-rules', [ApprovalConfigController::class, 'apiGetRules'])->name('api.approval-rules');
 
+    // Chat Routes (Work Order, Inquiry, and any future module)
+    Route::get('chats/file/{chatId}', [\App\Http\Controllers\Management\ChatController::class, 'showFile'])->name('chats.show-file');
+    Route::get('chats/download-all/{chatId}', [\App\Http\Controllers\Management\ChatController::class, 'downloadAll'])->name('chats.download-all');
+    Route::get('chats/download/{chatId}', [\App\Http\Controllers\Management\ChatController::class, 'download'])->name('chats.download');
+    Route::delete('chats/{chatId}/attachment/{index}', [\App\Http\Controllers\Management\ChatController::class, 'destroyAttachment'])->name('chats.attachment.destroy');
+    Route::delete('chats/{chatId}', [\App\Http\Controllers\Management\ChatController::class, 'destroy'])->name('chats.destroy');
+    Route::get('chats/mentionables/{type}/{id}', [\App\Http\Controllers\Management\ChatController::class, 'getMentionables'])->name('chats.mentionables');
+    Route::get('chats/{type}/{id}', [\App\Http\Controllers\Management\ChatController::class, 'index'])->name('chats.index');
+    Route::post('chats/{type}/{id}', [\App\Http\Controllers\Management\ChatController::class, 'store'])->name('chats.store');
+
     // Inquiry Routes
     Route::middleware('check.menu:management.inquiry.index')->group(function () {
         Route::post('inquiry/{inquiry}/import', [InquiryController::class, 'import'])->name('inquiry.import');

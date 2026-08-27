@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', 'Work Orders (SPK) · Promise Management')
 
@@ -133,6 +133,7 @@
 </div>
 
 @include('management.work-order.modal-wo-progress')
+@include('management.work-order.chat_drawer')
 
 @push('scripts')
 <script>
@@ -261,6 +262,11 @@
                                     onclick="window.dispatchEvent(new CustomEvent('open-wo-progress', { detail: { hashedId: '${data}' } }))"
                                     class="w-6 h-6 flex items-center justify-center bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 hover:border-indigo-400 text-indigo-600 transition-colors cursor-pointer">
                                 <i class="fa-solid fa-list-check text-[10px]"></i>
+                            </button>
+                            <button type="button" title="SPK Discussion & Chat"
+                                    onclick="window.dispatchEvent(new CustomEvent('open-wo-chat', { detail: { woId: '${row.id}', hashedId: '${data}' } }))"
+                                    class="w-6 h-6 flex items-center justify-center bg-violet-50 hover:bg-violet-100 border border-violet-200 hover:border-violet-400 text-violet-600 transition-colors cursor-pointer">
+                                <i class="fa-solid fa-comments text-[10px]"></i>
                             </button>
                         `;
                     }

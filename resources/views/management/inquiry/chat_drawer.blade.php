@@ -1,4 +1,4 @@
-﻿<!-- Slide-over Right Drawer for Inquiry Product Details and Chat -->
+<!-- Slide-over Right Drawer for Inquiry Product Details and Chat -->
 <div x-data="inquiryProductChat()"
      x-show="showChatDrawer"
      @open-product-chat.window="openChat($event.detail.id)"
@@ -711,27 +711,35 @@ window.inquiryProductChat = function() {
             // Load chats history
             this.loadChats(prodId);
 
-            // Setup Reverb listener
-            if (typeof window.Echo !== 'undefined') {
-                this.echoChannel = window.Echo.private(`inquiry-product-chat.${prodId}`)
-                    .listen('InquiryProductChatMessageSent', (e) => {
-                        this.chatMessages.push(e);
-                        this.$nextTick(() => {
-                            this.scrollToBottom();
-                            this.initViewer();
+            // Setup Reverb listener (graceful fallback if offline)
+            if (typeof window.Echo !== 'undefined' && window.Echo) {
+                try {
+                    this.echoChannel = window.Echo.private(`inquiry-product-chat.${prodId}`)
+                        .listen('InquiryProductChatMessageSent', (e) => {
+                            if (!this.chatMessages.some(m => Number(m.id) === Number(e.id))) {
+                                this.chatMessages.push(e);
+                                this.$nextTick(() => {
+                                    this.scrollToBottom();
+                                    this.initViewer();
+                                });
+                            }
+                        })
+                        .listen('InquiryProductChatMessageDeleted', (e) => {
+                            this.chatMessages = this.chatMessages.filter(msg => Number(msg.id) !== Number(e.chatId));
                         });
-                    })
-                    .listen('InquiryProductChatMessageDeleted', (e) => {
-                        this.chatMessages = this.chatMessages.filter(msg => Number(msg.id) !== Number(e.chatId));
-                    });
+                } catch (err) {
+                    console.warn('Echo subscription failed for inquiry chat:', err);
+                }
             }
         },
 
         closeChatDrawer() {
             this.showChatDrawer = false;
             // Leave Reverb channel
-            if (this.echoChannel && typeof window.Echo !== 'undefined') {
-                window.Echo.leave(`inquiry-product-chat.${this.chatProductDetail.id}`);
+            if (this.echoChannel && typeof window.Echo !== 'undefined' && window.Echo) {
+                try {
+                    window.Echo.leave(`inquiry-product-chat.${this.chatProductDetail.id}`);
+                } catch (e) {}
                 this.echoChannel = null;
             }
             if (this.viewerInstance) {
