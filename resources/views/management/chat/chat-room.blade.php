@@ -165,11 +165,12 @@
                             <div class="px-3.5 py-2 text-xs shadow-xs relative flex flex-col w-auto max-w-full"
                                  :class="msg.user_id == currentUserId ? 'chat-bubble-out' : 'chat-bubble-in'">
                                 
-                                <!-- Sender Name (Others only) -->
-                                <span x-show="msg.user_id != currentUserId" 
-                                      class="block text-[10.5px] font-extrabold mb-1 pr-6" 
-                                      :class="getUserColor(msg.user_id).name"
-                                      x-text="msg.user_name"></span>
+                                <!-- Sender Name (Shown on the first message of each time/user block, "You" for self) -->
+                                <template x-if="shouldShowAvatar(getFilteredMessages(), index)">
+                                    <span class="block text-[10.5px] font-extrabold mb-1 pr-6 tracking-wide" 
+                                          :class="msg.user_id == currentUserId ? 'text-cyan-200 dark:text-cyan-300' : getUserColor(msg.user_id).name"
+                                          x-text="msg.user_id == currentUserId ? 'You' : msg.user_name"></span>
+                                </template>
 
                                 <!-- Quoted / Reply Preview Box -->
                                 <template x-if="msg.reply_to">

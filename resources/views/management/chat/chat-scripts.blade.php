@@ -478,6 +478,11 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
             // If previous message is from a different user, show avatar
             if (Number(current.user_id) !== Number(prev.user_id)) return true;
 
+            // If time (minute) changed from previous message, show avatar
+            const curTime = current.created_at ? current.created_at.substring(0, 16) : '';
+            const prevTime = prev.created_at ? prev.created_at.substring(0, 16) : '';
+            if (curTime !== prevTime) return true;
+
             return false;
         },
 
