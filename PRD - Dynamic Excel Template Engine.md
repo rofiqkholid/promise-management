@@ -1,275 +1,443 @@
-# **Product Requirement Document (PRD)**
+# Product Requirement Document (PRD) & Technical Architecture
+## Dynamic Excel Template Engine (Export & Import DSL)
 
-## **Dynamic Excel Template Engine & Visual Mapping System (Core Reusable Module)**
+---
 
-| Attribute | Detail |
-| :---- | :---- |
-| **Module Name** | Core Dynamic Excel Engine Module |
-| **Document Version** | 2.0.0 |
-| **Target Framework** | Laravel 11 (PHP 8.2+) |
-| **Core Dependency** | phpoffice/phpspreadsheet, Web Spreadsheet UI Component (Univer / Luckysheet) |
-| **Document Status** | Approved for Development |
+## 1. Executive Summary & Objective
 
-## **1\. Executive Summary**
+### 1.1 Latar Belakang
+Aplikasi PROMISE Management melayani berbagai customer manufaktur/otomotif (Toyota, Honda, MMKI, ADM, dll.) yang masing-masing memiliki format template Excel resmi (Quotation Tooling, Part Cost Breakdown, Feasibility Study) dengan layout, styling, header, merged cells, dan formula yang berbeda-beda.
 
-Dalam sistem enterprise, pengelolaan dokumen berbasis Microsoft Excel (seperti *Quotation, Purchase Order, Invoice, Delivery Order, Costing Sheet*, dll.) sering menghadapi kendala skalabilitas (*scalability blocker*). Setiap kali terdapat format bawaan baru dari partner/customer, tim developer harus melakukan koding ulang (*hardcoded layout*) untuk menyesuaikan koordinat sel.
+### 1.2 Masalah (Problem Statement)
+* Pembuatan class export/import hardcoded per customer (`ToyotaQuotationExport`, `HondaQuotationExport`) melanggar prinsip *Open-Closed Principle*, menyebabkan duplikasi kode, tingginya resiko regresi, dan ketergantungan pada developer setiap kali ada perubahan revisi template customer.
 
-Dokumen ini mendefinisikan pembuatan **Dynamic Excel Template Engine dengan Visual Mapping Interface** sebagai **Core Reusable Module**. Modul ini dirancang agar dapat digunakan oleh seluruh fitur/modul bisnis dalam aplikasi tanpa perlu menyentuh kode program (*zero-code onboarding*).
+### 1.3 Solusi (The Solution)
+Membangun **Generic Dynamic Excel Template Engine** berbasis **DSL (Domain Specific Language) JSON Definition**.
+* **Template Fisik (`.xlsx`)**: Menyimpan seluruh layout visual, logo, border, font, dan format visual resmi customer.
+* **Definition JSON**: Menyimpan aturan pemetaan (*mapping rules*), perulangan (*repeating sections*), nesting data, formula dinamis, dan kondisi render.
+* **Laravel Engine**: Bertugas mengambil data via `DataResolver`, mem-parsing JSON, dan merender data ke file Excel menggunakan PhpSpreadsheet secara otomatis tanpa perlu coding baru untuk template baru.
 
-Sistem memungkinkan Admin mengunggah template Excel bawaan pihak eksternal (sekompleks apa pun layout, border, merged cell, dan rumusnya), **menampilkan preview spreadsheet secara interaktif di browser Web UI**, lalu memetakan (*mapping*) koordinat sel secara visual ke dalam variabel sistem (mng\_cfg\_system\_fields).
+---
 
-## **2\. Objectives & Success Metrics**
+## 2. Core Architectural Principles & Separation of Concerns
 
-### **2.1 Objectives**
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                            PROMISE EXCEL ARCHITECTURE                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                      │
+         ┌────────────────────────────┼────────────────────────────┐
+         ▼                            ▼                            ▼
+┌──────────────────┐        ┌──────────────────┐        ┌──────────────────┐
+│  EXCEL TEMPLATE  │        │ DEFINITION JSON  │        │  DATA RESOLVER   │
+│     (.xlsx)      │        │      (DSL)       │        │    (Laravel)     │
+├──────────────────┤        ├──────────────────┤        ├──────────────────┤
+│ Visual Layout    │        │ Cell Coordinates │        │ Database Queries │
+│ Corporate Styles │        │ Loop Definitions │        │ System Fields    │
+│ Static Texts     │        │ Formula Patterns │        │ Business Rules   │
+│ Native Formulas  │        │ Value Formatting │        │ Entity Relations │
+└──────────────────┘        └──────────────────┘        └──────────────────┘
+         │                            │                            │
+         └────────────────────────────┼────────────────────────────┘
+                                      ▼
+                       ┌──────────────────────────────┐
+                       │    DYNAMIC TEMPLATE ENGINE   │
+                       ├──────────────────────────────┤
+                       │ • TemplateParser             │
+                       │ • RowShiftTracker            │
+                       │ • SingleFieldRenderer        │
+                       │ • TableLoopRenderer          │
+                       │ • FormulaCompiler            │
+                       └──────────────────────────────┘
+                                      │
+                                      ▼
+                       ┌──────────────────────────────┐
+                       │   PhpSpreadsheet Renderer    │
+                       └──────────────────────────────┘
+                                      │
+                                      ▼
+                       ┌──────────────────────────────┐
+                       │    Customer Final Output     │
+                       └──────────────────────────────┘
+```
 
-1. **Reusability & Multi-Module Support:** Menyediakan *engine* terpusat yang dapat melayani berbagai domain bisnis (*Quotation, Purchase Order, Invoice, Goods Receipt*, dll.) melalui parameter template\_type.  
-2. **Zero Developer Intervention:** Menghilangkan ketergantungan pada *programmer* saat ada penambahan format/template dokumen baru.  
-3. **100% Layout Preservation:** Mempertahankan keutuhan *formatting*, logo, *merged cell*, garis *border*, warna, serta *formula* Excel bawaan partner saat proses ekspor dan impor.  
-4. **Interactive UI Mapping:** Menggantikan input koordinat manual (misal mengetik "C9" di form) dengan **Web UI Preview Excel** yang interaktif (klik sel di layar untuk memetakan field).  
-5. **Bidirectional Data Flow:** Mendukung proses **Export** (Sistem ![][image1] File Excel) dan **Import/Re-scan** (File Excel ![][image1] Sistem) secara presisi.
+### 2.1 Pembagian Tanggung Jawab (Matrix Responsibility)
 
-### **2.2 Key Performance Indicators (KPIs)**
+| Komponen | Tanggung Jawab | Yang Boleh Dilakukan | Yang DILARANG Dilakukan |
+| :--- | :--- | :--- | :--- |
+| **Excel Master (`.xlsx`)** | Layout & Presentasi Visual | Styling, border, warna, logo, header statis | Tidak menyimpan data dinamis |
+| **Definition JSON** | Aturan Pemetaan (Contract) | Koordinat cell, field mapping, format, formula dinamis | Tidak boleh memuat SQL / query / business logic |
+| **System Fields Master** | Kamus Data Global | Definisi `field_key`, label, relasi tabel database | Tidak mengurusi layout cell Excel |
+| **DataResolver** | Domain Provider | Eloquent query, kalkulasi bisnis, normalisasi payload | Tidak mengurusi koordinat cell / sheet |
+| **TemplateEngine** | Eksekutor & Kompilator | Manipulasi baris, copy style, inject data, compile formula | Tidak mengubah business logic data domain |
 
-* **Onboarding Speed:** Waktu penyiapan template baru berkurang dari 1–2 hari kerja menjadi \< 10 menit melalui Interactive UI Web Admin.  
-* **Format Accuracy Rate:** 100% preservasi elemen visual Excel tanpa ada *broken layout* atau *formula corruption*.  
-* **Parse Success Rate:** \> 99% keakuratan ekstraksi data saat proses impor file dari pengguna eksternal.
+---
 
-## **3\. User Personas & Use Cases**
+## 3. Integrasi Master Data Model
 
-### **Personas**
+### 3.1 Model `mng_cfg_templates`
+Menyimpan file master Excel dan konfigurasi JSON untuk setiap tipe dokumen dan customer:
+```text
+mng_cfg_templates
+├── id (PK)
+├── template_name (VARCHAR)
+├── template_type (VARCHAR)   --> 'tooling_quotation', 'part_cost', 'feasibility_study'
+├── direction (ENUM)          --> 'export', 'import'
+├── customer_id (FK nullable) --> Relasi ke tabel customers (null = template global)
+├── revision (VARCHAR)        --> '0', '1.1', 'Rev-A'
+├── file_path (VARCHAR)       --> Path storage file .xlsx master
+├── mapping_config (JSON)     --> Schema Definition JSON (DSL)
+├── is_active (BOOLEAN)
+└── timestamps
+```
 
-1. **System Administrator (Internal):** Mengelola Master Data Field (mng\_cfg\_system\_fields) dan melakukan *visual mapping* sel Excel di Web UI saat ada template baru.  
-2. **Operational / Business Staff (Internal):** Mengisi data transaksi pada modul terkait (Sales, Purchasing, Finance) dan men-generate file Excel berformat khusus partner secara otomatis.  
-3. **External Partner / Customer / Vendor:** Menerima file Excel, mengedit/mengisi data penyesuaian, lalu mengunggah kembali file tersebut ke sistem.
+### 3.2 Model `mng_cfg_system_fields`
+Kamus variabel global yang menjadi jembatan antara kolom database dengan `field_key` pada JSON:
+```text
+mng_cfg_system_fields
+├── id (PK)
+├── field_key (VARCHAR, Unique) --> 'ebd_part_no', 'cust_name', 'tooling_total_cost'
+├── label (VARCHAR)             --> 'Part Number', 'Customer Name', 'Total Tooling Cost'
+├── group (VARCHAR)             --> 'header', 'ebd_item', 'process', 'cost'
+├── data_type (VARCHAR)         --> 'string', 'number', 'currency', 'date', 'percentage'
+├── target_table (VARCHAR)      --> 'tooling_quotations', 'ebd_items', 'processes'
+├── target_column (VARCHAR)     --> 'part_number', 'total_cost'
+├── is_required (BOOLEAN)
+└── timestamps
+```
 
-### **Primary Use Cases**
+---
 
-* **UC-01:** Admin mendaftarkan variabel/field sistem baru berdasarkan modulnya (module\_type: quotation, po, invoice).  
-* **UC-02 (Interactive Mapping):** Admin mengunggah .xlsx template baru, sistem menampilkan preview Excel di Web UI, Admin mengklik sel untuk memasangkan *system field*, dan menentukan aturan *looping* tabel secara visual.  
-* **UC-03:** Sistem memanggil *Export Engine* untuk menginjeksi data transaksi ke dalam template Excel dan menghasilkan file .xlsx siap unduh.  
-* **UC-04:** User mengunggah file balasan dari partner, sistem memanggil *Import Engine* untuk mengekstrak data dari koordinat terpetakan menjadi *payload record* database.
+## 4. Standardized Definition JSON Schema (DSL Specification)
 
-## **4\. System Architecture & Workflows**
+Struktur JSON definition dirancang rapi, deklaratif, dan modular:
 
-### **4.1 Architectural Pattern**
+```json
+{
+  "version": "2.0",
+  "template_type": "tooling_quotation",
+  "direction": "export",
+  "sheets": [
+    {
+      "key": "main_sheet",
+      "name": "1. MMKI",
+      "required": true
+    },
+    {
+      "key": "breakdown_sheet",
+      "name": "Cost Breakdown",
+      "required": false
+    }
+  ],
 
-Sistem menggunakan pendekatan **Template Overlay & Visual Coordinate Mapping**:
+  "single_fields": [
+    {
+      "key": "doc_no",
+      "sheet": "1. MMKI",
+      "cell": "E2",
+      "type": "variable",
+      "format": "string",
+      "fallback": "-"
+    },
+    {
+      "key": "ebd_part_no",
+      "sheet": "1. MMKI",
+      "cell": "E3",
+      "type": "variable",
+      "format": "string"
+    },
+    {
+      "key": "quotation_date",
+      "sheet": "1. MMKI",
+      "cell": "E4",
+      "type": "variable",
+      "format": "date",
+      "date_format": "YYYY-MM-DD"
+    }
+  ],
 
-* File .xlsx asli disimpan sebagai **Master Template Artifact**.  
-* Sistem **TIDAK MEMBUAT** file spreadsheet dari awal (*scratch*).  
-* **UI Sheet Previewer Engine**: Mengonversi/menampilkan file .xlsx ke dalam Web Canvas Grid di Browser.  
-* Untuk **Export**: Engine membaca Master Template, lalu *overwrites* nilai sel sesuai JSON Map hasil penentuan UI.  
-* Untuk **Import**: Engine membaca koordinat sel dari file yang diunggah berdasarkan JSON Map, lalu mengonversinya menjadi *payload JSON/Array*.
+  "table_loops": [
+    {
+      "key": "ebd_items_section",
+      "sheet": "1. MMKI",
+      "type": "repeat",
+      "data_source": "ebd_items",
+      "start_row": 13,
 
-### **4.2 Data Flow Diagram (DFD)**
+      "row_behavior": {
+        "mode": "insert_and_copy_style",
+        "copy_merged_cells": true,
+        "copy_row_height": true
+      },
 
-\+--------------------------+        \+-----------------------------------+        \+-----------------------+  
-|  mng\_cfg\_system\_fields   |  \---\>  | Web UI Interactive Sheet Preview  |  \---\>  |   mng\_cfg\_templates   |  
-|  (Dictionary per Module) |        | (Click Cell & Visual Loop Rule)   |        | (JSON Configuration)  |  
-\+--------------------------+        \+-----------------------------------+        \+-----------------------+  
-                                                      |  
-                                                      v  
-                                    \+-----------------------------------+  
-                                    |     CORE ENGINE PROCESSOR         |  
-                                    \+-----------------------------------+  
-                                    |                                   |  
-                                    |  \[EXPORT MODE\]                    |  \[IMPORT MODE\]  
-                                    |  1\. Load Master .xlsx             |  1\. Parse Uploaded .xlsx  
-                                    |  2\. Inject DB Values              |  2\. Extract Cells by Map  
-                                    |  3\. Output Final .xlsx            |  3\. Transform Array/JSON  
-                                    |                                   |  4\. Pass Payload to Modul  
-                                    \+-----------------------------------+
+      "stop_condition": {
+        "type": "empty",
+        "column": "C"
+      },
 
-## **5\. Detailed Functional Specifications**
+      "mappings": {
+        "idx": {
+          "column": "B",
+          "type": "auto_increment",
+          "start_from": 1
+        },
+        "ebd_part_no": {
+          "column": "C",
+          "type": "variable",
+          "format": "string"
+        },
+        "ebd_part_name": {
+          "column": "E",
+          "type": "variable",
+          "format": "string"
+        },
+        "ebd_mat_spec": {
+          "column": "H",
+          "type": "variable",
+          "format": "string"
+        },
+        "ebd_mat_thick": {
+          "column": "I",
+          "type": "variable",
+          "format": "number",
+          "decimal_places": 2
+        },
+        "unit_price": {
+          "column": "N",
+          "type": "variable",
+          "format": "currency"
+        },
+        "discount_amount": {
+          "column": "O",
+          "type": "variable",
+          "format": "currency"
+        }
+      },
 
-### **5.1 Master System Fields Management (mng\_cfg\_system\_fields)**
+      "row_formulas": {
+        "P": {
+          "formula": "=N{row}-O{row}",
+          "format": "currency"
+        }
+      },
 
-* Menjadi *single source of truth* untuk seluruh variabel yang didukung oleh modul-modul di aplikasi.  
-* Atribut Field: field\_key (unik), label, module\_type (quotation, po, invoice, dll.), group (Header, Material, Process, Tooling, Item), dan data\_type.  
-* *Validation Rule:* Kunci field wajib menggunakan format *snake\_case*.
+      "footer_formulas": {
+        "total_amount": {
+          "target_cell": "P{end_row+1}",
+          "formula": "=SUM(P{start_row}:P{end_row})",
+          "format": "currency"
+        }
+      },
 
-### **5.2 Interactive Web UI Excel Preview & Visual Mapping System**
+      "nested_loops": [
+        {
+          "key": "item_processes",
+          "data_source": "processes",
+          "layout_direction": "vertical",
+          "mappings": {
+            "process_name": {
+              "column": "W",
+              "type": "variable"
+            },
+            "tonnage": {
+              "column": "X",
+              "type": "variable",
+              "format": "number"
+            }
+          }
+        }
+      ]
+    }
+  ],
 
-Fitur utama untuk Admin dalam melakukan konfigurasi template tanpa perlu mengetik koordinat sel secara manual.
-
-#### **A. Interactive Sheet Viewer Components**
-
-* Sistem mengintegrasikan pustaka Web Spreadsheet Viewer (seperti *Univer JS* atau *Luckysheet*) di halaman Admin Web.  
-* Saat file .xlsx diunggah, viewer langsung merender struktur sheet, warna, border, merged cells, dan font secara *real-time* di browser.
-
-#### **B. Visual Mapping Interaction Workflow**
-
-1. **Single Field Mapping (Header Data):**  
-   * Admin mengklik salah satu sel pada preview Excel (contoh: Klik Sel C9).  
-   * Popover / Sidebar Form akan muncul di sisi kanan layar.  
-   * Admin memilih **System Field** dari dropdown list (terfilter berdasarkan module\_type).  
-   * Sel yang berhasil di-map akan mendapat highlight warna khas (misal: *Green Highlight*) beserta badge nama field (part\_number).  
-2. **Table Loops Mapping (Data Bertingkat / Dynamic Array):**  
-   * Admin menandai/menyeleksi area baris tabel (contoh: Baris 11).  
-   * Admin memilih mode **"Create Table Loop"** dan menentukan nama grup (misal: material\_table).  
-   * Admin menandai kolom-kolom terkait secara visual (Klik Kolom B ![][image1] set ke material\_name, Klik Kolom E ![][image1] set ke input\_wt).  
-   * **Visual Stop Condition Builder:** Admin mengklik sel penutup loop (misal Sel B17 berisi teks "MATERIAL COST TOTAL"), lalu sistem otomatis menyimpan aturan *stop condition* berdasarkan kolom dan isi nilai teks sel tersebut.  
-   * Baris/area loop akan diberi highlight warna berbeda (misal: *Blue Highlight*).  
-3. **Formula & Static Cell Protection:**  
-   * Sel yang mengandung Formula Excel (seperti \=SUM(...)) akan diberi indikator khusus (*Yellow Highlight / Lock Icon*) untuk mencegah Admin tidak sengaja memetakan sel tersebut sebagai *input field*.  
-4. **Config JSON Auto-Generator:**  
-   * Setelah selesai melakukan mapping secara visual, Admin mengklik **"Save Mapping Configuration"**. Sistem otomatis mengekstrak seluruh koordinat visual tersebut menjadi dokumen JSON mapping\_config.
-
-### **5.3 Dynamic Mapping Configuration (mng\_cfg\_templates)**
-
-Sistem menyimpan konfigurasi tergenerasi dari UI ke dalam kolom JSON mapping\_config dengan struktur:
-
-1. **Single Fields:** Peta 1-to-1 koordinat sel dengan field\_key.  
-2. **Table Loops:** Peta multi-baris mencakup start\_row, stop\_condition, dan daftar columns.
-
-### **5.4 Export Engine Requirements**
-
-* Menggunakan template master berbasis file .xlsx.  
-* Menimpa (*overwrites*) nilai sel berdasarkan mapping\_config tanpa merusak styling/formula sel lain yang tidak di-map.  
-* Menghasilkan file output .xlsx yang siap diunduh atau dikirim via email.
-
-### **5.5 Import Engine Requirements**
-
-* Membaca file balasan dari partner.  
-* Mengekstrak nilai sel menggunakan getFormattedValue() atau getValue().  
-* Merged Cell handling: Jika area sel di-merge (misal A11:A16), ekstraktor membaca data dari sel paling kiri-atas (A11).  
-* Mengembalikan *payload array/JSON* yang siap diproses oleh logika transaksi modul bersangkutan.
-
-## **6\. Database Schema Design**
-
-### **6.1 Entity Relationship Diagram (ERD)**
-
-customers / entities (1) \<--- (N) mng\_cfg\_templates (1) \<--- (N) \[Existing Modul Tables (e.g., quotations)\]  
-                                          ^  
-mng\_cfg\_system\_fields (1) \----------------+ (Referenced via field\_key inside JSON Mapping)
-
-### **6.2 Table Definitions (Laravel Migrations)**
-
-#### **Table 1: mng\_cfg\_system\_fields**
-
-Schema::create('mng\_cfg\_system\_fields', function (Blueprint $table) {  
-    $table-\>id();  
-    $table-\>string('module\_type')-\>index(); // e.g., 'quotation', 'purchase\_order', 'invoice'  
-    $table-\>string('field\_key')-\>unique();  // e.g., 'part\_number', 'cycle\_time', 'po\_date'  
-    $table-\>string('label');                // Human-readable label for UI Dropdown  
-    $table-\>string('group');                // e.g., 'header', 'material', 'process', 'item'  
-    $table-\>enum('data\_type', \['string', 'numeric', 'decimal', 'date', 'boolean'\])-\>default('string');  
-    $table-\>boolean('is\_required')-\>default(false);  
-    $table-\>timestamps();  
-});
-
-#### **Table 2: mng\_cfg\_templates**
-
-Schema::create('mng\_cfg\_templates', function (Blueprint $table) {  
-    $table-\>id();  
-    $table-\>string('template\_type')-\>index();       // e.g., 'quotation', 'purchase\_order', 'invoice'  
-    $table-\>foreignId('customer\_id')  
-          \-\>nullable()  
-          \-\>constrained('customers')  
-          \-\>nullOnDelete();                         // Nullable jika template bertipe umum/vendor  
-    $table-\>string('template\_name');                // e.g., "Quotation Fabricated Part Honda"  
-    $table-\>string('file\_path');                    // Storage path master .xlsx  
-    $table-\>json('mapping\_config');                 // Generated JSON from Interactive Web UI Mapper  
-    $table-\>boolean('is\_active')-\>default(true);  
-    $table-\>timestamps();  
-});
-
-#### **Migration Integration pada Tabel Transaksi Existing (Contoh: quotations)**
-
-Schema::table('quotations', function (Blueprint $table) {  
-    $table-\>foreignId('excel\_template\_id')  
-          \-\>nullable()  
-          \-\>after('customer\_id')  
-          \-\>constrained('mng\_cfg\_templates')  
-          \-\>nullOnDelete();  
-});
-
-## **7\. Sample JSON Structure (mapping\_config)**
-
-Struktur JSON yang dihasilkan secara otomatis oleh Web UI Preview & Visual Mapping System:
-
-{  
-  "template\_type": "quotation",  
-  "single\_fields": \[  
-    {  
-      "field\_key": "part\_number",  
-      "cell": "C9"  
-    },  
-    {  
-      "field\_key": "part\_name",  
-      "cell": "C10"  
-    },  
-    {  
-      "field\_key": "supplier\_name",  
-      "cell": "F7"  
-    },  
-    {  
-      "field\_key": "usd\_rate",  
-      "cell": "H8"  
-    }  
-  \],  
-  "table\_loops": \[  
-    {  
-      "group": "material",  
-      "start\_row": 11,  
-      "stop\_condition": {  
-        "type": "cell\_value\_contains",  
-        "column": "B",  
-        "value": "MATERIAL COST TOTAL"  
-      },  
-      "columns": {  
-        "material\_name": "B",  
-        "input\_wt": "E",  
-        "output\_wt": "F",  
-        "scrap\_wt": "H"  
-      }  
-    },  
-    {  
-      "group": "process",  
-      "start\_row": 28,  
-      "stop\_condition": {  
-        "type": "cell\_value\_contains",  
-        "column": "B",  
-        "value": "ASSEMBLY PROCESS COST TOTAL"  
-      },  
-      "columns": {  
-        "process\_name": "B",  
-        "machinery": "C",  
-        "cycle\_time": "F",  
-        "cost\_minute": "G"  
-      }  
-    }  
-  \]  
+  "conditional_renders": [
+    {
+      "type": "hide_sheet",
+      "sheet": "Cost Breakdown",
+      "when": "is_confidential == true"
+    }
+  ]
 }
+```
 
-## **8\. Non-Functional Requirements (NFRs)**
+---
 
-1. **Performance:**  
-   * Render UI Preview file Excel di browser harus selesai dalam **\< 2 detik** untuk file \< 5MB.  
-   * Engine Export/Import di backend harus selesai dalam **\< 3 detik** per file.  
-   * Peak Memory PHP limit diset maksimal 128MB.  
-2. **Security & Validation:**  
-   * Upload file divalidasi MIME Type: .xlsx.  
-   * Sanitasi input wajib diterapkan sebelum mengekstrak data ke database.  
-3. **UI / UX Usability:**  
-   * Antarmuka visual mapper harus menyediakan fitur *Reset Mapping*, *Undo*, dan *Real-time Visual Highlight Badges*.
+## 5. Standardized Placeholder & Formula Compiler Engine
 
-## **9\. Implementation Roadmap & Milestones**
+Formula Excel di-compile secara dinamis dengan menyelesaikan placeholder posisi baris berikut:
 
-| Phase | Milestone | Deliverables | Estimated Time |
-| :---- | :---- | :---- | :---- |
-| **Phase 1** | **Database & Core Dictionary** | Migrations mng\_cfg\_\*, Seeders, CRUD Master System Fields per Modul | Sprint 1 (3 Hari) |
-| **Phase 2** | **Interactive Web UI Mapper** | Integrasi Web Sheet Viewer (Univer/Luckysheet) \+ Click & Map UI \+ Color Highlight \+ JSON Auto Generator | Sprint 1 (5 Hari) |
-| **Phase 3** | **Export Engine Module** | Reusable ExcelExportEngineService berbasis PhpSpreadsheet Overlay | Sprint 2 (3 Hari) |
-| **Phase 4** | **Import Engine Module** | Reusable ExcelImportEngineService \+ Dynamic Loop Parser \+ Stop Condition Detector | Sprint 2 (4 Hari) |
-| **Phase 5** | **Module Integration & Testing** | Integrasi ke modul Quotation (dan modul lain) \+ UAT Template Kompleks | Sprint 3 (3 Hari) |
+| Token Placeholder | Penjelasan | Contoh Input | Contoh Output (Baris 13-18) |
+| :--- | :--- | :--- | :--- |
+| `{row}` | Nomor baris aktif saat ini | `=N{row}*Q{row}` | `=N13*Q13` |
+| `{start_row}` | Nomor baris pertama data di-render | `=SUM(P{start_row}:P{end_row})` | `=SUM(P13:P18)` |
+| `{end_row}` | Nomor baris terakhir data setelah loop selesai | `=AVERAGE(I{start_row}:I{end_row})` | `=AVERAGE(I13:I18)` |
+| `{end_row+N}` | Offset baris setelah loop selesai (Footer) | `P{end_row+1}` | Target cell: `P19` |
+| `{parent_row}` | Nomor baris parent pada nested loop vertikal | `=W{row}/V{parent_row}` | `=W15/V13` |
+| `{sheet:key}` | Nama sheet aktual yang terdaftar pada sheets | `='{sheet:main_sheet}'!E3` | `='1. MMKI'!E3` |
 
-## **10\. Risk Management & Mitigations**
+---
 
-| Identified Risk | Risk Level | Mitigation Strategy |
-| :---- | :---- | :---- |
-| Partner mengubah posisi sel/layout tanpa pemberitahuan. | **Medium** | Admin tidak perlu koding ulang; cukup buka UI Visual Mapper, klik sel lokasi baru, dan simpan ulang dalam \< 5 menit. |
-| Render UI Preview berat untuk file Excel ukuran besar. | **Medium** | Terapkan server-side HTML/JSON conversion atau canvas rendering terbatas pada sheet aktif. |
-| Formula Excel \#REF\! atau \#VALUE\!. | **Low** | Biarkan formula dievaluasi oleh aplikasi Microsoft Excel milik partner. Backend hanya menginjeksi sel variabel input. |
+## 6. Detailed Logic Flow & Execution Pipeline
 
-[image1]: <data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAZCAYAAADe1WXtAAAAmklEQVR4XmNgGAWjYOCBvLx8FBA7oYtTBOTk5FyAuB/IZESXIxuIioryAF26VEZGRgVdjiIAdKkr0OA16OKUAkagoTlA1wqhS4AAC9DWPKCCWWTg2UD8DYirQeagG0wyUFJS4gcatgpdnBIA8nq3goJCOLoE2QBooCIQLwalAnQ5sgHQwGhgPJSji1MEQC4Eep0DXXwUjAIaAQBLkx8bCNIqXAAAAABJRU5ErkJggg==>
+```
+[Request Export Quotation (ID: 101, Customer: MMKI)]
+                       │
+                       ▼
+   ┌────────────────────────────────────────┐
+   │ 1. Load MngCfgTemplate & Master File   │
+   │    • Ambil definition_json             │
+   │    • Load master .xlsx via IOFactory   │
+   └────────────────────────────────────────┘
+                       │
+                       ▼
+   ┌────────────────────────────────────────┐
+   │ 2. DataResolver::resolve($quotationId) │
+   │    • Query Eloquent dengan eager load  │
+   │    • Bentuk Normalized Data Payload    │
+   │      - payload['fields'][...]          │
+   │      - payload['ebd_items'][...]       │
+   └────────────────────────────────────────┘
+                       │
+                       ▼
+   ┌────────────────────────────────────────┐
+   │ 3. RowShiftTracker Initialization      │
+   │    • Inisialisasi offset per sheet     │
+   └────────────────────────────────────────┘
+                       │
+                       ▼
+   ┌────────────────────────────────────────┐
+   │ 4. SingleFieldRenderer Execution       │
+   │    • Render header/scalar single cells │
+   │    • Set formatting & data type        │
+   └────────────────────────────────────────┘
+                       │
+                       ▼
+   ┌────────────────────────────────────────┐
+   │ 5. TableLoopRenderer Execution         │
+   │    • Iterasi setiap baris data source  │
+   │    • Row > start_row: insertNewRow     │
+   │    • Clone styling, height, merges     │
+   │    • Inject cell mapping & row_formula │
+   │    • Render nested loop (jika ada)     │
+   │    • Update RowShiftTracker (delta row)│
+   └────────────────────────────────────────┘
+                       │
+                       ▼
+   ┌────────────────────────────────────────┐
+   │ 6. Footer & Aggregate Formula Compile  │
+   │    • Hitung target cell + offset       │
+   │    • Substitusi {start_row} & {end_row}│
+   │    • Tulis formula ke cell footer      │
+   └────────────────────────────────────────┘
+                       │
+                       ▼
+   ┌────────────────────────────────────────┐
+   │ 7. ConditionEvaluator & Sheet Cleanup  │
+   │    • Evaluasi hide/show sheet/row      │
+   │    • Recalculate Pre-calculated Values │
+   └────────────────────────────────────────┘
+                       │
+                       ▼
+   [Download Response / Stream ke Browser]
+```
+
+---
+
+## 7. Class Design & Service Architecture di Laravel
+
+Struktur modular di folder `app/Services/ExcelTemplate/`:
+
+```text
+app/Services/ExcelTemplate/
+├── Contracts/
+│   ├── DataResolverInterface.php
+│   └── TemplateEngineInterface.php
+│
+├── Core/
+│   ├── TemplateEngine.php          --> Orchestrator utama workflow render
+│   ├── TemplateParser.php          --> Validasi & parsing schema JSON
+│   ├── RowShiftTracker.php         --> Melacak pergeseran baris antar-section
+│   └── StyleCloner.php             --> Helper cloning border, fill, alignment, merges
+│
+├── Renderers/
+│   ├── SingleFieldRenderer.php     --> Menangani rendering koordinat single cell
+│   ├── TableLoopRenderer.php       --> Menangani rendering repeat baris & nested data
+│   ├── FormulaCompiler.php         --> Parser formula string & token replacer
+│   └── ConditionEvaluator.php      --> Evaluasi rule conditional show/hide
+│
+└── Resolvers/
+    ├── ToolingQuotationDataResolver.php  --> Domain resolver untuk Tooling Quotation
+    ├── PartCostDataResolver.php          --> Domain resolver untuk Part Cost
+    └── FeasibilityDataResolver.php       --> Domain resolver untuk Feasibility Study
+```
+
+### 7.1 Contract DataResolver (`DataResolverInterface.php`)
+Setiap modul bisnis wajib mengimplementasikan interface ini:
+```php
+namespace App\Services\ExcelTemplate\Contracts;
+
+interface DataResolverInterface
+{
+    /**
+     * Resolve domain entity into normalized array for TemplateEngine
+     *
+     * @param int|string $entityId
+     * @return array{
+     *    fields: array<string, mixed>,
+     *    sections: array<string, array<int, array<string, mixed>>>
+     * }
+     */
+    public function resolve($entityId): array;
+}
+```
+
+---
+
+## 8. Penanganan Kompleksitas PhpSpreadsheet (Edge Cases)
+
+### 8.1 Row Insertion & Style Cloning
+Ketika PhpSpreadsheet melakukan `insertNewRowBefore($row, 1)`:
+1. Formula di bawah baris tersebut secara otomatis digeser oleh PhpSpreadsheet.
+2. Namun **style (border, fill, alignment) dan merged cell tidak otomatis terduplikasi** ke baris baru.
+3. **Solusi di `StyleCloner`**: Engine membaca `getStyle($templateRow)` dan `getMergeCells()` pada baris template, lalu menerapkannya secara eksplisit ke baris yang baru disisipkan.
+
+### 8.2 Dynamic Merged Cells
+Jika baris template memiliki merge cell (misal `E13:G13`):
+* Saat baris 14 dibuat, engine meregistrasikan `mergeCells("E14:G14")`.
+
+### 8.3 Number & Date Formatting
+Engine menerapkan format mask asli Excel melalui PhpSpreadsheet:
+* `currency` $\rightarrow$ `_($* #,##0_);_($* (#,##0);_($* "-"_);_(@_)` atau format rupiah `Rp #,##0`
+* `percentage` $\rightarrow$ `0.00%`
+* `number` $\rightarrow$ `#,##0.00`
+* `date` $\rightarrow$ `yyyy-mm-dd`
+
+---
+
+## 9. Error Handling, Safety & Constraints
+
+1. **Schema JSON Validation:**
+   * Sebelum disimpan di `mng_cfg_templates.mapping_config`, request wajib divalidasi dengan JSON Schema validator di Laravel.
+2. **Missing System Fields:**
+   * Jika `field_key` tidak ditemukan pada data payload, engine mengisi dengan `fallback` value (default: string kosong / `null`) tanpa membuat proses export error (*graceful degradation*).
+3. **Missing Sheet Name:**
+   * Jika sheet dengan nama pada JSON tidak ditemukan di file Excel, engine memberikan exception deskriptif: `Sheet '[Name]' not found in master template [Template_Name]`.
+4. **Memory Management:**
+   * Untuk export data besar, konfigurasi PhpSpreadsheet memory cache aktif:
+     ```php
+     \PhpOffice\PhpSpreadsheet\Settings::setCache(
+         new \Symfony\Component\Cache\Adapter\ApcuAdapter()
+     );
+     ```
+
+---
+
+## 10. Implementation Roadmap
+
+| Phase | Modul / Fitur | Deliverable |
+| :--- | :--- | :--- |
+| **Phase 1** | **Core Engine & Architecture** | Pembuatan `TemplateParser`, `RowShiftTracker`, `SingleFieldRenderer`, `FormulaCompiler`, dan `TemplateEngine`. |
+| **Phase 2** | **Table Loop & Nested Repeat** | Pembuatan `TableLoopRenderer`, `StyleCloner`, penanganan duplicate row, merge cells, dan footer formulas. |
+| **Phase 3** | **Domain Data Resolvers** | Implementasi `ToolingQuotationDataResolver` menghubungkan database PROMISE dengan payload standar engine. |
+| **Phase 4** | **Visual Studio Builder Integration** | Integrasi output JSON dari [Visual Mapping Studio](file:///c:/WebSource/PROMISE-APPS/promise-management/resources/views/management/excel-templates/builder.blade.php) agar 100% kompatibel dengan schema DSL. |
+| **Phase 5** | **Testing, Validation & Dry-Run** | Automated Unit Tests, Stress test formula complex, dan uji coba export template Toyota, MMKI, Honda. |
