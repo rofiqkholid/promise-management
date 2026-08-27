@@ -110,16 +110,30 @@
     }
 
     .chat-bubble-highlight {
-        animation: chatBubbleHighlight 2s ease-in-out;
+        animation: chatBubbleHighlight 2.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        position: relative !important;
+        z-index: 30 !important;
     }
     @keyframes chatBubbleHighlight {
-        0%, 25% {
-            filter: brightness(1.2);
-            box-shadow: 0 0 0 3px #38bdf8, 0 0 16px rgba(56, 189, 248, 0.5) !important;
+        0% {
+            box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.9) !important;
+            filter: brightness(1);
+        }
+        15%, 35% {
+            box-shadow: 0 0 0 5px #fbbf24, 0 0 35px rgba(251, 191, 36, 0.95), inset 0 0 12px rgba(255, 255, 255, 0.4) !important;
+            filter: brightness(1.4) contrast(1.1);
+        }
+        60% {
+            box-shadow: 0 0 0 4px #38bdf8, 0 0 25px rgba(56, 189, 248, 0.85) !important;
+            filter: brightness(1.25);
+        }
+        85% {
+            box-shadow: 0 0 0 2px #fbbf24, 0 0 12px rgba(251, 191, 36, 0.5) !important;
+            filter: brightness(1.1);
         }
         100% {
-            filter: none;
             box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+            filter: brightness(1);
         }
     }
 </style>
@@ -416,7 +430,7 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
                 bubbleBox.classList.add('chat-bubble-highlight');
                 setTimeout(() => {
                     bubbleBox.classList.remove('chat-bubble-highlight');
-                }, 2000);
+                }, 2400);
             }
         },
 
