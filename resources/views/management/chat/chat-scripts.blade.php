@@ -75,6 +75,39 @@
     .chat-markdown ul { list-style-type: disc !important; padding-left: 1.25rem !important; margin: 0.35rem 0 !important; }
     .chat-markdown ol { list-style-type: decimal !important; padding-left: 1.25rem !important; margin: 0.35rem 0 !important; }
     .chat-markdown li { display: list-item !important; margin-bottom: 0.2rem !important; }
+    
+    /* Natural, seamless link styling in chat bubbles */
+    .chat-bubble-out .chat-markdown a {
+        color: #ffffff !important;
+        text-decoration: underline !important;
+        text-underline-offset: 3px !important;
+        text-decoration-thickness: 1.5px !important;
+        font-weight: 600 !important;
+        word-break: break-all !important;
+        transition: opacity 0.15s ease !important;
+    }
+    .chat-bubble-out .chat-markdown a:hover {
+        opacity: 0.85 !important;
+    }
+    .chat-bubble-in .chat-markdown a {
+        color: #2563eb !important;
+        text-decoration: underline !important;
+        text-underline-offset: 3px !important;
+        text-decoration-thickness: 1.5px !important;
+        font-weight: 600 !important;
+        word-break: break-all !important;
+        transition: color 0.15s ease !important;
+    }
+    .chat-bubble-in .chat-markdown a:hover {
+        color: #1d4ed8 !important;
+    }
+    .dark .chat-bubble-in .chat-markdown a {
+        color: #60a5fa !important;
+    }
+    .dark .chat-bubble-in .chat-markdown a:hover {
+        color: #93c5fd !important;
+    }
+    
     .chat-markdown code { 
         background-color: rgba(0, 0, 0, 0.08) !important; 
         padding: 1px 4px !important; 
@@ -730,7 +763,7 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
 
             // Autolink URL if not already in an <a> tag
             const urlRegex = /(?<!href=")(https?:\/\/[^\s<]+)/g;
-            html = html.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-sky-50 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400 rounded-xs hover:underline font-semibold text-[11px]"><i class="fa-solid fa-link text-[8.5px]"></i> $1</a>');
+            html = html.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer" class="hover:underline cursor-pointer">$1</a>');
 
             return html;
         },
