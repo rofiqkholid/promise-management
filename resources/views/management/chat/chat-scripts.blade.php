@@ -109,13 +109,26 @@
         z-index: 99999 !important;
     }
 
-    .chat-bubble-highlight {
-        animation: chatBubbleFlash 2s ease-out;
+    .chat-bubble-highlight .chat-bubble-out {
+        animation: subtleLightHighlightOut 1.2s ease-out;
     }
-    @keyframes chatBubbleFlash {
-        0% { transform: scale(1.03); filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.85)); }
-        40% { transform: scale(1.02); filter: drop-shadow(0 0 5px rgba(99, 102, 241, 0.6)); }
-        100% { transform: scale(1); filter: none; }
+    .chat-bubble-highlight .chat-bubble-in {
+        animation: subtleLightHighlightIn 1.2s ease-out;
+    }
+    @keyframes subtleLightHighlightOut {
+        0%, 35% { background-color: #38bdf8 !important; }
+        100% { background-color: #007aff !important; }
+    }
+    @keyframes subtleLightHighlightIn {
+        0%, 35% { background-color: #e0e7ff !important; }
+        100% { background-color: #ffffff !important; }
+    }
+    .dark .chat-bubble-highlight .chat-bubble-in {
+        animation: subtleLightHighlightInDark 1.2s ease-out;
+    }
+    @keyframes subtleLightHighlightInDark {
+        0%, 35% { background-color: #334155 !important; }
+        100% { background-color: #1e293b !important; }
     }
 </style>
 @endpush

@@ -259,15 +259,15 @@
                                         <template x-for="(doc, docIdx) in getDocAttachments(msg)" :key="doc.f || doc.file_url || (msg.id + '-doc-' + (doc.index !== undefined ? doc.index : docIdx))">
                                             <div class="flex items-center gap-2.5 p-2 rounded-xl border transition-all duration-150"
                                                  :class="msg.user_id == currentUserId 
-                                                     ? 'bg-white/10 hover:bg-white/15 dark:bg-white/10 border-white/20 text-white' 
-                                                     : 'bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/80 dark:hover:bg-slate-800 border-slate-200/90 dark:border-slate-700 text-slate-800 dark:text-slate-100'">
+                                                     ? 'bg-blue-900/55 hover:bg-blue-900/75 dark:bg-blue-950/70 border-blue-400/35 text-white shadow-2xs' 
+                                                     : 'bg-slate-100/90 hover:bg-slate-200/90 dark:bg-slate-800/90 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 shadow-2xs'">
                                                 
                                                 <!-- File Icon Container -->
                                                 <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 shadow-2xs"
                                                      :class="isPdfType(doc.file_type, doc.file_name) 
                                                          ? 'bg-rose-500 text-white shadow-xs' 
                                                          : (msg.user_id == currentUserId 
-                                                             ? 'bg-white/20 text-white border border-white/25' 
+                                                             ? 'bg-white/20 text-white border border-white/30 backdrop-blur-xs' 
                                                              : 'bg-indigo-50 dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 border border-indigo-100 dark:border-slate-600')">
                                                     <i class="fa-solid text-sm" :class="isPdfType(doc.file_type, doc.file_name) ? 'fa-file-pdf' : 'fa-file-lines'"></i>
                                                 </div>
@@ -279,37 +279,34 @@
                                                 </div>
                                                 
                                                 <!-- Action Buttons (Preview, Download, Delete) -->
-                                                <div class="flex items-center gap-1 flex-shrink-0 select-none">
+                                                <div class="flex items-center gap-1.5 flex-shrink-0 select-none">
                                                     <!-- Only PDF allows preview -->
                                                     <button x-show="isPdfType(doc.file_type, doc.file_name)"
                                                             @click="previewDoc(doc.file_url, doc.file_name)" 
                                                             type="button"
-                                                            class="w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-150 cursor-pointer active:scale-90"
+                                                            class="w-7 h-7 rounded-md flex items-center justify-center transition-all duration-150 cursor-pointer active:scale-95 shadow-xs"
                                                             :class="msg.user_id == currentUserId 
-                                                                ? 'bg-white/15 hover:bg-white/30 text-white border border-white/20' 
-                                                                : 'bg-slate-200/80 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border border-slate-300/50 dark:border-slate-600'"
+                                                                ? 'bg-blue-600 hover:bg-blue-500 text-white border border-blue-400/40' 
+                                                                : 'bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border border-slate-300/60 dark:border-slate-600'"
                                                             title="Preview PDF">
-                                                        <i class="fa-solid fa-eye text-[10.5px]"></i>
+                                                        <i class="fa-solid fa-eye text-[11px]"></i>
                                                     </button>
                                                     
                                                     <!-- Download File Button -->
                                                     <a :href="doc.download_url" 
-                                                       class="w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-150 cursor-pointer active:scale-90"
+                                                       class="w-7 h-7 rounded-md flex items-center justify-center transition-all duration-150 cursor-pointer active:scale-95 shadow-xs"
                                                        :class="msg.user_id == currentUserId 
-                                                           ? 'bg-white/15 hover:bg-white/30 text-white border border-white/20' 
-                                                           : 'bg-slate-200/80 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border border-slate-300/50 dark:border-slate-600'"
+                                                           ? 'bg-blue-600 hover:bg-blue-500 text-white border border-blue-400/40' 
+                                                           : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs'"
                                                        title="Download File">
-                                                        <i class="fa-solid fa-download text-[10.5px]"></i>
+                                                        <i class="fa-solid fa-download text-[11px]"></i>
                                                     </a>
                                                     
-                                                    <!-- Delete File Attachment Button (Smooth glass that glows rose on hover) -->
+                                                    <!-- Delete File Attachment Button -->
                                                     <button x-show="msg.user_id == currentUserId"
                                                             @click="deleteAttachment(msg.id, doc.index !== undefined ? doc.index : docIdx, doc.file_path, doc.f)" 
                                                             type="button"
-                                                            class="w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-150 cursor-pointer active:scale-90"
-                                                            :class="msg.user_id == currentUserId 
-                                                                ? 'bg-white/15 hover:bg-rose-500 text-white border border-white/20 hover:border-rose-400' 
-                                                                : 'bg-slate-200/80 hover:bg-rose-600 text-slate-600 hover:text-white dark:bg-slate-700 dark:hover:bg-rose-600 dark:text-slate-300 border border-slate-300/50 dark:border-slate-600'"
+                                                            class="w-7 h-7 rounded-md flex items-center justify-center transition-all duration-150 cursor-pointer active:scale-95 shadow-xs bg-rose-600 hover:bg-rose-500 text-white border border-rose-400/50"
                                                             title="Delete this file">
                                                         <i class="fa-solid fa-trash-can text-[10px]"></i>
                                                     </button>
