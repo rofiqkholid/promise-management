@@ -11,6 +11,7 @@
     <meta name="reverb-host" content="{{ env('VITE_REVERB_HOST', config('reverb.apps.apps.0.options.host')) }}">
     <meta name="reverb-port" content="{{ env('VITE_REVERB_PORT', 443) }}">
     <meta name="reverb-scheme" content="{{ env('VITE_REVERB_SCHEME', 'https') }}">
+    <meta name="reverb-path" content="{{ env('VITE_REVERB_PATH', '/reverb') }}">
     
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ asset('assets/image/logo-promise.png') }}">

@@ -22,6 +22,7 @@ function initEcho() {
         const hostMeta = document.querySelector('meta[name="reverb-host"]');
         const portMeta = document.querySelector('meta[name="reverb-port"]');
         const schemeMeta = document.querySelector('meta[name="reverb-scheme"]');
+        const pathMeta = document.querySelector('meta[name="reverb-path"]');
 
         const reverbKey = (keyMeta && keyMeta.getAttribute('content')) || import.meta.env.VITE_REVERB_APP_KEY;
         if (!reverbKey) return;
@@ -45,6 +46,10 @@ function initEcho() {
             wsPort = window.location.port ? Number(window.location.port) : (isTls ? 443 : 80);
         }
 
+        const wsPath = (pathMeta && pathMeta.getAttribute('content')) 
+            || import.meta.env.VITE_REVERB_PATH 
+            || '/reverb';
+
         window.Echo = new Echo({
             broadcaster: 'reverb',
             key: reverbKey,
@@ -53,6 +58,7 @@ function initEcho() {
             wssPort: wsPort,
             forceTLS: isTls,
             enabledTransports: ['ws', 'wss'],
+            wsPath: wsPath,
             authEndpoint: authEndpoint,
             auth: {
                 headers: {
