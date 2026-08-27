@@ -109,26 +109,18 @@
         z-index: 99999 !important;
     }
 
-    .chat-bubble-highlight .chat-bubble-out {
-        animation: subtleLightHighlightOut 1.2s ease-out;
+    .chat-bubble-highlight {
+        animation: chatBubbleHighlight 2s ease-in-out;
     }
-    .chat-bubble-highlight .chat-bubble-in {
-        animation: subtleLightHighlightIn 1.2s ease-out;
-    }
-    @keyframes subtleLightHighlightOut {
-        0%, 35% { background-color: #38bdf8 !important; }
-        100% { background-color: #007aff !important; }
-    }
-    @keyframes subtleLightHighlightIn {
-        0%, 35% { background-color: #e0e7ff !important; }
-        100% { background-color: #ffffff !important; }
-    }
-    .dark .chat-bubble-highlight .chat-bubble-in {
-        animation: subtleLightHighlightInDark 1.2s ease-out;
-    }
-    @keyframes subtleLightHighlightInDark {
-        0%, 35% { background-color: #334155 !important; }
-        100% { background-color: #1e293b !important; }
+    @keyframes chatBubbleHighlight {
+        0%, 25% {
+            filter: brightness(1.2);
+            box-shadow: 0 0 0 3px #38bdf8, 0 0 16px rgba(56, 189, 248, 0.5) !important;
+        }
+        100% {
+            filter: none;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+        }
     }
 </style>
 @endpush
@@ -415,14 +407,15 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
 
         jumpToMessage(targetId) {
             if (!targetId) return;
-            const targetEl = document.getElementById('chat-bubble-' + targetId);
-            if (targetEl) {
-                targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                targetEl.classList.remove('chat-bubble-highlight');
-                void targetEl.offsetWidth; // trigger reflow
-                targetEl.classList.add('chat-bubble-highlight');
+            const targetRow = document.getElementById('chat-bubble-' + targetId);
+            if (targetRow) {
+                targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                const bubbleBox = targetRow.querySelector('.chat-bubble-in, .chat-bubble-out') || targetRow;
+                bubbleBox.classList.remove('chat-bubble-highlight');
+                void bubbleBox.offsetWidth; // trigger reflow
+                bubbleBox.classList.add('chat-bubble-highlight');
                 setTimeout(() => {
-                    targetEl.classList.remove('chat-bubble-highlight');
+                    bubbleBox.classList.remove('chat-bubble-highlight');
                 }, 2000);
             }
         },

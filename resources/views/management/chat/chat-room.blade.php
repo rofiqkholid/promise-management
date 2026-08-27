@@ -228,12 +228,12 @@
                                                 <div class="absolute inset-0 bg-black/25 opacity-0 group-hover/img:opacity-100 transition-opacity duration-150 pointer-events-none rounded-lg"></div>
 
                                                 <!-- Image Hover Action Buttons (Download & Delete) -->
-                                                <div class="absolute top-2 right-2 opacity-0 group-hover/img:opacity-100 transition-opacity duration-150 flex items-center gap-1.5 z-10 select-none">
+                                                <div class="absolute top-2 right-2 opacity-0 group-hover/img:opacity-100 transition-all duration-150 flex items-center gap-1.5 z-10 select-none">
                                                     <!-- Download Image Button -->
                                                     <a :href="img.download_url" 
                                                        download
                                                        @click.stop
-                                                       class="w-7 h-7 rounded-full bg-black/60 hover:bg-black/85 backdrop-blur-xs text-white flex items-center justify-center shadow-md cursor-pointer transition-colors duration-150 border border-white/30"
+                                                       class="w-7 h-7 rounded-full bg-slate-900/60 hover:bg-slate-900/90 backdrop-blur-md text-white flex items-center justify-center shadow-sm cursor-pointer transition-colors duration-150 border border-white/25"
                                                        title="Download Image">
                                                         <i class="fa-solid fa-download text-[10px]"></i>
                                                     </a>
@@ -241,7 +241,7 @@
                                                     <button x-show="msg.user_id == currentUserId"
                                                             @click.stop="deleteAttachment(msg.id, img.index !== undefined ? img.index : imgIdx, img.file_path, img.f)" 
                                                             type="button"
-                                                            class="w-7 h-7 rounded-full bg-rose-600/80 hover:bg-rose-600 backdrop-blur-xs text-white flex items-center justify-center shadow-md cursor-pointer transition-colors duration-150 border border-white/30"
+                                                            class="w-7 h-7 rounded-full bg-slate-900/60 hover:bg-rose-600/90 backdrop-blur-md text-white flex items-center justify-center shadow-sm cursor-pointer transition-colors duration-150 border border-white/25 hover:border-rose-400/50"
                                                             title="Delete this image">
                                                         <i class="fa-solid fa-trash-can text-[9.5px]"></i>
                                                     </button>
