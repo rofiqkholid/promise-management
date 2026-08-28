@@ -212,25 +212,21 @@
                      :id="'chat-bubble-' + msg.id"
                      :class="msg.user_id == currentUserId ? 'self-end flex-row-reverse' : 'self-start flex-row'">
                     
-                    <!-- Avatar (For incoming messages from others) -->
-                    <template x-if="msg.user_id != currentUserId">
-                        <div class="w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] flex-shrink-0 select-none shadow-xs border mt-0.5"
-                             :class="getUserColor(msg.user_id).avatar"
-                             :title="msg.user_name"
-                             x-text="msg.user_name ? msg.user_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'U'">
-                        </div>
-                    </template>
+                    <!-- Avatar (Shown for both self and others) -->
+                    <div class="w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] flex-shrink-0 select-none shadow-xs border mt-0.5"
+                         :class="getUserColor(msg.user_id).avatar"
+                         :title="msg.user_name"
+                         x-text="msg.user_name ? msg.user_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : (msg.user_id == currentUserId ? 'ME' : 'U')">
+                    </div>
 
                     <!-- Bubble Column (Bubble + Sender Name + Timestamp) -->
                     <div class="flex flex-col min-w-0 max-w-full"
                          :class="msg.user_id == currentUserId ? 'items-end' : 'items-start'">
                         
-                        <!-- Sender Name (Only for other users) -->
-                        <template x-if="msg.user_id != currentUserId">
-                            <span class="block text-[11px] font-bold mb-0.5 px-1 tracking-tight select-none" 
-                                  :class="getUserColor(msg.user_id).name"
-                                  x-text="msg.user_name || 'User'"></span>
-                        </template>
+                        <!-- Sender Real Name -->
+                        <span class="block text-[11px] font-bold mb-0.5 px-1 tracking-tight select-none" 
+                              :class="msg.user_id == currentUserId ? (getUserColor(msg.user_id).name + ' text-right') : getUserColor(msg.user_id).name"
+                              x-text="msg.user_name || (msg.user_id == currentUserId ? 'Me' : 'User')"></span>
 
                         <!-- Bubble & Hover Action Container -->
                         <div class="flex items-center gap-1.5 group max-w-full"
