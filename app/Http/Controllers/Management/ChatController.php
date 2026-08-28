@@ -87,18 +87,6 @@ class ChatController extends Controller
             } else {
                 $messages = collect();
             }
-        } elseif ($request->has('q') && trim($request->input('q')) !== '') {
-            $q = trim($request->input('q'));
-            $messages = $query->where(function ($sub) use ($q) {
-                $sub->where('message', 'like', "%{$q}%")
-                    ->orWhere('file_name', 'like', "%{$q}%")
-                    ->orWhereHas('user', function ($u) use ($q) {
-                        $u->where('name', 'like', "%{$q}%");
-                    });
-            })
-            ->orderBy('id', 'asc')
-            ->take(50)
-            ->get();
         } else {
             if ($request->has('before_id') && $request->input('before_id')) {
                 $query->where('id', '<', $request->input('before_id'));
