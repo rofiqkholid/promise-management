@@ -37,7 +37,26 @@ class ChatController extends Controller
                 ->take(50)
                 ->get()
                 ->reverse()
-                ->values();
+        } elseif ($request->has('target_date') && filled($request->input('target_date'))) {
+            $targetDate = trim($request->input('target_date'));
+            $targetMsg = (clone $query)->where('created_at', '>=', $targetDate . ' 00:00:00')
+                ->orderBy('id', 'asc')
+                ->first();
+
+            if ($targetMsg) {
+                $targetId = $targetMsg->id;
+                if ($request->has('before_id') && $request->input('before_id')) {
+                    $query->where('id', '<', $request->input('before_id'));
+                }
+                $query->where('id', '>=', $targetId);
+                $messages = $query->orderBy('id', 'desc')
+                    ->take(50)
+                    ->get()
+                    ->reverse()
+                    ->values();
+            } else {
+                $messages = collect();
+            }
         } elseif ($request->has('target_id') && $request->input('target_id')) {
             $targetId = (int) $request->input('target_id');
             if ($request->has('before_id') && $request->input('before_id')) {

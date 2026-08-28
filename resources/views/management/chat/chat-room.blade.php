@@ -29,82 +29,65 @@
             </div>
         </div>
 
-        <div class="flex items-center gap-2">
-            <!-- Date Filter Popover Dropdown -->
+        <div class="flex items-center gap-1.5">
+            <!-- Search Toggle Button (Leftmost) -->
+            <button @click="showSearchBar = !showSearchBar; if (showSearchBar) { $nextTick(() => { $refs.chatSearchInput?.focus(); }); }"
+                    type="button" 
+                    class="h-7 px-2.5 text-[10px] font-semibold rounded-sm border transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                    :class="showSearchBar || searchQuery 
+                        ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 border-indigo-300 dark:border-indigo-800' 
+                        : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750'"
+                    title="Find messages (direct jump)">
+                <i class="fa-solid fa-magnifying-glass text-[9.5px] text-indigo-500"></i>
+                <span>Search</span>
+            </button>
+
+            <!-- Files & Links Direct Navigator -->
+            <button @click="jumpToMedia()"
+                    type="button" 
+                    class="h-7 px-2.5 text-[10px] font-semibold rounded-sm border bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                    title="Jump directly to files and links">
+                <i class="fa-solid fa-paperclip text-[9.5px] text-slate-500"></i>
+                <span>Files &amp; Links</span>
+            </button>
+
+            <!-- Date Direct Jump Dropdown (Right) -->
             <div class="relative" x-data="{ openDateMenu: false }" @click.outside="openDateMenu = false">
                 <button @click="openDateMenu = !openDateMenu" 
                         type="button" 
-                        class="px-2.5 py-1 text-[9.5px] font-bold rounded-sm border transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
-                        :class="selectedDateFilter !== 'all' 
-                            ? 'bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 border-indigo-300 dark:border-indigo-800' 
-                            : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750'">
-                    <i class="fa-solid fa-calendar-days text-[9px] text-indigo-500"></i>
-                    <span x-text="getDateFilterLabel()"></span>
-                    <i class="fa-solid fa-chevron-down text-[7.5px] opacity-60"></i>
+                        class="h-7 px-2.5 text-[10px] font-semibold rounded-sm border transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750"
+                        title="Jump directly to date in chat">
+                    <i class="fa-solid fa-calendar-days text-[9.5px] text-indigo-500"></i>
+                    <span>All Dates</span>
+                    <i class="fa-solid fa-chevron-down text-[7.5px] opacity-60 ml-0.5"></i>
                 </button>
 
                 <!-- Dropdown Menu -->
                 <div x-show="openDateMenu" 
                      class="absolute right-0 mt-1 w-44 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm shadow-xl z-50 py-1 text-xs"
                      x-cloak>
-                    <button type="button" @click="selectedDateFilter = 'all'; openDateMenu = false;" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-between text-[11px] cursor-pointer">
-                        <span>All Dates</span>
-                        <i x-show="selectedDateFilter === 'all'" class="fa-solid fa-check text-indigo-600 dark:text-indigo-400 text-[10px]"></i>
-                    </button>
-                    <button type="button" @click="selectedDateFilter = 'today'; openDateMenu = false;" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-between text-[11px] cursor-pointer">
+                    <button type="button" @click="jumpToDate('today'); openDateMenu = false;" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-between text-[11px] cursor-pointer">
                         <span>Today</span>
-                        <i x-show="selectedDateFilter === 'today'" class="fa-solid fa-check text-indigo-600 dark:text-indigo-400 text-[10px]"></i>
+                        <i class="fa-solid fa-arrow-down text-[9px] text-slate-400"></i>
                     </button>
-                    <button type="button" @click="selectedDateFilter = 'yesterday'; openDateMenu = false;" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-between text-[11px] cursor-pointer">
+                    <button type="button" @click="jumpToDate('yesterday'); openDateMenu = false;" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-between text-[11px] cursor-pointer">
                         <span>Yesterday</span>
-                        <i x-show="selectedDateFilter === 'yesterday'" class="fa-solid fa-check text-indigo-600 dark:text-indigo-400 text-[10px]"></i>
+                        <i class="fa-solid fa-arrow-down text-[9px] text-slate-400"></i>
                     </button>
-                    <button type="button" @click="selectedDateFilter = '7days'; openDateMenu = false;" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-between text-[11px] cursor-pointer">
+                    <button type="button" @click="jumpToDate('7days'); openDateMenu = false;" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-between text-[11px] cursor-pointer">
                         <span>Last 7 Days</span>
-                        <i x-show="selectedDateFilter === '7days'" class="fa-solid fa-check text-indigo-600 dark:text-indigo-400 text-[10px]"></i>
+                        <i class="fa-solid fa-arrow-down text-[9px] text-slate-400"></i>
                     </button>
                     <div class="border-t border-slate-200 dark:border-slate-700 my-1"></div>
                     <div class="px-3 py-1.5">
-                        <label class="block text-[9px] font-bold text-slate-500 uppercase mb-1">Specific Date</label>
+                        <label class="block text-[9px] font-bold text-slate-500 uppercase mb-1">Pick Date</label>
                         <input type="date" 
                                x-model="customDateFilter" 
-                               @change="selectedDateFilter = 'custom'; openDateMenu = false;"
+                               @change="jumpToDate('custom', customDateFilter); openDateMenu = false;"
                                class="w-full text-[11px] p-1 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-sm text-slate-800 dark:text-slate-200">
                     </div>
                 </div>
             </div>
-
-            <!-- Filter Segmented Tabs -->
-            <div class="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-sm border border-slate-300/60 dark:border-slate-700">
-                <button @click="showOnlyMediaAndLinks = false" 
-                        type="button" 
-                        class="px-2.5 py-0.5 text-[9.5px] font-bold rounded-sm transition-all cursor-pointer"
-                        :class="!showOnlyMediaAndLinks 
-                            ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-xs' 
-                            : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'">
-                    All
-                </button>
-                <button @click="showOnlyMediaAndLinks = true" 
-                        type="button" 
-                        class="px-2.5 py-0.5 text-[9.5px] font-bold rounded-sm transition-all cursor-pointer flex items-center gap-1"
-                        :class="showOnlyMediaAndLinks 
-                            ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-xs' 
-                            : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'">
-                    <i class="fa-solid fa-paperclip text-[8.5px]"></i> Files &amp; Links
-                </button>
-            </div>
-
-            <!-- Search Toggle Button -->
-            <button @click="showSearchBar = !showSearchBar; if (showSearchBar) { $nextTick(() => { $refs.chatSearchInput?.focus(); }); }"
-                    type="button" 
-                    class="px-2.5 py-1 text-[9.5px] font-bold rounded-sm border transition-all flex items-center gap-1 cursor-pointer shadow-2xs"
-                    :class="showSearchBar || searchQuery 
-                        ? 'bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 border-indigo-300 dark:border-indigo-800' 
-                        : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750'"
-                    title="Search messages">
-                <i class="fa-solid fa-magnifying-glass text-[9px] text-indigo-500"></i>
-                <span class="hidden sm:inline">Search</span>
-            </button>
         </div>
     </div>
 
