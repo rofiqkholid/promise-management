@@ -29,64 +29,85 @@
             </div>
         </div>
 
-        <div class="flex items-center gap-1.5">
-            <!-- Search Toggle Button (Leftmost) -->
+        <div class="flex items-center gap-1.5 sm:gap-2">
+            <!-- 1. Search Button (Left) -->
             <button @click="showSearchBar = !showSearchBar; if (showSearchBar) { $nextTick(() => { $refs.chatSearchInput?.focus(); }); }"
                     type="button" 
-                    class="h-7 px-2.5 text-[10px] font-semibold rounded-sm border transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                    class="h-[28px] px-2.5 text-[11px] font-semibold rounded-md border transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs select-none"
                     :class="showSearchBar || searchQuery 
-                        ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 border-indigo-300 dark:border-indigo-800' 
-                        : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750'"
-                    title="Find messages (direct jump)">
-                <i class="fa-solid fa-magnifying-glass text-[9.5px] text-indigo-500"></i>
-                <span>Search</span>
+                        ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 border-indigo-300 dark:border-indigo-700 shadow-xs' 
+                        : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750 hover:text-slate-900 dark:hover:text-white'"
+                    title="Search in conversation">
+                <i class="fa-solid fa-magnifying-glass text-[10px] text-indigo-500"></i>
+                <span class="inline">Search</span>
             </button>
 
-            <!-- Files & Links Direct Navigator -->
-            <button @click="jumpToMedia()"
-                    type="button" 
-                    class="h-7 px-2.5 text-[10px] font-semibold rounded-sm border bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
-                    title="Jump directly to files and links">
-                <i class="fa-solid fa-paperclip text-[9.5px] text-slate-500"></i>
-                <span>Files &amp; Links</span>
-            </button>
-
-            <!-- Date Direct Jump Dropdown (Right) -->
+            <!-- 2. Jump to Date Dropdown (Middle) -->
             <div class="relative" x-data="{ openDateMenu: false }" @click.outside="openDateMenu = false">
                 <button @click="openDateMenu = !openDateMenu" 
                         type="button" 
-                        class="h-7 px-2.5 text-[10px] font-semibold rounded-sm border transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750"
-                        title="Jump directly to date in chat">
-                    <i class="fa-solid fa-calendar-days text-[9.5px] text-indigo-500"></i>
-                    <span>All Dates</span>
-                    <i class="fa-solid fa-chevron-down text-[7.5px] opacity-60 ml-0.5"></i>
+                        class="h-[28px] px-2.5 text-[11px] font-semibold rounded-md border transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs select-none"
+                        :class="openDateMenu 
+                            ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 border-indigo-300 dark:border-indigo-700 shadow-xs' 
+                            : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750 hover:text-slate-900 dark:hover:text-white'"
+                        title="Jump to a specific date in history">
+                    <i class="fa-solid fa-calendar-days text-[10px] text-indigo-500"></i>
+                    <span x-text="getDateFilterLabel()"></span>
+                    <i class="fa-solid fa-chevron-down text-[8px] opacity-60 ml-0.5"></i>
                 </button>
 
                 <!-- Dropdown Menu -->
                 <div x-show="openDateMenu" 
-                     class="absolute right-0 mt-1 w-44 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm shadow-xl z-50 py-1 text-xs"
+                     x-transition:enter="transition ease-out duration-100"
+                     x-transition:enter-start="opacity-0 scale-95"
+                     x-transition:enter-end="opacity-100 scale-100"
+                     x-transition:leave="transition ease-in duration-75"
+                     x-transition:leave-start="opacity-100 scale-100"
+                     x-transition:leave-end="opacity-0 scale-95"
+                     class="absolute left-0 sm:right-0 sm:left-auto mt-1 w-48 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl z-50 py-1 text-xs"
                      x-cloak>
-                    <button type="button" @click="jumpToDate('today'); openDateMenu = false;" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-between text-[11px] cursor-pointer">
-                        <span>Today</span>
-                        <i class="fa-solid fa-arrow-down text-[9px] text-slate-400"></i>
+                    <div class="px-3 py-1 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                        Jump to Date
+                    </div>
+                    <button type="button" @click="jumpToDate('today'); openDateMenu = false;" class="w-full text-left px-3 py-1.5 hover:bg-indigo-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-between text-[11px] font-medium cursor-pointer transition-colors">
+                        <span class="flex items-center gap-2"><i class="fa-regular fa-calendar text-[10px] text-indigo-500"></i> Today</span>
                     </button>
-                    <button type="button" @click="jumpToDate('yesterday'); openDateMenu = false;" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-between text-[11px] cursor-pointer">
-                        <span>Yesterday</span>
-                        <i class="fa-solid fa-arrow-down text-[9px] text-slate-400"></i>
+                    <button type="button" @click="jumpToDate('yesterday'); openDateMenu = false;" class="w-full text-left px-3 py-1.5 hover:bg-indigo-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-between text-[11px] font-medium cursor-pointer transition-colors">
+                        <span class="flex items-center gap-2"><i class="fa-regular fa-calendar-minus text-[10px] text-indigo-500"></i> Yesterday</span>
                     </button>
-                    <button type="button" @click="jumpToDate('7days'); openDateMenu = false;" class="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-between text-[11px] cursor-pointer">
-                        <span>Last 7 Days</span>
-                        <i class="fa-solid fa-arrow-down text-[9px] text-slate-400"></i>
+                    <button type="button" @click="jumpToDate('7days'); openDateMenu = false;" class="w-full text-left px-3 py-1.5 hover:bg-indigo-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-between text-[11px] font-medium cursor-pointer transition-colors">
+                        <span class="flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left text-[10px] text-indigo-500"></i> Last 7 Days</span>
                     </button>
-                    <div class="border-t border-slate-200 dark:border-slate-700 my-1"></div>
+                    <div class="border-t border-slate-100 dark:border-slate-700 my-1"></div>
                     <div class="px-3 py-1.5">
-                        <label class="block text-[9px] font-bold text-slate-500 uppercase mb-1">Pick Date</label>
+                        <label class="block text-[9.5px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">Pick a Date</label>
                         <input type="date" 
                                x-model="customDateFilter" 
                                @change="jumpToDate('custom', customDateFilter); openDateMenu = false;"
-                               class="w-full text-[11px] p-1 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-sm text-slate-800 dark:text-slate-200">
+                               class="w-full text-[11px] px-2 py-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md text-slate-800 dark:text-slate-200 focus:outline-hidden focus:border-indigo-500 transition-colors">
                     </div>
                 </div>
+            </div>
+
+            <!-- 3. Segmented Pill Toggle (Right) -->
+            <div class="h-[28px] flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-md border border-slate-200 dark:border-slate-700 select-none">
+                <button @click="showOnlyMediaAndLinks = false" 
+                        type="button" 
+                        class="h-[22px] px-2.5 text-[11px] font-semibold rounded-sm transition-all cursor-pointer flex items-center justify-center"
+                        :class="!showOnlyMediaAndLinks 
+                            ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-xs font-bold' 
+                            : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'">
+                    All
+                </button>
+                <button @click="showOnlyMediaAndLinks = true" 
+                        type="button" 
+                        class="h-[22px] px-2.5 text-[11px] font-semibold rounded-sm transition-all cursor-pointer flex items-center gap-1.5 justify-center"
+                        :class="showOnlyMediaAndLinks 
+                            ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-xs font-bold' 
+                            : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'">
+                    <i class="fa-solid fa-paperclip text-[9.5px]"></i>
+                    <span>Files &amp; Links</span>
+                </button>
             </div>
         </div>
     </div>
@@ -207,33 +228,41 @@
                 </template>
 
                 <!-- Message Row (Top-aligned with Avatar on Top) -->
-                <!-- Message Row -->
-                <div class="flex items-start gap-2 max-w-[85%] w-full my-1"
+                <div class="flex items-start gap-2 max-w-[85%] w-full"
                      :id="'chat-bubble-' + msg.id"
-                     :class="msg.user_id == currentUserId ? 'self-end flex-row-reverse' : 'self-start flex-row'">
+                     :class="[
+                         msg.user_id == currentUserId ? 'self-end flex-row-reverse' : 'self-start flex-row',
+                         shouldShowMessageFooter(getFilteredMessages(), index) ? 'mb-2' : 'mb-0.5'
+                     ]">
                     
-                    <!-- Avatar (Shown for both self and others) -->
-                    <div class="w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] flex-shrink-0 select-none shadow-xs border mt-0.5"
-                         :class="getUserColor(msg.user_id).avatar"
-                         :title="msg.user_name"
-                         x-text="msg.user_name ? msg.user_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : (msg.user_id == currentUserId ? 'ME' : 'U')">
-                    </div>
+                    <!-- Avatar (Top aligned next to bubble, shown on top/first of message group) -->
+                    <template x-if="shouldShowAvatar(getFilteredMessages(), index)">
+                        <div class="w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] flex-shrink-0 select-none shadow-xs border mt-0.5"
+                             :class="getUserColor(msg.user_id).avatar"
+                             x-text="msg.user_name ? msg.user_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : (msg.user_id == currentUserId ? 'ME' : 'U')">
+                        </div>
+                    </template>
+                    <template x-if="!shouldShowAvatar(getFilteredMessages(), index)">
+                        <div class="w-7 h-7 flex-shrink-0"></div>
+                    </template>
 
-                    <!-- Bubble Column (Bubble + Sender Name + Timestamp) -->
+                    <!-- Bubble Column (Bubble + Outside Timestamp/Check) -->
                     <div class="flex flex-col min-w-0 max-w-full"
                          :class="msg.user_id == currentUserId ? 'items-end' : 'items-start'">
                         
-                        <!-- Sender Real Name -->
-                        <span class="block text-[11px] font-bold mb-0.5 px-1 tracking-tight select-none" 
-                              :class="msg.user_id == currentUserId ? (getUserColor(msg.user_id).name + ' text-right') : getUserColor(msg.user_id).name"
-                              x-text="msg.user_name || (msg.user_id == currentUserId ? 'Me' : 'User')"></span>
+                        <!-- Sender Name (Placed Outside and ABOVE the Bubble, real name always) -->
+                        <template x-if="shouldShowAvatar(getFilteredMessages(), index)">
+                            <span class="block text-[10.5px] font-extrabold mb-1 px-1 tracking-wide select-none" 
+                                  :class="msg.user_id == currentUserId ? (getUserColor(msg.user_id).name + ' text-right') : getUserColor(msg.user_id).name"
+                                  x-text="msg.user_name || (msg.user_id == currentUserId ? 'Me' : 'User')"></span>
+                        </template>
 
-                        <!-- Bubble & Hover Action Container -->
+                        <!-- Bubble & Hover Action Container (Action buttons appear in front of bubble) -->
                         <div class="flex items-center gap-1.5 group max-w-full"
                              :class="msg.user_id == currentUserId ? 'flex-row-reverse' : 'flex-row'">
                             
                             <!-- Bubble Box -->
-                            <div class="px-3 py-2 text-xs shadow-xs relative flex flex-col w-auto max-w-full"
+                            <div class="px-3.5 py-2 text-xs shadow-xs relative flex flex-col w-auto max-w-full"
                                  :class="msg.user_id == currentUserId ? 'chat-bubble-out' : 'chat-bubble-in'">
                                 
                                 <!-- Quoted / Reply Preview Box (Clickable to jump to original message) -->
@@ -392,14 +421,16 @@
                             </div>
                         </div>
 
-                        <!-- Timestamp and Checkmark Status -->
-                        <div class="flex items-center gap-1 mt-0.5 px-1 text-[9.5px] select-none font-medium text-slate-400 dark:text-slate-500"
-                             :class="msg.user_id == currentUserId ? 'justify-end' : 'justify-start'">
-                            <span x-text="formatTime(msg.created_at)"></span>
-                            <template x-if="msg.user_id == currentUserId">
-                                <i class="fa-solid fa-check-double text-[9px] text-[#007aff] dark:text-blue-400"></i>
-                            </template>
-                        </div>
+                        <!-- Outside Timestamp and Checkmark Status (Shown only on last message of group) -->
+                        <template x-if="shouldShowMessageFooter(getFilteredMessages(), index)">
+                            <div class="flex items-center gap-1 mt-0.5 px-1.5 text-[9.5px] select-none font-medium text-slate-400 dark:text-slate-500"
+                                 :class="msg.user_id == currentUserId ? 'justify-end' : 'justify-start'">
+                                <span x-text="formatTime(msg.created_at)"></span>
+                                <template x-if="msg.user_id == currentUserId">
+                                    <i class="fa-solid fa-check-double text-[9px] text-[#007aff] dark:text-blue-400"></i>
+                                </template>
+                            </div>
+                        </template>
                     </div>
                 </div>
             </div>

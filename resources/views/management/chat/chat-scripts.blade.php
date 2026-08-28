@@ -47,20 +47,20 @@
     .chat-bubble-out {
         background-color: #007aff !important;
         color: #ffffff !important;
-        border-radius: 14px 14px 3px 14px !important;
-        box-shadow: 0 1px 2px 0 rgba(0, 122, 255, 0.15) !important;
+        border-radius: 1.15rem 0.25rem 1.15rem 1.15rem !important;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
     }
     .chat-bubble-in {
         background-color: #ffffff !important;
         color: #1e293b !important;
-        border-radius: 14px 14px 14px 3px !important;
-        border: 1px solid rgba(226, 232, 240, 0.9) !important;
+        border-radius: 0.25rem 1.15rem 1.15rem 1.15rem !important;
+        border: 1px solid rgba(226, 232, 240, 0.85) !important;
         box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04) !important;
     }
     .dark .chat-bubble-in {
         background-color: #1e293b !important;
         color: #f1f5f9 !important;
-        border-color: rgba(51, 65, 85, 0.9) !important;
+        border-color: rgba(51, 65, 85, 0.85) !important;
     }
 
     /* Markdown content inside bubbles styling with high specificity */
@@ -537,113 +537,185 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
             }
         },
 
-        jumpToDate(period, customDate = null) {
+        jumpToDate(mode, customDate = null) {
             if (!this.chatId) return;
+            this.selectedDateFilter = mode;
+            if (customDate) this.customDateFilter = customDate;
 
             const now = new Date();
             const pad = n => String(n).padStart(2, '0');
             const todayStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 
-            const yest = new Date();
-            yest.setDate(now.getDate() - 1);
-            const yestStr = `${yest.getFullYear()}-${pad(yest.getMonth() + 1)}-${pad(yest.getDate())}`;
+            let targetDateStr = '';
+            let dateLabel = '';
 
-            let targetDateStr = null;
-            let targetLabel = 'selected date';
-
-            if (period === 'today') {
+            if (mode === 'today') {
                 targetDateStr = todayStr;
-                targetLabel = 'Today';
-            } else if (period === 'yesterday') {
-                targetDateStr = yestStr;
-                targetLabel = 'Yesterday';
-            } else if (period === '7days') {
+                dateLabel = 'Today';
+            } else if (mode === 'yesterday') {
+                const yest = new Date();
+                yest.setDate(now.getDate() - 1);
+                targetDateStr = `${yest.getFullYear()}-${pad(yest.getMonth() + 1)}-${pad(yest.getDate())}`;
+                dateLabel = 'Yesterday';
+            } else if (mode === '7days') {
                 const sevenDaysAgo = new Date();
                 sevenDaysAgo.setDate(now.getDate() - 7);
-                sevenDaysAgo.setHours(0, 0, 0, 0);
                 targetDateStr = `${sevenDaysAgo.getFullYear()}-${pad(sevenDaysAgo.getMonth() + 1)}-${pad(sevenDaysAgo.getDate())}`;
-                targetLabel = 'Last 7 Days';
-            } else if (period === 'custom' && customDate) {
+                dateLabel = 'Last 7 Days';
+            } else if (mode === 'custom' && customDate) {
                 targetDateStr = customDate;
-                targetLabel = customDate;
+                dateLabel = customDate;
             }
 
             if (!targetDateStr) return;
 
-            // 1. Check if matching message exists in already-loaded DOM messages
-            const match = this.chatMessages.find(m => m.created_at && m.created_at.startsWith(targetDateStr));
-            if (match) {
-                this.jumpToMessage(match.id);
-                return;
-            }
-
-            // 2. Fetch older history for target date from server
-            const url = `{{ url('management/chats') }}/${this.chatType}/${this.chatId}?target_date=${encodeURIComponent(targetDateStr)}`;
-            fetch(url, {
-                headers: this.getApiHeaders()
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (data.success && Array.isArray(data.messages) && data.messages.length > 0) {
-                    const existingIds = new Set(this.chatMessages.map(m => Number(m.id)));
-                    const newMessages = data.messages.filter(m => !existingIds.has(Number(m.id)));
-                    if (newMessages.length > 0) {
-                        this.chatMessages = [...newMessages, ...this.chatMessages];
-                        this.oldestChatId = this.chatMessages[0].id;
-                    }
-                    this.$nextTick(() => {
-                        const targetMsg = data.messages[0];
-                        if (targetMsg) this.jumpToMessage(targetMsg.id);
-                    });
-                } else {
-                    if (typeof showToast === 'function') {
-                        showToast(`No messages found for ${targetLabel}.`, 'info');
-                    }
-                }
-            })
-            .catch(() => {
-                if (typeof showToast === 'function') {
-                    showToast(`Failed to load messages for ${targetLabel}.`, 'error');
-                }
+            // Search in currently loaded messages (find earliest message matching or >= targetDateStr)
+            const matchMsg = this.chatMessages.find(m => {
+                if (!m.created_at) return false;
+                const mDate = m.created_at.substring(0, 10);
+                return mDate >= targetDateStr;
             });
+
+            if (matchMsg) {
+                this.jumpToMessage(matchMsg.id);
+            } else {
+                // If not in currently loaded batch, fetch from server and jump directly
+                fetch(`{{ url('management/chats') }}/${this.chatType}/${this.chatId}?target_date=${targetDateStr}&limit=30`, {
+                    headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success && Array.isArray(data.messages) && data.messages.length > 0) {
+                        const existingIds = new Set(this.chatMessages.map(m => Number(m.id)));
+                        const newMsgs = data.messages.filter(m => !existingIds.has(Number(m.id)));
+                        this.chatMessages = [...newMsgs, ...this.chatMessages].sort((a, b) => Number(a.id) - Number(b.id));
+                        this.oldestChatId = this.chatMessages.length > 0 ? this.chatMessages[0].id : null;
+                        this.hasMoreChats = data.has_more !== undefined ? data.has_more : this.hasMoreChats;
+                        
+                        this.$nextTick(() => {
+                            const firstMatch = this.chatMessages.find(m => m.created_at && m.created_at.substring(0, 10) >= targetDateStr);
+                            if (firstMatch) {
+                                this.jumpToMessage(firstMatch.id);
+                            }
+                        });
+                    } else {
+                        if (typeof showToast === 'function') {
+                            showToast(`No messages found on or after ${dateLabel}`, 'info');
+                        }
+                    }
+                })
+                .catch(() => {});
+            }
         },
 
-        jumpToMedia() {
-            if (!this.chatMessages || this.chatMessages.length === 0) {
-                if (typeof showToast === 'function') showToast('No messages in this chat room yet.', 'info');
-                return;
+        getDateFilterLabel() {
+            if (this.selectedDateFilter === 'today') return 'Today';
+            if (this.selectedDateFilter === 'yesterday') return 'Yesterday';
+            if (this.selectedDateFilter === '7days') return 'Last 7 Days';
+            if (this.selectedDateFilter === 'custom' && this.customDateFilter) {
+                const parts = this.customDateFilter.split('-');
+                if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+                return this.customDateFilter;
             }
+            return 'Jump to Date';
+        },
 
-            // Find all loaded messages with attachments or URLs
-            const mediaMessages = this.chatMessages.filter(msg => {
-                const hasFile = !!msg.file_path;
-                const hasLink = msg.message && (msg.message.includes('http://') || msg.message.includes('https://') || msg.message.includes('www.'));
-                return hasFile || hasLink;
-            });
+        formatTime(dateStr) {
+            if (!dateStr) return '';
+            const normalized = dateStr.replace(/-/g, '/');
+            const d = new Date(normalized);
+            if (isNaN(d.getTime())) return dateStr;
+            const hours = String(d.getHours()).padStart(2, '0');
+            const minutes = String(d.getMinutes()).padStart(2, '0');
+            return `${hours}:${minutes}`;
+        },
 
-            if (mediaMessages.length === 0) {
-                if (typeof showToast === 'function') showToast('No files or links found in recent messages.', 'info');
-                return;
-            }
+        getDateDivider(dateStr) {
+            if (!dateStr) return '';
+            const normalized = dateStr.substring(0, 10);
+            const parts = normalized.split('-');
+            if (parts.length !== 3) return normalized;
 
-            // Cycle through media messages
-            if (this.currentMediaIndex === undefined || this.currentMediaIndex === null || this.currentMediaIndex < 0 || this.currentMediaIndex >= mediaMessages.length) {
-                this.currentMediaIndex = mediaMessages.length - 1; // Start at most recent media
-            } else {
-                this.currentMediaIndex = (this.currentMediaIndex - 1 + mediaMessages.length) % mediaMessages.length;
-            }
+            const date = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+            if (isNaN(date.getTime())) return normalized;
 
-            const target = mediaMessages[this.currentMediaIndex];
-            if (target) {
-                this.jumpToMessage(target.id);
-                if (typeof showToast === 'function' && mediaMessages.length > 1) {
-                    showToast(`Jumped to file/link (${this.currentMediaIndex + 1} of ${mediaMessages.length})`, 'info');
-                }
-            }
+            const today = new Date();
+            const yesterday = new Date();
+            yesterday.setDate(today.getDate() - 1);
+
+            const isSameDay = (d1, d2) => d1.getFullYear() === d2.getFullYear() && d1.getMonth() === d2.getMonth() && d1.getDate() === d2.getDate();
+
+            if (isSameDay(date, today)) return 'Today';
+            if (isSameDay(date, yesterday)) return 'Yesterday';
+
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            
+            return `${days[date.getDay()]}, ${date.getDate()} ${months[date.getMonth()]}`;
+        },
+
+        shouldShowDateDivider(messages, index) {
+            if (!messages || messages.length === 0 || index === 0) return true;
+            const current = messages[index];
+            const prev = messages[index - 1];
+            if (!current || !prev || !current.created_at || !prev.created_at) return false;
+            
+            const curDate = current.created_at.substring(0, 10);
+            const prevDate = prev.created_at.substring(0, 10);
+            return curDate !== prevDate;
+        },
+
+        shouldShowMessageFooter(messages, index) {
+            if (!messages || index >= messages.length - 1) return true;
+            const current = messages[index];
+            const next = messages[index + 1];
+            if (!current || !next) return true;
+
+            // If next message has a date divider after it, show footer
+            if (this.shouldShowDateDivider(messages, index + 1)) return true;
+            
+            // If next message is from a different user, show footer
+            if (Number(current.user_id) !== Number(next.user_id)) return true;
+            
+            // If next message is sent in a different minute, show footer
+            const curTime = current.created_at ? current.created_at.substring(0, 16) : '';
+            const nextTime = next.created_at ? next.created_at.substring(0, 16) : '';
+            return curTime !== nextTime;
+        },
+
+        shouldShowAvatar(messages, index) {
+            if (!messages || index === 0) return true;
+            const current = messages[index];
+            const prev = messages[index - 1];
+            if (!current || !prev) return true;
+
+            // If current message has a date divider above it, show avatar
+            if (this.shouldShowDateDivider(messages, index)) return true;
+
+            // If previous message is from a different user, show avatar
+            if (Number(current.user_id) !== Number(prev.user_id)) return true;
+
+            // If time (minute) changed from previous message, show avatar
+            const curTime = current.created_at ? current.created_at.substring(0, 16) : '';
+            const prevTime = prev.created_at ? prev.created_at.substring(0, 16) : '';
+            if (curTime !== prevTime) return true;
+
+            return false;
         },
 
         getFilteredMessages() {
-            return this.chatMessages;
+            let list = this.chatMessages;
+
+            // Filter by Media / Links toggle only
+            if (this.showOnlyMediaAndLinks) {
+                list = list.filter(msg => {
+                    const hasFile = !!msg.file_path;
+                    const hasLink = msg.message && (msg.message.includes('http://') || msg.message.includes('https://') || msg.message.includes('www.'));
+                    return hasFile || hasLink;
+                });
+            }
+
+            return list;
         },
 
         // Reply / Quoting

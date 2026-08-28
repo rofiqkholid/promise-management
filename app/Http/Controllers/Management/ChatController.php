@@ -38,26 +38,6 @@ class ChatController extends Controller
                 ->get()
                 ->reverse()
                 ->values();
-        } elseif ($request->has('target_date') && filled($request->input('target_date'))) {
-            $targetDate = trim($request->input('target_date'));
-            $targetMsg = (clone $query)->where('created_at', '>=', $targetDate . ' 00:00:00')
-                ->orderBy('id', 'asc')
-                ->first();
-
-            if ($targetMsg) {
-                $targetId = $targetMsg->id;
-                if ($request->has('before_id') && $request->input('before_id')) {
-                    $query->where('id', '<', $request->input('before_id'));
-                }
-                $query->where('id', '>=', $targetId);
-                $messages = $query->orderBy('id', 'desc')
-                    ->take(50)
-                    ->get()
-                    ->reverse()
-                    ->values();
-            } else {
-                $messages = collect();
-            }
         } elseif ($request->has('target_id') && $request->input('target_id')) {
             $targetId = (int) $request->input('target_id');
             if ($request->has('before_id') && $request->input('before_id')) {
@@ -69,6 +49,39 @@ class ChatController extends Controller
                 ->get()
                 ->reverse()
                 ->values();
+        } elseif ($request->has('target_date') && $request->input('target_date')) {
+            $targetDate = $request->input('target_date');
+            // Find earliest message on or after targetDate
+            $targetMsg = Chat::where('chatable_type', $type)
+                ->where('chatable_id', $id)
+                ->whereDate('created_at', '>=', $targetDate)
+                ->orderBy('id', 'asc')
+                ->first();
+
+            if ($targetMsg) {
+                // Fetch window around and after targetMsg
+                $limit = (int) $request->input('limit', 30);
+                $messages = Chat::where('chatable_type', $type)
+                    ->where('chatable_id', $id)
+                    ->where('id', '>=', $targetMsg->id)
+                    ->orderBy('id', 'asc')
+                    ->take($limit)
+                    ->get();
+            } else {
+                $messages = collect();
+            }
+        } elseif ($request->has('q') && trim($request->input('q')) !== '') {
+            $q = trim($request->input('q'));
+            $messages = $query->where(function ($sub) use ($q) {
+                $sub->where('message', 'like', "%{$q}%")
+                    ->orWhere('file_name', 'like', "%{$q}%")
+                    ->orWhereHas('user', function ($u) use ($q) {
+                        $u->where('name', 'like', "%{$q}%");
+                    });
+            })
+            ->orderBy('id', 'asc')
+            ->take(50)
+            ->get();
         } else {
             if ($request->has('before_id') && $request->input('before_id')) {
                 $query->where('id', '<', $request->input('before_id'));
