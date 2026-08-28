@@ -33,10 +33,10 @@
                     type="button" 
                     class="h-[28px] w-[28px] flex items-center justify-center rounded-md border transition-all cursor-pointer shadow-2xs select-none"
                     :class="showSearchBar || searchQuery 
-                        ? 'bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 border-indigo-300 dark:border-indigo-800 shadow-xs' 
-                        : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750 hover:text-slate-900 dark:hover:text-white'"
+                        ? 'bg-indigo-100 dark:bg-indigo-900/70 text-indigo-700 dark:text-indigo-300 border-indigo-300 dark:border-indigo-700 shadow-xs' 
+                        : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'"
                     title="Search messages">
-                <i class="fa-solid fa-magnifying-glass text-[11px]" :class="showSearchBar || searchQuery ? 'text-indigo-600 dark:text-indigo-400' : 'text-indigo-500 dark:text-indigo-400'"></i>
+                <i class="fa-solid fa-magnifying-glass text-[11px]" :class="showSearchBar || searchQuery ? 'text-indigo-600 dark:text-indigo-300' : 'text-indigo-500 dark:text-indigo-400'"></i>
             </button>
 
             <!-- 2. Jump to Date Dropdown -->
@@ -45,8 +45,8 @@
                         type="button" 
                         class="h-[28px] px-2 flex items-center justify-center gap-1.5 rounded-md border transition-all cursor-pointer shadow-2xs select-none"
                         :class="openDateMenu 
-                            ? 'bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 border-indigo-300 dark:border-indigo-800 shadow-xs' 
-                            : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750 hover:text-slate-900 dark:hover:text-white'"
+                            ? 'bg-indigo-100 dark:bg-indigo-900/70 text-indigo-700 dark:text-indigo-300 border-indigo-300 dark:border-indigo-700 shadow-xs' 
+                            : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'"
                         title="Jump to date">
                     <i class="fa-solid fa-calendar-days text-[11px] text-indigo-500 dark:text-indigo-400"></i>
                     <i class="fa-solid fa-chevron-down text-[7.5px] opacity-60"></i>
@@ -112,8 +112,8 @@
                         type="button" 
                         class="h-[28px] px-2.5 flex items-center justify-center gap-1.5 rounded-md border transition-all cursor-pointer shadow-2xs select-none"
                         :class="showDetailPanel 
-                            ? 'bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 border-indigo-300 dark:border-indigo-800 shadow-xs font-bold' 
-                            : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750 hover:text-slate-900 dark:hover:text-white'"
+                            ? 'bg-indigo-100 dark:bg-indigo-900/70 text-indigo-700 dark:text-indigo-300 border-indigo-300 dark:border-indigo-700 shadow-xs font-bold' 
+                            : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'"
                         :title="showDetailPanel ? 'Hide Room Details' : 'Show Room Details'">
                     <i class="fa-solid fa-circle-info text-[11px] text-indigo-500 dark:text-indigo-400"></i>
                     <span class="text-[11px] font-semibold hidden sm:inline">Details</span>
@@ -130,7 +130,7 @@
          x-transition:leave="transition ease-in duration-100"
          x-transition:leave-start="opacity-100 translate-y-0"
          x-transition:leave-end="opacity-0 -translate-y-2"
-         class="px-4 py-2 bg-slate-50 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 z-10 flex-shrink-0"
+         class="px-4 py-2 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 z-10 flex-shrink-0"
          x-cloak>
         <div class="relative flex-1 flex items-center">
             <i class="fa-solid fa-magnifying-glass absolute left-2.5 text-slate-400 text-xs"></i>
@@ -648,21 +648,21 @@
              x-cloak>
             
             <!-- Detail Panel Top Header -->
-            <div class="px-3.5 py-2.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-850 flex-shrink-0">
+            <div class="px-3.5 py-2.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-900 flex-shrink-0">
                 <div class="flex items-center gap-2">
                     <i class="fa-solid fa-circle-info text-indigo-600 dark:text-indigo-400 text-xs"></i>
                     <h4 class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider">Room Details</h4>
                 </div>
                 <button @click="showDetailPanel = false" 
                         type="button"
-                        class="w-6 h-6 flex items-center justify-center rounded-sm text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-750 transition-colors text-base cursor-pointer">
+                        class="w-6 h-6 flex items-center justify-center rounded-sm text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors text-base cursor-pointer">
                     &times;
                 </button>
             </div>
 
             <!-- Detail Panel Segmented Tabs -->
             <div class="px-3 py-2 bg-slate-50/70 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex-shrink-0">
-                <div class="flex items-center gap-0.5 p-0.5 bg-slate-200/60 dark:bg-slate-800/80 rounded-md border border-slate-200 dark:border-slate-700/60 select-none">
+                <div class="flex items-center gap-0.5 p-0.5 bg-slate-200/60 dark:bg-slate-800 rounded-md border border-slate-200 dark:border-slate-700/60 select-none">
                     <button @click="activeDetailTab = 'info'" 
                             type="button" 
                             class="flex-1 py-1 text-[11px] font-semibold rounded-sm transition-all cursor-pointer flex items-center justify-center gap-1.5"
@@ -681,7 +681,7 @@
                         <i class="fa-solid fa-paperclip text-[10px]"></i>
                         <span>Files</span>
                         <span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold" 
-                              :class="activeDetailTab === 'files' ? 'bg-blue-50 dark:bg-blue-950/80 text-[#0c4da2] dark:text-blue-300' : 'bg-slate-200/80 dark:bg-slate-750 text-slate-500 dark:text-slate-400'"
+                              :class="activeDetailTab === 'files' ? 'bg-blue-50 dark:bg-blue-900/60 text-[#0c4da2] dark:text-blue-300' : 'bg-slate-200/80 dark:bg-slate-700 text-slate-500 dark:text-slate-400'"
                               x-text="getSharedFilesList().length"></span>
                     </button>
                     <button @click="activeDetailTab = 'members'" 
@@ -693,7 +693,7 @@
                         <i class="fa-solid fa-users text-[10px]"></i>
                         <span>Members</span>
                         <span class="px-1.5 py-0.2 rounded-full text-[9px] font-bold"
-                              :class="activeDetailTab === 'members' ? 'bg-blue-50 dark:bg-blue-950/80 text-[#0c4da2] dark:text-blue-300' : 'bg-slate-200/80 dark:bg-slate-750 text-slate-500 dark:text-slate-400'"
+                              :class="activeDetailTab === 'members' ? 'bg-blue-50 dark:bg-blue-900/60 text-[#0c4da2] dark:text-blue-300' : 'bg-slate-200/80 dark:bg-slate-700 text-slate-500 dark:text-slate-400'"
                               x-text="getUniqueParticipants().length"></span>
                     </button>
                 </div>
@@ -844,7 +844,7 @@
                                 </div>
                                 <button type="button" 
                                         @click="chatInputMessage = (chatInputMessage ? chatInputMessage + ' ' : '') + '@' + user.name + ' '; $refs.chatInput?.focus();"
-                                        class="px-1.5 py-0.5 bg-slate-100 hover:bg-indigo-50 dark:bg-slate-750 dark:hover:bg-slate-700 text-slate-600 hover:text-indigo-600 dark:text-slate-300 font-bold text-[9.5px] rounded-sm transition-colors cursor-pointer flex-shrink-0"
+                                        class="px-1.5 py-0.5 bg-slate-100 hover:bg-indigo-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 hover:text-indigo-400 dark:text-slate-300 font-bold text-[9.5px] rounded-sm transition-colors cursor-pointer flex-shrink-0"
                                         title="Mention in chat">
                                     @Mention
                                 </button>
