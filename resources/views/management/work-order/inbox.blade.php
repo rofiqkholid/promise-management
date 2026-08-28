@@ -347,23 +347,31 @@
                                                     {{-- Table Column Headers (Directly under Task Name) --}}
                                                     <div class="grid grid-cols-12 items-center px-4 py-2 bg-slate-50/80 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-[11px] font-semibold text-slate-500 dark:text-slate-400 select-none">
                                                         <div class="col-span-4 flex items-center gap-2">
-                                                            <i class="fa-solid fa-list-check text-slate-400 text-xs"></i>
-                                                            <span>Task</span>
+                                                            {{-- Select All Checkbox for PIC --}}
+                                                            <template x-if="(dept.is_my_pic_task === true || dept.is_my_pic_task === 1) && (detailData.status === 'Approved' || detailData.status === 'Released')">
+                                                                <input type="checkbox" 
+                                                                       :checked="isAllProductsChecked(proc.process_id, dept.department_id)"
+                                                                       @change="toggleSelectAllProducts(proc.process_id, dept.department_id, $event.target.checked)"
+                                                                       title="Select / Unselect All Products"
+                                                                       class="h-3.5 w-3.5 rounded-md border-slate-300 dark:border-slate-600 text-[#0c4da2] focus:ring-0 cursor-pointer">
+                                                            </template>
+                                                            <i class="fa-solid fa-barcode text-slate-400 text-xs"></i>
+                                                            <span>Part No</span>
                                                         </div>
-                                                        <div class="col-span-2 flex items-center gap-1.5">
-                                                            <i class="fa-solid fa-folder text-slate-400 text-xs"></i>
+                                                        <div class="col-span-4 flex items-center gap-1.5">
+                                                            <i class="fa-solid fa-cube text-slate-400 text-xs"></i>
+                                                            <span>Part Name</span>
+                                                        </div>
+                                                        <div class="col-span-1 flex items-center gap-1.5">
+                                                            <i class="fa-solid fa-building text-slate-400 text-xs"></i>
                                                             <span>Dept</span>
                                                         </div>
-                                                        <div class="col-span-3 flex items-center gap-1.5">
-                                                            <i class="fa-solid fa-file-lines text-slate-400 text-xs"></i>
-                                                            <span>Description</span>
-                                                        </div>
                                                         <div class="col-span-1 text-center">
-                                                            <i class="fa-solid fa-user text-slate-400 text-xs" title="Assignee"></i>
+                                                            <i class="fa-solid fa-user text-slate-400 text-xs" title="PIC / Assignee"></i>
                                                         </div>
                                                         <div class="col-span-2 text-right flex items-center justify-end gap-1.5">
-                                                            <i class="fa-solid fa-chart-pie text-slate-400 text-xs"></i>
-                                                            <span>Progress</span>
+                                                            <i class="fa-solid fa-circle-check text-slate-400 text-xs"></i>
+                                                            <span>Status</span>
                                                         </div>
                                                     </div>
 
@@ -373,7 +381,7 @@
                                                             <div class="grid grid-cols-12 items-center px-4 py-2 text-xs transition-colors hover:bg-slate-50/80 dark:hover:bg-slate-800/40"
                                                                  :class="dept.checked_product_ids.includes(Number(p.id)) ? 'bg-emerald-50/15 dark:bg-emerald-950/10' : ''">
                                                                 
-                                                                {{-- Col 1: Tree line, Checkbox, and Part Number --}}
+                                                                {{-- Col 1: Part Number --}}
                                                                 <div class="col-span-4 flex items-center gap-2 pl-2 min-w-0 pr-2">
                                                                     <span class="text-slate-300 dark:text-slate-600 text-xs font-mono select-none">└</span>
                                                                     
@@ -400,13 +408,13 @@
                                                                           x-text="p.customer_part_no"></span>
                                                                 </div>
 
-                                                                {{-- Col 2: Dept Code --}}
-                                                                <div class="col-span-2">
-                                                                    <span class="text-[10px] text-slate-500 dark:text-slate-400 font-mono" x-text="dept.department_code"></span>
-                                                                </div>
+                                                                {{-- Col 2: Part Name --}}
+                                                                <div class="col-span-4 truncate text-slate-600 dark:text-slate-300 pr-2" x-text="p.customer_part_name"></div>
 
-                                                                {{-- Col 3: Part Name / Description --}}
-                                                                <div class="col-span-3 truncate text-slate-500 dark:text-slate-400" x-text="p.customer_part_name"></div>
+                                                                {{-- Col 3: Dept Code --}}
+                                                                <div class="col-span-1">
+                                                                    <span class="text-[10px] text-slate-500 dark:text-slate-400 font-mono font-semibold" x-text="dept.department_code"></span>
+                                                                </div>
 
                                                                 {{-- Col 4: Assignee Avatar --}}
                                                                 <div class="col-span-1 flex justify-center">
@@ -415,7 +423,7 @@
                                                                          x-text="dept.pic_name ? dept.pic_name.split(' ').map(n => n[0]).slice(0, 2).join('') : 'P'"></div>
                                                                 </div>
 
-                                                                {{-- Col 5: Status / Progress --}}
+                                                                {{-- Col 5: Status --}}
                                                                 <div class="col-span-2 text-right flex items-center justify-end gap-1.5">
                                                                     <i class="text-xs" 
                                                                        :class="dept.checked_product_ids.includes(Number(p.id)) ? 'fa-solid fa-circle-check text-emerald-500' : 'fa-regular fa-circle text-slate-300 dark:text-slate-600'"></i>
