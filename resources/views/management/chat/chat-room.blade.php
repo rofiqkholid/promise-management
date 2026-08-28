@@ -29,31 +29,29 @@
             </div>
         </div>
 
-        <div class="flex items-center gap-1.5 sm:gap-2">
-            <!-- 1. Search Button (Left) -->
+        <div class="flex items-center gap-1 sm:gap-1.5">
+            <!-- 1. Search Button (Icon-only) -->
             <button @click="showSearchBar = !showSearchBar; if (showSearchBar) { $nextTick(() => { $refs.chatSearchInput?.focus(); }); }"
                     type="button" 
-                    class="h-[28px] px-2.5 text-[11px] font-semibold rounded-md border transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs select-none"
+                    class="h-[28px] w-[28px] flex items-center justify-center rounded-md border transition-all cursor-pointer shadow-2xs select-none"
                     :class="showSearchBar || searchQuery 
                         ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 border-indigo-300 dark:border-indigo-700 shadow-xs' 
                         : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750 hover:text-slate-900 dark:hover:text-white'"
-                    title="Search in conversation">
-                <i class="fa-solid fa-magnifying-glass text-[10px] text-indigo-500"></i>
-                <span class="inline">Search</span>
+                    title="Search messages">
+                <i class="fa-solid fa-magnifying-glass text-[11px] text-indigo-500"></i>
             </button>
 
-            <!-- 2. Jump to Date Dropdown (Middle) -->
+            <!-- 2. Jump to Date Dropdown (Icon-only with mini chevron) -->
             <div class="relative" x-data="{ openDateMenu: false }" @click.outside="openDateMenu = false">
                 <button @click="openDateMenu = !openDateMenu" 
                         type="button" 
-                        class="h-[28px] px-2.5 text-[11px] font-semibold rounded-md border transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs select-none"
+                        class="h-[28px] px-1.5 flex items-center justify-center gap-1 rounded-md border transition-all cursor-pointer shadow-2xs select-none"
                         :class="openDateMenu 
                             ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 border-indigo-300 dark:border-indigo-700 shadow-xs' 
                             : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750 hover:text-slate-900 dark:hover:text-white'"
-                        title="Jump to a specific date in history">
-                    <i class="fa-solid fa-calendar-days text-[10px] text-indigo-500"></i>
-                    <span x-text="getDateFilterLabel()"></span>
-                    <i class="fa-solid fa-chevron-down text-[8px] opacity-60 ml-0.5"></i>
+                        title="Jump to date">
+                    <i class="fa-solid fa-calendar-days text-[11px] text-indigo-500"></i>
+                    <i class="fa-solid fa-chevron-down text-[7.5px] opacity-60"></i>
                 </button>
 
                 <!-- Dropdown Menu -->
