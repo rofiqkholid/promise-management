@@ -1394,50 +1394,38 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
         previewDoc(url, name, fileType = '') {
             if (!url) return;
             if (this.isImageType(fileType, name)) {
+                // 1. Leverage existing chat image Viewer instance if element exists in DOM
+                const existingImg = this.$el?.querySelector(`img.chat-image-thumb[data-original="${url}"], img.chat-image-thumb[src="${url}"]`);
+                if (existingImg) {
+                    existingImg.click();
+                    return;
+                }
+
+                // 2. Direct Viewer.js instantiation fallback
                 if (typeof Viewer !== 'undefined') {
-                    const img = new Image();
-                    img.src = url;
-                    img.alt = name || 'Image Preview';
-                    const viewer = new Viewer(img, {
-                        hidden() {
-                            viewer.destroy();
-                        },
+                    const tempImg = new Image();
+                    tempImg.src = url;
+                    tempImg.alt = name || 'Image Preview';
+                    const viewer = new Viewer(tempImg, {
+                        hidden() { viewer.destroy(); },
                         navbar: false,
                         title: true,
-                        toolbar: {
-                            zoomIn: 1,
-                            zoomOut: 1,
-                            oneToOne: 1,
-                            reset: 1,
-                            prev: 0,
-                            play: 0,
-                            next: 0,
-                            rotateLeft: 1,
-                            rotateRight: 1,
-                            flipHorizontal: 1,
-                            flipVertical: 1,
-                        },
-                        tooltip: true,
-                        transition: true,
-                        fullscreen: true,
-                        keyboard: true
+                        toolbar: true
                     });
                     viewer.show();
-                } else {
-                    this.pdfPreviewName = name || 'Image Preview';
-                    this.pdfPreviewUrl = url;
+                    return;
                 }
             } else if (this.isPdfType(fileType, name)) {
                 this.pdfPreviewName = name || 'PDF Preview';
                 this.pdfPreviewUrl = url;
-            } else {
-                window.open(url, '_blank');
+                return;
             }
+            window.open(url, '_blank');
         },
 
         initViewer() {
             if (typeof Viewer === 'undefined') return;
-            const container = this.$refs.chatContainer || document.getElementById('chat-messages-container');
+            const container = this.$el || this.$refs.chatContainer || document.getElementById('chat-messages-container');
             if (!container) return;
 
             this.$nextTick(() => {

@@ -790,10 +790,18 @@
                         <template x-for="(file, fIdx) in getSharedFilesList()" :key="fIdx">
                             <div class="p-2 bg-slate-50/60 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/60 rounded-md flex items-center justify-between gap-2 shadow-2xs hover:border-indigo-400/50 dark:hover:border-indigo-600/50 transition-colors">
                                 <div class="flex items-center gap-2 min-w-0 flex-1">
-                                    <div class="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0"
-                                         :class="isPdfType(file.file_type, file.file_name) ? 'bg-rose-50 dark:bg-rose-950/70 text-rose-500' : (isImageType(file.file_type, file.file_name) ? 'bg-emerald-50 dark:bg-emerald-950/70 text-emerald-500' : 'bg-blue-50 dark:bg-blue-950/70 text-blue-500')">
-                                        <i class="fa-solid text-xs" :class="isPdfType(file.file_type, file.file_name) ? 'fa-file-pdf' : (isImageType(file.file_type, file.file_name) ? 'fa-image' : 'fa-file')"></i>
-                                    </div>
+                                    <template x-if="isImageType(file.file_type, file.file_name)">
+                                        <img :src="file.file_url" 
+                                             :data-original="file.file_url" 
+                                             :alt="file.file_name"
+                                             class="w-7 h-7 rounded-md object-cover chat-image-thumb cursor-zoom-in border border-slate-200 dark:border-slate-700 flex-shrink-0">
+                                    </template>
+                                    <template x-if="!isImageType(file.file_type, file.file_name)">
+                                        <div class="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0"
+                                             :class="isPdfType(file.file_type, file.file_name) ? 'bg-rose-50 dark:bg-rose-950/70 text-rose-500' : 'bg-blue-50 dark:bg-blue-950/70 text-blue-500'">
+                                            <i class="fa-solid text-xs" :class="isPdfType(file.file_type, file.file_name) ? 'fa-file-pdf' : 'fa-file'"></i>
+                                        </div>
+                                    </template>
                                     <div class="min-w-0 flex-1">
                                         <span class="block font-semibold text-slate-800 dark:text-slate-200 text-xs truncate" x-text="file.file_name"></span>
                                         <span class="block text-[9.5px] text-slate-400 dark:text-slate-500 truncate" x-text="(file.senderName || 'User') + ' • ' + formatBytes(file.file_size)"></span>
