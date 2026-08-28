@@ -994,6 +994,18 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
             });
         },
 
+        getApiHeaders() {
+            const headers = {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            };
+            if (typeof window.Echo !== 'undefined' && window.Echo && typeof window.Echo.socketId === 'function') {
+                const sid = window.Echo.socketId();
+                if (sid) headers['X-Socket-ID'] = sid;
+            }
+            return headers;
+        },
+
         // Send Message
         async sendMessage() {
             if (this.sendingMessage) return;
@@ -1030,10 +1042,7 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
             try {
                 const res = await fetch(`{{ url('management/chats') }}/${this.chatType}/${this.chatId}`, {
                     method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
-                    },
+                    headers: this.getApiHeaders(),
                     body: formData
                 }).then(r => r.json());
 
@@ -1063,10 +1072,7 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
             const doDelete = () => {
                 fetch(`{{ url('management/chats') }}/${msgId}`, {
                     method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
-                    }
+                    headers: this.getApiHeaders()
                 })
                 .then(r => r.json())
                 .then(res => {
@@ -1131,10 +1137,7 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
 
                 fetch(url, {
                     method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
-                    }
+                    headers: this.getApiHeaders()
                 })
                 .then(r => r.json())
                 .then(res => {
