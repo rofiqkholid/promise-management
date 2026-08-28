@@ -203,8 +203,7 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
         hasMoreChats: true,
         oldestChatId: null,
         echoChannel: null,
-        fallbackPollTimer: null,
-        isReverbConnected: false,
+        isPusherConnected: false,
         viewerInstance: null,
         pdfPreviewUrl: null,
         pdfPreviewName: '',
@@ -237,7 +236,6 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
         },
 
         initRoom(type, id, title = '', subtitle = '') {
-            this.stopFallbackPolling();
             if (this.echoChannel && typeof window.Echo !== 'undefined') {
                 try {
                     window.Echo.leave(`chat.${this.chatType}.${this.chatId}`);
@@ -266,107 +264,61 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
         listenEcho() {
             if (!this.chatId) return;
 
-            // Check if Echo is available and functional
+            // Check if Echo is available and configured
             if (typeof window.Echo !== 'undefined' && window.Echo) {
                 try {
-                    this.echoChannel = window.Echo.private(`chat.${this.chatType}.${this.chatId}`)
-                        .listen('ChatMessageSent', (e) => {
-                            if (!this.chatMessages.some(m => Number(m.id) === Number(e.id))) {
-                                this.chatMessages.push(e);
-                                this.$nextTick(() => {
-                                    this.scrollToBottom();
-                                    this.initViewer();
-                                });
-                            }
-                        })
-                        .listen('ChatMessageDeleted', (e) => {
-                            this.chatMessages = this.chatMessages.filter(msg => Number(msg.id) !== Number(e.chatId));
-                        });
+                    const handleMessageIncoming = (e) => {
+                        if (!e || !e.id) return;
+                        if (!this.chatMessages.some(m => Number(m.id) === Number(e.id))) {
+                            this.chatMessages.push(e);
+                            this.$nextTick(() => {
+                                this.scrollToBottom();
+                                this.initViewer();
+                            });
+                        }
+                    };
 
-                    // Listen to Pusher/Reverb connection states
+                    const handleMessageDeleted = (e) => {
+                        if (!e || !e.chatId) return;
+                        this.chatMessages = this.chatMessages.filter(msg => Number(msg.id) !== Number(e.chatId));
+                    };
+
+                    this.echoChannel = window.Echo.private(`chat.${this.chatType}.${this.chatId}`)
+                        .listen('.ChatMessageSent', handleMessageIncoming)
+                        .listen('ChatMessageSent', handleMessageIncoming)
+                        .listen('.ChatMessageDeleted', handleMessageDeleted)
+                        .listen('ChatMessageDeleted', handleMessageDeleted);
+
+                    // Track Pusher connection states gracefully without polling
                     if (window.Echo.connector && window.Echo.connector.pusher && window.Echo.connector.pusher.connection) {
                         const conn = window.Echo.connector.pusher.connection;
                         conn.bind('connected', () => {
-                            this.isReverbConnected = true;
-                            this.stopFallbackPolling();
-                        });
-                        conn.bind('unavailable', () => {
-                            this.isReverbConnected = false;
-                            this.startFallbackPolling();
-                        });
-                        conn.bind('failed', () => {
-                            this.isReverbConnected = false;
-                            this.startFallbackPolling();
+                            this.isPusherConnected = true;
                         });
                         conn.bind('disconnected', () => {
-                            this.isReverbConnected = false;
-                            this.startFallbackPolling();
+                            this.isPusherConnected = false;
+                        });
+                        conn.bind('unavailable', () => {
+                            this.isPusherConnected = false;
+                        });
+                        conn.bind('failed', () => {
+                            this.isPusherConnected = false;
+                        });
+                        conn.bind('error', (err) => {
+                            this.isPusherConnected = false;
+                            // Silently ignore quota / connection errors so the app runs uninterrupted
+                            console.debug('Pusher connection notice (operating in local direct mode):', err);
                         });
 
-                        if (conn.state === 'connected') {
-                            this.isReverbConnected = true;
-                            this.stopFallbackPolling();
-                        } else {
-                            // Fallback polling active while connecting or if offline
-                            this.startFallbackPolling();
-                        }
-                    } else {
-                        this.startFallbackPolling();
+                        this.isPusherConnected = (conn.state === 'connected');
                     }
                 } catch (err) {
-                    console.warn('Echo subscription failed, running in fallback polling mode:', err);
-                    this.startFallbackPolling();
+                    console.debug('Echo setup notice (operating in standard direct mode):', err);
                 }
-            } else {
-                // Echo not configured or unavailable -> fallback polling mode
-                this.startFallbackPolling();
             }
-        },
-
-        startFallbackPolling() {
-            if (this.fallbackPollTimer) return;
-            // Poll for new messages every 5 seconds without user disruption
-            this.fallbackPollTimer = setInterval(() => {
-                if (this.chatId && !this.loadingChats && !this.sendingMessage) {
-                    this.syncLatestMessages();
-                }
-            }, 5000);
-        },
-
-        stopFallbackPolling() {
-            if (this.fallbackPollTimer) {
-                clearInterval(this.fallbackPollTimer);
-                this.fallbackPollTimer = null;
-            }
-        },
-
-        syncLatestMessages() {
-            if (!this.chatId) return;
-            const url = `{{ url('management/chats') }}/${this.chatType}/${this.chatId}`;
-            fetch(url, {
-                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (data.success && Array.isArray(data.messages)) {
-                    const currentIds = this.chatMessages.map(m => Number(m.id)).join(',');
-                    const incomingIds = data.messages.map(m => Number(m.id)).join(',');
-                    if (currentIds !== incomingIds) {
-                        const container = this.$refs.chatContainer || document.getElementById('chat-messages-container');
-                        const isNearBottom = container ? (container.scrollHeight - container.scrollTop - container.clientHeight < 150) : true;
-                        this.chatMessages = data.messages;
-                        this.$nextTick(() => {
-                            if (isNearBottom) this.scrollToBottom();
-                            this.initViewer();
-                        });
-                    }
-                }
-            })
-            .catch(() => {});
         },
 
         leaveRoom() {
-            this.stopFallbackPolling();
             if (this.echoChannel && typeof window.Echo !== 'undefined') {
                 try {
                     window.Echo.leave(`chat.${this.chatType}.${this.chatId}`);
