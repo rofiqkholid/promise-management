@@ -438,187 +438,528 @@
 
                         <!-- Outside Timestamp and Checkmark Status (Shown only on last message of group) -->
                         <template x-if="shouldShowMessageFooter(getFilteredMessages(), index)">
-                            <div class="flex items-center gap-1 mt-0.5 px-1.5 text-[9.5px] select-none font-medium text-slate-400 dark:text-slate-500"
-                                 :class="msg.user_id == currentUserId ? 'justify-end' : 'justify-start'">
-                                <span x-text="formatTime(msg.created_at)"></span>
-                                <template x-if="msg.user_id == currentUserId">
-                                    <i class="fa-solid fa-check-double text-[9px] text-[#007aff] dark:text-blue-400"></i>
+                            <!-- Avatar (Top aligned next to bubble, shown on top/first of message group) -->
+                            <template x-if="shouldShowAvatar(getFilteredMessages(), index)">
+                                <div class="w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] flex-shrink-0 select-none shadow-xs border mt-0.5"
+                                     :class="getUserColor(msg.user_id).avatar"
+                                     :title="msg.user ? msg.user.name : 'Unknown User'"
+                                     x-text="getInitials(msg.user ? msg.user.name : 'U')">
+                                </div>
+                            </template>
+                            <template x-if="!shouldShowAvatar(getFilteredMessages(), index)">
+                                <div class="w-7 flex-shrink-0"></div>
+                            </template>
+
+                            <!-- Bubble Wrapper -->
+                            <div class="flex flex-col relative group/bubble"
+                                 :class="msg.user_id == currentUserId ? 'items-end' : 'items-start'">
+
+                                <!-- Sender Name (Only in Group/WO Chat, for first message in group) -->
+                                <template x-if="shouldShowSenderName(getFilteredMessages(), index)">
+                                    <span class="text-[10.5px] font-bold px-1 mb-0.5 select-none"
+                                          :class="getUserColor(msg.user_id).name"
+                                          x-text="msg.user ? msg.user.name : 'Unknown'"></span>
                                 </template>
+
+                                <!-- Message Bubble (iOS / WhatsApp Style) -->
+                                <div class="px-3.5 py-2 text-xs relative max-w-full leading-relaxed select-text"
+                                     :class="[
+                                         msg.user_id == currentUserId 
+                                             ? 'chat-bubble-out' 
+                                             : 'chat-bubble-in'
+                                     ]">
+
+                                    <!-- Replied Parent Quote Preview inside bubble -->
+                                    <template x-if="msg.replied_to_chat">
+                                        <div @click="jumpToMessage(msg.replied_to_chat.id)"
+                                             class="mb-1.5 p-1.5 rounded-sm border-l-2 bg-black/5 dark:bg-white/5 cursor-pointer hover:bg-black/10 dark:hover:bg-white/10 transition-colors select-none text-[11px]"
+                                             :class="msg.user_id == currentUserId ? 'border-white/80 text-white' : 'border-indigo-500 text-slate-700 dark:text-slate-300'">
+                                            <span class="font-bold block text-[10px]" x-text="msg.replied_to_chat.user ? msg.replied_to_chat.user.name : 'User'"></span>
+                                            <span class="truncate block opacity-85 text-[10.5px]" x-html="getReplySnippet(msg.replied_to_chat)"></span>
+                                        </div>
+                                    </template>
+
+                                    <!-- Message Text (Markdown Rendered) -->
+                                    <template x-if="msg.message">
+                                        <div class="chat-markdown prose dark:prose-invert max-w-none text-xs break-words leading-relaxed"
+                                             x-html="renderMessageMarkdown(msg.message, msg.user_id == currentUserId)"></div>
+                                    </template>
+
+                                    <!-- Attachments Preview inside bubble -->
+                                    <template x-if="msg.attachments && msg.attachments.length > 0">
+                                        <div class="mt-1.5 space-y-1.5">
+                                            <template x-for="(att, aIdx) in msg.attachments" :key="aIdx">
+                                                <div class="rounded-sm overflow-hidden">
+                                                    <!-- Image Preview with Viewer.js -->
+                                                    <template x-if="isImageType(att.file_type, att.file_name)">
+                                                        <div class="relative group/img cursor-pointer">
+                                                            <img :src="att.file_url" 
+                                                                 :alt="att.file_name" 
+                                                                 :data-original="att.file_url"
+                                                                 class="chat-preview-image max-h-56 max-w-full rounded-sm object-cover hover:opacity-95 transition-opacity">
+                                                        </div>
+                                                    </template>
+
+                                                    <!-- PDF / Document Preview -->
+                                                    <template x-if="isPdfType(att.file_type, att.file_name)">
+                                                        <div @click="previewDoc(att.file_url, att.file_name)"
+                                                             class="flex items-center gap-2 p-2 rounded-sm border cursor-pointer transition-all duration-150"
+                                                             :class="msg.user_id == currentUserId 
+                                                                 ? 'bg-white/15 border-white/30 text-white hover:bg-white/25' 
+                                                                 : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:bg-indigo-50/50 dark:hover:bg-slate-700/80'">
+                                                            <i class="fa-solid fa-file-pdf text-rose-500 text-lg flex-shrink-0"></i>
+                                                            <div class="min-w-0 flex-1">
+                                                                <span class="block text-[11px] font-semibold truncate" x-text="att.file_name"></span>
+                                                                <span class="block text-[9.5px] opacity-75 font-mono" x-text="formatBytes(att.file_size)"></span>
+                                                            </div>
+                                                            <i class="fa-solid fa-arrow-up-right-from-square text-[10px] opacity-70"></i>
+                                                        </div>
+                                                    </template>
+
+                                                    <!-- Other File Types (Downloadable) -->
+                                                    <template x-if="!isImageType(att.file_type, att.file_name) && !isPdfType(att.file_type, att.file_name)">
+                                                        <a :href="att.file_url" 
+                                                           :download="att.file_name" 
+                                                           target="_blank"
+                                                           class="flex items-center gap-2 p-2 rounded-sm border transition-all duration-150"
+                                                           :class="msg.user_id == currentUserId 
+                                                               ? 'bg-white/15 border-white/30 text-white hover:bg-white/25' 
+                                                               : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:bg-indigo-50/50 dark:hover:bg-slate-700/80'">
+                                                            <i class="fa-solid fa-paperclip text-indigo-500 text-base flex-shrink-0"></i>
+                                                            <div class="min-w-0 flex-1">
+                                                                <span class="block text-[11px] font-semibold truncate" x-text="att.file_name"></span>
+                                                                <span class="block text-[9.5px] opacity-75 font-mono" x-text="formatBytes(att.file_size)"></span>
+                                                            </div>
+                                                            <i class="fa-solid fa-download text-[10px] opacity-70"></i>
+                                                        </a>
+                                                    </template>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </template>
+
+                                    <!-- Time & Read Status Footer inside bubble -->
+                                    <div class="flex items-center justify-end gap-1 mt-0.5 select-none font-mono text-[9px]"
+                                         :class="msg.user_id == currentUserId ? 'text-white/80' : 'text-slate-400 dark:text-slate-500'">
+                                        <span x-text="formatTime(msg.created_at)"></span>
+                                        <template x-if="msg.user_id == currentUserId">
+                                            <span>
+                                                <template x-if="msg.is_pending">
+                                                    <i class="fa-regular fa-clock text-[8px] animate-pulse"></i>
+                                                </template>
+                                                <template x-if="!msg.is_pending">
+                                                    <i class="fa-solid fa-check-double text-[8.5px] text-white"></i>
+                                                </template>
+                                            </span>
+                                        </template>
+                                    </div>
+
+                                </div>
+
+                                <!-- Floating Action Buttons (Reply trigger) on hover -->
+                                <div class="absolute top-1 hidden group-hover/bubble:flex items-center gap-1 z-10 select-none"
+                                     :class="msg.user_id == currentUserId ? '-left-10' : '-right-10'">
+                                    <button @click="setReply(msg)" 
+                                            type="button" 
+                                            class="w-6 h-6 rounded-full bg-white dark:bg-slate-800 text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 border border-slate-200 dark:border-slate-700 shadow-xs flex items-center justify-center cursor-pointer transition-colors"
+                                            title="Reply to message">
+                                        <i class="fa-solid fa-reply text-[9px]"></i>
+                                    </button>
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </div>
+                </template>
+
+                <!-- Scroll to bottom anchor -->
+                <div x-ref="chatBottomAnchor" class="h-1"></div>
+            </div>
+
+            <!-- Scroll To Bottom Floating Button -->
+            <button x-show="showScrollToBottomBtn" 
+                    @click="scrollToBottom()"
+                    type="button" 
+                    class="absolute right-6 bottom-20 w-8 h-8 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg flex items-center justify-center cursor-pointer transition-all z-20"
+                    x-cloak>
+                <i class="fa-solid fa-chevron-down text-xs"></i>
+            </button>
+
+            <!-- Quoted / Replying Banner Above Input -->
+            <div x-show="replyingTo" 
+                 class="px-4 py-2 bg-slate-200/90 dark:bg-slate-800 border-t border-slate-300 dark:border-slate-700 flex items-center justify-between z-20 flex-shrink-0"
+                 x-cloak>
+                <div class="flex items-center gap-2 min-w-0">
+                    <i class="fa-solid fa-reply text-indigo-600 dark:text-indigo-400 text-xs"></i>
+                    <div class="text-xs truncate">
+                        <span class="font-bold text-slate-800 dark:text-slate-200">Replying to </span>
+                        <span class="font-bold text-indigo-600 dark:text-indigo-400" x-text="replyingTo?.user_name"></span>:
+                        <span class="text-slate-600 dark:text-slate-400 italic ml-1" x-html="getReplySnippet(replyingTo)"></span>
+                    </div>
+                </div>
+                <button @click="cancelReply()" type="button" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm font-bold ml-2">
+                    &times;
+                </button>
+            </div>
+
+            <!-- Attachments Preview List Chips (Before Sending) -->
+            <div x-show="chatAttachments.length > 0" 
+                 class="px-4 py-2 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex flex-wrap gap-2 z-20 flex-shrink-0"
+                 x-cloak>
+                <template x-for="(att, aIdx) in chatAttachments" :key="aIdx">
+                    <div class="flex items-center gap-1.5 pl-2 pr-1.5 py-1 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-sm text-xs max-w-[240px] group/chip shadow-2xs">
+                        <!-- Image / PDF Thumbnail or Icon with Preview Click -->
+                        <template x-if="isImageType(att.type, att.name) && att.previewUrl">
+                            <img :src="att.previewUrl" 
+                                 @click="previewDoc(att.previewUrl, att.name)"
+                                 class="w-6 h-6 object-cover rounded-xs cursor-pointer hover:opacity-80 transition-opacity" 
+                                 title="Click to preview image">
+                        </template>
+                        <template x-if="isPdfType(att.type, att.name)">
+                            <div @click="previewDoc(att.previewUrl, att.name)"
+                                 class="w-6 h-6 rounded-xs bg-rose-500 text-white flex items-center justify-center flex-shrink-0 cursor-pointer hover:bg-rose-600 transition-colors"
+                                 title="Click to preview PDF">
+                                <i class="fa-solid fa-file-pdf text-[10px]"></i>
+                            </div>
+                        </template>
+                        <template x-if="!isImageType(att.type, att.name) && !isPdfType(att.type, att.name)">
+                            <i class="fa-solid fa-paperclip text-slate-400 text-[10px]"></i>
+                        </template>
+
+                        <span class="truncate flex-1 text-[11px] font-medium text-slate-700 dark:text-slate-300" x-text="att.name"></span>
+
+                        <!-- Quick Preview Action for Image / PDF -->
+                        <template x-if="(isImageType(att.type, att.name) || isPdfType(att.type, att.name)) && att.previewUrl">
+                            <button @click="previewDoc(att.previewUrl, att.name)" 
+                                    type="button" 
+                                    class="w-4 h-4 rounded-full flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer"
+                                    title="Preview file">
+                                <i class="fa-solid fa-eye text-[9px]"></i>
+                            </button>
+                        </template>
+
+                        <!-- Remove Chip Button -->
+                        <button @click="removeAttachment(aIdx)" 
+                                type="button" 
+                                class="w-4 h-4 rounded-full flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer text-xs"
+                                title="Remove">
+                            &times;
+                        </button>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Mention / Tag Autocomplete Popover Dropdown -->
+            <div x-show="showMentionDropdown && getFilteredMentions().length > 0" 
+                 class="absolute left-6 bottom-20 w-64 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-sm shadow-xl z-50 overflow-hidden py-1 max-h-48 overflow-y-auto"
+                 x-cloak>
+                <div class="px-2.5 py-1 bg-slate-100 dark:bg-slate-900 text-[9.5px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200 dark:border-slate-700"
+                     x-text="mentionMode === '@' ? 'Mention Person' : 'Tag Item / Product'"></div>
+                
+                <template x-for="(item, mIdx) in getFilteredMentions()" :key="mIdx">
+                    <button @click="selectMention(item)" 
+                            type="button"
+                            class="w-full px-3 py-1.5 text-left text-xs hover:bg-indigo-50 dark:hover:bg-slate-700 flex items-center gap-2 transition-colors cursor-pointer border-b border-slate-100 dark:border-slate-750 last:border-none">
+                        <span class="w-5 h-5 rounded-full flex items-center justify-center font-bold text-[9px]"
+                              :class="mentionMode === '@' ? 'bg-indigo-100 dark:bg-indigo-950 text-indigo-600' : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-600'">
+                            <i class="fa-solid" :class="mentionMode === '@' ? 'fa-user text-[9px]' : 'fa-box text-[9px]'"></i>
+                        </span>
+                        <div class="truncate flex-1">
+                            <span class="font-bold text-slate-800 dark:text-slate-200 block truncate" x-text="mentionMode === '@' ? item.name : item.code"></span>
+                            <span x-show="item.email || item.name" class="text-[9.5px] text-slate-400 block truncate" x-text="mentionMode === '@' ? item.email : item.name"></span>
+                        </div>
+                    </button>
+                </template>
+            </div>
+
+            <!-- Rich Formatting Toolbar (Auto-appears on text selection or manual toggle) -->
+            <div x-show="showFormatToolbar || hasTextSelection" 
+                 class="px-4 py-1.5 bg-slate-50 dark:bg-slate-900/80 border-t border-slate-200 dark:border-slate-800 flex items-center gap-1 z-20 flex-shrink-0 select-none transition-all"
+                 x-cloak>
+                <button @mousedown.prevent @click="applyFormat('bold')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs" title="Bold (Ctrl+B)">B</button>
+                <button @mousedown.prevent @click="applyFormat('italic')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 italic text-xs font-serif" title="Italic (Ctrl+I)">I</button>
+                <button @mousedown.prevent @click="applyFormat('underline')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 underline text-xs font-semibold" title="Underline (Ctrl+U)">U</button>
+                <button @mousedown.prevent @click="applyFormat('strike')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 line-through text-xs" title="Strikethrough (Ctrl+Shift+X / Alt+Shift+5)">S</button>
+                <div class="h-3.5 w-px bg-slate-300 dark:bg-slate-700 mx-1"></div>
+                <button @mousedown.prevent @click="applyFormat('code')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono text-[11px]" title="Code block (Ctrl+Shift+C / Ctrl+E)">&lt;/&gt;</button>
+                <button @mousedown.prevent @click="applyFormat('quote')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs" title="Quote (Ctrl+Shift+>)"><i class="fa-solid fa-quote-left text-[10px]"></i></button>
+                <button @mousedown.prevent @click="applyFormat('ul')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs" title="Bulleted List (Ctrl+Shift+8 / Ctrl+Shift+L)"><i class="fa-solid fa-list-ul text-[10px]"></i></button>
+                <button @mousedown.prevent @click="applyFormat('ol')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs" title="Numbered List (Ctrl+Shift+7)"><i class="fa-solid fa-list-ol text-[10px]"></i></button>
+            </div>
+
+            <!-- Chat Input Box & Action Row -->
+            <div class="p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-end gap-2 flex-shrink-0 z-20">
+                
+                <!-- File Picker Input (Hidden) -->
+                <input type="file" 
+                       x-ref="chatFileInput" 
+                       @change="handleFileSelect($event)" 
+                       multiple 
+                       class="hidden">
+
+                <!-- Attachment Button -->
+                <button @click="$refs.chatFileInput.click()" 
+                        type="button" 
+                        class="w-9 h-9 flex items-center justify-center rounded-sm bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors flex-shrink-0 cursor-pointer"
+                        title="Attach Files / Photos">
+                    <i class="fa-solid fa-paperclip text-sm"></i>
+                </button>
+
+                <!-- Formatting Toggle Button -->
+                <button @click="showFormatToolbar = !showFormatToolbar" 
+                        type="button" 
+                        class="w-9 h-9 flex items-center justify-center rounded-sm transition-colors flex-shrink-0 cursor-pointer"
+                        :class="showFormatToolbar || hasTextSelection ? 'bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400' : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'"
+                        title="Toggle Text Formatting Toolbar">
+                    <i class="fa-solid fa-font text-xs"></i>
+                </button>
+
+                <!-- Textarea Input Box (Aligned to 36px buttons, auto-grows up to 120px) -->
+                <div class="flex-1 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-sm focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500/30 transition-all flex items-center min-h-[36px] px-3 py-1.5 box-border">
+                    <textarea x-ref="chatInput"
+                              x-model="chatInputMessage"
+                              rows="1"
+                              x-init="$el.style.height = '20px'; $watch('chatInputMessage', val => { if (!val || !val.trim()) { $el.style.height = '20px'; } })"
+                              @input="handleInputChange($event); checkTextSelection(); $el.style.height = '20px'; $el.style.height = Math.min($el.scrollHeight, 120) + 'px';"
+                              @select="checkTextSelection()"
+                              @mouseup="checkTextSelection()"
+                              @keyup="checkTextSelection()"
+                              @blur="setTimeout(() => { checkTextSelection(); }, 150)"
+                              @keydown="handleChatTextareaKeydown($event)"
+                              placeholder="Type a message... (@ mention, # item, Shift+Enter for newline)"
+                              class="w-full text-xs bg-transparent border-none outline-none resize-none chat-textarea text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 max-h-30 p-0 leading-normal block overflow-y-auto"></textarea>
+                </div>
+
+                <!-- Send Button -->
+                <button @click="sendMessage(); if ($refs.chatInput) $refs.chatInput.style.height = '20px';" 
+                        :disabled="sendingMessage || (!chatInputMessage.trim() && chatAttachments.length === 0)"
+                        type="button" 
+                        class="w-9 h-9 flex items-center justify-center rounded-sm bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white shadow-xs transition-colors flex-shrink-0 cursor-pointer"
+                        title="Send Message">
+                    <template x-if="!sendingMessage">
+                        <i class="fa-solid fa-paper-plane text-xs"></i>
+                    </template>
+                    <template x-if="sendingMessage">
+                        <i class="fa-solid fa-spinner animate-spin text-xs"></i>
+                    </template>
+                </button>
+            </div>
+
+        </div>
+
+        <!-- Right: Dynamic Collapsible Detail Panel (with Tabs) -->
+        <div x-show="hasDetailPanel && showDetailPanel" 
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 translate-x-full"
+             x-transition:enter-end="opacity-100 translate-x-0"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 translate-x-0"
+             x-transition:leave-end="opacity-0 translate-x-full"
+             class="w-80 md:w-88 border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col h-full flex-shrink-0 z-20 shadow-xs overflow-hidden"
+             x-cloak>
+            
+            <!-- Detail Panel Top Header -->
+            <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/70 dark:bg-slate-850/50 flex-shrink-0">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-circle-info text-indigo-500 text-xs"></i>
+                    <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Room Details</h4>
+                </div>
+                <button @click="showDetailPanel = false" 
+                        type="button"
+                        class="w-6 h-6 flex items-center justify-center rounded-sm text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-700 transition-colors text-base cursor-pointer">
+                    &times;
+                </button>
+            </div>
+
+            <!-- Detail Panel Segmented Tabs -->
+            <div class="px-3 pt-2.5 pb-2 bg-slate-50/40 dark:bg-slate-850/30 border-b border-slate-200 dark:border-slate-800 flex items-center gap-1 flex-shrink-0 select-none">
+                <button @click="activeDetailTab = 'info'" 
+                        type="button" 
+                        class="flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                        :class="activeDetailTab === 'info' 
+                            ? 'bg-white dark:bg-slate-800 text-[#0c4da2] dark:text-blue-400 shadow-2xs border border-slate-200/80 dark:border-slate-700 font-bold' 
+                            : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'">
+                    <i class="fa-solid fa-circle-info text-[10px]"></i>
+                    <span>Info</span>
+                </button>
+                <button @click="activeDetailTab = 'files'" 
+                        type="button" 
+                        class="flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                        :class="activeDetailTab === 'files' 
+                            ? 'bg-white dark:bg-slate-800 text-[#0c4da2] dark:text-blue-400 shadow-2xs border border-slate-200/80 dark:border-slate-700 font-bold' 
+                            : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'">
+                    <i class="fa-solid fa-paperclip text-[10px]"></i>
+                    <span>Files</span>
+                    <span class="px-1.5 py-0.2 bg-slate-100 dark:bg-slate-700 rounded-full text-[9px] font-bold" x-text="getSharedFilesList().length"></span>
+                </button>
+                <button @click="activeDetailTab = 'members'" 
+                        type="button" 
+                        class="flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                        :class="activeDetailTab === 'members' 
+                            ? 'bg-white dark:bg-slate-800 text-[#0c4da2] dark:text-blue-400 shadow-2xs border border-slate-200/80 dark:border-slate-700 font-bold' 
+                            : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'">
+                    <i class="fa-solid fa-users text-[10px]"></i>
+                    <span>Members</span>
+                    <span class="px-1.5 py-0.2 bg-slate-100 dark:bg-slate-700 rounded-full text-[9px] font-bold" x-text="getUniqueParticipants().length"></span>
+                </button>
+            </div>
+
+            <!-- Detail Panel Tab Contents -->
+            <div class="flex-1 overflow-y-auto p-4 space-y-4 text-xs chat-scroll min-h-0">
+                
+                <!-- Tab 1: Info (Context & Room Summary) -->
+                <div x-show="activeDetailTab === 'info'" class="space-y-4">
+                    <!-- Topic / Title Card -->
+                    <div class="p-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-md space-y-1.5">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Discussion Room</span>
+                            <span class="px-1.5 py-0.5 text-[9px] font-extrabold uppercase rounded-sm bg-blue-50 dark:bg-blue-950 text-[#0c4da2] dark:text-blue-400 border border-blue-200 dark:border-blue-800" x-text="chatType || 'General'"></span>
+                        </div>
+                        <h5 class="text-sm font-bold text-slate-800 dark:text-slate-100 break-words" x-text="chatTitle || 'Discussion Room'"></h5>
+                        <p x-show="chatSubtitle" class="text-xs text-slate-500 dark:text-slate-400" x-text="chatSubtitle"></p>
+                    </div>
+
+                    <!-- Dynamic Work Order / Custom Context if available -->
+                    <template x-if="detailPanelData || (typeof woDetail !== 'undefined' && woDetail)">
+                        <div class="space-y-3">
+                            <div class="border-t border-slate-200 dark:border-slate-800 pt-3">
+                                <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Specifications</span>
+                                <div class="grid grid-cols-2 gap-2.5 bg-slate-50/70 dark:bg-slate-800/40 p-2.5 rounded-md border border-slate-200/80 dark:border-slate-700/70 text-xs">
+                                    <div>
+                                        <span class="block text-[10px] text-slate-400 font-medium uppercase">Priority</span>
+                                        <span class="font-bold text-slate-800 dark:text-slate-100" x-text="(detailPanelData?.priority || woDetail?.priority) || 'Normal'"></span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-[10px] text-slate-400 font-medium uppercase">Status</span>
+                                        <span class="font-bold text-slate-800 dark:text-slate-100" x-text="(detailPanelData?.status || woDetail?.status) || 'Active'"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Products / Part Items List with 1-Click #Tag button -->
+                            <template x-if="(detailPanelData?.products || woDetail?.products) && (detailPanelData?.products || woDetail?.products).length > 0">
+                                <div class="border-t border-slate-200 dark:border-slate-800 pt-3">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider" x-text="'Linked Products (' + ((detailPanelData?.products || woDetail?.products).length) + ')'"></span>
+                                        <span class="text-[9px] text-slate-400">Click #Tag to insert</span>
+                                    </div>
+                                    <div class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                                        <template x-for="(prod, pIdx) in (detailPanelData?.products || woDetail?.products)" :key="pIdx">
+                                            <div class="p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 rounded-md flex items-center justify-between gap-2 shadow-2xs hover:border-[#0c4da2]/50 transition-colors">
+                                                <div class="min-w-0 flex-1">
+                                                    <span class="block font-bold text-slate-800 dark:text-slate-100 text-xs truncate font-mono" x-text="prod.customer_part_no"></span>
+                                                    <span class="block text-[11px] text-slate-500 truncate" x-text="prod.customer_part_name"></span>
+                                                </div>
+                                                <button type="button" 
+                                                        @click="chatInputMessage = (chatInputMessage ? chatInputMessage + ' ' : '') + '#' + prod.customer_part_no + ' '; $refs.chatInput?.focus();"
+                                                        class="px-2 py-0.5 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950 dark:hover:bg-indigo-900 text-indigo-600 dark:text-indigo-300 font-bold text-[10px] rounded-md border border-indigo-200 dark:border-indigo-800 transition-colors cursor-pointer flex-shrink-0"
+                                                        title="Tag this part number in chat">
+                                                    #Tag
+                                                </button>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <!-- Room Statistics -->
+                    <div class="border-t border-slate-200 dark:border-slate-800 pt-3">
+                        <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Activity Overview</span>
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div class="p-2.5 bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/70 rounded-md">
+                                <span class="block text-[10px] text-slate-400">Total Messages</span>
+                                <span class="text-sm font-bold text-slate-800 dark:text-slate-100" x-text="chatMessages.length"></span>
+                            </div>
+                            <div class="p-2.5 bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/70 rounded-md">
+                                <span class="block text-[10px] text-slate-400">Shared Files</span>
+                                <span class="text-sm font-bold text-slate-800 dark:text-slate-100" x-text="getSharedFilesList().length"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Files & Links (Shared Attachments) -->
+                <div x-show="activeDetailTab === 'files'" class="space-y-2">
+                    <template x-if="getSharedFilesList().length === 0">
+                        <div class="py-8 text-center text-slate-400 select-none">
+                            <i class="fa-solid fa-folder-open text-3xl mb-2 opacity-50"></i>
+                            <p class="text-xs">No shared files or media in this discussion.</p>
+                        </div>
+                    </template>
+
+                    <div class="space-y-2">
+                        <template x-for="(file, fIdx) in getSharedFilesList()" :key="fIdx">
+                            <div class="p-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 rounded-md flex items-center justify-between gap-2 shadow-2xs hover:border-[#0c4da2]/50 transition-colors">
+                                <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                                    <div class="w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0"
+                                         :class="isPdfType(file.file_type, file.file_name) ? 'bg-rose-50 dark:bg-rose-950 text-rose-500' : (isImageType(file.file_type, file.file_name) ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-500' : 'bg-blue-50 dark:bg-blue-950 text-blue-500')">
+                                        <i class="fa-solid text-sm" :class="isPdfType(file.file_type, file.file_name) ? 'fa-file-pdf' : (isImageType(file.file_type, file.file_name) ? 'fa-image' : 'fa-file')"></i>
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <span class="block font-semibold text-slate-800 dark:text-slate-200 text-xs truncate" x-text="file.file_name"></span>
+                                        <span class="block text-[10px] text-slate-400 truncate" x-text="(file.senderName || 'User') + ' • ' + formatBytes(file.file_size)"></span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-1 flex-shrink-0">
+                                    <template x-if="isPdfType(file.file_type, file.file_name) || isImageType(file.file_type, file.file_name)">
+                                        <button type="button" 
+                                                @click="previewDoc(file.file_url, file.file_name)"
+                                                class="w-7 h-7 flex items-center justify-center rounded-md text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-slate-700 cursor-pointer"
+                                                title="Preview File">
+                                            <i class="fa-solid fa-eye text-xs"></i>
+                                        </button>
+                                    </template>
+                                    <a :href="file.file_url" 
+                                       :download="file.file_name" 
+                                       target="_blank"
+                                       class="w-7 h-7 flex items-center justify-center rounded-md text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-slate-700 cursor-pointer"
+                                       title="Download File">
+                                        <i class="fa-solid fa-download text-xs"></i>
+                                    </a>
+                                </div>
                             </div>
                         </template>
                     </div>
                 </div>
-            </div>
-        </template>
-    </div>
 
-    <!-- Scroll To Bottom Floating Button -->
-    <button x-show="showScrollToBottomBtn" 
-            @click="scrollToBottom()"
-            type="button" 
-            class="absolute right-6 bottom-24 w-8 h-8 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg flex items-center justify-center cursor-pointer transition-all z-20"
-            x-cloak>
-        <i class="fa-solid fa-chevron-down text-xs"></i>
-    </button>
+                <!-- Tab 3: Members (Participants List) -->
+                <div x-show="activeDetailTab === 'members'" class="space-y-2">
+                    <template x-if="getUniqueParticipants().length === 0">
+                        <div class="py-8 text-center text-slate-400 select-none">
+                            <i class="fa-solid fa-users text-3xl mb-2 opacity-50"></i>
+                            <p class="text-xs">No active participants yet.</p>
+                        </div>
+                    </template>
 
-    <!-- Quoted / Replying Banner Above Input -->
-    <div x-show="replyingTo" 
-         class="px-4 py-2 bg-slate-200/90 dark:bg-slate-800 border-t border-slate-300 dark:border-slate-700 flex items-center justify-between z-20 flex-shrink-0"
-         x-cloak>
-        <div class="flex items-center gap-2 min-w-0">
-            <i class="fa-solid fa-reply text-indigo-600 dark:text-indigo-400 text-xs"></i>
-            <div class="text-xs truncate">
-                <span class="font-bold text-slate-800 dark:text-slate-200">Replying to </span>
-                <span class="font-bold text-indigo-600 dark:text-indigo-400" x-text="replyingTo?.user_name"></span>:
-                <span class="text-slate-600 dark:text-slate-400 italic ml-1" x-html="getReplySnippet(replyingTo)"></span>
-            </div>
-        </div>
-        <button @click="cancelReply()" type="button" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm font-bold ml-2">
-            &times;
-        </button>
-    </div>
-
-    <!-- Attachments Preview List Chips (Before Sending) -->
-    <div x-show="chatAttachments.length > 0" 
-         class="px-4 py-2 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex flex-wrap gap-2 z-20 flex-shrink-0"
-         x-cloak>
-        <template x-for="(att, aIdx) in chatAttachments" :key="aIdx">
-            <div class="flex items-center gap-1.5 pl-2 pr-1.5 py-1 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-sm text-xs max-w-[240px] group/chip shadow-2xs">
-                <!-- Image / PDF Thumbnail or Icon with Preview Click -->
-                <template x-if="isImageType(att.type, att.name) && att.previewUrl">
-                    <img :src="att.previewUrl" 
-                         @click="previewDoc(att.previewUrl, att.name)"
-                         class="w-6 h-6 object-cover rounded-xs cursor-pointer hover:opacity-80 transition-opacity" 
-                         title="Click to preview image">
-                </template>
-                <template x-if="isPdfType(att.type, att.name)">
-                    <div @click="previewDoc(att.previewUrl, att.name)"
-                         class="w-6 h-6 rounded-xs bg-rose-500 text-white flex items-center justify-center flex-shrink-0 cursor-pointer hover:bg-rose-600 transition-colors"
-                         title="Click to preview PDF">
-                        <i class="fa-solid fa-file-pdf text-[10px]"></i>
+                    <div class="space-y-2">
+                        <template x-for="(user, uIdx) in getUniqueParticipants()" :key="uIdx">
+                            <div class="p-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 rounded-md flex items-center justify-between gap-2 shadow-2xs">
+                                <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                                    <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold uppercase border flex-shrink-0"
+                                         :class="getUserColor(user.id).avatar"
+                                         x-text="getInitials(user.name)"></div>
+                                    <div class="min-w-0 flex-1">
+                                        <span class="block font-bold text-slate-800 dark:text-slate-100 text-xs truncate" x-text="user.name"></span>
+                                        <span class="block text-[10px] text-slate-400 truncate" x-text="user.department_code || user.email || 'Participant'"></span>
+                                    </div>
+                                </div>
+                                <button type="button" 
+                                        @click="chatInputMessage = (chatInputMessage ? chatInputMessage + ' ' : '') + '@' + user.name + ' '; $refs.chatInput?.focus();"
+                                        class="px-2 py-1 bg-slate-100 hover:bg-indigo-50 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 hover:text-indigo-600 dark:text-slate-300 font-bold text-[10px] rounded-md transition-colors cursor-pointer flex-shrink-0"
+                                        title="Mention in chat">
+                                    @Mention
+                                </button>
+                            </div>
+                        </template>
                     </div>
-                </template>
-                <template x-if="!isImageType(att.type, att.name) && !isPdfType(att.type, att.name)">
-                    <i class="fa-solid fa-paperclip text-slate-400 text-[10px]"></i>
-                </template>
-
-                <span class="truncate flex-1 text-[11px] font-medium text-slate-700 dark:text-slate-300" x-text="att.name"></span>
-
-                <!-- Quick Preview Action for Image / PDF -->
-                <template x-if="(isImageType(att.type, att.name) || isPdfType(att.type, att.name)) && att.previewUrl">
-                    <button @click="previewDoc(att.previewUrl, att.name)" 
-                            type="button" 
-                            class="w-4 h-4 rounded-full flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer"
-                            title="Preview file">
-                        <i class="fa-solid fa-eye text-[9px]"></i>
-                    </button>
-                </template>
-
-                <!-- Remove Chip Button -->
-                <button @click="removeAttachment(aIdx)" 
-                        type="button" 
-                        class="w-4 h-4 rounded-full flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer text-xs"
-                        title="Remove">
-                    &times;
-                </button>
-            </div>
-        </template>
-    </div>
-
-    <!-- Mention / Tag Autocomplete Popover Dropdown -->
-    <div x-show="showMentionDropdown && getFilteredMentions().length > 0" 
-         class="absolute left-6 bottom-20 w-64 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-sm shadow-xl z-50 overflow-hidden py-1 max-h-48 overflow-y-auto"
-         x-cloak>
-        <div class="px-2.5 py-1 bg-slate-100 dark:bg-slate-900 text-[9.5px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200 dark:border-slate-700"
-             x-text="mentionMode === '@' ? 'Mention Person' : 'Tag Item / Product'"></div>
-        
-        <template x-for="(item, mIdx) in getFilteredMentions()" :key="mIdx">
-            <button @click="selectMention(item)" 
-                    type="button"
-                    class="w-full px-3 py-1.5 text-left text-xs hover:bg-indigo-50 dark:hover:bg-slate-700 flex items-center gap-2 transition-colors cursor-pointer border-b border-slate-100 dark:border-slate-750 last:border-none">
-                <span class="w-5 h-5 rounded-full flex items-center justify-center font-bold text-[9px]"
-                      :class="mentionMode === '@' ? 'bg-indigo-100 dark:bg-indigo-950 text-indigo-600' : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-600'">
-                    <i class="fa-solid" :class="mentionMode === '@' ? 'fa-user text-[9px]' : 'fa-box text-[9px]'"></i>
-                </span>
-                <div class="truncate flex-1">
-                    <span class="font-bold text-slate-800 dark:text-slate-200 block truncate" x-text="mentionMode === '@' ? item.name : item.code"></span>
-                    <span x-show="item.email || item.name" class="text-[9.5px] text-slate-400 block truncate" x-text="mentionMode === '@' ? item.email : item.name"></span>
                 </div>
-            </button>
-        </template>
-    </div>
 
-    <!-- Rich Formatting Toolbar (Auto-appears on text selection or manual toggle) -->
-    <div x-show="showFormatToolbar || hasTextSelection" 
-         class="px-4 py-1.5 bg-slate-50 dark:bg-slate-900/80 border-t border-slate-200 dark:border-slate-800 flex items-center gap-1 z-20 flex-shrink-0 select-none transition-all"
-         x-cloak>
-        <button @mousedown.prevent @click="applyFormat('bold')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs" title="Bold (Ctrl+B)">B</button>
-        <button @mousedown.prevent @click="applyFormat('italic')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 italic text-xs font-serif" title="Italic (Ctrl+I)">I</button>
-        <button @mousedown.prevent @click="applyFormat('underline')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 underline text-xs font-semibold" title="Underline (Ctrl+U)">U</button>
-        <button @mousedown.prevent @click="applyFormat('strike')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 line-through text-xs" title="Strikethrough (Ctrl+Shift+X / Alt+Shift+5)">S</button>
-        <div class="h-3.5 w-px bg-slate-300 dark:bg-slate-700 mx-1"></div>
-        <button @mousedown.prevent @click="applyFormat('code')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono text-[11px]" title="Code block (Ctrl+Shift+C / Ctrl+E)">&lt;/&gt;</button>
-        <button @mousedown.prevent @click="applyFormat('quote')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs" title="Quote (Ctrl+Shift+>)"><i class="fa-solid fa-quote-left text-[10px]"></i></button>
-        <button @mousedown.prevent @click="applyFormat('ul')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs" title="Bulleted List (Ctrl+Shift+8 / Ctrl+Shift+L)"><i class="fa-solid fa-list-ul text-[10px]"></i></button>
-        <button @mousedown.prevent @click="applyFormat('ol')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs" title="Numbered List (Ctrl+Shift+7)"><i class="fa-solid fa-list-ol text-[10px]"></i></button>
-    </div>
-
-    <!-- Chat Input Box & Action Row -->
-    <div class="p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-end gap-2 flex-shrink-0 z-20">
-        
-        <!-- File Picker Input (Hidden) -->
-        <input type="file" 
-               x-ref="chatFileInput" 
-               @change="handleFileSelect($event)" 
-               multiple 
-               class="hidden">
-
-        <!-- Attachment Button -->
-        <button @click="$refs.chatFileInput.click()" 
-                type="button" 
-                class="w-9 h-9 flex items-center justify-center rounded-sm bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors flex-shrink-0 cursor-pointer"
-                title="Attach Files / Photos">
-            <i class="fa-solid fa-paperclip text-sm"></i>
-        </button>
-
-        <!-- Formatting Toggle Button -->
-        <button @click="showFormatToolbar = !showFormatToolbar" 
-                type="button" 
-                class="w-9 h-9 flex items-center justify-center rounded-sm transition-colors flex-shrink-0 cursor-pointer"
-                :class="showFormatToolbar || hasTextSelection ? 'bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400' : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'"
-                title="Toggle Text Formatting Toolbar">
-            <i class="fa-solid fa-font text-xs"></i>
-        </button>
-
-        <!-- Textarea Input Box (Aligned to 36px buttons, auto-grows up to 120px) -->
-        <div class="flex-1 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-sm focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500/30 transition-all flex items-center min-h-[36px] px-3 py-1.5 box-border">
-            <textarea x-ref="chatInput"
-                      x-model="chatInputMessage"
-                      rows="1"
-                      x-init="$el.style.height = '20px'; $watch('chatInputMessage', val => { if (!val || !val.trim()) { $el.style.height = '20px'; } })"
-                      @input="handleInputChange($event); checkTextSelection(); $el.style.height = '20px'; $el.style.height = Math.min($el.scrollHeight, 120) + 'px';"
-                      @select="checkTextSelection()"
-                      @mouseup="checkTextSelection()"
-                      @keyup="checkTextSelection()"
-                      @blur="setTimeout(() => { checkTextSelection(); }, 150)"
-                      @keydown="handleChatTextareaKeydown($event)"
-                      placeholder="Type a message... (@ mention, # item, Shift+Enter for newline)"
-                      class="w-full text-xs bg-transparent border-none outline-none resize-none chat-textarea text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 max-h-30 p-0 leading-normal block overflow-y-auto"></textarea>
+            </div>
         </div>
 
-        <!-- Send Button -->
-        <button @click="sendMessage(); if ($refs.chatInput) $refs.chatInput.style.height = '20px';" 
-                :disabled="sendingMessage || (!chatInputMessage.trim() && chatAttachments.length === 0)"
-                type="button" 
-                class="w-9 h-9 flex items-center justify-center rounded-sm bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white shadow-xs transition-colors flex-shrink-0 cursor-pointer"
-                title="Send Message">
-            <template x-if="!sendingMessage">
-                <i class="fa-solid fa-paper-plane text-xs"></i>
-            </template>
-            <template x-if="sendingMessage">
-                <i class="fa-solid fa-spinner animate-spin text-xs"></i>
-            </template>
-        </button>
     </div>
 
     <!-- Document / Image Modal Preview -->
@@ -650,215 +991,4 @@
             </div>
         </div>
     </div>
-
-    <!-- Right: Dynamic Collapsible Detail Panel (with Tabs) -->
-    <div x-show="hasDetailPanel && showDetailPanel" 
-         x-transition:enter="transition ease-out duration-200"
-         x-transition:enter-start="opacity-0 translate-x-full"
-         x-transition:enter-end="opacity-100 translate-x-0"
-         x-transition:leave="transition ease-in duration-150"
-         x-transition:leave-start="opacity-100 translate-x-0"
-         x-transition:leave-end="opacity-0 translate-x-full"
-         class="fixed md:static inset-y-0 right-0 z-[100] md:z-20 w-full max-w-xs md:max-w-sm border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col h-full flex-shrink-0 shadow-2xl md:shadow-none overflow-hidden"
-         x-cloak>
-        
-        <!-- Detail Panel Top Header -->
-        <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/70 dark:bg-slate-850/50 flex-shrink-0">
-            <div class="flex items-center gap-2">
-                <i class="fa-solid fa-circle-info text-indigo-500 text-xs"></i>
-                <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Room Details</h4>
-            </div>
-            <button @click="showDetailPanel = false" 
-                    type="button"
-                    class="w-6 h-6 flex items-center justify-center rounded-sm text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-700 transition-colors text-base cursor-pointer">
-                &times;
-            </button>
-        </div>
-
-        <!-- Detail Panel Segmented Tabs -->
-        <div class="px-3 pt-2.5 pb-2 bg-slate-50/40 dark:bg-slate-850/30 border-b border-slate-200 dark:border-slate-800 flex items-center gap-1 flex-shrink-0 select-none">
-            <button @click="activeDetailTab = 'info'" 
-                    type="button" 
-                    class="flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all cursor-pointer flex items-center justify-center gap-1.5"
-                    :class="activeDetailTab === 'info' 
-                        ? 'bg-white dark:bg-slate-800 text-[#0c4da2] dark:text-blue-400 shadow-2xs border border-slate-200/80 dark:border-slate-700 font-bold' 
-                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'">
-                <i class="fa-solid fa-circle-info text-[10px]"></i>
-                <span>Info</span>
-            </button>
-            <button @click="activeDetailTab = 'files'" 
-                    type="button" 
-                    class="flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all cursor-pointer flex items-center justify-center gap-1.5"
-                    :class="activeDetailTab === 'files' 
-                        ? 'bg-white dark:bg-slate-800 text-[#0c4da2] dark:text-blue-400 shadow-2xs border border-slate-200/80 dark:border-slate-700 font-bold' 
-                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'">
-                <i class="fa-solid fa-paperclip text-[10px]"></i>
-                <span>Files</span>
-                <span class="px-1.5 py-0.2 bg-slate-100 dark:bg-slate-700 rounded-full text-[9px] font-bold" x-text="getSharedFilesList().length"></span>
-            </button>
-            <button @click="activeDetailTab = 'members'" 
-                    type="button" 
-                    class="flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all cursor-pointer flex items-center justify-center gap-1.5"
-                    :class="activeDetailTab === 'members' 
-                        ? 'bg-white dark:bg-slate-800 text-[#0c4da2] dark:text-blue-400 shadow-2xs border border-slate-200/80 dark:border-slate-700 font-bold' 
-                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'">
-                <i class="fa-solid fa-users text-[10px]"></i>
-                <span>Members</span>
-                <span class="px-1.5 py-0.2 bg-slate-100 dark:bg-slate-700 rounded-full text-[9px] font-bold" x-text="getUniqueParticipants().length"></span>
-            </button>
-        </div>
-
-        <!-- Detail Panel Tab Contents -->
-        <div class="flex-1 overflow-y-auto p-4 space-y-4 text-xs chat-scroll min-h-0">
-            
-            <!-- Tab 1: Info (Context & Room Summary) -->
-            <div x-show="activeDetailTab === 'info'" class="space-y-4">
-                <!-- Topic / Title Card -->
-                <div class="p-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-md space-y-1.5">
-                    <div class="flex items-center justify-between">
-                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Discussion Room</span>
-                        <span class="px-1.5 py-0.5 text-[9px] font-extrabold uppercase rounded-sm bg-blue-50 dark:bg-blue-950 text-[#0c4da2] dark:text-blue-400 border border-blue-200 dark:border-blue-800" x-text="chatType || 'General'"></span>
-                    </div>
-                    <h5 class="text-sm font-bold text-slate-800 dark:text-slate-100 break-words" x-text="chatTitle || 'Discussion Room'"></h5>
-                    <p x-show="chatSubtitle" class="text-xs text-slate-500 dark:text-slate-400" x-text="chatSubtitle"></p>
-                </div>
-
-                <!-- Dynamic Work Order / Custom Context if available -->
-                <template x-if="detailPanelData || (typeof woDetail !== 'undefined' && woDetail)">
-                    <div class="space-y-3">
-                        <div class="border-t border-slate-200 dark:border-slate-800 pt-3">
-                            <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Specifications</span>
-                            <div class="grid grid-cols-2 gap-2.5 bg-slate-50/70 dark:bg-slate-800/40 p-2.5 rounded-md border border-slate-200/80 dark:border-slate-700/70 text-xs">
-                                <div>
-                                    <span class="block text-[10px] text-slate-400 font-medium uppercase">Priority</span>
-                                    <span class="font-bold text-slate-800 dark:text-slate-100" x-text="(detailPanelData?.priority || woDetail?.priority) || 'Normal'"></span>
-                                </div>
-                                <div>
-                                    <span class="block text-[10px] text-slate-400 font-medium uppercase">Status</span>
-                                    <span class="font-bold text-slate-800 dark:text-slate-100" x-text="(detailPanelData?.status || woDetail?.status) || 'Active'"></span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Products / Part Items List with 1-Click #Tag button -->
-                        <template x-if="(detailPanelData?.products || woDetail?.products) && (detailPanelData?.products || woDetail?.products).length > 0">
-                            <div class="border-t border-slate-200 dark:border-slate-800 pt-3">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider" x-text="'Linked Products (' + ((detailPanelData?.products || woDetail?.products).length) + ')'"></span>
-                                    <span class="text-[9px] text-slate-400">Click #Tag to insert</span>
-                                </div>
-                                <div class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-                                    <template x-for="(prod, pIdx) in (detailPanelData?.products || woDetail?.products)" :key="pIdx">
-                                        <div class="p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 rounded-md flex items-center justify-between gap-2 shadow-2xs hover:border-[#0c4da2]/50 transition-colors">
-                                            <div class="min-w-0 flex-1">
-                                                <span class="block font-bold text-slate-800 dark:text-slate-100 text-xs truncate font-mono" x-text="prod.customer_part_no"></span>
-                                                <span class="block text-[11px] text-slate-500 truncate" x-text="prod.customer_part_name"></span>
-                                            </div>
-                                            <button type="button" 
-                                                    @click="chatInputMessage = (chatInputMessage ? chatInputMessage + ' ' : '') + '#' + prod.customer_part_no + ' '; $refs.chatInput?.focus();"
-                                                    class="px-2 py-0.5 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950 dark:hover:bg-indigo-900 text-indigo-600 dark:text-indigo-300 font-bold text-[10px] rounded-md border border-indigo-200 dark:border-indigo-800 transition-colors cursor-pointer flex-shrink-0"
-                                                    title="Tag this part number in chat">
-                                                #Tag
-                                            </button>
-                                        </div>
-                                    </template>
-                                </div>
-                            </div>
-                        </template>
-                    </div>
-                </template>
-
-                <!-- Room Statistics -->
-                <div class="border-t border-slate-200 dark:border-slate-800 pt-3">
-                    <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Activity Overview</span>
-                    <div class="grid grid-cols-2 gap-2 text-xs">
-                        <div class="p-2.5 bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/70 rounded-md">
-                            <span class="block text-[10px] text-slate-400">Total Messages</span>
-                            <span class="text-sm font-bold text-slate-800 dark:text-slate-100" x-text="chatMessages.length"></span>
-                        </div>
-                        <div class="p-2.5 bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/70 rounded-md">
-                            <span class="block text-[10px] text-slate-400">Shared Files</span>
-                            <span class="text-sm font-bold text-slate-800 dark:text-slate-100" x-text="getSharedFilesList().length"></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tab 2: Files & Links (Shared Attachments) -->
-            <div x-show="activeDetailTab === 'files'" class="space-y-2">
-                <template x-if="getSharedFilesList().length === 0">
-                    <div class="py-8 text-center text-slate-400 select-none">
-                        <i class="fa-solid fa-folder-open text-3xl mb-2 opacity-50"></i>
-                        <p class="text-xs">No shared files or media in this discussion.</p>
-                    </div>
-                </template>
-
-                <div class="space-y-2">
-                    <template x-for="(file, fIdx) in getSharedFilesList()" :key="fIdx">
-                        <div class="p-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 rounded-md flex items-center justify-between gap-2 shadow-2xs hover:border-[#0c4da2]/50 transition-colors">
-                            <div class="flex items-center gap-2.5 min-w-0 flex-1">
-                                <div class="w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0"
-                                     :class="isPdfType(file.file_type, file.file_name) ? 'bg-rose-50 dark:bg-rose-950 text-rose-500' : (isImageType(file.file_type, file.file_name) ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-500' : 'bg-blue-50 dark:bg-blue-950 text-blue-500')">
-                                    <i class="fa-solid text-sm" :class="isPdfType(file.file_type, file.file_name) ? 'fa-file-pdf' : (isImageType(file.file_type, file.file_name) ? 'fa-image' : 'fa-file')"></i>
-                                </div>
-                                <div class="min-w-0 flex-1">
-                                    <span class="block font-semibold text-slate-800 dark:text-slate-200 text-xs truncate" x-text="file.file_name"></span>
-                                    <span class="block text-[10px] text-slate-400 truncate" x-text="(file.senderName || 'User') + ' • ' + formatBytes(file.file_size)"></span>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-1 flex-shrink-0">
-                                <template x-if="isPdfType(file.file_type, file.file_name) || isImageType(file.file_type, file.file_name)">
-                                    <button type="button" 
-                                            @click="previewDoc(file.file_url, file.file_name)"
-                                            class="w-7 h-7 flex items-center justify-center rounded-md text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-slate-700 cursor-pointer"
-                                            title="Preview File">
-                                        <i class="fa-solid fa-eye text-xs"></i>
-                                    </button>
-                                </template>
-                                <a :href="file.file_url" 
-                                   :download="file.file_name"
-                                   target="_blank"
-                                   class="w-7 h-7 flex items-center justify-center rounded-md text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-slate-700 cursor-pointer"
-                                   title="Download File">
-                                    <i class="fa-solid fa-download text-xs"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </template>
-                </div>
-            </div>
-
-            <!-- Tab 3: Members (Participants List) -->
-            <div x-show="activeDetailTab === 'members'" class="space-y-2">
-                <template x-if="getUniqueParticipants().length === 0">
-                    <div class="py-8 text-center text-slate-400 select-none">
-                        <i class="fa-solid fa-users text-3xl mb-2 opacity-50"></i>
-                        <p class="text-xs">No active participants yet.</p>
-                    </div>
-                </template>
-
-                <div class="space-y-2">
-                    <template x-for="(user, uIdx) in getUniqueParticipants()" :key="uIdx">
-                        <div class="p-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 rounded-md flex items-center justify-between gap-2 shadow-2xs">
-                            <div class="flex items-center gap-2.5 min-w-0 flex-1">
-                                <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold uppercase border flex-shrink-0"
-                                     :class="getUserColor(user.id).avatar"
-                                     x-text="getInitials(user.name)"></div>
-                                <div class="min-w-0 flex-1">
-                                    <span class="block font-bold text-slate-800 dark:text-slate-100 text-xs truncate" x-text="user.name"></span>
-                                    <span class="block text-[10px] text-slate-400 truncate" x-text="user.department_code || user.email || 'Participant'"></span>
-                                </div>
-                            </div>
-                            <button type="button" 
-                                    @click="chatInputMessage = (chatInputMessage ? chatInputMessage + ' ' : '') + '@' + user.name + ' '; $refs.chatInput?.focus();"
-                                    class="px-2 py-1 bg-slate-100 hover:bg-indigo-50 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 hover:text-indigo-600 dark:text-slate-300 font-bold text-[10px] rounded-md transition-colors cursor-pointer flex-shrink-0"
-                                    title="Mention in chat">
-                                @Mention
-                            </button>
-                        </div>
-                    </template>
-                </div>
-            </div>
-
-        </div>
-    </div>
+</div>
