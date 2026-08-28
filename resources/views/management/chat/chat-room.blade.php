@@ -4,22 +4,15 @@
      @dragleave.prevent="if ($event.relatedTarget === null || !$el.contains($event.relatedTarget)) { isDragging = false }"
      @drop.prevent="handleDrop($event)">
 
-    <!-- Premium Glassmorphic Drag and Drop Overlay -->
+    <!-- Simple Clean Drag and Drop Overlay -->
     <div x-show="isDragging" 
-         class="absolute inset-0 bg-slate-900/40 dark:bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-6 z-[99] transition-all duration-200"
+         class="absolute inset-0 bg-slate-900/60 dark:bg-slate-950/75 backdrop-blur-xs flex flex-col items-center justify-center gap-2.5 z-[99] select-none transition-opacity duration-150"
          @dragover.prevent
          @dragleave.prevent="isDragging = false"
          @drop.prevent="handleDrop($event)"
          x-cloak>
-        <div class="w-full max-w-sm border-2 border-dashed border-indigo-400/80 dark:border-indigo-500/80 bg-white/95 dark:bg-slate-900/95 rounded-2xl p-6 flex flex-col items-center justify-center gap-3 text-center shadow-2xl backdrop-blur-md pointer-events-none select-none ring-4 ring-indigo-500/10">
-            <div class="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shadow-inner border border-indigo-100 dark:border-indigo-900/50">
-                <i class="fa-solid fa-cloud-arrow-up text-2xl text-indigo-600 dark:text-indigo-400"></i>
-            </div>
-            <div>
-                <p class="text-sm font-bold text-slate-800 dark:text-slate-100">Drop files here to send</p>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Images, PDFs, documents, or spreadsheets</p>
-            </div>
-        </div>
+        <i class="fa-solid fa-cloud-arrow-up text-4xl text-white opacity-95 pointer-events-none"></i>
+        <p class="text-sm font-bold text-white tracking-wide pointer-events-none">Drop files to send</p>
     </div>
     
     <!-- Chat Header with Filter Segmented Control -->
