@@ -108,6 +108,28 @@
         color: #93c5fd !important;
     }
     
+    .chat-markdown ol {
+        list-style-type: decimal !important;
+        list-style-position: outside !important;
+        margin: 0.35rem 0 0.35rem 1.35rem !important;
+        padding: 0 !important;
+    }
+    .chat-markdown ul {
+        list-style-type: disc !important;
+        list-style-position: outside !important;
+        margin: 0.35rem 0 0.35rem 1.35rem !important;
+        padding: 0 !important;
+    }
+    .chat-markdown li {
+        margin: 0.15rem 0 !important;
+        line-height: 1.45 !important;
+        display: list-item !important;
+    }
+    .chat-bubble-out .chat-markdown ol,
+    .chat-bubble-out .chat-markdown ul {
+        color: #ffffff !important;
+    }
+    
     .chat-markdown code { 
         background-color: rgba(0, 0, 0, 0.08) !important; 
         padding: 1px 4px !important; 
@@ -801,7 +823,7 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
             });
         },
 
-        // Formatting Toolbar
+        // Rich Formatting & Block Styling
         applyFormat(type) {
             const textarea = this.$refs.chatInput;
             if (!textarea) return;
@@ -828,20 +850,44 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
                     newCursorPos = selected ? end + 4 : start + 2;
                     break;
                 case 'code':
-                    replacement = `\`${selected || 'code'}\``;
-                    newCursorPos = selected ? end + 2 : start + 1;
+                    if (selected.includes('\n')) {
+                        replacement = `\`\`\`\n${selected || 'code block'}\n\`\`\``;
+                        newCursorPos = selected ? end + 8 : start + 4;
+                    } else {
+                        replacement = `\`${selected || 'code'}\``;
+                        newCursorPos = selected ? end + 2 : start + 1;
+                    }
                     break;
                 case 'quote':
-                    replacement = `\n> ${selected || 'quote'}\n`;
-                    newCursorPos = selected ? end + 4 : start + 3;
+                    if (selected) {
+                        const quoted = selected.split('\n').map(l => `> ${l}`).join('\n');
+                        replacement = `${before.endsWith('\n') || !before ? '' : '\n'}${quoted}\n`;
+                        newCursorPos = start + replacement.length;
+                    } else {
+                        replacement = `${before.endsWith('\n') || !before ? '' : '\n'}> quote text\n`;
+                        newCursorPos = start + replacement.length;
+                    }
                     break;
                 case 'ul':
-                    replacement = `\n- ${selected || 'list item'}\n`;
-                    newCursorPos = selected ? end + 4 : start + 3;
+                    if (selected) {
+                        const listItems = selected.split('\n').map(l => `- ${l.replace(/^[-*•\d\.]+\s*/, '')}`).join('\n');
+                        replacement = `${before.endsWith('\n') || !before ? '' : '\n'}${listItems}\n`;
+                        newCursorPos = start + replacement.length;
+                    } else {
+                        replacement = `${before.endsWith('\n') || !before ? '' : '\n'}- List item\n`;
+                        newCursorPos = start + replacement.length;
+                    }
                     break;
                 case 'ol':
-                    replacement = `\n1. ${selected || 'list item'}\n`;
-                    newCursorPos = selected ? end + 5 : start + 4;
+                    if (selected) {
+                        let count = 1;
+                        const listItems = selected.split('\n').map(l => `${count++}. ${l.replace(/^[-*•\d\.]+\s*/, '')}`).join('\n');
+                        replacement = `${before.endsWith('\n') || !before ? '' : '\n'}${listItems}\n`;
+                        newCursorPos = start + replacement.length;
+                    } else {
+                        replacement = `${before.endsWith('\n') || !before ? '' : '\n'}1. List item\n`;
+                        newCursorPos = start + replacement.length;
+                    }
                     break;
             }
 
@@ -849,7 +895,146 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
             this.$nextTick(() => {
                 textarea.focus();
                 textarea.setSelectionRange(newCursorPos, newCursorPos);
+                textarea.style.height = '20px';
+                textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
             });
+        },
+
+        // Textarea Keyboard Shortcuts & Smart List Continuation
+        handleChatTextareaKeydown(event) {
+            const textarea = this.$refs.chatInput;
+            if (!textarea) return;
+
+            const isCtrl = event.ctrlKey || event.metaKey;
+            const key = event.key ? event.key.toLowerCase() : '';
+
+            // 1. Keyboard Formatting Shortcuts
+            if (isCtrl) {
+                if (key === 'b') {
+                    event.preventDefault();
+                    this.applyFormat('bold');
+                    return;
+                }
+                if (key === 'i') {
+                    event.preventDefault();
+                    this.applyFormat('italic');
+                    return;
+                }
+                if (key === 'x' && event.shiftKey) {
+                    event.preventDefault();
+                    this.applyFormat('strike');
+                    return;
+                }
+                if (key === 'e' || key === '`') {
+                    event.preventDefault();
+                    this.applyFormat('code');
+                    return;
+                }
+                if (key === 'q' && event.shiftKey) {
+                    event.preventDefault();
+                    this.applyFormat('quote');
+                    return;
+                }
+                if ((key === '8' || key === 'u') && event.shiftKey) {
+                    event.preventDefault();
+                    this.applyFormat('ul');
+                    return;
+                }
+                if ((key === '7' || key === 'o') && event.shiftKey) {
+                    event.preventDefault();
+                    this.applyFormat('ol');
+                    return;
+                }
+            }
+
+            // 2. Smart List Continuation & Enter Handling
+            if (event.key === 'Enter') {
+                const val = this.chatInputMessage || '';
+                const start = textarea.selectionStart;
+                const lineBeforeCursor = val.substring(0, start).split('\n').pop();
+
+                // Numbered list pattern: "1. item" or " 2. item"
+                const numMatch = lineBeforeCursor.match(/^(\s*)(\d+)\.\s*(.*)$/);
+                // Bullet list pattern: "- item" or "* item" or "• item"
+                const bulletMatch = lineBeforeCursor.match(/^(\s*)([-*•])\s*(.*)$/);
+
+                if (numMatch) {
+                    const indent = numMatch[1];
+                    const num = parseInt(numMatch[2], 10);
+                    const itemContent = numMatch[3].trim();
+
+                    if (!itemContent) {
+                        // Empty numbered list line -> Exit list (remove prefix)
+                        event.preventDefault();
+                        const beforeLine = val.substring(0, start - lineBeforeCursor.length);
+                        const afterCursor = val.substring(start);
+                        this.chatInputMessage = beforeLine + afterCursor;
+                        const newPos = beforeLine.length;
+                        this.$nextTick(() => {
+                            textarea.setSelectionRange(newPos, newPos);
+                            textarea.style.height = '20px';
+                            textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+                        });
+                        return;
+                    }
+
+                    // Has content -> Auto increment to next list number: e.g. "2. "
+                    event.preventDefault();
+                    const nextNumStr = `\n${indent}${num + 1}. `;
+                    const before = val.substring(0, start);
+                    const after = val.substring(start);
+                    this.chatInputMessage = before + nextNumStr + after;
+                    const newPos = start + nextNumStr.length;
+                    this.$nextTick(() => {
+                        textarea.setSelectionRange(newPos, newPos);
+                        textarea.style.height = '20px';
+                        textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+                    });
+                    return;
+                }
+
+                if (bulletMatch) {
+                    const indent = bulletMatch[1];
+                    const bullet = bulletMatch[2];
+                    const itemContent = bulletMatch[3].trim();
+
+                    if (!itemContent) {
+                        // Empty bullet list line -> Exit list (remove prefix)
+                        event.preventDefault();
+                        const beforeLine = val.substring(0, start - lineBeforeCursor.length);
+                        const afterCursor = val.substring(start);
+                        this.chatInputMessage = beforeLine + afterCursor;
+                        const newPos = beforeLine.length;
+                        this.$nextTick(() => {
+                            textarea.setSelectionRange(newPos, newPos);
+                            textarea.style.height = '20px';
+                            textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+                        });
+                        return;
+                    }
+
+                    // Has content -> Auto continue bullet list: e.g. "- "
+                    event.preventDefault();
+                    const nextBulletStr = `\n${indent}${bullet} `;
+                    const before = val.substring(0, start);
+                    const after = val.substring(start);
+                    this.chatInputMessage = before + nextBulletStr + after;
+                    const newPos = start + nextBulletStr.length;
+                    this.$nextTick(() => {
+                        textarea.setSelectionRange(newPos, newPos);
+                        textarea.style.height = '20px';
+                        textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+                    });
+                    return;
+                }
+
+                // Normal message line (send on Enter without Shift)
+                if (!event.shiftKey) {
+                    event.preventDefault();
+                    this.sendMessage();
+                    textarea.style.height = '20px';
+                }
+            }
         },
 
         // Parse Markdown & Mentions
@@ -898,11 +1083,20 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
             str = str.replace(/~~([^~]+)~~/g, '<del>$1</del>');
             // Blockquote
             str = str.replace(/^>\s?(.*)$/gm, '<blockquote>$1</blockquote>');
+            str = str.replace(/<\/blockquote>\n<blockquote>/g, '<br>');
+
             // Bullet list
-            str = str.replace(/^\s*-\s+(.*)$/gm, '<li>$1</li>');
-            str = str.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+            str = str.replace(/^[\t ]*[-*•]\s+(.+)$/gm, '<li class="chat-li-ul">$1</li>');
+            str = str.replace(/(<li class="chat-li-ul">[\s\S]*?<\/li>)(?!(?:\s*<li class="chat-li-ul">))/g, function(match) {
+                return '<ul>' + match.replace(/class="chat-li-ul"/g, '') + '</ul>';
+            });
+
             // Numbered list
-            str = str.replace(/^\s*\d+\.\s+(.*)$/gm, '<li>$1</li>');
+            str = str.replace(/^[\t ]*(\d+)\.\s+(.+)$/gm, '<li class="chat-li-ol">$2</li>');
+            str = str.replace(/(<li class="chat-li-ol">[\s\S]*?<\/li>)(?!(?:\s*<li class="chat-li-ol">))/g, function(match) {
+                return '<ol>' + match.replace(/class="chat-li-ol"/g, '') + '</ol>';
+            });
+
             // Newlines
             str = str.replace(/\n/g, '<br>');
             return str;
