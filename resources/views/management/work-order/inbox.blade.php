@@ -218,105 +218,165 @@
                                 @include('management.work-order.wo1.preview')
                             </div>
                         </div>
-                                    {{-- Tab 2: PIC Checklist --}}
-                        <div x-show="activeRightTab === 'checklist'" class="w-full max-w-[760px] space-y-4">
-                            {{-- Checklist Product Search --}}
-                            <div class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-sm p-2.5 shadow-2xs flex items-center gap-2">
-                                <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs ml-1"></i>
-                                <input type="text" x-model="checklistSearchQuery" placeholder="Search product by part no or name..."
-                                       class="w-full text-xs text-slate-800 dark:text-slate-100 bg-transparent focus:outline-none border-none p-0">
-                                <button x-show="checklistSearchQuery" @click="checklistSearchQuery = ''" class="text-slate-400 hover:text-slate-655 dark:hover:text-slate-300 cursor-pointer">
-                                    <i class="fa-solid fa-circle-xmark text-xs"></i>
-                                </button>
+                                    {{-- Tab 2: PIC Checklist (Modern Project Management Style) --}}
+                        <div x-show="activeRightTab === 'checklist'" class="w-full max-w-[760px] space-y-3.5">
+                            
+                            {{-- Quick Stats & Search Bar --}}
+                            <div class="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl p-3 shadow-xs flex items-center justify-between gap-3">
+                                <div class="relative flex-1 flex items-center">
+                                    <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs absolute left-3 pointer-events-none"></i>
+                                    <input type="text" 
+                                           x-model="checklistSearchQuery" 
+                                           placeholder="Filter product by Part No or Name..."
+                                           class="w-full pl-9 pr-8 py-1.5 text-xs text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all placeholder:text-slate-400">
+                                    <button x-show="checklistSearchQuery" 
+                                            @click="checklistSearchQuery = ''" 
+                                            class="absolute right-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer">
+                                        <i class="fa-solid fa-circle-xmark text-xs"></i>
+                                    </button>
+                                </div>
+                                <div class="flex items-center gap-2 flex-shrink-0 text-[11px] font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-200/60 dark:border-slate-700/50">
+                                    <i class="fa-solid fa-cubes text-indigo-500"></i>
+                                    <span x-text="(detailData.products ? detailData.products.length : 0) + ' Products'"></span>
+                                </div>
                             </div>
 
                             <template x-for="(proc, pIdx) in detailData.processes" :key="pIdx">
-                                <div class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-sm overflow-hidden shadow-2xs">
-                                    <div class="bg-slate-50 dark:bg-slate-800 px-4 py-2 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                                        <span class="text-xs font-bold text-slate-800 dark:text-slate-200" x-text="proc.process_name"></span>
+                                <div class="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl overflow-hidden shadow-xs">
+                                    {{-- Process Section Header --}}
+                                    <div class="px-4 py-3 bg-slate-50/80 dark:bg-slate-800/60 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
+                                        <div class="flex items-center gap-2.5">
+                                            <div class="w-6 h-6 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-[11px] font-bold">
+                                                <i class="fa-solid fa-diagram-project"></i>
+                                            </div>
+                                            <span class="text-xs font-extrabold text-slate-800 dark:text-slate-100 uppercase tracking-wide" x-text="proc.process_name"></span>
+                                        </div>
                                     </div>
-                                    <div class="p-4 space-y-3">
+
+                                    <div class="p-3.5 space-y-3">
                                         <template x-for="(dept, dIdx) in proc.assigned_departments" :key="dIdx">
-                                            <div class="border border-slate-200 dark:border-slate-800 rounded-sm overflow-hidden">
-                                                {{-- Accordion Header --}}
+                                            <div class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden transition-all bg-white dark:bg-slate-900">
+                                                {{-- Accordion Header (Interactive Department Progress Row) --}}
                                                 <button type="button" @click="toggleDept(proc.process_id, dept.department_id)"
-                                                        class="w-full flex justify-between items-center bg-slate-50 dark:bg-slate-800 hover:bg-slate-100/70 dark:hover:bg-slate-800/70 p-2.5 border-b border-slate-200 dark:border-slate-800 text-xs font-semibold cursor-pointer select-none">
-                                                    <div class="flex items-center gap-2">
-                                                        <span class="px-2 py-0.5 rounded-sm bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold" x-text="dept.department_code"></span>
-                                                        <span class="text-slate-500 dark:text-slate-400" x-text="'(PIC: ' + dept.pic_name + ')'"></span>
+                                                        class="w-full flex justify-between items-center bg-slate-50/60 hover:bg-slate-100/80 dark:bg-slate-800/40 dark:hover:bg-slate-800 p-3 text-xs font-semibold cursor-pointer select-none transition-colors">
+                                                    <div class="flex items-center gap-2.5 min-w-0">
+                                                        <span class="px-2.5 py-1 rounded-md bg-slate-200/80 dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold text-[11px] border border-slate-300/40 dark:border-slate-600" x-text="dept.department_code"></span>
+                                                        <div class="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 text-xs truncate">
+                                                            <i class="fa-regular fa-circle-user text-[13px] text-slate-400 flex-shrink-0"></i>
+                                                            <span class="font-medium truncate" x-text="dept.pic_name"></span>
+                                                        </div>
                                                         <template x-if="dept.is_my_pic_task === true || dept.is_my_pic_task === 1">
-                                                            <span class="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50 font-extrabold text-[9px] rounded-sm uppercase tracking-wider font-mono">My Task</span>
+                                                            <span class="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 ring-1 ring-indigo-500/20 font-bold text-[9px] rounded-full uppercase tracking-wider flex items-center gap-1">
+                                                                <i class="fa-solid fa-star text-[7.5px]"></i> My Task
+                                                            </span>
                                                         </template>
                                                     </div>
-                                                    <div class="flex items-center gap-3 select-none">
-                                                        <div class="flex items-center gap-2">
-                                                            <span class="font-mono text-slate-600 dark:text-slate-400 text-[11px]" x-text="dept.checked_product_ids.length + '/' + detailData.products.length + ' Done'"></span>
-                                                            <div class="w-48 bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden border border-slate-300/30 dark:border-slate-700/30 flex-shrink-0">
-                                                                <div class="bg-[#0c4da2] dark:bg-blue-500 h-full rounded-full transition-all duration-300" :style="'width: ' + (detailData.products.length > 0 ? (dept.checked_product_ids.length / detailData.products.length * 100) : 0) + '%'"></div>
+
+                                                    <div class="flex items-center gap-3.5 select-none flex-shrink-0">
+                                                        <div class="flex items-center gap-2.5">
+                                                            <span class="font-mono text-xs font-bold" 
+                                                                  :class="getDeptProgressPct(dept) === 100 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-300'" 
+                                                                  x-text="getDeptValidCheckedCount(dept) + '/' + (detailData.products ? detailData.products.length : 0) + ' (' + getDeptProgressPct(dept) + '%)'"></span>
+                                                            <div class="w-36 sm:w-44 bg-slate-200/80 dark:bg-slate-700/80 h-2 rounded-full overflow-hidden flex-shrink-0">
+                                                                <div class="h-full rounded-full transition-all duration-300" 
+                                                                     :class="getDeptProgressPct(dept) === 100 ? 'bg-emerald-500 shadow-sm' : 'bg-indigo-600 dark:bg-indigo-500'" 
+                                                                     :style="'width: ' + getDeptProgressPct(dept) + '%'"></div>
                                                             </div>
                                                         </div>
-                                                        <i class="fa-solid text-[9px] text-slate-400" :class="isDeptExpanded(proc.process_id, dept.department_id) ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                                                        <div class="w-5 h-5 rounded-full bg-slate-200/60 dark:bg-slate-700/60 flex items-center justify-center text-slate-400">
+                                                            <i class="fa-solid text-[9px] transition-transform duration-200" :class="isDeptExpanded(proc.process_id, dept.department_id) ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                                                        </div>
                                                     </div>
                                                 </button>
                                                 
-                                                {{-- Accordion Body (Checkbox checklist) --}}
-                                                <div x-show="isDeptExpanded(proc.process_id, dept.department_id)" class="p-3 space-y-2.5 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
+                                                {{-- Accordion Body (Modern Task Checklist) --}}
+                                                <div x-show="isDeptExpanded(proc.process_id, dept.department_id)" class="p-3.5 space-y-3 bg-slate-50/30 dark:bg-slate-900/60 border-t border-slate-200/70 dark:border-slate-800">
+                                                    
                                                     {{-- Lock Warning if not approved --}}
                                                     <template x-if="detailData.status !== 'Approved' && detailData.status !== 'Released'">
-                                                        <div class="px-2.5 py-1.5 text-[10px] bg-amber-50 dark:bg-amber-955/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900/40 rounded-sm flex items-center gap-1.5 font-bold mb-2">
-                                                            <i class="fa-solid fa-lock"></i> Progress checklist is locked during approval process.
+                                                        <div class="px-3 py-2 text-xs bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 rounded-lg flex items-center gap-2 font-medium">
+                                                            <i class="fa-solid fa-lock text-amber-500"></i> Progress checklist is locked during approval process.
                                                         </div>
                                                     </template>
 
-                                                    {{-- Select All Row (Only for PIC when approved) --}}
+                                                    {{-- Select All Toolbar (Only for PIC when approved) --}}
                                                     <template x-if="(dept.is_my_pic_task === true || dept.is_my_pic_task === 1) && (detailData.status === 'Approved' || detailData.status === 'Released')">
-                                                        <div class="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800 mb-1 select-none">
-                                                            <label class="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700 dark:text-slate-300">
+                                                        <div class="flex items-center justify-between px-1 pb-1 select-none">
+                                                            <label class="inline-flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-indigo-600 transition-colors">
                                                                 <input type="checkbox" 
                                                                        :checked="isAllProductsChecked(proc.process_id, dept.department_id)"
                                                                        @change="toggleSelectAllProducts(proc.process_id, dept.department_id, $event.target.checked)"
-                                                                       class="h-3.5 w-3.5 rounded-sm border-slate-300 dark:border-slate-700 text-[#0c4da2] dark:text-blue-500 focus:ring-0 cursor-pointer bg-white dark:bg-slate-900">
-                                                                <span>Select All Products</span>
+                                                                       class="h-4 w-4 rounded-md border-slate-300 dark:border-slate-600 text-indigo-600 focus:ring-0 cursor-pointer bg-white dark:bg-slate-800">
+                                                                <span>Mark all products as completed</span>
                                                             </label>
                                                         </div>
                                                     </template>
                                                     
-                                                    <div class="bg-slate-50 dark:bg-slate-900/40 p-2.5 border border-slate-200 dark:border-slate-800 rounded-sm">
-                                                        <div class="grid grid-cols-2 gap-2">
-                                                            <template x-for="p in detailData.products.filter(p => !checklistSearchQuery || p.customer_part_no.toLowerCase().includes(checklistSearchQuery.toLowerCase()) || p.customer_part_name.toLowerCase().includes(checklistSearchQuery.toLowerCase()))" :key="p.id">
-                                                                <div class="flex items-center justify-between p-2 border rounded-sm text-xs transition-colors duration-200 shadow-2xs"
-                                                                     :class="dept.checked_product_ids.includes(Number(p.id)) ? 'border-emerald-200 dark:border-emerald-800 bg-emerald-50/20 dark:bg-emerald-950/10' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900'">
-                                                                    
-                                                                    {{-- Checkbox for PIC (Enabled only if approved) --}}
-                                                                    <template x-if="(dept.is_my_pic_task === true || dept.is_my_pic_task === 1) && (detailData.status === 'Approved' || detailData.status === 'Released')">
-                                                                        <label class="flex items-center gap-2.5 cursor-pointer w-full select-none text-slate-700 dark:text-slate-300">
+                                                    {{-- Product Task Cards Grid --}}
+                                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                                        <template x-for="p in detailData.products.filter(p => !checklistSearchQuery || p.customer_part_no.toLowerCase().includes(checklistSearchQuery.toLowerCase()) || p.customer_part_name.toLowerCase().includes(checklistSearchQuery.toLowerCase()))" :key="p.id">
+                                                            <div>
+                                                                {{-- Editable Tile for PIC when approved --}}
+                                                                <template x-if="(dept.is_my_pic_task === true || dept.is_my_pic_task === 1) && (detailData.status === 'Approved' || detailData.status === 'Released')">
+                                                                    <label class="flex items-center justify-between p-2.5 border rounded-xl text-xs transition-all duration-150 shadow-2xs cursor-pointer select-none"
+                                                                           :class="dept.checked_product_ids.includes(Number(p.id)) 
+                                                                               ? 'border-emerald-300 dark:border-emerald-700/60 bg-emerald-50/40 dark:bg-emerald-950/20 ring-1 ring-emerald-500/10' 
+                                                                               : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-xs'">
+                                                                        
+                                                                        <div class="flex items-center gap-3 min-w-0 flex-1">
                                                                             <input type="checkbox" name="checked_product_ids[]" :value="p.id"
                                                                                    :checked="dept.checked_product_ids.includes(Number(p.id))"
                                                                                    @change="toggleProductChecked(proc.process_id, dept.department_id, p.id, $event.target.checked)"
-                                                                                   class="h-3.5 w-3.5 rounded-sm border-slate-300 dark:border-slate-750 text-[#0c4da2] dark:text-blue-500 focus:ring-0 cursor-pointer bg-white dark:bg-slate-900">
+                                                                                   class="h-4 w-4 rounded-md border-slate-300 dark:border-slate-600 text-emerald-600 focus:ring-0 cursor-pointer bg-white dark:bg-slate-800">
                                                                             <div class="min-w-0 flex-1">
-                                                                                <span class="font-extrabold block text-slate-800 dark:text-slate-200" :class="dept.checked_product_ids.includes(Number(p.id)) ? 'text-emerald-800 dark:text-emerald-450' : 'text-slate-800 dark:text-slate-200'" x-text="p.customer_part_no"></span>
-                                                                                <span class="text-[10px] text-slate-455 dark:text-slate-400 truncate block" x-text="p.customer_part_name"></span>
+                                                                                <span class="font-bold block truncate" 
+                                                                                      :class="dept.checked_product_ids.includes(Number(p.id)) ? 'text-emerald-900 dark:text-emerald-300' : 'text-slate-800 dark:text-slate-100'" 
+                                                                                      x-text="p.customer_part_no"></span>
+                                                                                <span class="text-[11px] text-slate-500 dark:text-slate-400 truncate block mt-0.5" x-text="p.customer_part_name"></span>
                                                                             </div>
-                                                                        </label>
-                                                                    </template>
-                                                                    
-                                                                    {{-- Read-only or Disabled checklist if not PIC or not approved --}}
-                                                                    <template x-if="!((dept.is_my_pic_task === true || dept.is_my_pic_task === 1) && (detailData.status === 'Approved' || detailData.status === 'Released'))">
-                                                                        <div class="flex items-center gap-2.5 w-full">
-                                                                            <div class="w-4 h-4 rounded-sm flex items-center justify-center flex-none border"
-                                                                                 :class="dept.checked_product_ids.includes(Number(p.id)) ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-700'">
+                                                                        </div>
+
+                                                                        <span class="ml-2 flex-shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold"
+                                                                              :class="dept.checked_product_ids.includes(Number(p.id)) 
+                                                                                  ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 flex items-center gap-1' 
+                                                                                  : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500'">
+                                                                            <i x-show="dept.checked_product_ids.includes(Number(p.id))" class="fa-solid fa-check text-[8px]"></i>
+                                                                            <span x-text="dept.checked_product_ids.includes(Number(p.id)) ? 'Done' : 'To Do'"></span>
+                                                                        </span>
+                                                                    </label>
+                                                                </template>
+
+                                                                {{-- Read-Only Tile for non-PIC or unapproved --}}
+                                                                <template x-if="!((dept.is_my_pic_task === true || dept.is_my_pic_task === 1) && (detailData.status === 'Approved' || detailData.status === 'Released'))">
+                                                                    <div class="flex items-center justify-between p-2.5 border rounded-xl text-xs transition-all duration-150 shadow-2xs"
+                                                                         :class="dept.checked_product_ids.includes(Number(p.id)) 
+                                                                             ? 'border-emerald-300/80 dark:border-emerald-700/60 bg-emerald-50/30 dark:bg-emerald-950/15' 
+                                                                             : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 opacity-85'">
+                                                                        
+                                                                        <div class="flex items-center gap-3 min-w-0 flex-1">
+                                                                            <div class="w-4 h-4 rounded-md flex items-center justify-center flex-none"
+                                                                                 :class="dept.checked_product_ids.includes(Number(p.id)) ? 'bg-emerald-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-300 dark:text-slate-600 border border-slate-200 dark:border-slate-700'">
                                                                                 <i class="fa-solid text-[8px]" :class="dept.checked_product_ids.includes(Number(p.id)) ? 'fa-check' : 'fa-xmark'"></i>
                                                                             </div>
                                                                             <div class="min-w-0 flex-1">
-                                                                                <span class="font-bold block" :class="dept.checked_product_ids.includes(Number(p.id)) ? 'text-emerald-800 dark:text-emerald-450 font-extrabold' : 'text-slate-600 dark:text-slate-400'" x-text="p.customer_part_no"></span>
-                                                                                <span class="text-[10px] text-slate-455 dark:text-slate-550 truncate block" x-text="p.customer_part_name"></span>
+                                                                                <span class="font-bold block truncate" 
+                                                                                      :class="dept.checked_product_ids.includes(Number(p.id)) ? 'text-emerald-900 dark:text-emerald-300' : 'text-slate-700 dark:text-slate-300'" 
+                                                                                      x-text="p.customer_part_no"></span>
+                                                                                <span class="text-[11px] text-slate-500 dark:text-slate-400 truncate block mt-0.5" x-text="p.customer_part_name"></span>
                                                                             </div>
                                                                         </div>
-                                                                    </template>
-                                                                </div>
-                                                            </template>
-                                                        </div>
+
+                                                                        <span class="ml-2 flex-shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold"
+                                                                              :class="dept.checked_product_ids.includes(Number(p.id)) 
+                                                                                  ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 flex items-center gap-1' 
+                                                                                  : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500'">
+                                                                            <i x-show="dept.checked_product_ids.includes(Number(p.id))" class="fa-solid fa-check text-[8px]"></i>
+                                                                            <span x-text="dept.checked_product_ids.includes(Number(p.id)) ? 'Done' : 'To Do'"></span>
+                                                                        </span>
+                                                                    </div>
+                                                                </template>
+                                                            </div>
+                                                        </template>
                                                     </div>
                                                 </div>
                                             </div>
@@ -744,6 +804,19 @@ function outlookInbox() {
                     });
                 }
             });
+        },
+
+        getDeptValidCheckedCount(dept) {
+            if (!dept || !dept.checked_product_ids || !this.detailData || !this.detailData.products) return 0;
+            const prodIds = new Set(this.detailData.products.map(p => Number(p.id)));
+            const valid = dept.checked_product_ids.filter(id => prodIds.has(Number(id)));
+            return Math.min(new Set(valid).size, this.detailData.products.length);
+        },
+
+        getDeptProgressPct(dept) {
+            if (!this.detailData || !this.detailData.products || this.detailData.products.length === 0) return 0;
+            const count = this.getDeptValidCheckedCount(dept);
+            return Math.round((count / this.detailData.products.length) * 100);
         },
         
         toggleProductChecked(processId, departmentId, productId, isChecked) {
