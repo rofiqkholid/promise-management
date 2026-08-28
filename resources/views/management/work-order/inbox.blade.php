@@ -222,20 +222,20 @@
                         <div x-show="activeRightTab === 'checklist'" class="w-full max-w-[780px] space-y-4">
                             
                             {{-- Proportional Search & Status Bar --}}
-                            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-2xs flex items-center justify-between gap-3">
+                            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm p-3 shadow-2xs flex items-center justify-between gap-3">
                                 <div class="relative flex-1 flex items-center">
                                     <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs absolute left-3 pointer-events-none"></i>
                                     <input type="text" 
                                            x-model="checklistSearchQuery" 
                                            placeholder="Search product by Part No or Product Name..."
-                                           class="w-full pl-9 pr-8 py-1.5 text-xs text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-lg focus:outline-none focus:border-[#0c4da2] focus:ring-1 focus:ring-[#0c4da2]/20 transition-all placeholder:text-slate-400">
+                                           class="w-full pl-9 pr-8 py-1.5 text-xs text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-sm focus:outline-none focus:border-[#0c4da2] focus:ring-1 focus:ring-[#0c4da2]/20 transition-all placeholder:text-slate-400">
                                     <button x-show="checklistSearchQuery" 
                                             @click="checklistSearchQuery = ''" 
                                             class="absolute right-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer">
                                         <i class="fa-solid fa-circle-xmark text-xs"></i>
                                     </button>
                                 </div>
-                                <div class="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-200/60 dark:border-slate-700/60 flex-shrink-0 select-none">
+                                <div class="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-sm border border-slate-200/60 dark:border-slate-700/60 flex-shrink-0 select-none">
                                     <i class="fa-solid fa-cubes text-[#0c4da2] dark:text-blue-400"></i>
                                     <span x-text="(detailData.products ? detailData.products.length : 0) + ' Products'"></span>
                                 </div>
@@ -245,7 +245,7 @@
                             <template x-for="(proc, pIdx) in detailData.processes" :key="pIdx">
                                 <div class="space-y-4">
                                     <template x-for="(dept, dIdx) in proc.assigned_departments" :key="dIdx">
-                                        <div class="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl overflow-hidden shadow-2xs transition-all">
+                                        <div class="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-sm overflow-hidden shadow-2xs transition-all">
                                             
                                             {{-- Group Header with Progress Bar & App Colors --}}
                                             <div @click="toggleDept(proc.process_id, dept.department_id)"
@@ -257,10 +257,10 @@
                                                     
                                                     <span class="font-bold text-sm text-slate-800 dark:text-slate-100 truncate" x-text="proc.process_name"></span>
                                                     
-                                                    <span class="px-2 py-0.5 rounded bg-slate-200/80 dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold text-[11px] font-mono border border-slate-300/50 dark:border-slate-600" x-text="dept.department_code"></span>
+                                                    <span class="px-2 py-0.5 rounded-sm bg-slate-200/80 dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold text-[11px] font-mono border border-slate-300/50 dark:border-slate-600" x-text="dept.department_code"></span>
 
                                                     <template x-if="dept.is_my_pic_task === true || dept.is_my_pic_task === 1">
-                                                        <span class="px-2 py-0.5 bg-blue-50 dark:bg-blue-950/60 text-[#0c4da2] dark:text-blue-400 border border-blue-200 dark:border-blue-800/60 font-bold text-[10px] rounded-md uppercase tracking-wider">
+                                                        <span class="px-2 py-0.5 bg-blue-50 dark:bg-blue-950/60 text-[#0c4da2] dark:text-blue-400 border border-blue-200 dark:border-blue-800/60 font-bold text-[10px] rounded-sm uppercase tracking-wider">
                                                             My Task
                                                         </span>
                                                     </template>
@@ -272,8 +272,8 @@
                                                           :class="getDeptProgressPct(dept) === 100 ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-slate-600 dark:text-slate-400'"
                                                           x-text="getDeptValidCheckedCount(dept) + '/' + (detailData.products ? detailData.products.length : 0) + ' (' + getDeptProgressPct(dept) + '%)'"></span>
                                                     
-                                                    <div class="w-24 sm:w-32 bg-slate-200/80 dark:bg-slate-700/80 h-2 rounded-full overflow-hidden flex-shrink-0">
-                                                        <div class="h-full rounded-full transition-all duration-300" 
+                                                    <div class="w-24 sm:w-32 bg-slate-200/80 dark:bg-slate-700/80 h-2 rounded-sm overflow-hidden flex-shrink-0">
+                                                        <div class="h-full rounded-sm transition-all duration-300" 
                                                              :class="getDeptProgressPct(dept) === 100 ? 'bg-emerald-500' : 'bg-[#0c4da2] dark:bg-blue-500'" 
                                                              :style="'width: ' + getDeptProgressPct(dept) + '%'"></div>
                                                     </div>
@@ -294,7 +294,7 @@
                                                         <input type="checkbox" 
                                                                :checked="isAllProductsChecked(proc.process_id, dept.department_id)"
                                                                @change="toggleSelectAllProducts(proc.process_id, dept.department_id, $event.target.checked)"
-                                                               class="h-3.5 w-3.5 rounded border-slate-300 dark:border-slate-600 text-[#0c4da2] focus:ring-0 cursor-pointer">
+                                                               class="h-3.5 w-3.5 rounded-sm border-slate-300 dark:border-slate-600 text-[#0c4da2] focus:ring-0 cursor-pointer">
                                                         <span>Select All</span>
                                                     </label>
                                                 </template>
@@ -322,7 +322,7 @@
                                                                        :value="p.id"
                                                                        :checked="dept.checked_product_ids.includes(Number(p.id))"
                                                                        @change="toggleProductChecked(proc.process_id, dept.department_id, p.id, $event.target.checked)"
-                                                                       class="h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-[#0c4da2] focus:ring-0 cursor-pointer flex-shrink-0">
+                                                                       class="h-4 w-4 rounded-sm border-slate-300 dark:border-slate-600 text-[#0c4da2] focus:ring-0 cursor-pointer flex-shrink-0">
                                                             </template>
 
                                                             {{-- Disabled Checkbox (Read-Only when locked or non-PIC) --}}
@@ -330,7 +330,7 @@
                                                                 <input type="checkbox" 
                                                                        disabled 
                                                                        :checked="dept.checked_product_ids.includes(Number(p.id))" 
-                                                                       class="h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-slate-400 opacity-50 cursor-not-allowed flex-shrink-0">
+                                                                       class="h-4 w-4 rounded-sm border-slate-300 dark:border-slate-600 text-slate-400 opacity-50 cursor-not-allowed flex-shrink-0">
                                                             </template>
 
                                                             {{-- Part No --}}
@@ -347,7 +347,7 @@
                                                         <div class="flex items-center gap-3 flex-shrink-0 select-none">
                                                             {{-- Priority Pill (If defined) --}}
                                                             <template x-if="detailData.priority">
-                                                                <span class="px-2 py-0.5 rounded text-[10px] font-semibold"
+                                                                <span class="px-2 py-0.5 rounded-sm text-[10px] font-semibold"
                                                                       :class="detailData.priority === 'Urgent' ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900' : (detailData.priority === 'High' ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700')"
                                                                       x-text="detailData.priority"></span>
                                                             </template>
