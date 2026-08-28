@@ -4,16 +4,21 @@
      @dragleave.prevent="if ($event.relatedTarget === null || !$el.contains($event.relatedTarget)) { isDragging = false }"
      @drop.prevent="handleDrop($event)">
 
-    <!-- Drag and Drop Overlay -->
+    <!-- Premium Glassmorphic Drag and Drop Overlay -->
     <div x-show="isDragging" 
-         class="absolute inset-0 bg-indigo-600/10 dark:bg-indigo-600/20 backdrop-blur-xs flex flex-col items-center justify-center border-2 border-dashed border-indigo-500 z-[99] transition-all m-4 rounded-sm"
+         class="absolute inset-0 bg-slate-900/40 dark:bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-6 z-[99] transition-all duration-200"
          @dragover.prevent
          @dragleave.prevent="isDragging = false"
          @drop.prevent="handleDrop($event)"
          x-cloak>
-        <div class="bg-white dark:bg-slate-800 p-6 rounded-md shadow-lg flex flex-col items-center gap-3 select-none pointer-events-none">
-            <i class="fa-solid fa-cloud-arrow-up text-4xl text-indigo-600 dark:text-indigo-400 animate-bounce"></i>
-            <p class="text-xs font-bold text-slate-700 dark:text-slate-200">Drop files here to upload</p>
+        <div class="w-full max-w-sm border-2 border-dashed border-indigo-400/80 dark:border-indigo-500/80 bg-white/95 dark:bg-slate-900/95 rounded-2xl p-6 flex flex-col items-center justify-center gap-3 text-center shadow-2xl backdrop-blur-md pointer-events-none select-none ring-4 ring-indigo-500/10">
+            <div class="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shadow-inner border border-indigo-100 dark:border-indigo-900/50">
+                <i class="fa-solid fa-cloud-arrow-up text-2xl text-indigo-600 dark:text-indigo-400"></i>
+            </div>
+            <div>
+                <p class="text-sm font-bold text-slate-800 dark:text-slate-100">Drop files here to send</p>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Images, PDFs, documents, or spreadsheets</p>
+            </div>
         </div>
     </div>
     
