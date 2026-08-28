@@ -307,21 +307,25 @@
                                                      class="flex items-center justify-between px-4 py-3 bg-slate-50/60 hover:bg-slate-100/70 dark:bg-slate-800/40 dark:hover:bg-slate-800/70 border-b border-slate-200/80 dark:border-slate-800 cursor-pointer select-none transition-colors">
                                                     
                                                     {{-- Left: Expand icon, Process Name, Badge & PIC --}}
-                                                    <div class="flex items-center gap-2.5 min-w-0 flex-1 pr-3">
-                                                        <i class="fa-solid text-slate-400 text-xs w-3 text-center transition-transform duration-200" 
+                                                    <div class="flex items-center gap-2.5 min-w-0 flex-1 pr-3 flex-wrap sm:flex-nowrap">
+                                                        <i class="fa-solid text-slate-400 text-xs w-3 text-center transition-transform duration-200 flex-shrink-0" 
                                                            :class="isDeptExpanded(proc.process_id, dept.department_id) ? 'fa-chevron-down text-[#0c4da2]' : 'fa-chevron-right'"></i>
                                                         
                                                         <span class="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-100 truncate" x-text="proc.process_name"></span>
                                                         
-                                                        <span class="px-2 py-0.5 rounded-md bg-slate-200/80 dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold text-[10px] font-mono border border-slate-300/50 dark:border-slate-600" x-text="dept.department_code"></span>
+                                                        <span class="px-2 py-0.5 rounded-md bg-slate-200/80 dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold text-[10px] font-mono border border-slate-300/50 dark:border-slate-600 flex-shrink-0" x-text="dept.department_code"></span>
 
                                                         <template x-if="dept.is_my_pic_task === true || dept.is_my_pic_task === 1">
-                                                            <span class="px-1.5 py-0.5 bg-blue-50 dark:bg-blue-950 text-[#0c4da2] dark:text-blue-400 border border-blue-200 dark:border-blue-800 text-[9px] font-bold rounded-md uppercase tracking-wider">
+                                                            <span class="px-1.5 py-0.5 bg-blue-50 dark:bg-blue-950 text-[#0c4da2] dark:text-blue-400 border border-blue-200 dark:border-blue-800 text-[9px] font-bold rounded-md uppercase tracking-wider flex-shrink-0">
                                                                 My Task
                                                             </span>
                                                         </template>
 
-                                                        <span class="text-xs text-slate-500 dark:text-slate-400 truncate hidden md:inline" x-text="'• PIC: ' + (dept.pic_name || '—')"></span>
+                                                        <div class="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 truncate flex-shrink-0">
+                                                            <span class="text-slate-300 dark:text-slate-600">•</span>
+                                                            <span class="text-slate-400">PIC:</span>
+                                                            <span class="font-medium text-slate-700 dark:text-slate-300 truncate" x-text="dept.pic_name || '—'"></span>
+                                                        </div>
                                                     </div>
 
                                                     {{-- Right: Assignee Avatar & Progress --}}
@@ -358,7 +362,7 @@
                                                             <i class="fa-solid fa-barcode text-slate-400 text-xs"></i>
                                                             <span>Part No</span>
                                                         </div>
-                                                        <div class="col-span-4 flex items-center gap-1.5">
+                                                        <div class="col-span-3 flex items-center gap-1.5">
                                                             <i class="fa-solid fa-cube text-slate-400 text-xs"></i>
                                                             <span>Part Name</span>
                                                         </div>
@@ -366,8 +370,9 @@
                                                             <i class="fa-solid fa-building text-slate-400 text-xs"></i>
                                                             <span>Dept</span>
                                                         </div>
-                                                        <div class="col-span-1 text-center">
-                                                            <i class="fa-solid fa-user text-slate-400 text-xs" title="PIC / Assignee"></i>
+                                                        <div class="col-span-2 flex items-center gap-1.5">
+                                                            <i class="fa-solid fa-user text-slate-400 text-xs"></i>
+                                                            <span>PIC</span>
                                                         </div>
                                                         <div class="col-span-2 text-right flex items-center justify-end gap-1.5">
                                                             <i class="fa-solid fa-circle-check text-slate-400 text-xs"></i>
@@ -409,18 +414,18 @@
                                                                 </div>
 
                                                                 {{-- Col 2: Part Name --}}
-                                                                <div class="col-span-4 truncate text-slate-600 dark:text-slate-300 pr-2" x-text="p.customer_part_name"></div>
+                                                                <div class="col-span-3 truncate text-slate-600 dark:text-slate-300 pr-2" x-text="p.customer_part_name"></div>
 
                                                                 {{-- Col 3: Dept Code --}}
                                                                 <div class="col-span-1">
                                                                     <span class="text-[10px] text-slate-500 dark:text-slate-400 font-mono font-semibold" x-text="dept.department_code"></span>
                                                                 </div>
 
-                                                                {{-- Col 4: Assignee Avatar --}}
-                                                                <div class="col-span-1 flex justify-center">
-                                                                    <div class="w-4 h-4 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center text-[8px] font-bold uppercase"
-                                                                         :title="dept.pic_name"
+                                                                {{-- Col 4: PIC Name & Avatar --}}
+                                                                <div class="col-span-2 flex items-center gap-1.5 min-w-0 pr-2">
+                                                                    <div class="w-4 h-4 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center text-[8px] font-bold uppercase flex-shrink-0"
                                                                          x-text="dept.pic_name ? dept.pic_name.split(' ').map(n => n[0]).slice(0, 2).join('') : 'P'"></div>
+                                                                    <span class="truncate text-[11px] text-slate-600 dark:text-slate-300 font-medium" x-text="dept.pic_name || '—'"></span>
                                                                 </div>
 
                                                                 {{-- Col 5: Status --}}
