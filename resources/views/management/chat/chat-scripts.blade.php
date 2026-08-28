@@ -250,6 +250,45 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
             { avatar: 'bg-teal-100 dark:bg-teal-950 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-800', name: 'text-teal-600 dark:text-teal-400' },
         ],
 
+        // Collapsible Detail Panel (Dynamic & Configurable)
+        hasDetailPanel: true,
+        showDetailPanel: false,
+        activeDetailTab: 'info', // 'info', 'files', 'members'
+        detailPanelData: null,
+
+        toggleDetailPanel() {
+            this.showDetailPanel = !this.showDetailPanel;
+        },
+
+        getSharedFilesList() {
+            const files = [];
+            if (!this.chatMessages || !this.chatMessages.length) return files;
+            this.chatMessages.forEach(msg => {
+                if (msg.attachments && Array.isArray(msg.attachments)) {
+                    msg.attachments.forEach(att => {
+                        files.push({
+                            ...att,
+                            messageId: msg.id,
+                            senderName: msg.user?.name || 'User',
+                            createdAt: msg.created_at
+                        });
+                    });
+                }
+            });
+            return files;
+        },
+
+        getUniqueParticipants() {
+            const map = new Map();
+            if (!this.chatMessages || !this.chatMessages.length) return [];
+            this.chatMessages.forEach(msg => {
+                if (msg.user && !map.has(msg.user.id)) {
+                    map.set(msg.user.id, msg.user);
+                }
+            });
+            return Array.from(map.values());
+        },
+
         getUserColor(userId) {
             const index = Math.abs(Number(userId || 0)) % this.userColorPalette.length;
             return this.userColorPalette[index];

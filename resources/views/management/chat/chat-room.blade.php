@@ -105,6 +105,20 @@
                     <span>Files &amp; Links</span>
                 </button>
             </div>
+
+            <!-- 4. Dynamic Detail Panel Toggle Button -->
+            <template x-if="hasDetailPanel">
+                <button @click="toggleDetailPanel()" 
+                        type="button" 
+                        class="h-[28px] px-2 flex items-center justify-center gap-1.5 rounded-md border transition-all cursor-pointer shadow-2xs select-none"
+                        :class="showDetailPanel 
+                            ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 border-indigo-300 dark:border-indigo-700 shadow-xs' 
+                            : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750 hover:text-slate-900 dark:hover:text-white'"
+                        :title="showDetailPanel ? 'Hide Room Details' : 'Show Room Details'">
+                    <i class="fa-solid fa-circle-info text-[11px] text-indigo-500"></i>
+                    <span class="text-[11px] font-semibold hidden md:inline">Details</span>
+                </button>
+            </template>
         </div>
     </div>
 
@@ -637,4 +651,214 @@
         </div>
     </div>
 
-</div>
+    <!-- Right: Dynamic Collapsible Detail Panel (with Tabs) -->
+    <div x-show="hasDetailPanel && showDetailPanel" 
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 translate-x-full"
+         x-transition:enter-end="opacity-100 translate-x-0"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100 translate-x-0"
+         x-transition:leave-end="opacity-0 translate-x-full"
+         class="fixed md:static inset-y-0 right-0 z-[100] md:z-20 w-full max-w-xs md:max-w-sm border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col h-full flex-shrink-0 shadow-2xl md:shadow-none overflow-hidden"
+         x-cloak>
+        
+        <!-- Detail Panel Top Header -->
+        <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/70 dark:bg-slate-850/50 flex-shrink-0">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-circle-info text-indigo-500 text-xs"></i>
+                <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Room Details</h4>
+            </div>
+            <button @click="showDetailPanel = false" 
+                    type="button"
+                    class="w-6 h-6 flex items-center justify-center rounded-sm text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-700 transition-colors text-base cursor-pointer">
+                &times;
+            </button>
+        </div>
+
+        <!-- Detail Panel Segmented Tabs -->
+        <div class="px-3 pt-2.5 pb-2 bg-slate-50/40 dark:bg-slate-850/30 border-b border-slate-200 dark:border-slate-800 flex items-center gap-1 flex-shrink-0 select-none">
+            <button @click="activeDetailTab = 'info'" 
+                    type="button" 
+                    class="flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                    :class="activeDetailTab === 'info' 
+                        ? 'bg-white dark:bg-slate-800 text-[#0c4da2] dark:text-blue-400 shadow-2xs border border-slate-200/80 dark:border-slate-700 font-bold' 
+                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'">
+                <i class="fa-solid fa-circle-info text-[10px]"></i>
+                <span>Info</span>
+            </button>
+            <button @click="activeDetailTab = 'files'" 
+                    type="button" 
+                    class="flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                    :class="activeDetailTab === 'files' 
+                        ? 'bg-white dark:bg-slate-800 text-[#0c4da2] dark:text-blue-400 shadow-2xs border border-slate-200/80 dark:border-slate-700 font-bold' 
+                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'">
+                <i class="fa-solid fa-paperclip text-[10px]"></i>
+                <span>Files</span>
+                <span class="px-1.5 py-0.2 bg-slate-100 dark:bg-slate-700 rounded-full text-[9px] font-bold" x-text="getSharedFilesList().length"></span>
+            </button>
+            <button @click="activeDetailTab = 'members'" 
+                    type="button" 
+                    class="flex-1 py-1.5 text-[11px] font-semibold rounded-md transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                    :class="activeDetailTab === 'members' 
+                        ? 'bg-white dark:bg-slate-800 text-[#0c4da2] dark:text-blue-400 shadow-2xs border border-slate-200/80 dark:border-slate-700 font-bold' 
+                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'">
+                <i class="fa-solid fa-users text-[10px]"></i>
+                <span>Members</span>
+                <span class="px-1.5 py-0.2 bg-slate-100 dark:bg-slate-700 rounded-full text-[9px] font-bold" x-text="getUniqueParticipants().length"></span>
+            </button>
+        </div>
+
+        <!-- Detail Panel Tab Contents -->
+        <div class="flex-1 overflow-y-auto p-4 space-y-4 text-xs chat-scroll min-h-0">
+            
+            <!-- Tab 1: Info (Context & Room Summary) -->
+            <div x-show="activeDetailTab === 'info'" class="space-y-4">
+                <!-- Topic / Title Card -->
+                <div class="p-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-md space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Discussion Room</span>
+                        <span class="px-1.5 py-0.5 text-[9px] font-extrabold uppercase rounded-sm bg-blue-50 dark:bg-blue-950 text-[#0c4da2] dark:text-blue-400 border border-blue-200 dark:border-blue-800" x-text="chatType || 'General'"></span>
+                    </div>
+                    <h5 class="text-sm font-bold text-slate-800 dark:text-slate-100 break-words" x-text="chatTitle || 'Discussion Room'"></h5>
+                    <p x-show="chatSubtitle" class="text-xs text-slate-500 dark:text-slate-400" x-text="chatSubtitle"></p>
+                </div>
+
+                <!-- Dynamic Work Order / Custom Context if available -->
+                <template x-if="detailPanelData || (typeof woDetail !== 'undefined' && woDetail)">
+                    <div class="space-y-3">
+                        <div class="border-t border-slate-200 dark:border-slate-800 pt-3">
+                            <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Specifications</span>
+                            <div class="grid grid-cols-2 gap-2.5 bg-slate-50/70 dark:bg-slate-800/40 p-2.5 rounded-md border border-slate-200/80 dark:border-slate-700/70 text-xs">
+                                <div>
+                                    <span class="block text-[10px] text-slate-400 font-medium uppercase">Priority</span>
+                                    <span class="font-bold text-slate-800 dark:text-slate-100" x-text="(detailPanelData?.priority || woDetail?.priority) || 'Normal'"></span>
+                                </div>
+                                <div>
+                                    <span class="block text-[10px] text-slate-400 font-medium uppercase">Status</span>
+                                    <span class="font-bold text-slate-800 dark:text-slate-100" x-text="(detailPanelData?.status || woDetail?.status) || 'Active'"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Products / Part Items List with 1-Click #Tag button -->
+                        <template x-if="(detailPanelData?.products || woDetail?.products) && (detailPanelData?.products || woDetail?.products).length > 0">
+                            <div class="border-t border-slate-200 dark:border-slate-800 pt-3">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider" x-text="'Linked Products (' + ((detailPanelData?.products || woDetail?.products).length) + ')'"></span>
+                                    <span class="text-[9px] text-slate-400">Click #Tag to insert</span>
+                                </div>
+                                <div class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                                    <template x-for="(prod, pIdx) in (detailPanelData?.products || woDetail?.products)" :key="pIdx">
+                                        <div class="p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 rounded-md flex items-center justify-between gap-2 shadow-2xs hover:border-[#0c4da2]/50 transition-colors">
+                                            <div class="min-w-0 flex-1">
+                                                <span class="block font-bold text-slate-800 dark:text-slate-100 text-xs truncate font-mono" x-text="prod.customer_part_no"></span>
+                                                <span class="block text-[11px] text-slate-500 truncate" x-text="prod.customer_part_name"></span>
+                                            </div>
+                                            <button type="button" 
+                                                    @click="chatInputMessage = (chatInputMessage ? chatInputMessage + ' ' : '') + '#' + prod.customer_part_no + ' '; $refs.chatInput?.focus();"
+                                                    class="px-2 py-0.5 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950 dark:hover:bg-indigo-900 text-indigo-600 dark:text-indigo-300 font-bold text-[10px] rounded-md border border-indigo-200 dark:border-indigo-800 transition-colors cursor-pointer flex-shrink-0"
+                                                    title="Tag this part number in chat">
+                                                #Tag
+                                            </button>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+
+                <!-- Room Statistics -->
+                <div class="border-t border-slate-200 dark:border-slate-800 pt-3">
+                    <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Activity Overview</span>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div class="p-2.5 bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/70 rounded-md">
+                            <span class="block text-[10px] text-slate-400">Total Messages</span>
+                            <span class="text-sm font-bold text-slate-800 dark:text-slate-100" x-text="chatMessages.length"></span>
+                        </div>
+                        <div class="p-2.5 bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/70 rounded-md">
+                            <span class="block text-[10px] text-slate-400">Shared Files</span>
+                            <span class="text-sm font-bold text-slate-800 dark:text-slate-100" x-text="getSharedFilesList().length"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 2: Files & Links (Shared Attachments) -->
+            <div x-show="activeDetailTab === 'files'" class="space-y-2">
+                <template x-if="getSharedFilesList().length === 0">
+                    <div class="py-8 text-center text-slate-400 select-none">
+                        <i class="fa-solid fa-folder-open text-3xl mb-2 opacity-50"></i>
+                        <p class="text-xs">No shared files or media in this discussion.</p>
+                    </div>
+                </template>
+
+                <div class="space-y-2">
+                    <template x-for="(file, fIdx) in getSharedFilesList()" :key="fIdx">
+                        <div class="p-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 rounded-md flex items-center justify-between gap-2 shadow-2xs hover:border-[#0c4da2]/50 transition-colors">
+                            <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                                <div class="w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0"
+                                     :class="isPdfType(file.file_type, file.file_name) ? 'bg-rose-50 dark:bg-rose-950 text-rose-500' : (isImageType(file.file_type, file.file_name) ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-500' : 'bg-blue-50 dark:bg-blue-950 text-blue-500')">
+                                    <i class="fa-solid text-sm" :class="isPdfType(file.file_type, file.file_name) ? 'fa-file-pdf' : (isImageType(file.file_type, file.file_name) ? 'fa-image' : 'fa-file')"></i>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <span class="block font-semibold text-slate-800 dark:text-slate-200 text-xs truncate" x-text="file.file_name"></span>
+                                    <span class="block text-[10px] text-slate-400 truncate" x-text="(file.senderName || 'User') + ' • ' + formatBytes(file.file_size)"></span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-1 flex-shrink-0">
+                                <template x-if="isPdfType(file.file_type, file.file_name) || isImageType(file.file_type, file.file_name)">
+                                    <button type="button" 
+                                            @click="previewDoc(file.file_url, file.file_name)"
+                                            class="w-7 h-7 flex items-center justify-center rounded-md text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-slate-700 cursor-pointer"
+                                            title="Preview File">
+                                        <i class="fa-solid fa-eye text-xs"></i>
+                                    </button>
+                                </template>
+                                <a :href="file.file_url" 
+                                   :download="file.file_name"
+                                   target="_blank"
+                                   class="w-7 h-7 flex items-center justify-center rounded-md text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-slate-700 cursor-pointer"
+                                   title="Download File">
+                                    <i class="fa-solid fa-download text-xs"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Tab 3: Members (Participants List) -->
+            <div x-show="activeDetailTab === 'members'" class="space-y-2">
+                <template x-if="getUniqueParticipants().length === 0">
+                    <div class="py-8 text-center text-slate-400 select-none">
+                        <i class="fa-solid fa-users text-3xl mb-2 opacity-50"></i>
+                        <p class="text-xs">No active participants yet.</p>
+                    </div>
+                </template>
+
+                <div class="space-y-2">
+                    <template x-for="(user, uIdx) in getUniqueParticipants()" :key="uIdx">
+                        <div class="p-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 rounded-md flex items-center justify-between gap-2 shadow-2xs">
+                            <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                                <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold uppercase border flex-shrink-0"
+                                     :class="getUserColor(user.id).avatar"
+                                     x-text="getInitials(user.name)"></div>
+                                <div class="min-w-0 flex-1">
+                                    <span class="block font-bold text-slate-800 dark:text-slate-100 text-xs truncate" x-text="user.name"></span>
+                                    <span class="block text-[10px] text-slate-400 truncate" x-text="user.department_code || user.email || 'Participant'"></span>
+                                </div>
+                            </div>
+                            <button type="button" 
+                                    @click="chatInputMessage = (chatInputMessage ? chatInputMessage + ' ' : '') + '@' + user.name + ' '; $refs.chatInput?.focus();"
+                                    class="px-2 py-1 bg-slate-100 hover:bg-indigo-50 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 hover:text-indigo-600 dark:text-slate-300 font-bold text-[10px] rounded-md transition-colors cursor-pointer flex-shrink-0"
+                                    title="Mention in chat">
+                                @Mention
+                            </button>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+        </div>
+    </div>

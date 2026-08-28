@@ -166,7 +166,7 @@
                                         :class="activeRightTab === 'checklist' ? 'border-[#0c4da2] dark:border-blue-500 text-[#0c4da2] dark:text-blue-400' : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'">
                                     Task Progress Checklist
                                 </button>
-                                <button type="button" @click="activeRightTab = 'chat'; if (chatId !== detailData.id) { initRoom('work_order', detailData.id, detailData.wo_number, (detailData.inquiry?.customer?.code || '') + ' • ' + (detailData.inquiry?.project_model?.name || '')); }" 
+                                <button type="button" @click="activeRightTab = 'chat'; detailPanelData = detailData; hasDetailPanel = true; if (chatId !== detailData.id) { initRoom('work_order', detailData.id, detailData.wo_number, (detailData.inquiry?.customer?.code || '') + ' • ' + (detailData.inquiry?.project_model?.name || '')); }" 
                                         class="py-2 text-xs font-bold border-b-2 transition-all cursor-pointer flex items-center gap-1.5"
                                         :class="activeRightTab === 'chat' ? 'border-[#0c4da2] dark:border-blue-500 text-[#0c4da2] dark:text-blue-400' : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'">
                                     <i class="fa-solid fa-comments text-xs"></i>
