@@ -279,7 +279,7 @@
                                         </div>
                                         <p class="text-[10.5px] truncate mt-0.5"
                                            :class="msg.user_id == currentUserId ? 'text-white/90 font-medium' : 'text-slate-600 dark:text-slate-300 font-medium'"
-                                           x-text="msg.reply_to.message || (msg.reply_to.file_name ? '📎 ' + msg.reply_to.file_name : 'Quoted Message')"></p>
+                                           x-html="getReplySnippet(msg.reply_to)"></p>
                                     </div>
                                 </template>
 
@@ -458,7 +458,7 @@
             <div class="text-xs truncate">
                 <span class="font-bold text-slate-800 dark:text-slate-200">Replying to </span>
                 <span class="font-bold text-indigo-600 dark:text-indigo-400" x-text="replyingTo?.user_name"></span>:
-                <span class="text-slate-600 dark:text-slate-400 italic ml-1" x-text="replyingTo?.message || replyingTo?.file_name"></span>
+                <span class="text-slate-600 dark:text-slate-400 italic ml-1" x-html="getReplySnippet(replyingTo)"></span>
             </div>
         </div>
         <button @click="cancelReply()" type="button" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm font-bold ml-2">

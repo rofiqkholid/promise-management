@@ -1106,6 +1106,39 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
             }
         },
 
+        // Format Quoted / Reply Snippet with Clean Inline Styles
+        getReplySnippet(reply) {
+            if (!reply) return 'Quoted Message';
+            let text = reply.message || (reply.file_name ? '📎 ' + reply.file_name : 'Quoted Message');
+
+            // Strip blockquotes (>), list markers, code blocks, and collapse multiple whitespace/newlines
+            text = text
+                .replace(/^>\s?/gm, '')
+                .replace(/^[\t ]*[-*•\d\.]+\s*/gm, '')
+                .replace(/```[\s\S]*?```/g, ' [Code] ')
+                .replace(/\n+/g, ' ')
+                .trim();
+
+            // Escape HTML characters
+            let str = String(text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+
+            // Render inline styles: bold, italic, strike, underline, code
+            str = str.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+            str = str.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+            str = str.replace(/~~([^~]+)~~/g, '<del>$1</del>');
+            str = str.replace(/&lt;u&gt;(.*?)&lt;\/u&gt;/gi, '<u>$1</u>');
+            str = str.replace(/`([^`]+)`/g, '<code class="bg-black/15 dark:bg-white/15 px-1 py-0.5 rounded-xs font-mono text-[9.5px]">$1</code>');
+
+            // Highlight @mentions & #items
+            str = str.replace(/@([a-zA-Z0-9_\s]{2,30})(?=[,\.\s<\n]|$)/g, '<span class="font-bold opacity-90">@$1</span>');
+            str = str.replace(/#([a-zA-Z0-9_\-]{2,30})/g, '<span class="font-bold font-mono opacity-90">#$1</span>');
+
+            return str;
+        },
+
         // Parse Markdown & Mentions
         renderFormattedMessage(text) {
             if (!text) return '';
