@@ -171,41 +171,25 @@
         z-index: 99999 !important;
     }
 
-    /* Definitive High-Visibility Highlight for Jumped / Direct Reply Message */
+    /* Soft Subtle Highlight for Jumped / Direct Reply Message (Clean & Minimalist like WhatsApp) */
     .chat-bubble-in {
-        transition: background-color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease, transform 0.25s ease !important;
+        transition: background-color 0.8s ease !important;
     }
     .chat-bubble-out {
-        transition: background-color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease, transform 0.25s ease !important;
+        transition: background-color 0.8s ease !important;
     }
 
     .chat-bubble-in.chat-bubble-highlighted,
     .chat-bubble-in.chat-bubble-highlight {
-        background-color: #fde047 !important; /* Vivid golden yellow */
-        color: #0f172a !important;
-        border-color: #eab308 !important;
-        box-shadow: 0 0 0 4px #eab308, 0 10px 30px -5px rgba(234, 179, 8, 0.7) !important;
-        transform: scale(1.035) !important;
-        position: relative !important;
-        z-index: 40 !important;
+        background-color: #fef3c7 !important; /* Soft warm pastel cream */
     }
     .dark .chat-bubble-in.chat-bubble-highlighted,
     .dark .chat-bubble-in.chat-bubble-highlight {
-        background-color: #ca8a04 !important; /* Bright amber gold */
-        color: #ffffff !important;
-        border-color: #facc15 !important;
-        box-shadow: 0 0 0 4px #facc15, 0 10px 30px -5px rgba(250, 204, 21, 0.7) !important;
-        transform: scale(1.035) !important;
-        position: relative !important;
-        z-index: 40 !important;
+        background-color: rgba(251, 191, 36, 0.25) !important;
     }
     .chat-bubble-out.chat-bubble-highlighted,
     .chat-bubble-out.chat-bubble-highlight {
-        background-color: #0284c7 !important;
-        box-shadow: 0 0 0 4px #fde047, 0 10px 30px -5px rgba(253, 224, 71, 0.8) !important;
-        transform: scale(1.035) !important;
-        position: relative !important;
-        z-index: 40 !important;
+        background-color: #2563eb !important; /* Soft lighter blue */
     }
 </style>
 @endpush
@@ -554,7 +538,7 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
                 bubbleBox.classList.add('chat-bubble-highlighted');
                 setTimeout(() => {
                     bubbleBox.classList.remove('chat-bubble-highlighted');
-                }, 2200);
+                }, 1500);
             } else {
                 // Target message is not in currently loaded window -> load history up to targetId!
                 this.loadChats(this.oldestChatId, targetId, () => {
@@ -568,7 +552,7 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
                             bubbleBox.classList.add('chat-bubble-highlighted');
                             setTimeout(() => {
                                 bubbleBox.classList.remove('chat-bubble-highlighted');
-                            }, 2200);
+                            }, 1500);
                         }
                     }, 150);
                 });
