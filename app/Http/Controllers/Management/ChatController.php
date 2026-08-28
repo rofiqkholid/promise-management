@@ -35,6 +35,7 @@ class ChatController extends Controller
             });
             $messages = $query->orderBy('id', 'desc')
                 ->take(50)
+                ->get()
                 ->reverse()
                 ->values();
         } elseif ($request->has('target_date') && filled($request->input('target_date'))) {

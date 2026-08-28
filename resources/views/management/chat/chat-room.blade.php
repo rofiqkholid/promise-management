@@ -207,41 +207,37 @@
                 </template>
 
                 <!-- Message Row (Top-aligned with Avatar on Top) -->
-                <div class="flex items-start gap-2 max-w-[85%] w-full"
+                <!-- Message Row -->
+                <div class="flex items-start gap-2 max-w-[85%] w-full my-1"
                      :id="'chat-bubble-' + msg.id"
-                     :class="[
-                         msg.user_id == currentUserId ? 'self-end flex-row-reverse' : 'self-start flex-row',
-                         shouldShowMessageFooter(getFilteredMessages(), index) ? 'mb-2' : 'mb-0.5'
-                     ]">
+                     :class="msg.user_id == currentUserId ? 'self-end flex-row-reverse' : 'self-start flex-row'">
                     
-                    <!-- Avatar (Top aligned next to bubble, shown on top/first of message group) -->
-                    <template x-if="shouldShowAvatar(getFilteredMessages(), index)">
+                    <!-- Avatar (For incoming messages from others) -->
+                    <template x-if="msg.user_id != currentUserId">
                         <div class="w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] flex-shrink-0 select-none shadow-xs border mt-0.5"
                              :class="getUserColor(msg.user_id).avatar"
-                             x-text="msg.user_name ? msg.user_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : (msg.user_id == currentUserId ? 'ME' : 'U')">
+                             :title="msg.user_name"
+                             x-text="msg.user_name ? msg.user_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'U'">
                         </div>
                     </template>
-                    <template x-if="!shouldShowAvatar(getFilteredMessages(), index)">
-                        <div class="w-7 h-7 flex-shrink-0"></div>
-                    </template>
 
-                    <!-- Bubble Column (Bubble + Outside Timestamp/Check) -->
+                    <!-- Bubble Column (Bubble + Sender Name + Timestamp) -->
                     <div class="flex flex-col min-w-0 max-w-full"
                          :class="msg.user_id == currentUserId ? 'items-end' : 'items-start'">
                         
-                        <!-- Sender Name (Placed Outside and ABOVE the Bubble, real name always) -->
-                        <template x-if="shouldShowAvatar(getFilteredMessages(), index)">
-                            <span class="block text-[10.5px] font-extrabold mb-1 px-1 tracking-wide select-none" 
-                                  :class="msg.user_id == currentUserId ? (getUserColor(msg.user_id).name + ' text-right') : getUserColor(msg.user_id).name"
-                                  x-text="msg.user_name || (msg.user_id == currentUserId ? 'Me' : 'User')"></span>
+                        <!-- Sender Name (Only for other users) -->
+                        <template x-if="msg.user_id != currentUserId">
+                            <span class="block text-[11px] font-bold mb-0.5 px-1 tracking-tight select-none" 
+                                  :class="getUserColor(msg.user_id).name"
+                                  x-text="msg.user_name || 'User'"></span>
                         </template>
 
-                        <!-- Bubble & Hover Action Container (Action buttons appear in front of bubble) -->
+                        <!-- Bubble & Hover Action Container -->
                         <div class="flex items-center gap-1.5 group max-w-full"
                              :class="msg.user_id == currentUserId ? 'flex-row-reverse' : 'flex-row'">
                             
                             <!-- Bubble Box -->
-                            <div class="px-3.5 py-2 text-xs shadow-xs relative flex flex-col w-auto max-w-full"
+                            <div class="px-3 py-2 text-xs shadow-xs relative flex flex-col w-auto max-w-full"
                                  :class="msg.user_id == currentUserId ? 'chat-bubble-out' : 'chat-bubble-in'">
                                 
                                 <!-- Quoted / Reply Preview Box (Clickable to jump to original message) -->
@@ -400,16 +396,14 @@
                             </div>
                         </div>
 
-                        <!-- Outside Timestamp and Checkmark Status (Shown only on last message of group) -->
-                        <template x-if="shouldShowMessageFooter(getFilteredMessages(), index)">
-                            <div class="flex items-center gap-1 mt-0.5 px-1.5 text-[9.5px] select-none font-medium text-slate-400 dark:text-slate-500"
-                                 :class="msg.user_id == currentUserId ? 'justify-end' : 'justify-start'">
-                                <span x-text="formatTime(msg.created_at)"></span>
-                                <template x-if="msg.user_id == currentUserId">
-                                    <i class="fa-solid fa-check-double text-[9px] text-[#007aff] dark:text-blue-400"></i>
-                                </template>
-                            </div>
-                        </template>
+                        <!-- Timestamp and Checkmark Status -->
+                        <div class="flex items-center gap-1 mt-0.5 px-1 text-[9.5px] select-none font-medium text-slate-400 dark:text-slate-500"
+                             :class="msg.user_id == currentUserId ? 'justify-end' : 'justify-start'">
+                            <span x-text="formatTime(msg.created_at)"></span>
+                            <template x-if="msg.user_id == currentUserId">
+                                <i class="fa-solid fa-check-double text-[9px] text-[#007aff] dark:text-blue-400"></i>
+                            </template>
+                        </div>
                     </div>
                 </div>
             </div>

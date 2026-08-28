@@ -47,20 +47,20 @@
     .chat-bubble-out {
         background-color: #007aff !important;
         color: #ffffff !important;
-        border-radius: 1.15rem 0.25rem 1.15rem 1.15rem !important;
-        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+        border-radius: 14px 14px 3px 14px !important;
+        box-shadow: 0 1px 2px 0 rgba(0, 122, 255, 0.15) !important;
     }
     .chat-bubble-in {
         background-color: #ffffff !important;
         color: #1e293b !important;
-        border-radius: 0.25rem 1.15rem 1.15rem 1.15rem !important;
-        border: 1px solid rgba(226, 232, 240, 0.85) !important;
+        border-radius: 14px 14px 14px 3px !important;
+        border: 1px solid rgba(226, 232, 240, 0.9) !important;
         box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04) !important;
     }
     .dark .chat-bubble-in {
         background-color: #1e293b !important;
         color: #f1f5f9 !important;
-        border-color: rgba(51, 65, 85, 0.85) !important;
+        border-color: rgba(51, 65, 85, 0.9) !important;
     }
 
     /* Markdown content inside bubbles styling with high specificity */
