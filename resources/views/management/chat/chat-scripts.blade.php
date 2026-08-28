@@ -172,30 +172,85 @@
     }
 
     .chat-bubble-highlight {
-        animation: chatBubbleHighlight 2.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
         position: relative !important;
         z-index: 30 !important;
     }
-    @keyframes chatBubbleHighlight {
+    
+    /* Highlight animation for incoming (white/slate) bubbles */
+    .chat-bubble-in.chat-bubble-highlight {
+        animation: chatBubbleInHighlight 2.5s cubic-bezier(0.25, 1, 0.5, 1) !important;
+    }
+    @keyframes chatBubbleInHighlight {
         0% {
-            box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.9) !important;
-            filter: brightness(1);
+            background-color: #ffffff;
+            box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+            transform: scale(1);
         }
-        15%, 35% {
-            box-shadow: 0 0 0 5px #fbbf24, 0 0 35px rgba(251, 191, 36, 0.95), inset 0 0 12px rgba(255, 255, 255, 0.4) !important;
-            filter: brightness(1.4) contrast(1.1);
+        15%, 45% {
+            background-color: #fef08a !important; /* Rich amber-yellow flash */
+            box-shadow: 0 0 0 3px #f59e0b, 0 10px 25px -5px rgba(245, 158, 11, 0.5) !important;
+            transform: scale(1.025);
         }
-        60% {
-            box-shadow: 0 0 0 4px #38bdf8, 0 0 25px rgba(56, 189, 248, 0.85) !important;
-            filter: brightness(1.25);
-        }
-        85% {
-            box-shadow: 0 0 0 2px #fbbf24, 0 0 12px rgba(251, 191, 36, 0.5) !important;
-            filter: brightness(1.1);
+        70% {
+            background-color: #fef9c3 !important;
+            box-shadow: 0 0 0 2px #fbbf24, 0 4px 12px rgba(245, 158, 11, 0.25) !important;
+            transform: scale(1.01);
         }
         100% {
-            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+            background-color: #ffffff;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            transform: scale(1);
+        }
+    }
+    .dark .chat-bubble-in.chat-bubble-highlight {
+        animation: chatBubbleInDarkHighlight 2.5s cubic-bezier(0.25, 1, 0.5, 1) !important;
+    }
+    @keyframes chatBubbleInDarkHighlight {
+        0% {
+            background-color: #1e293b;
+            box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+            transform: scale(1);
+        }
+        15%, 45% {
+            background-color: #78350f !important;
+            box-shadow: 0 0 0 3px #fbbf24, 0 10px 25px -5px rgba(251, 191, 36, 0.6) !important;
+            transform: scale(1.025);
+        }
+        70% {
+            background-color: #451a03 !important;
+            box-shadow: 0 0 0 2px #f59e0b, 0 4px 12px rgba(245, 158, 11, 0.3) !important;
+            transform: scale(1.01);
+        }
+        100% {
+            background-color: #1e293b;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            transform: scale(1);
+        }
+    }
+
+    /* Highlight animation for outgoing (blue) bubbles */
+    .chat-bubble-out.chat-bubble-highlight {
+        animation: chatBubbleOutHighlight 2.5s cubic-bezier(0.25, 1, 0.5, 1) !important;
+    }
+    @keyframes chatBubbleOutHighlight {
+        0% {
+            box-shadow: 0 0 0 0 rgba(251, 191, 36, 0);
+            transform: scale(1);
+        }
+        15%, 45% {
+            box-shadow: 0 0 0 4px #fbbf24, 0 10px 30px -5px rgba(251, 191, 36, 0.7) !important;
+            filter: brightness(1.25) contrast(1.1);
+            transform: scale(1.025);
+        }
+        70% {
+            box-shadow: 0 0 0 2px #fde047, 0 4px 15px rgba(251, 191, 36, 0.4) !important;
+            filter: brightness(1.1);
+            transform: scale(1.01);
+        }
+        100% {
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
             filter: brightness(1);
+            transform: scale(1);
         }
     }
 </style>
