@@ -334,28 +334,30 @@
                                                              :title="dept.pic_name"
                                                              x-text="dept.pic_name ? dept.pic_name.split(' ').map(n => n[0]).slice(0, 2).join('') : 'P'"></div>
 
-                                                        <div class="flex items-center gap-2 text-xs font-semibold">
-                                                            <span class="font-mono text-xs" 
-                                                                  :class="getDeptProgressPct(dept) === 100 ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-slate-600 dark:text-slate-300'"
-                                                                  x-text="getDeptProgressPct(dept) + '%'"></span>
-                                                            
-                                                            {{-- SVG Circular Progress Chart --}}
-                                                            <div class="relative w-4.5 h-4.5 flex-shrink-0 flex items-center justify-center">
-                                                                <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
-                                                                    <!-- Background Circle -->
-                                                                    <circle cx="18" cy="18" r="15" fill="none" class="stroke-current text-slate-200 dark:text-slate-700/80" stroke-width="3.5"></circle>
-                                                                    <!-- Progress Circle -->
-                                                                    <circle cx="18" cy="18" r="15" fill="none" 
-                                                                            :class="getDeptProgressPct(dept) === 100 ? 'text-emerald-500' : (getDeptProgressPct(dept) > 0 ? 'text-amber-500' : 'text-slate-300 dark:text-slate-600')" 
-                                                                            stroke-width="3.5" 
-                                                                            stroke-dasharray="100" 
-                                                                            pathLength="100"
-                                                                            :stroke-dashoffset="100 - getDeptProgressPct(dept)" 
-                                                                            stroke-linecap="round"
-                                                                            class="stroke-current transition-all duration-300 ease-out"></circle>
-                                                                </svg>
+                                                        <!-- Circular Progress with Inside Percentage Text -->
+                                                        <div class="relative w-8 h-8 sm:w-8.5 sm:h-8.5 flex-shrink-0 flex items-center justify-center select-none">
+                                                            <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+                                                                <!-- Background Circle -->
+                                                                <circle cx="18" cy="18" r="15" fill="none" class="stroke-current text-slate-200 dark:text-slate-700/80" stroke-width="3"></circle>
+                                                                <!-- Progress Circle -->
+                                                                <circle cx="18" cy="18" r="15" fill="none" 
+                                                                        :class="getDeptProgressPct(dept) === 100 ? 'text-emerald-500' : (getDeptProgressPct(dept) > 0 ? 'text-amber-500' : 'text-slate-300 dark:text-slate-600')" 
+                                                                        stroke-width="3" 
+                                                                        stroke-dasharray="100" 
+                                                                        pathLength="100"
+                                                                        :stroke-dashoffset="100 - getDeptProgressPct(dept)" 
+                                                                        stroke-linecap="round"
+                                                                        class="stroke-current transition-all duration-300 ease-out"></circle>
+                                                            </svg>
+                                                            <!-- Percentage Text / Done State Centered Inside -->
+                                                            <div class="absolute inset-0 flex items-center justify-center">
                                                                 <template x-if="getDeptProgressPct(dept) === 100">
-                                                                    <i class="fa-solid fa-check text-[7.5px] text-emerald-500 absolute inset-0 flex items-center justify-center"></i>
+                                                                    <i class="fa-solid fa-check text-[10px] font-black text-emerald-600 dark:text-emerald-400"></i>
+                                                                </template>
+                                                                <template x-if="getDeptProgressPct(dept) < 100">
+                                                                    <span class="font-mono text-[9px] sm:text-[9.5px] font-bold leading-none" 
+                                                                          :class="getDeptProgressPct(dept) > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400 dark:text-slate-500'"
+                                                                          x-text="getDeptProgressPct(dept) + '%'"></span>
                                                                 </template>
                                                             </div>
                                                         </div>
