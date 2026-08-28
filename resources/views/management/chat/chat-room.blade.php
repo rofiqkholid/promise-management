@@ -238,7 +238,7 @@
                 </template>
 
                 <!-- Message Row (Top-aligned with Avatar on Top) -->
-                <div class="flex items-start gap-2 max-w-[85%] w-full"
+                <div class="flex items-start gap-2 max-w-[75%] sm:max-w-[70%] md:max-w-[65%] w-full"
                      :id="'chat-bubble-' + msg.id"
                      :class="[
                          msg.user_id == currentUserId ? 'self-end flex-row-reverse' : 'self-start flex-row',
