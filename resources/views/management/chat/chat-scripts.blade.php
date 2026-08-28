@@ -1391,14 +1391,47 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
             return 'grid-cols-3 max-w-[420px]'; // Maksimum 3 gambar lebarnya
         },
 
-        previewDoc(url, name) {
+        previewDoc(url, name, fileType = '') {
             if (!url) return;
-            if (this.isPdfType('', name)) {
+            if (this.isImageType(fileType, name)) {
+                if (typeof Viewer !== 'undefined') {
+                    const img = new Image();
+                    img.src = url;
+                    img.alt = name || 'Image Preview';
+                    const viewer = new Viewer(img, {
+                        hidden() {
+                            viewer.destroy();
+                        },
+                        navbar: false,
+                        title: true,
+                        toolbar: {
+                            zoomIn: 1,
+                            zoomOut: 1,
+                            oneToOne: 1,
+                            reset: 1,
+                            prev: 0,
+                            play: 0,
+                            next: 0,
+                            rotateLeft: 1,
+                            rotateRight: 1,
+                            flipHorizontal: 1,
+                            flipVertical: 1,
+                        },
+                        tooltip: true,
+                        transition: true,
+                        fullscreen: true,
+                        keyboard: true
+                    });
+                    viewer.show();
+                } else {
+                    this.pdfPreviewName = name || 'Image Preview';
+                    this.pdfPreviewUrl = url;
+                }
+            } else if (this.isPdfType(fileType, name)) {
                 this.pdfPreviewName = name || 'PDF Preview';
                 this.pdfPreviewUrl = url;
-            } else if (this.isImageType('', name)) {
-                this.pdfPreviewName = name || 'Image Preview';
-                this.pdfPreviewUrl = url;
+            } else {
+                window.open(url, '_blank');
             }
         },
 

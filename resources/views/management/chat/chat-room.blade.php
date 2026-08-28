@@ -802,7 +802,7 @@
                                 <div class="flex items-center gap-0.5 flex-shrink-0">
                                     <template x-if="isPdfType(file.file_type, file.file_name) || isImageType(file.file_type, file.file_name)">
                                         <button type="button" 
-                                                @click="previewDoc(file.file_url, file.file_name)"
+                                                @click="previewDoc(file.file_url, file.file_name, file.file_type)"
                                                 class="w-6 h-6 flex items-center justify-center rounded-sm text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-slate-700 cursor-pointer"
                                                 title="Preview File">
                                             <i class="fa-solid fa-eye text-[10.5px]"></i>
