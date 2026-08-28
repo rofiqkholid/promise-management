@@ -166,7 +166,7 @@
                                         :class="activeRightTab === 'checklist' ? 'border-[#0c4da2] dark:border-blue-500 text-[#0c4da2] dark:text-blue-400' : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'">
                                     Task Progress Checklist
                                 </button>
-                                <button type="button" @click="activeRightTab = 'chat'; if (chatId !== detailData.id) { initRoom('work_order', detailData.id, detailData.wo_number, (detailData.inquiry?.customer?.code || '') + ' • ' + (detailData.inquiry?.project_model?.name || '')); }" 
+                                <button type="button" @click="activeRightTab = 'chat'; if (detailData && detailData.id && (chatId !== detailData.id || chatMessages.length === 0)) { initRoom('work_order', detailData.id, detailData.wo_number, (detailData.inquiry?.customer?.code || '') + ' • ' + (detailData.inquiry?.project_model?.name || '')); }" 
                                         class="py-2 text-xs font-bold border-b-2 transition-all cursor-pointer flex items-center gap-1.5"
                                         :class="activeRightTab === 'chat' ? 'border-[#0c4da2] dark:border-blue-500 text-[#0c4da2] dark:text-blue-400' : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'">
                                     <i class="fa-solid fa-comments text-xs"></i>
@@ -615,10 +615,7 @@ function outlookInbox() {
                         this.urgentReason = this.detailData.urgent_reason || '';
                         this.urgentConfirmed = !!(this.detailData.urgent_reason || this.detailData.urgent_confirmed_by);
                         this.activeRightTab = 'doc'; // Default tab always display WO document
-
-                        // Init chat room for this WO
-                        const chatSubtitle = (this.detailData.inquiry?.customer?.code || '') + ' • ' + (this.detailData.inquiry?.project_model?.name || '');
-                        this.initRoom('work_order', this.detailData.id, this.detailData.wo_number, chatSubtitle);
+                        this.leaveRoom(); // Leave previous chat room until user explicitly opens Discussion Room tab
                         
                         // Sort departments (my task first) and set default expanded state
                         this.expandedDepts = {};

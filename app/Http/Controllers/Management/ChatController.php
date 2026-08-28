@@ -35,8 +35,8 @@ class ChatController extends Controller
             });
             $messages = $query->orderBy('id', 'desc')
                 ->take(50)
-                ->get()
                 ->reverse()
+                ->values();
         } elseif ($request->has('target_date') && filled($request->input('target_date'))) {
             $targetDate = trim($request->input('target_date'));
             $targetMsg = (clone $query)->where('created_at', '>=', $targetDate . ' 00:00:00')
