@@ -224,7 +224,7 @@
                             {{-- Top Metrics Summary Cards --}}
                             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                 {{-- Card 1: Priority --}}
-                                <div class="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-sm p-3 shadow-2xs">
+                                <div class="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-md p-3 shadow-2xs">
                                     <div class="flex items-center justify-between text-slate-400 text-xs mb-1.5">
                                         <div class="flex items-center gap-1.5 font-medium">
                                             <i class="fa-solid fa-flag text-xs" :class="detailData.priority === 'Urgent' ? 'text-rose-500' : (detailData.priority === 'High' ? 'text-amber-500' : 'text-emerald-500')"></i>
@@ -235,7 +235,7 @@
                                 </div>
 
                                 {{-- Card 2: Total Tasks --}}
-                                <div class="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-sm p-3 shadow-2xs">
+                                <div class="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-md p-3 shadow-2xs">
                                     <div class="flex items-center justify-between text-slate-400 text-xs mb-1.5">
                                         <div class="flex items-center gap-1.5 font-medium">
                                             <i class="fa-solid fa-file-lines text-xs text-[#0c4da2] dark:text-blue-400"></i>
@@ -246,7 +246,7 @@
                                 </div>
 
                                 {{-- Card 3: Task Done --}}
-                                <div class="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-sm p-3 shadow-2xs">
+                                <div class="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-md p-3 shadow-2xs">
                                     <div class="flex items-center justify-between text-slate-400 text-xs mb-1.5">
                                         <div class="flex items-center gap-1.5 font-medium">
                                             <i class="fa-solid fa-file-circle-check text-xs text-emerald-500"></i>
@@ -257,7 +257,7 @@
                                 </div>
 
                                 {{-- Card 4: Task Ongoing --}}
-                                <div class="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-sm p-3 shadow-2xs">
+                                <div class="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-md p-3 shadow-2xs">
                                     <div class="flex items-center justify-between text-slate-400 text-xs mb-1.5">
                                         <div class="flex items-center gap-1.5 font-medium">
                                             <i class="fa-solid fa-file-circle-exclamation text-xs text-amber-500"></i>
@@ -269,13 +269,13 @@
                             </div>
 
                             {{-- Search & Filter Toolbar --}}
-                            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm p-2.5 shadow-2xs flex items-center justify-between gap-3">
+                            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md p-2.5 shadow-2xs flex items-center justify-between gap-3">
                                 <div class="relative flex-1 max-w-sm flex items-center">
                                     <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs absolute left-3 pointer-events-none"></i>
                                     <input type="text" 
                                            x-model="checklistSearchQuery" 
                                            placeholder="Search product by Part No or Name..."
-                                           class="w-full pl-8 pr-7 py-1 text-xs text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-sm focus:outline-none focus:border-[#0c4da2] focus:ring-1 focus:ring-[#0c4da2]/20 transition-all placeholder:text-slate-400">
+                                           class="w-full pl-8 pr-7 py-1.5 text-xs text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-md focus:outline-none focus:border-[#0c4da2] focus:ring-1 focus:ring-[#0c4da2]/20 transition-all placeholder:text-slate-400">
                                     <button x-show="checklistSearchQuery" 
                                             @click="checklistSearchQuery = ''" 
                                             class="absolute right-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer">
@@ -288,10 +288,10 @@
                             </div>
 
                             {{-- Task Management Tree Table --}}
-                            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm overflow-hidden shadow-2xs">
+                            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md overflow-hidden shadow-2xs">
                                 
-                                {{-- Table Column Headers (Matching Dashboard Screenshot) --}}
-                                <div class="grid grid-cols-12 items-center px-4 py-2.5 bg-slate-50/80 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-[11px] font-semibold text-slate-500 dark:text-slate-400 select-none">
+                                {{-- Table Column Headers at the very top of the list --}}
+                                <div class="grid grid-cols-12 items-center px-4 py-2.5 bg-slate-50/90 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 text-[11px] font-semibold text-slate-500 dark:text-slate-400 select-none">
                                     <div class="col-span-4 flex items-center gap-2">
                                         <i class="fa-solid fa-list-check text-slate-400 text-xs"></i>
                                         <span>Task</span>
@@ -337,7 +337,7 @@
                                                         <span class="font-bold text-xs text-slate-800 dark:text-slate-100 truncate" x-text="proc.process_name"></span>
                                                         
                                                         <template x-if="dept.is_my_pic_task === true || dept.is_my_pic_task === 1">
-                                                            <span class="px-1.5 py-0.5 bg-blue-50 dark:bg-blue-950 text-[#0c4da2] dark:text-blue-400 border border-blue-200 dark:border-blue-800 text-[9px] font-bold rounded-sm uppercase tracking-wider">
+                                                            <span class="px-1.5 py-0.5 bg-blue-50 dark:bg-blue-950 text-[#0c4da2] dark:text-blue-400 border border-blue-200 dark:border-blue-800 text-[9px] font-bold rounded-md uppercase tracking-wider">
                                                                 My Task
                                                             </span>
                                                         </template>
@@ -345,7 +345,7 @@
 
                                                     {{-- Col 2: Department Badge --}}
                                                     <div class="col-span-2 flex items-center gap-1.5">
-                                                        <span class="px-2 py-0.5 rounded-sm bg-slate-200/80 dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold text-[10px] font-mono border border-slate-300/50 dark:border-slate-600" x-text="dept.department_code"></span>
+                                                        <span class="px-2 py-0.5 rounded-md bg-slate-200/80 dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-bold text-[10px] font-mono border border-slate-300/50 dark:border-slate-600" x-text="dept.department_code"></span>
                                                     </div>
 
                                                     {{-- Col 3: PIC Description --}}
@@ -386,7 +386,7 @@
                                                                            :value="p.id"
                                                                            :checked="dept.checked_product_ids.includes(Number(p.id))"
                                                                            @change="toggleProductChecked(proc.process_id, dept.department_id, p.id, $event.target.checked)"
-                                                                           class="h-3.5 w-3.5 rounded-sm border-slate-300 dark:border-slate-600 text-[#0c4da2] focus:ring-0 cursor-pointer flex-shrink-0">
+                                                                           class="h-3.5 w-3.5 rounded-md border-slate-300 dark:border-slate-600 text-[#0c4da2] focus:ring-0 cursor-pointer flex-shrink-0">
                                                                 </template>
 
                                                                 {{-- Disabled Checkbox (Read-Only) --}}
@@ -394,7 +394,7 @@
                                                                     <input type="checkbox" 
                                                                            disabled 
                                                                            :checked="dept.checked_product_ids.includes(Number(p.id))" 
-                                                                           class="h-3.5 w-3.5 rounded-sm border-slate-300 dark:border-slate-600 text-slate-400 opacity-50 cursor-not-allowed flex-shrink-0">
+                                                                           class="h-3.5 w-3.5 rounded-md border-slate-300 dark:border-slate-600 text-slate-400 opacity-50 cursor-not-allowed flex-shrink-0">
                                                                 </template>
 
                                                                 <span class="font-medium text-slate-800 dark:text-slate-100 font-mono truncate" 
