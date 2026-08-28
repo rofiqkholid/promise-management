@@ -171,87 +171,41 @@
         z-index: 99999 !important;
     }
 
-    .chat-bubble-highlight {
-        position: relative !important;
-        z-index: 30 !important;
+    /* Definitive High-Visibility Highlight for Jumped / Direct Reply Message */
+    .chat-bubble-in {
+        transition: background-color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease, transform 0.25s ease !important;
     }
-    
-    /* Highlight animation for incoming (white/slate) bubbles */
-    .chat-bubble-in.chat-bubble-highlight {
-        animation: chatBubbleInHighlight 2.5s cubic-bezier(0.25, 1, 0.5, 1) !important;
-    }
-    @keyframes chatBubbleInHighlight {
-        0% {
-            background-color: #ffffff;
-            box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
-            transform: scale(1);
-        }
-        15%, 45% {
-            background-color: #fef08a !important; /* Rich amber-yellow flash */
-            box-shadow: 0 0 0 3px #f59e0b, 0 10px 25px -5px rgba(245, 158, 11, 0.5) !important;
-            transform: scale(1.025);
-        }
-        70% {
-            background-color: #fef9c3 !important;
-            box-shadow: 0 0 0 2px #fbbf24, 0 4px 12px rgba(245, 158, 11, 0.25) !important;
-            transform: scale(1.01);
-        }
-        100% {
-            background-color: #ffffff;
-            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-            transform: scale(1);
-        }
-    }
-    .dark .chat-bubble-in.chat-bubble-highlight {
-        animation: chatBubbleInDarkHighlight 2.5s cubic-bezier(0.25, 1, 0.5, 1) !important;
-    }
-    @keyframes chatBubbleInDarkHighlight {
-        0% {
-            background-color: #1e293b;
-            box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
-            transform: scale(1);
-        }
-        15%, 45% {
-            background-color: #78350f !important;
-            box-shadow: 0 0 0 3px #fbbf24, 0 10px 25px -5px rgba(251, 191, 36, 0.6) !important;
-            transform: scale(1.025);
-        }
-        70% {
-            background-color: #451a03 !important;
-            box-shadow: 0 0 0 2px #f59e0b, 0 4px 12px rgba(245, 158, 11, 0.3) !important;
-            transform: scale(1.01);
-        }
-        100% {
-            background-color: #1e293b;
-            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-            transform: scale(1);
-        }
+    .chat-bubble-out {
+        transition: background-color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease, transform 0.25s ease !important;
     }
 
-    /* Highlight animation for outgoing (blue) bubbles */
-    .chat-bubble-out.chat-bubble-highlight {
-        animation: chatBubbleOutHighlight 2.5s cubic-bezier(0.25, 1, 0.5, 1) !important;
+    .chat-bubble-in.chat-bubble-highlighted,
+    .chat-bubble-in.chat-bubble-highlight {
+        background-color: #fde047 !important; /* Vivid golden yellow */
+        color: #0f172a !important;
+        border-color: #eab308 !important;
+        box-shadow: 0 0 0 4px #eab308, 0 10px 30px -5px rgba(234, 179, 8, 0.7) !important;
+        transform: scale(1.035) !important;
+        position: relative !important;
+        z-index: 40 !important;
     }
-    @keyframes chatBubbleOutHighlight {
-        0% {
-            box-shadow: 0 0 0 0 rgba(251, 191, 36, 0);
-            transform: scale(1);
-        }
-        15%, 45% {
-            box-shadow: 0 0 0 4px #fbbf24, 0 10px 30px -5px rgba(251, 191, 36, 0.7) !important;
-            filter: brightness(1.25) contrast(1.1);
-            transform: scale(1.025);
-        }
-        70% {
-            box-shadow: 0 0 0 2px #fde047, 0 4px 15px rgba(251, 191, 36, 0.4) !important;
-            filter: brightness(1.1);
-            transform: scale(1.01);
-        }
-        100% {
-            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-            filter: brightness(1);
-            transform: scale(1);
-        }
+    .dark .chat-bubble-in.chat-bubble-highlighted,
+    .dark .chat-bubble-in.chat-bubble-highlight {
+        background-color: #ca8a04 !important; /* Bright amber gold */
+        color: #ffffff !important;
+        border-color: #facc15 !important;
+        box-shadow: 0 0 0 4px #facc15, 0 10px 30px -5px rgba(250, 204, 21, 0.7) !important;
+        transform: scale(1.035) !important;
+        position: relative !important;
+        z-index: 40 !important;
+    }
+    .chat-bubble-out.chat-bubble-highlighted,
+    .chat-bubble-out.chat-bubble-highlight {
+        background-color: #0284c7 !important;
+        box-shadow: 0 0 0 4px #fde047, 0 10px 30px -5px rgba(253, 224, 71, 0.8) !important;
+        transform: scale(1.035) !important;
+        position: relative !important;
+        z-index: 40 !important;
     }
 </style>
 @endpush
@@ -595,12 +549,12 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
             if (targetRow) {
                 targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 const bubbleBox = targetRow.querySelector('.chat-bubble-in, .chat-bubble-out') || targetRow;
-                bubbleBox.classList.remove('chat-bubble-highlight');
+                bubbleBox.classList.remove('chat-bubble-highlighted', 'chat-bubble-highlight');
                 void bubbleBox.offsetWidth; // trigger reflow
-                bubbleBox.classList.add('chat-bubble-highlight');
+                bubbleBox.classList.add('chat-bubble-highlighted');
                 setTimeout(() => {
-                    bubbleBox.classList.remove('chat-bubble-highlight');
-                }, 2400);
+                    bubbleBox.classList.remove('chat-bubble-highlighted');
+                }, 2200);
             } else {
                 // Target message is not in currently loaded window -> load history up to targetId!
                 this.loadChats(this.oldestChatId, targetId, () => {
@@ -609,12 +563,12 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
                         if (newTargetRow) {
                             newTargetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
                             const bubbleBox = newTargetRow.querySelector('.chat-bubble-in, .chat-bubble-out') || newTargetRow;
-                            bubbleBox.classList.remove('chat-bubble-highlight');
+                            bubbleBox.classList.remove('chat-bubble-highlighted', 'chat-bubble-highlight');
                             void bubbleBox.offsetWidth;
-                            bubbleBox.classList.add('chat-bubble-highlight');
+                            bubbleBox.classList.add('chat-bubble-highlighted');
                             setTimeout(() => {
-                                bubbleBox.classList.remove('chat-bubble-highlight');
-                            }, 2400);
+                                bubbleBox.classList.remove('chat-bubble-highlighted');
+                            }, 2200);
                         }
                     }, 150);
                 });
