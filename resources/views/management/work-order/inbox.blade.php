@@ -334,32 +334,28 @@
                                                              :title="dept.pic_name"
                                                              x-text="dept.pic_name ? dept.pic_name.split(' ').map(n => n[0]).slice(0, 2).join('') : 'P'"></div>
 
-                                                        <div class="flex items-center gap-1.5 text-xs font-semibold">
+                                                        <div class="flex items-center gap-2 text-xs font-semibold">
                                                             <span class="font-mono text-xs" 
-                                                                  :class="getDeptProgressPct(dept) === 100 ? 'text-emerald-600 dark:text-emerald-400 font-bold' : (getDeptProgressPct(dept) > 0 ? 'text-amber-600 dark:text-amber-400 font-bold' : 'text-slate-600 dark:text-slate-300')"
+                                                                  :class="getDeptProgressPct(dept) === 100 ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-slate-600 dark:text-slate-300'"
                                                                   x-text="getDeptProgressPct(dept) + '%'"></span>
                                                             
-                                                            {{-- Real Dynamic SVG Circular Progress Ring --}}
-                                                            <div class="relative w-4 h-4 flex items-center justify-center flex-shrink-0" :title="getDeptProgressPct(dept) + '% Completed'">
-                                                                <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                                                                    {{-- Track --}}
-                                                                    <circle cx="18" cy="18" r="15.9155"
-                                                                            class="text-slate-200 dark:text-slate-700 stroke-current"
-                                                                            stroke-width="4.5"
-                                                                            fill="none" />
-                                                                    {{-- Dynamic Progress Ring --}}
-                                                                    <circle cx="18" cy="18" r="15.9155"
-                                                                            :class="getDeptProgressPct(dept) === 100 ? 'text-emerald-500' : (getDeptProgressPct(dept) > 0 ? 'text-amber-500' : 'text-transparent')"
-                                                                            stroke-dasharray="100, 100"
-                                                                            :stroke-dashoffset="100 - getDeptProgressPct(dept)"
-                                                                            stroke-width="4.5"
+                                                            {{-- SVG Circular Progress Chart --}}
+                                                            <div class="relative w-4.5 h-4.5 flex-shrink-0 flex items-center justify-center">
+                                                                <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+                                                                    <!-- Background Circle -->
+                                                                    <circle cx="18" cy="18" r="15" fill="none" class="stroke-current text-slate-200 dark:text-slate-700/80" stroke-width="3.5"></circle>
+                                                                    <!-- Progress Circle -->
+                                                                    <circle cx="18" cy="18" r="15" fill="none" 
+                                                                            :class="getDeptProgressPct(dept) === 100 ? 'text-emerald-500' : (getDeptProgressPct(dept) > 0 ? 'text-amber-500' : 'text-slate-300 dark:text-slate-600')" 
+                                                                            stroke-width="3.5" 
+                                                                            stroke-dasharray="100" 
+                                                                            pathLength="100"
+                                                                            :stroke-dashoffset="100 - getDeptProgressPct(dept)" 
                                                                             stroke-linecap="round"
-                                                                            stroke-current
-                                                                            fill="none"
-                                                                            class="transition-all duration-300 ease-out" />
+                                                                            class="stroke-current transition-all duration-300 ease-out"></circle>
                                                                 </svg>
                                                                 <template x-if="getDeptProgressPct(dept) === 100">
-                                                                    <i class="fa-solid fa-check text-[7px] text-emerald-500 absolute"></i>
+                                                                    <i class="fa-solid fa-check text-[7.5px] text-emerald-500 absolute inset-0 flex items-center justify-center"></i>
                                                                 </template>
                                                             </div>
                                                         </div>
@@ -401,17 +397,15 @@
                                                         </div>
                                                     </div>
 
-                                                    {{-- Child Product Rows (Clickable Row to Toggle Checklist) --}}
+                                                    {{-- Child Product Rows --}}
                                                     <div class="divide-y divide-slate-100 dark:divide-slate-800/60">
                                                         <template x-for="p in detailData.products.filter(p => !checklistSearchQuery || p.customer_part_no.toLowerCase().includes(checklistSearchQuery.toLowerCase()) || p.customer_part_name.toLowerCase().includes(checklistSearchQuery.toLowerCase()))" :key="p.id">
-                                                            <div class="grid grid-cols-12 items-center px-4 py-2 text-xs transition-colors select-none"
+                                                            <div @click="if ((dept.is_my_pic_task === true || dept.is_my_pic_task === 1) && (detailData.status === 'Approved' || detailData.status === 'Released')) { toggleProductChecked(proc.process_id, dept.department_id, p.id, !dept.checked_product_ids.includes(Number(p.id))); }"
+                                                                 class="grid grid-cols-12 items-center px-4 py-2 text-xs transition-colors select-none"
                                                                  :class="[
-                                                                     (dept.is_my_pic_task === true || dept.is_my_pic_task === 1) && (detailData.status === 'Approved' || detailData.status === 'Released') 
-                                                                         ? 'cursor-pointer hover:bg-slate-100/80 dark:hover:bg-slate-800/70' 
-                                                                         : 'hover:bg-slate-50/80 dark:hover:bg-slate-800/40',
+                                                                     (dept.is_my_pic_task === true || dept.is_my_pic_task === 1) && (detailData.status === 'Approved' || detailData.status === 'Released') ? 'cursor-pointer hover:bg-slate-100/80 dark:hover:bg-slate-800/60 active:bg-slate-200/50' : 'hover:bg-slate-50/80 dark:hover:bg-slate-800/40',
                                                                      dept.checked_product_ids.includes(Number(p.id)) ? 'bg-emerald-50/15 dark:bg-emerald-950/10' : ''
-                                                                 ]"
-                                                                 @click="if ((dept.is_my_pic_task === true || dept.is_my_pic_task === 1) && (detailData.status === 'Approved' || detailData.status === 'Released')) { toggleProductChecked(proc.process_id, dept.department_id, p.id, !dept.checked_product_ids.includes(Number(p.id))); }">
+                                                                 ]">
                                                                 
                                                                 {{-- Col 1: Part Number --}}
                                                                 <div class="col-span-4 flex items-center gap-2 pl-2 min-w-0 pr-2">
@@ -437,7 +431,7 @@
                                                                     </template>
 
                                                                     <span class="font-medium text-slate-800 dark:text-slate-100 font-mono truncate" 
-                                                                          :class="dept.checked_product_ids.includes(Number(p.id)) ? 'text-emerald-900 dark:text-emerald-300 font-bold' : ''"
+                                                                          :class="dept.checked_product_ids.includes(Number(p.id)) ? 'text-emerald-900 dark:text-emerald-300' : ''"
                                                                           x-text="p.customer_part_no"></span>
                                                                 </div>
 
@@ -776,7 +770,6 @@ function outlookInbox() {
                             });
                             
                             proc.assigned_departments.forEach(dept => {
-                                dept.checked_product_ids = (dept.checked_product_ids || []).map(Number);
                                 const key = proc.process_id + '_' + dept.department_id;
                                 this.expandedDepts[key] = !!dept.is_my_pic_task;
                             });
@@ -916,18 +909,13 @@ function outlookInbox() {
             if (!dept) return;
 
             productId = Number(productId);
-            let current = (dept.checked_product_ids || []).map(Number);
             if (isChecked) {
-                if (!current.includes(productId)) {
-                    current.push(productId);
+                if (!dept.checked_product_ids.includes(productId)) {
+                    dept.checked_product_ids.push(productId);
                 }
             } else {
-                current = current.filter(id => id !== productId);
+                dept.checked_product_ids = dept.checked_product_ids.filter(id => id !== productId);
             }
-            dept.checked_product_ids = [...current];
-
-            // Auto-save to server immediately
-            this.saveDeptProgress(processId, departmentId, dept.checked_product_ids);
         },
 
         isAllProductsChecked(processId, departmentId) {
@@ -937,7 +925,7 @@ function outlookInbox() {
             if (!dept) return false;
             
             return this.detailData.products.length > 0 && 
-                   this.detailData.products.every(p => (dept.checked_product_ids || []).includes(Number(p.id)));
+                   this.detailData.products.every(p => dept.checked_product_ids.includes(Number(p.id)));
         },
 
         toggleSelectAllProducts(processId, departmentId, isChecked) {
@@ -951,9 +939,6 @@ function outlookInbox() {
             } else {
                 dept.checked_product_ids = [];
             }
-
-            // Auto-save to server immediately
-            this.saveDeptProgress(processId, departmentId, dept.checked_product_ids);
         },
 
         getTotalTasksSummary() {
