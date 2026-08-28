@@ -626,15 +626,27 @@
 
         </div>
 
-        <!-- Right: Dynamic Collapsible Detail Panel (with Tabs) -->
+        <!-- Detail Panel Drawer Backdrop (Click to close) -->
         <div x-show="hasDetailPanel && showDetailPanel" 
-             x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0 translate-x-full"
-             x-transition:enter-end="opacity-100 translate-x-0"
-             x-transition:leave="transition ease-in duration-150"
-             x-transition:leave-start="opacity-100 translate-x-0"
-             x-transition:leave-end="opacity-0 translate-x-full"
-             class="w-80 md:w-88 border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col h-full flex-shrink-0 z-20 shadow-xs overflow-hidden"
+             x-transition:enter="transition-opacity ease-linear duration-200"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition-opacity ease-linear duration-150"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             @click="showDetailPanel = false" 
+             class="absolute inset-0 bg-slate-900/30 dark:bg-slate-950/50 z-25 backdrop-blur-[1px]" 
+             x-cloak></div>
+
+        <!-- Right: Dynamic Collapsible Detail Panel Drawer (Slide-over from right) -->
+        <div x-show="hasDetailPanel && showDetailPanel" 
+             x-transition:enter="transition ease-out duration-250"
+             x-transition:enter-start="translate-x-full"
+             x-transition:enter-end="translate-x-0"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="translate-x-0"
+             x-transition:leave-end="translate-x-full"
+             class="absolute inset-y-0 right-0 w-full sm:w-88 md:w-96 border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col h-full z-30 shadow-2xl overflow-hidden"
              x-cloak>
             
             <!-- Detail Panel Top Header -->

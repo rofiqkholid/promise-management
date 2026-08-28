@@ -9,7 +9,7 @@
             this.woDetail = null;
             this.loadingWo = true;
             this.hasDetailPanel = true;
-            this.showDetailPanel = true; // Auto open detail panel inside drawer on wide screens
+            this.showDetailPanel = false;
 
             const hashedId = detail.hashedId;
             const woId = detail.woId;
