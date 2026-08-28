@@ -434,23 +434,53 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
             });
         },
 
+        cleanMarkdownForSearch(text) {
+            if (!text) return '';
+            return String(text)
+                .replace(/[*_~`#>]/g, '')               // strip markdown syntax chars
+                .replace(/<\/?[^>]+(>|$)/g, '')         // strip HTML tags: <u>, </u>, <p>, <span>, etc.
+                .replace(/^[\t ]*[-*•\d\.]+\s*/gm, '')  // strip list bullets and numbers at line start
+                .replace(/\s+/g, ' ')                   // normalize whitespace
+                .toLowerCase()
+                .trim();
+        },
+
         onSearchInput() {
             if (this.searchDebounceTimer) clearTimeout(this.searchDebounceTimer);
-            const query = (this.searchQuery || '').trim();
-            if (!query) {
+            const rawQuery = (this.searchQuery || '').trim();
+            if (!rawQuery) {
                 this.searchResults = [];
                 this.currentSearchIndex = -1;
                 return;
             }
 
-            // Immediately scan local chatMessages in memory
-            const q = query.toLowerCase();
+            const q = rawQuery.toLowerCase();
+            const cleanQ = this.cleanMarkdownForSearch(rawQuery);
+            const queryWords = cleanQ.split(/\s+/).filter(Boolean);
+
+            // Immediately scan local chatMessages in memory with style normalization
             const localMatches = this.chatMessages.filter(m => {
-                const matchMsg = m.message && m.message.toLowerCase().includes(q);
-                const matchUser = m.user_name && m.user_name.toLowerCase().includes(q);
-                const matchFile = (m.file_name && m.file_name.toLowerCase().includes(q)) ||
-                                  (Array.isArray(m.attachments) && m.attachments.some(a => (a.name || a.file_name || '').toLowerCase().includes(q)));
-                return matchMsg || matchUser || matchFile;
+                const rawMsg = (m.message || '').toLowerCase();
+                const cleanMsg = this.cleanMarkdownForSearch(m.message);
+                const userName = (m.user_name || '').toLowerCase();
+                const fileName = (m.file_name || '').toLowerCase();
+                const attachNames = Array.isArray(m.attachments) 
+                    ? m.attachments.map(a => (a.name || a.file_name || '').toLowerCase()).join(' ') 
+                    : '';
+
+                // 1. Direct match on raw message
+                if (rawMsg.includes(q) || (cleanQ && rawMsg.includes(cleanQ))) return true;
+
+                // 2. Direct match on clean message (stripped of markdown styles)
+                if (cleanMsg.includes(q) || (cleanQ && cleanMsg.includes(cleanQ))) return true;
+
+                // 3. Match all words in clean message (e.g. "test" and "message" both present)
+                if (queryWords.length > 1 && queryWords.every(w => cleanMsg.includes(w) || rawMsg.includes(w))) return true;
+
+                // 4. Match user name or file name
+                if (userName.includes(q) || fileName.includes(q) || attachNames.includes(q)) return true;
+
+                return false;
             }).map(m => m.id);
 
             this.searchResults = localMatches;
@@ -463,10 +493,10 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
             }
 
             // Debounced server search across full history if query is 2+ chars
-            if (query.length >= 2) {
+            if (rawQuery.length >= 2) {
                 this.searchDebounceTimer = setTimeout(() => {
-                    this.searchServer(query);
-                }, 350);
+                    this.searchServer(rawQuery);
+                }, 300);
             }
         },
 

@@ -25,13 +25,30 @@ class ChatController extends Controller
             ->where('chatable_id', $id);
 
         if ($request->has('q') && filled($request->input('q'))) {
-            $searchTerm = '%' . trim($request->input('q')) . '%';
-            $query->where(function ($q) use ($searchTerm) {
+            $rawSearch = trim($request->input('q'));
+            $searchTerm = '%' . $rawSearch . '%';
+            $words = array_filter(preg_split('/\s+/', $rawSearch));
+            $cleanQuery = preg_replace('/[*_~`#<>]/', '', $rawSearch);
+            $cleanTerm = !empty($cleanQuery) ? '%' . trim($cleanQuery) . '%' : null;
+
+            $query->where(function ($q) use ($searchTerm, $words, $cleanTerm) {
                 $q->where('message', 'like', $searchTerm)
                   ->orWhere('file_name', 'like', $searchTerm)
                   ->orWhereHas('user', function ($uq) use ($searchTerm) {
                       $uq->where('name', 'like', $searchTerm);
                   });
+
+                if ($cleanTerm && $cleanTerm !== $searchTerm) {
+                    $q->orWhere('message', 'like', $cleanTerm);
+                }
+
+                if (count($words) > 1) {
+                    $q->orWhere(function ($subQ) use ($words) {
+                        foreach ($words as $w) {
+                            $subQ->where('message', 'like', '%' . $w . '%');
+                        }
+                    });
+                }
             });
             $messages = $query->orderBy('id', 'desc')
                 ->take(50)
