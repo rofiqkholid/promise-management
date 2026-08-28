@@ -305,14 +305,19 @@
                                 <!-- Image Gallery Grid (Maks 3 gambar lebarnya) -->
                                 <template x-if="getImageAttachments(msg).length > 0">
                                     <div class="mt-1 mb-1"
-                                         :class="getImageAttachments(msg).length === 1 ? 'max-w-[280px]' : ('grid gap-1.5 ' + getImageGridClass(getImageAttachments(msg).length))">
+                                         :class="getImageAttachments(msg).length === 1 ? 'max-w-[280px]' : ('grid gap-1.5 sm:gap-2 ' + getImageGridClass(getImageAttachments(msg).length))">
                                         <template x-for="(img, imgIdx) in getImageAttachments(msg)" :key="img.f || img.file_url || (msg.id + '-img-' + (img.index !== undefined ? img.index : imgIdx))">
-                                            <div class="relative overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-800 group/img"
-                                                 :class="getImageAttachments(msg).length === 1 ? 'w-auto' : 'aspect-square h-24 sm:h-28 w-full'">
+                                            <div class="relative overflow-hidden rounded-lg group/img border shadow-2xs transition-all"
+                                                 :class="[
+                                                     getImageAttachments(msg).length === 1 ? 'w-auto' : 'aspect-square h-24 sm:h-28 w-full',
+                                                     msg.user_id == currentUserId 
+                                                         ? 'border-white/35 dark:border-white/25 bg-white/10 ring-1 ring-black/10' 
+                                                         : 'border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 ring-1 ring-black/5'
+                                                 ]">
                                                 <img :src="img.file_url" 
                                                      :alt="img.file_name" 
                                                      :data-original="img.file_url"
-                                                     class="w-full object-cover chat-image-thumb cursor-zoom-in transition-opacity duration-150 hover:opacity-90 rounded-lg"
+                                                     class="w-full object-cover chat-image-thumb cursor-zoom-in transition-opacity duration-150 hover:opacity-90 rounded-md"
                                                      :class="getImageAttachments(msg).length === 1 ? 'max-h-64 h-auto' : 'h-full'">
                                                 
                                                 <!-- Soft dark vignette on hover -->
