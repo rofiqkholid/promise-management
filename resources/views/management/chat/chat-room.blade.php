@@ -438,140 +438,18 @@
 
                         <!-- Outside Timestamp and Checkmark Status (Shown only on last message of group) -->
                         <template x-if="shouldShowMessageFooter(getFilteredMessages(), index)">
-                            <!-- Avatar (Top aligned next to bubble, shown on top/first of message group) -->
-                            <template x-if="shouldShowAvatar(getFilteredMessages(), index)">
-                                <div class="w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] flex-shrink-0 select-none shadow-xs border mt-0.5"
-                                     :class="getUserColor(msg.user_id).avatar"
-                                     :title="msg.user ? msg.user.name : 'Unknown User'"
-                                     x-text="getInitials(msg.user ? msg.user.name : 'U')">
-                                </div>
-                            </template>
-                            <template x-if="!shouldShowAvatar(getFilteredMessages(), index)">
-                                <div class="w-7 flex-shrink-0"></div>
-                            </template>
-
-                            <!-- Bubble Wrapper -->
-                            <div class="flex flex-col relative group/bubble"
-                                 :class="msg.user_id == currentUserId ? 'items-end' : 'items-start'">
-
-                                <!-- Sender Name (Only in Group/WO Chat, for first message in group) -->
-                                <template x-if="shouldShowSenderName(getFilteredMessages(), index)">
-                                    <span class="text-[10.5px] font-bold px-1 mb-0.5 select-none"
-                                          :class="getUserColor(msg.user_id).name"
-                                          x-text="msg.user ? msg.user.name : 'Unknown'"></span>
+                            <div class="flex items-center gap-1 mt-0.5 px-1.5 text-[9.5px] select-none font-medium text-slate-400 dark:text-slate-500"
+                                 :class="msg.user_id == currentUserId ? 'justify-end' : 'justify-start'">
+                                <span x-text="formatTime(msg.created_at)"></span>
+                                <template x-if="msg.user_id == currentUserId">
+                                    <i class="fa-solid fa-check-double text-[9px] text-[#007aff] dark:text-blue-400"></i>
                                 </template>
-
-                                <!-- Message Bubble (iOS / WhatsApp Style) -->
-                                <div class="px-3.5 py-2 text-xs relative max-w-full leading-relaxed select-text"
-                                     :class="[
-                                         msg.user_id == currentUserId 
-                                             ? 'chat-bubble-out' 
-                                             : 'chat-bubble-in'
-                                     ]">
-
-                                    <!-- Replied Parent Quote Preview inside bubble -->
-                                    <template x-if="msg.replied_to_chat">
-                                        <div @click="jumpToMessage(msg.replied_to_chat.id)"
-                                             class="mb-1.5 p-1.5 rounded-sm border-l-2 bg-black/5 dark:bg-white/5 cursor-pointer hover:bg-black/10 dark:hover:bg-white/10 transition-colors select-none text-[11px]"
-                                             :class="msg.user_id == currentUserId ? 'border-white/80 text-white' : 'border-indigo-500 text-slate-700 dark:text-slate-300'">
-                                            <span class="font-bold block text-[10px]" x-text="msg.replied_to_chat.user ? msg.replied_to_chat.user.name : 'User'"></span>
-                                            <span class="truncate block opacity-85 text-[10.5px]" x-html="getReplySnippet(msg.replied_to_chat)"></span>
-                                        </div>
-                                    </template>
-
-                                    <!-- Message Text (Markdown Rendered) -->
-                                    <template x-if="msg.message">
-                                        <div class="chat-markdown prose dark:prose-invert max-w-none text-xs break-words leading-relaxed"
-                                             x-html="renderMessageMarkdown(msg.message, msg.user_id == currentUserId)"></div>
-                                    </template>
-
-                                    <!-- Attachments Preview inside bubble -->
-                                    <template x-if="msg.attachments && msg.attachments.length > 0">
-                                        <div class="mt-1.5 space-y-1.5">
-                                            <template x-for="(att, aIdx) in msg.attachments" :key="aIdx">
-                                                <div class="rounded-sm overflow-hidden">
-                                                    <!-- Image Preview with Viewer.js -->
-                                                    <template x-if="isImageType(att.file_type, att.file_name)">
-                                                        <div class="relative group/img cursor-pointer">
-                                                            <img :src="att.file_url" 
-                                                                 :alt="att.file_name" 
-                                                                 :data-original="att.file_url"
-                                                                 class="chat-preview-image max-h-56 max-w-full rounded-sm object-cover hover:opacity-95 transition-opacity">
-                                                        </div>
-                                                    </template>
-
-                                                    <!-- PDF / Document Preview -->
-                                                    <template x-if="isPdfType(att.file_type, att.file_name)">
-                                                        <div @click="previewDoc(att.file_url, att.file_name)"
-                                                             class="flex items-center gap-2 p-2 rounded-sm border cursor-pointer transition-all duration-150"
-                                                             :class="msg.user_id == currentUserId 
-                                                                 ? 'bg-white/15 border-white/30 text-white hover:bg-white/25' 
-                                                                 : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:bg-indigo-50/50 dark:hover:bg-slate-700/80'">
-                                                            <i class="fa-solid fa-file-pdf text-rose-500 text-lg flex-shrink-0"></i>
-                                                            <div class="min-w-0 flex-1">
-                                                                <span class="block text-[11px] font-semibold truncate" x-text="att.file_name"></span>
-                                                                <span class="block text-[9.5px] opacity-75 font-mono" x-text="formatBytes(att.file_size)"></span>
-                                                            </div>
-                                                            <i class="fa-solid fa-arrow-up-right-from-square text-[10px] opacity-70"></i>
-                                                        </div>
-                                                    </template>
-
-                                                    <!-- Other File Types (Downloadable) -->
-                                                    <template x-if="!isImageType(att.file_type, att.file_name) && !isPdfType(att.file_type, att.file_name)">
-                                                        <a :href="att.file_url" 
-                                                           :download="att.file_name" 
-                                                           target="_blank"
-                                                           class="flex items-center gap-2 p-2 rounded-sm border transition-all duration-150"
-                                                           :class="msg.user_id == currentUserId 
-                                                               ? 'bg-white/15 border-white/30 text-white hover:bg-white/25' 
-                                                               : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:bg-indigo-50/50 dark:hover:bg-slate-700/80'">
-                                                            <i class="fa-solid fa-paperclip text-indigo-500 text-base flex-shrink-0"></i>
-                                                            <div class="min-w-0 flex-1">
-                                                                <span class="block text-[11px] font-semibold truncate" x-text="att.file_name"></span>
-                                                                <span class="block text-[9.5px] opacity-75 font-mono" x-text="formatBytes(att.file_size)"></span>
-                                                            </div>
-                                                            <i class="fa-solid fa-download text-[10px] opacity-70"></i>
-                                                        </a>
-                                                    </template>
-                                                </div>
-                                            </template>
-                                        </div>
-                                    </template>
-
-                                    <!-- Time & Read Status Footer inside bubble -->
-                                    <div class="flex items-center justify-end gap-1 mt-0.5 select-none font-mono text-[9px]"
-                                         :class="msg.user_id == currentUserId ? 'text-white/80' : 'text-slate-400 dark:text-slate-500'">
-                                        <span x-text="formatTime(msg.created_at)"></span>
-                                        <template x-if="msg.user_id == currentUserId">
-                                            <span>
-                                                <template x-if="msg.is_pending">
-                                                    <i class="fa-regular fa-clock text-[8px] animate-pulse"></i>
-                                                </template>
-                                                <template x-if="!msg.is_pending">
-                                                    <i class="fa-solid fa-check-double text-[8.5px] text-white"></i>
-                                                </template>
-                                            </span>
-                                        </template>
-                                    </div>
-
-                                </div>
-
-                                <!-- Floating Action Buttons (Reply trigger) on hover -->
-                                <div class="absolute top-1 hidden group-hover/bubble:flex items-center gap-1 z-10 select-none"
-                                     :class="msg.user_id == currentUserId ? '-left-10' : '-right-10'">
-                                    <button @click="setReply(msg)" 
-                                            type="button" 
-                                            class="w-6 h-6 rounded-full bg-white dark:bg-slate-800 text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 border border-slate-200 dark:border-slate-700 shadow-xs flex items-center justify-center cursor-pointer transition-colors"
-                                            title="Reply to message">
-                                        <i class="fa-solid fa-reply text-[9px]"></i>
-                                    </button>
-                                </div>
-
                             </div>
-                        </div>
-
+                        </template>
                     </div>
-                </template>
+                </div>
+            </div>
+        </template>
 
                 <!-- Scroll to bottom anchor -->
                 <div x-ref="chatBottomAnchor" class="h-1"></div>
