@@ -966,7 +966,48 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
                 }
             }
 
-            // 2. Smart List Continuation & Enter Handling
+            // 2. Smart Backspace on Empty List Item (Delete entire prefix at once)
+            if (event.key === 'Backspace') {
+                const val = this.chatInputMessage || '';
+                const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
+
+                if (start === end) {
+                    const linesBefore = val.substring(0, start).split('\n');
+                    const lineBeforeCursor = linesBefore[linesBefore.length - 1];
+                    const lineAfterCursor = val.substring(start).split('\n')[0];
+
+                    // Check if current line is just a list prefix with no text: e.g. "1. ", "2. ", "- ", "* ", "> "
+                    const emptyListMatch = lineBeforeCursor.match(/^(\s*)(\d+\.|[-*•>]|\d+\))\s*$/);
+                    if (emptyListMatch && lineAfterCursor.trim() === '') {
+                        event.preventDefault();
+                        const lineStartPos = start - lineBeforeCursor.length;
+                        const before = val.substring(0, lineStartPos);
+                        const after = val.substring(start + lineAfterCursor.length);
+
+                        // If preceded by a newline, remove the line and merge up
+                        let newText = '';
+                        let newCursor = lineStartPos;
+                        if (before.endsWith('\n')) {
+                            newText = before.slice(0, -1) + after;
+                            newCursor = lineStartPos - 1;
+                        } else {
+                            newText = before + after;
+                            newCursor = lineStartPos;
+                        }
+
+                        this.chatInputMessage = newText;
+                        this.$nextTick(() => {
+                            textarea.setSelectionRange(newCursor, newCursor);
+                            textarea.style.height = '20px';
+                            textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+                        });
+                        return;
+                    }
+                }
+            }
+
+            // 3. Smart List Continuation & Enter Handling
             if (event.key === 'Enter') {
                 const val = this.chatInputMessage || '';
                 const start = textarea.selectionStart;
@@ -983,12 +1024,13 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
                     const itemContent = numMatch[3].trim();
 
                     if (!itemContent) {
-                        // Empty numbered list line -> Exit list (remove prefix)
+                        // Empty numbered list line -> Exit list (remove prefix and stay as clean line)
                         event.preventDefault();
-                        const beforeLine = val.substring(0, start - lineBeforeCursor.length);
-                        const afterCursor = val.substring(start);
-                        this.chatInputMessage = beforeLine + afterCursor;
-                        const newPos = beforeLine.length;
+                        const lineStartPos = start - lineBeforeCursor.length;
+                        const before = val.substring(0, lineStartPos);
+                        const after = val.substring(start);
+                        this.chatInputMessage = before + after;
+                        const newPos = lineStartPos;
                         this.$nextTick(() => {
                             textarea.setSelectionRange(newPos, newPos);
                             textarea.style.height = '20px';
@@ -1018,12 +1060,13 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
                     const itemContent = bulletMatch[3].trim();
 
                     if (!itemContent) {
-                        // Empty bullet list line -> Exit list (remove prefix)
+                        // Empty bullet list line -> Exit list (remove prefix and stay as clean line)
                         event.preventDefault();
-                        const beforeLine = val.substring(0, start - lineBeforeCursor.length);
-                        const afterCursor = val.substring(start);
-                        this.chatInputMessage = beforeLine + afterCursor;
-                        const newPos = beforeLine.length;
+                        const lineStartPos = start - lineBeforeCursor.length;
+                        const before = val.substring(0, lineStartPos);
+                        const after = val.substring(start);
+                        this.chatInputMessage = before + after;
+                        const newPos = lineStartPos;
                         this.$nextTick(() => {
                             textarea.setSelectionRange(newPos, newPos);
                             textarea.style.height = '20px';
