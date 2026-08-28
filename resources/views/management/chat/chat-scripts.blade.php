@@ -148,16 +148,23 @@
         margin: 0.35rem 0 !important; 
     }
     .dark .chat-markdown pre { background-color: rgba(255, 255, 255, 0.1) !important; }
-    .chat-markdown pre code { background: transparent !important; padding: 0 !important; font-size: inherit !important; }
+    /* Quotes (High-Contrast & Beautifully Highlighted) */
     .chat-markdown blockquote {
-        border-left: 3px solid rgba(99, 102, 241, 0.6) !important;
-        padding-left: 0.5rem !important;
+        border-left: 3.5px solid #4f46e5 !important;
+        background-color: rgba(99, 102, 241, 0.08) !important;
+        padding: 4px 10px !important;
         margin: 0.35rem 0 !important;
+        border-radius: 0 6px 6px 0 !important;
         font-style: italic !important;
-        opacity: 0.9 !important;
     }
     .dark .chat-markdown blockquote {
-        border-left-color: rgba(129, 140, 248, 0.6) !important;
+        border-left-color: #818cf8 !important;
+        background-color: rgba(99, 102, 241, 0.2) !important;
+    }
+    .chat-bubble-out .chat-markdown blockquote {
+        border-left: 3.5px solid #ffffff !important;
+        background-color: rgba(255, 255, 255, 0.2) !important;
+        color: #ffffff !important;
     }
 
     .viewer-container {
