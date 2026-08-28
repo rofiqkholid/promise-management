@@ -624,8 +624,6 @@
                 </button>
             </div>
 
-        </div>
-
         <!-- Detail Panel Drawer Backdrop (Click to close) -->
         <div x-show="hasDetailPanel && showDetailPanel" 
              x-transition:enter="transition-opacity ease-linear duration-200"
@@ -849,8 +847,6 @@
 
             </div>
         </div>
-
-    </div>
 
     <!-- Document / Image Modal Preview -->
     <div x-show="pdfPreviewUrl" 
