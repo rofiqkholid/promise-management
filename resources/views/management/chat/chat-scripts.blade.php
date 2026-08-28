@@ -231,6 +231,7 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
         customDateFilter: '',
         showScrollToBottomBtn: false,
         showFormatToolbar: false,
+        hasTextSelection: false,
         searchQuery: '',
         showSearchBar: false,
         searchResults: [],
@@ -928,7 +929,14 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
                 textarea.setSelectionRange(newCursorPos, newCursorPos);
                 textarea.style.height = '20px';
                 textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+                this.checkTextSelection();
             });
+        },
+
+        checkTextSelection() {
+            const textarea = this.$refs.chatInput;
+            if (!textarea) return;
+            this.hasTextSelection = textarea.selectionStart !== textarea.selectionEnd;
         },
 
         // Textarea Keyboard Shortcuts (Microsoft Teams, Word & Slack standards) & Smart List Continuation

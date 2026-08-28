@@ -534,19 +534,19 @@
         </template>
     </div>
 
-    <!-- Rich Formatting Toolbar -->
-    <div x-show="showFormatToolbar" 
-         class="px-4 py-1.5 bg-slate-50 dark:bg-slate-900/80 border-t border-slate-200 dark:border-slate-800 flex items-center gap-1 z-20 flex-shrink-0 select-none"
+    <!-- Rich Formatting Toolbar (Auto-appears on text selection or manual toggle) -->
+    <div x-show="showFormatToolbar || hasTextSelection" 
+         class="px-4 py-1.5 bg-slate-50 dark:bg-slate-900/80 border-t border-slate-200 dark:border-slate-800 flex items-center gap-1 z-20 flex-shrink-0 select-none transition-all"
          x-cloak>
-        <button @click="applyFormat('bold')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs" title="Bold (Ctrl+B)">B</button>
-        <button @click="applyFormat('italic')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 italic text-xs font-serif" title="Italic (Ctrl+I)">I</button>
-        <button @click="applyFormat('underline')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 underline text-xs font-semibold" title="Underline (Ctrl+U)">U</button>
-        <button @click="applyFormat('strike')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 line-through text-xs" title="Strikethrough (Ctrl+Shift+X / Alt+Shift+5)">S</button>
+        <button @mousedown.prevent @click="applyFormat('bold')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs" title="Bold (Ctrl+B)">B</button>
+        <button @mousedown.prevent @click="applyFormat('italic')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 italic text-xs font-serif" title="Italic (Ctrl+I)">I</button>
+        <button @mousedown.prevent @click="applyFormat('underline')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 underline text-xs font-semibold" title="Underline (Ctrl+U)">U</button>
+        <button @mousedown.prevent @click="applyFormat('strike')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 line-through text-xs" title="Strikethrough (Ctrl+Shift+X / Alt+Shift+5)">S</button>
         <div class="h-3.5 w-px bg-slate-300 dark:bg-slate-700 mx-1"></div>
-        <button @click="applyFormat('code')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono text-[11px]" title="Code block (Ctrl+Shift+C / Ctrl+E)">&lt;/&gt;</button>
-        <button @click="applyFormat('quote')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs" title="Quote (Ctrl+Shift+>)"><i class="fa-solid fa-quote-left text-[10px]"></i></button>
-        <button @click="applyFormat('ul')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs" title="Bulleted List (Ctrl+Shift+8 / Ctrl+Shift+L)"><i class="fa-solid fa-list-ul text-[10px]"></i></button>
-        <button @click="applyFormat('ol')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs" title="Numbered List (Ctrl+Shift+7)"><i class="fa-solid fa-list-ol text-[10px]"></i></button>
+        <button @mousedown.prevent @click="applyFormat('code')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono text-[11px]" title="Code block (Ctrl+Shift+C / Ctrl+E)">&lt;/&gt;</button>
+        <button @mousedown.prevent @click="applyFormat('quote')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs" title="Quote (Ctrl+Shift+>)"><i class="fa-solid fa-quote-left text-[10px]"></i></button>
+        <button @mousedown.prevent @click="applyFormat('ul')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs" title="Bulleted List (Ctrl+Shift+8 / Ctrl+Shift+L)"><i class="fa-solid fa-list-ul text-[10px]"></i></button>
+        <button @mousedown.prevent @click="applyFormat('ol')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs" title="Numbered List (Ctrl+Shift+7)"><i class="fa-solid fa-list-ol text-[10px]"></i></button>
     </div>
 
     <!-- Chat Input Box & Action Row -->
@@ -571,7 +571,7 @@
         <button @click="showFormatToolbar = !showFormatToolbar" 
                 type="button" 
                 class="w-9 h-9 flex items-center justify-center rounded-sm transition-colors flex-shrink-0 cursor-pointer"
-                :class="showFormatToolbar ? 'bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400' : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'"
+                :class="showFormatToolbar || hasTextSelection ? 'bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400' : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'"
                 title="Toggle Text Formatting Toolbar">
             <i class="fa-solid fa-font text-xs"></i>
         </button>
@@ -582,7 +582,11 @@
                       x-model="chatInputMessage"
                       rows="1"
                       x-init="$el.style.height = '20px'; $watch('chatInputMessage', val => { if (!val || !val.trim()) { $el.style.height = '20px'; } })"
-                      @input="handleInputChange($event); $el.style.height = '20px'; $el.style.height = Math.min($el.scrollHeight, 120) + 'px';"
+                      @input="handleInputChange($event); checkTextSelection(); $el.style.height = '20px'; $el.style.height = Math.min($el.scrollHeight, 120) + 'px';"
+                      @select="checkTextSelection()"
+                      @mouseup="checkTextSelection()"
+                      @keyup="checkTextSelection()"
+                      @blur="setTimeout(() => { checkTextSelection(); }, 150)"
                       @keydown="handleChatTextareaKeydown($event)"
                       placeholder="Type a message... (@ mention, # item, Shift+Enter for newline)"
                       class="w-full text-xs bg-transparent border-none outline-none resize-none chat-textarea text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 max-h-30 p-0 leading-normal block overflow-y-auto"></textarea>
