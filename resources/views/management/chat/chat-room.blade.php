@@ -542,11 +542,12 @@
          x-cloak>
         <button @click="applyFormat('bold')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs" title="Bold (Ctrl+B)">B</button>
         <button @click="applyFormat('italic')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 italic text-xs font-serif" title="Italic (Ctrl+I)">I</button>
-        <button @click="applyFormat('strike')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 line-through text-xs" title="Strikethrough (Ctrl+Shift+X)">S</button>
+        <button @click="applyFormat('underline')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 underline text-xs font-semibold" title="Underline (Ctrl+U)">U</button>
+        <button @click="applyFormat('strike')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 line-through text-xs" title="Strikethrough (Ctrl+Shift+X / Alt+Shift+5)">S</button>
         <div class="h-3.5 w-px bg-slate-300 dark:bg-slate-700 mx-1"></div>
-        <button @click="applyFormat('code')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono text-[11px]" title="Code block (Ctrl+E)">&lt;/&gt;</button>
-        <button @click="applyFormat('quote')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs" title="Quote block (Ctrl+Shift+Q)"><i class="fa-solid fa-quote-left text-[10px]"></i></button>
-        <button @click="applyFormat('ul')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs" title="Bulleted List (Ctrl+Shift+8)"><i class="fa-solid fa-list-ul text-[10px]"></i></button>
+        <button @click="applyFormat('code')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono text-[11px]" title="Code block (Ctrl+Shift+C / Ctrl+E)">&lt;/&gt;</button>
+        <button @click="applyFormat('quote')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs" title="Quote (Ctrl+Shift+>)"><i class="fa-solid fa-quote-left text-[10px]"></i></button>
+        <button @click="applyFormat('ul')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs" title="Bulleted List (Ctrl+Shift+8 / Ctrl+Shift+L)"><i class="fa-solid fa-list-ul text-[10px]"></i></button>
         <button @click="applyFormat('ol')" type="button" class="w-6 h-6 rounded-xs hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs" title="Numbered List (Ctrl+Shift+7)"><i class="fa-solid fa-list-ol text-[10px]"></i></button>
     </div>
 

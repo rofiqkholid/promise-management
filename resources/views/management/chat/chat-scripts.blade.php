@@ -849,6 +849,10 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
                     replacement = `~~${selected || 'strikethrough'}~~`;
                     newCursorPos = selected ? end + 4 : start + 2;
                     break;
+                case 'underline':
+                    replacement = `<u>${selected || 'underlined text'}</u>`;
+                    newCursorPos = selected ? end + 7 : start + 3;
+                    break;
                 case 'code':
                     if (selected.includes('\n')) {
                         replacement = `\`\`\`\n${selected || 'code block'}\n\`\`\``;
@@ -900,47 +904,62 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
             });
         },
 
-        // Textarea Keyboard Shortcuts & Smart List Continuation
+        // Textarea Keyboard Shortcuts (Microsoft Teams, Word & Slack standards) & Smart List Continuation
         handleChatTextareaKeydown(event) {
             const textarea = this.$refs.chatInput;
             if (!textarea) return;
 
             const isCtrl = event.ctrlKey || event.metaKey;
+            const isAlt = event.altKey;
+            const isShift = event.shiftKey;
             const key = event.key ? event.key.toLowerCase() : '';
 
-            // 1. Keyboard Formatting Shortcuts
+            // 1. Standard Microsoft / Slack / Teams Formatting Shortcuts
             if (isCtrl) {
+                // Ctrl+B: Bold (MS Word / Teams / Slack)
                 if (key === 'b') {
                     event.preventDefault();
                     this.applyFormat('bold');
                     return;
                 }
+                // Ctrl+I: Italic (MS Word / Teams / Slack)
                 if (key === 'i') {
                     event.preventDefault();
                     this.applyFormat('italic');
                     return;
                 }
-                if (key === 'x' && event.shiftKey) {
+                // Ctrl+U: Underline (MS Word / Teams)
+                if (key === 'u' && !isShift) {
+                    event.preventDefault();
+                    this.applyFormat('underline');
+                    return;
+                }
+                // Strikethrough: Ctrl+Shift+X (Teams/Slack), Ctrl+Shift+S (Discord), Alt+Shift+5 (Word)
+                if ((isShift && (key === 'x' || key === 's')) || (isAlt && isShift && key === '5')) {
                     event.preventDefault();
                     this.applyFormat('strike');
                     return;
                 }
-                if (key === 'e' || key === '`') {
+                // Code / Code block: Ctrl+Shift+C (Teams/Slack), Ctrl+E, Ctrl+`
+                if ((isShift && key === 'c') || key === 'e' || key === '`') {
                     event.preventDefault();
                     this.applyFormat('code');
                     return;
                 }
-                if (key === 'q' && event.shiftKey) {
+                // Blockquote: Ctrl+Shift+9 (Slack), Ctrl+Shift+. / > (Teams/Notion), Ctrl+Shift+Q
+                if (isShift && (key === '9' || key === '.' || key === '>' || key === 'q')) {
                     event.preventDefault();
                     this.applyFormat('quote');
                     return;
                 }
-                if ((key === '8' || key === 'u') && event.shiftKey) {
+                // Bullet List: Ctrl+Shift+8 (MS Word/Teams/Slack), Ctrl+Shift+L (Wordpad/Evernote), Ctrl+Shift+U
+                if (isShift && (key === '8' || key === 'l' || key === 'u')) {
                     event.preventDefault();
                     this.applyFormat('ul');
                     return;
                 }
-                if ((key === '7' || key === 'o') && event.shiftKey) {
+                // Numbered List: Ctrl+Shift+7 (MS Word/Teams/Slack), Ctrl+Shift+O
+                if (isShift && (key === '7' || key === 'o')) {
                     event.preventDefault();
                     this.applyFormat('ol');
                     return;
