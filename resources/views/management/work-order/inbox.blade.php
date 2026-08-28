@@ -339,22 +339,24 @@
                                                                   :class="getDeptProgressPct(dept) === 100 ? 'text-emerald-600 dark:text-emerald-400 font-bold' : (getDeptProgressPct(dept) > 0 ? 'text-amber-600 dark:text-amber-400 font-bold' : 'text-slate-600 dark:text-slate-300')"
                                                                   x-text="getDeptProgressPct(dept) + '%'"></span>
                                                             
-                                                            {{-- Dynamic SVG Circular Progress Ring --}}
+                                                            {{-- Real Dynamic SVG Circular Progress Ring --}}
                                                             <div class="relative w-4 h-4 flex items-center justify-center flex-shrink-0" :title="getDeptProgressPct(dept) + '% Completed'">
                                                                 <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36">
                                                                     {{-- Track --}}
-                                                                    <path class="text-slate-200 dark:text-slate-700 stroke-current"
-                                                                          stroke-width="4.5"
-                                                                          fill="none"
-                                                                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                                                    <circle cx="18" cy="18" r="15.9155"
+                                                                            class="text-slate-200 dark:text-slate-700 stroke-current"
+                                                                            stroke-width="4.5"
+                                                                            fill="none" />
                                                                     {{-- Dynamic Progress Ring --}}
-                                                                    <path :class="getDeptProgressPct(dept) === 100 ? 'text-emerald-500' : (getDeptProgressPct(dept) > 0 ? 'text-amber-500' : 'text-transparent')"
-                                                                          :stroke-dasharray="getDeptProgressPct(dept) + ', 100'"
-                                                                          stroke-width="4.5"
-                                                                          stroke-linecap="round"
-                                                                          stroke-current
-                                                                          fill="none"
-                                                                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                                                    <circle cx="18" cy="18" r="15.9155"
+                                                                            :class="getDeptProgressPct(dept) === 100 ? 'text-emerald-500' : (getDeptProgressPct(dept) > 0 ? 'text-amber-500' : 'text-transparent')"
+                                                                            stroke-dasharray="100, 100"
+                                                                            :stroke-dashoffset="100 - getDeptProgressPct(dept)"
+                                                                            stroke-width="4.5"
+                                                                            stroke-linecap="round"
+                                                                            stroke-current
+                                                                            fill="none"
+                                                                            class="transition-all duration-300 ease-out" />
                                                                 </svg>
                                                                 <template x-if="getDeptProgressPct(dept) === 100">
                                                                     <i class="fa-solid fa-check text-[7px] text-emerald-500 absolute"></i>
@@ -774,6 +776,7 @@ function outlookInbox() {
                             });
                             
                             proc.assigned_departments.forEach(dept => {
+                                dept.checked_product_ids = (dept.checked_product_ids || []).map(Number);
                                 const key = proc.process_id + '_' + dept.department_id;
                                 this.expandedDepts[key] = !!dept.is_my_pic_task;
                             });
@@ -913,13 +916,18 @@ function outlookInbox() {
             if (!dept) return;
 
             productId = Number(productId);
+            let current = (dept.checked_product_ids || []).map(Number);
             if (isChecked) {
-                if (!dept.checked_product_ids.includes(productId)) {
-                    dept.checked_product_ids.push(productId);
+                if (!current.includes(productId)) {
+                    current.push(productId);
                 }
             } else {
-                dept.checked_product_ids = dept.checked_product_ids.filter(id => id !== productId);
+                current = current.filter(id => id !== productId);
             }
+            dept.checked_product_ids = [...current];
+
+            // Auto-save to server immediately
+            this.saveDeptProgress(processId, departmentId, dept.checked_product_ids);
         },
 
         isAllProductsChecked(processId, departmentId) {
@@ -929,7 +937,7 @@ function outlookInbox() {
             if (!dept) return false;
             
             return this.detailData.products.length > 0 && 
-                   this.detailData.products.every(p => dept.checked_product_ids.includes(Number(p.id)));
+                   this.detailData.products.every(p => (dept.checked_product_ids || []).includes(Number(p.id)));
         },
 
         toggleSelectAllProducts(processId, departmentId, isChecked) {
@@ -943,6 +951,9 @@ function outlookInbox() {
             } else {
                 dept.checked_product_ids = [];
             }
+
+            // Auto-save to server immediately
+            this.saveDeptProgress(processId, departmentId, dept.checked_product_ids);
         },
 
         getTotalTasksSummary() {

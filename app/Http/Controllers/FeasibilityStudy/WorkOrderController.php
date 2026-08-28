@@ -523,8 +523,21 @@ class WorkOrderController extends Controller
 
             $this->workOrderService->updateProcessProgress($decryptedId, $processId, $deptId, $checkedProductIds);
 
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Progress successfully updated!'
+                ]);
+            }
+
             return redirect()->back()->with('success', 'Progress successfully updated!');
         } catch (\Exception $e) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ], 422);
+            }
             return redirect()->back()->with('error', $e->getMessage());
         }
     }
