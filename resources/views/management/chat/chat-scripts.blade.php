@@ -1,7 +1,6 @@
 <x-sweetalert />
 
 @push('styles')
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.7/viewer.min.css">
 <style>
     /* Force chat messages container to scroll smoothly and reliably */
     #chat-messages-container {
@@ -195,8 +194,6 @@
 @endpush
 
 @push('scripts')
-<script src="https://cdnjs.cloudflare.com/ajax/libs/viewerjs/1.11.7/viewer.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
 window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
     return {

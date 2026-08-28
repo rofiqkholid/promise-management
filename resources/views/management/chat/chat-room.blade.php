@@ -605,7 +605,9 @@
 
     <!-- Document / Image Modal Preview -->
     <div x-show="pdfPreviewUrl" 
-         class="fixed inset-0 z-[99999] bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-4"
+         class="fixed inset-0 z-[99999] bg-black/50 backdrop-blur-xs flex items-center justify-center p-4"
+         @click.self="pdfPreviewUrl = null"
+         @keydown.escape.window="pdfPreviewUrl = null"
          x-cloak>
         <div class="bg-white dark:bg-slate-800 w-full max-w-5xl h-[90vh] flex flex-col shadow-2xl border border-slate-200 dark:border-slate-700 rounded-sm overflow-hidden">
             <!-- Modal Header -->
