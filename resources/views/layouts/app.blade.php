@@ -7,11 +7,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="base-url" content="{{ url('/') }}">
     <meta name="broadcasting-auth-url" content="{{ url('broadcasting/auth') }}">
-    <meta name="reverb-key" content="{{ env('VITE_REVERB_APP_KEY', config('reverb.apps.apps.0.key')) }}">
-    <meta name="reverb-host" content="{{ env('VITE_REVERB_HOST', config('reverb.apps.apps.0.options.host')) }}">
-    <meta name="reverb-port" content="{{ env('VITE_REVERB_PORT', 443) }}">
-    <meta name="reverb-scheme" content="{{ env('VITE_REVERB_SCHEME', 'https') }}">
-    <meta name="reverb-path" content="{{ env('VITE_REVERB_PATH', '/reverb') }}">
+    <meta name="pusher-key" content="{{ env('VITE_PUSHER_APP_KEY', config('broadcasting.connections.pusher.key')) }}">
+    <meta name="pusher-cluster" content="{{ env('VITE_PUSHER_APP_CLUSTER', config('broadcasting.connections.pusher.options.cluster', 'ap1')) }}">
     
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ asset('assets/image/logo-promise.png') }}">
