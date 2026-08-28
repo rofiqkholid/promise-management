@@ -838,8 +838,8 @@
                                          :class="getUserColor(user.id).avatar"
                                          x-text="getInitials(user.name)"></div>
                                     <div class="min-w-0 flex-1">
-                                        <span class="block font-bold text-slate-800 dark:text-slate-100 text-xs truncate" x-text="user.name"></span>
-                                        <span class="block text-[9.5px] text-slate-400 dark:text-slate-500 truncate" x-text="user.department_code || user.email || 'Participant'"></span>
+                                        <span class="block font-bold text-slate-800 dark:text-slate-100 text-xs truncate" x-text="user.name + (user.id == currentUserId ? ' (You)' : '')"></span>
+                                        <span class="block text-[9.5px] text-slate-400 dark:text-slate-500 truncate" x-text="(user.department_code ? user.department_code + ' • ' : '') + user.message_count + ' msg' + (user.message_count > 1 ? 's' : '')"></span>
                                     </div>
                                 </div>
                                 <button type="button" 

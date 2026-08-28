@@ -262,14 +262,14 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
 
         getSharedFilesList() {
             const files = [];
-            if (!this.chatMessages || !this.chatMessages.length) return files;
+            if (!this.chatMessages || !this.chatMessages.length) return [];
             this.chatMessages.forEach(msg => {
                 if (msg.attachments && Array.isArray(msg.attachments)) {
                     msg.attachments.forEach(att => {
                         files.push({
                             ...att,
                             messageId: msg.id,
-                            senderName: msg.user?.name || 'User',
+                            senderName: msg.user_name || msg.user?.name || 'User',
                             createdAt: msg.created_at
                         });
                     });
@@ -282,11 +282,36 @@ window.chatRoomEngine = function(defaultType = 'work_order', defaultId = null) {
             const map = new Map();
             if (!this.chatMessages || !this.chatMessages.length) return [];
             this.chatMessages.forEach(msg => {
-                if (msg.user && !map.has(msg.user.id)) {
-                    map.set(msg.user.id, msg.user);
+                const uid = msg.user_id || msg.user?.id;
+                const uname = msg.user_name || msg.user?.name || (uid == this.currentUserId ? 'Me' : 'Participant');
+                const dept = msg.department_code || msg.user?.department_code || msg.user?.department || '';
+                const email = msg.user_email || msg.user?.email || '';
+                
+                if (uid) {
+                    if (!map.has(uid)) {
+                        map.set(uid, {
+                            id: uid,
+                            name: uname,
+                            department_code: dept,
+                            email: email,
+                            message_count: 1,
+                            last_active: msg.created_at
+                        });
+                    } else {
+                        const existing = map.get(uid);
+                        existing.message_count = (existing.message_count || 1) + 1;
+                        if (uname && uname !== 'Participant' && existing.name === 'Participant') {
+                            existing.name = uname;
+                        }
+                    }
                 }
             });
             return Array.from(map.values());
+        },
+
+        getInitials(name) {
+            if (!name) return 'U';
+            return name.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase();
         },
 
         getUserColor(userId) {
