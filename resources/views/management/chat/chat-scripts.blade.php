@@ -189,7 +189,7 @@
     }
     .chat-bubble-out.chat-bubble-highlighted,
     .chat-bubble-out.chat-bubble-highlight {
-        background-color: #2563eb !important; /* Soft lighter blue */
+        background-color: #38bdf8 !important; /* Bright vivid sky-cyan highlight */
     }
 </style>
 @endpush
