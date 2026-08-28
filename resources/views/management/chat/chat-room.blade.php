@@ -6,7 +6,7 @@
 
     <!-- Simple Clean Drag and Drop Overlay -->
     <div x-show="isDragging" 
-         class="absolute inset-0 bg-slate-900/60 dark:bg-slate-950/75 backdrop-blur-xs flex flex-col items-center justify-center gap-2.5 z-[99] select-none transition-opacity duration-150"
+         class="absolute inset-0 bg-slate-900/60 dark:bg-slate-950/75 flex flex-col items-center justify-center gap-2.5 z-[99] select-none transition-opacity duration-150"
          @dragover.prevent
          @dragleave.prevent="isDragging = false"
          @drop.prevent="handleDrop($event)"
@@ -605,7 +605,7 @@
 
     <!-- Document / Image Modal Preview -->
     <div x-show="pdfPreviewUrl" 
-         class="fixed inset-0 z-[99999] bg-black/50 backdrop-blur-xs flex items-center justify-center p-4"
+         class="fixed inset-0 z-[99999] bg-black/50 flex items-center justify-center p-4"
          @click.self="pdfPreviewUrl = null"
          @keydown.escape.window="pdfPreviewUrl = null"
          x-cloak>
