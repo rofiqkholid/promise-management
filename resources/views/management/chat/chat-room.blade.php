@@ -715,7 +715,37 @@
                     </div>
 
                     <!-- Dynamic Work Order / Custom Context if available -->
-                    <template x-if="detailPanelData || (typeof woDetail !== 'undefined' && woDetail)">
+                    <!-- Specifications for Inquiry Product -->
+                    <template x-if="chatType === 'inquiry_product' && detailPanelData">
+                        <div class="border-t border-slate-200 dark:border-slate-800 pt-2.5 space-y-2">
+                            <span class="block text-[9.5px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">Item Specifications</span>
+                            <div class="grid grid-cols-2 gap-2 bg-slate-50/70 dark:bg-slate-800/40 p-2 rounded-md border border-slate-200/80 dark:border-slate-700/60 text-xs">
+                                <div>
+                                    <span class="block text-[9.5px] text-slate-400 dark:text-slate-500 font-semibold uppercase">Part No</span>
+                                    <span class="font-bold text-xs font-mono text-slate-800 dark:text-slate-100 truncate block" x-text="detailPanelData?.customer_part_no || '—'"></span>
+                                </div>
+                                <div>
+                                    <span class="block text-[9.5px] text-slate-400 dark:text-slate-500 font-semibold uppercase">Model</span>
+                                    <span class="font-bold text-xs text-slate-800 dark:text-slate-100 truncate block" x-text="detailPanelData?.model_name || '—'"></span>
+                                </div>
+                                <div class="col-span-2">
+                                    <span class="block text-[9.5px] text-slate-400 dark:text-slate-500 font-semibold uppercase">Part Name</span>
+                                    <span class="font-medium text-xs text-slate-700 dark:text-slate-200 block" x-text="detailPanelData?.customer_part_name || '—'"></span>
+                                </div>
+                                <div>
+                                    <span class="block text-[9.5px] text-slate-400 dark:text-slate-500 font-semibold uppercase">Variant</span>
+                                    <span class="font-semibold text-xs text-slate-800 dark:text-slate-100" x-text="detailPanelData?.variant || '—'"></span>
+                                </div>
+                                <div>
+                                    <span class="block text-[9.5px] text-slate-400 dark:text-slate-500 font-semibold uppercase">Category</span>
+                                    <span class="font-semibold text-xs text-slate-800 dark:text-slate-100" x-text="detailPanelData?.part_category || '—'"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Dynamic Work Order / Custom Context if available -->
+                    <template x-if="chatType === 'work_order' && (detailPanelData || (typeof woDetail !== 'undefined' && woDetail))">
                         <div class="space-y-3">
                             <div class="border-t border-slate-200 dark:border-slate-800 pt-2.5">
                                 <span class="block text-[9.5px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5">Specifications</span>

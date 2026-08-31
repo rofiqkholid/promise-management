@@ -671,6 +671,19 @@ class ChatController extends Controller
                     ];
                 })->values();
             }
+        } elseif ($type === 'inquiry_product') {
+            $inqProd = InquiryProduct::find($id);
+            if ($inqProd) {
+                $prods = InquiryProduct::where('inquiry_id', $inqProd->inquiry_id)->get();
+                $items = $prods->map(function ($p) {
+                    return [
+                        'id' => $p->id,
+                        'code' => $p->customer_part_no,
+                        'name' => $p->customer_part_name,
+                        'label' => $p->customer_part_no . ' (' . $p->customer_part_name . ')',
+                    ];
+                })->values();
+            }
         } elseif ($type === 'inquiry') {
             $prods = InquiryProduct::where('inquiry_id', $id)->get();
             $items = $prods->map(function ($p) {
