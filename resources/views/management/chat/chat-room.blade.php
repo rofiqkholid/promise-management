@@ -119,6 +119,18 @@
                     <span class="text-[11px] font-semibold hidden sm:inline">Details</span>
                 </button>
             </template>
+
+            <!-- 5. Close Drawer Button (for slide-over drawer modal views) -->
+            <template x-if="typeof showDrawer !== 'undefined' || typeof showChatDrawer !== 'undefined' || typeof closeDrawer === 'function' || typeof closeChatDrawer === 'function'">
+                <div class="flex items-center pl-1 border-l border-slate-200 dark:border-slate-700">
+                    <button @click="if (typeof closeDrawer === 'function') closeDrawer(); else if (typeof closeChatDrawer === 'function') closeChatDrawer(); else if (typeof closeRoom === 'function') closeRoom();" 
+                            type="button" 
+                            class="h-[28px] w-[28px] flex items-center justify-center rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 dark:hover:border-rose-900/50 hover:border-rose-200 transition-all cursor-pointer shadow-2xs select-none"
+                            title="Close Drawer (Esc)">
+                        <i class="fa-solid fa-xmark text-sm font-bold"></i>
+                    </button>
+                </div>
+            </template>
         </div>
     </div>
 
