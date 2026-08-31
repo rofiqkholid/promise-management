@@ -16,18 +16,28 @@
     </div>
     
     <!-- Chat Header with Filter Segmented Control -->
-    <div class="px-4 py-2.5 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between flex-shrink-0 z-10">
-        <div class="flex items-center gap-2">
-            <span class="flex h-6 w-6 items-center justify-center bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 rounded-full text-xs">
+    <div class="px-3.5 py-2.5 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between flex-shrink-0 z-10">
+        <div class="flex items-center gap-2 min-w-0 pr-2">
+            <!-- Close Drawer Button (Positioned on Left) -->
+            <template x-if="typeof showDrawer !== 'undefined' || typeof showChatDrawer !== 'undefined' || typeof closeDrawer === 'function' || typeof closeChatDrawer === 'function'">
+                <button @click="if (typeof closeDrawer === 'function') closeDrawer(); else if (typeof closeChatDrawer === 'function') closeChatDrawer(); else if (typeof closeRoom === 'function') closeRoom();" 
+                        type="button" 
+                        class="h-[28px] w-[28px] flex items-center justify-center rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 dark:hover:border-rose-900/50 hover:border-rose-200 transition-all cursor-pointer shadow-2xs select-none flex-shrink-0 mr-0.5"
+                        title="Close Drawer (Esc)">
+                    <i class="fa-solid fa-xmark text-sm font-bold"></i>
+                </button>
+            </template>
+
+            <span class="flex h-6 w-6 items-center justify-center bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 rounded-full text-xs flex-shrink-0">
                 <i class="fa-solid fa-comments"></i>
             </span>
-            <div>
-                <span class="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider block" x-text="chatTitle || 'Discussion Room'"></span>
-                <span x-show="chatSubtitle" class="text-[10px] text-slate-500 dark:text-slate-400 block -mt-0.5" x-text="chatSubtitle"></span>
+            <div class="min-w-0">
+                <span class="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider block truncate" x-text="chatTitle || 'Discussion Room'"></span>
+                <span x-show="chatSubtitle" class="text-[10px] text-slate-500 dark:text-slate-400 block -mt-0.5 truncate" x-text="chatSubtitle"></span>
             </div>
         </div>
 
-        <div class="flex items-center gap-1.5 sm:gap-2">
+        <div class="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
             <!-- 1. Search Button (Icon-only) -->
             <button @click="showSearchBar = !showSearchBar; if (showSearchBar) { $nextTick(() => { $refs.chatSearchInput?.focus(); }); }"
                     type="button" 
@@ -118,18 +128,6 @@
                     <i class="fa-solid fa-circle-info text-[11px] text-indigo-500 dark:text-indigo-400"></i>
                     <span class="text-[11px] font-semibold hidden sm:inline">Details</span>
                 </button>
-            </template>
-
-            <!-- 5. Close Drawer Button (for slide-over drawer modal views) -->
-            <template x-if="typeof showDrawer !== 'undefined' || typeof showChatDrawer !== 'undefined' || typeof closeDrawer === 'function' || typeof closeChatDrawer === 'function'">
-                <div class="flex items-center pl-1 border-l border-slate-200 dark:border-slate-700">
-                    <button @click="if (typeof closeDrawer === 'function') closeDrawer(); else if (typeof closeChatDrawer === 'function') closeChatDrawer(); else if (typeof closeRoom === 'function') closeRoom();" 
-                            type="button" 
-                            class="h-[28px] w-[28px] flex items-center justify-center rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 dark:hover:border-rose-900/50 hover:border-rose-200 transition-all cursor-pointer shadow-2xs select-none"
-                            title="Close Drawer (Esc)">
-                        <i class="fa-solid fa-xmark text-sm font-bold"></i>
-                    </button>
-                </div>
             </template>
         </div>
     </div>
