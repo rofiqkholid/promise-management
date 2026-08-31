@@ -59,7 +59,7 @@
          x-transition:leave="transition-opacity ease-linear duration-200"
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0"
-         class="fixed inset-0 bg-slate-900/40 backdrop-blur-[2px] z-[8999]"
+         class="fixed inset-0 bg-black/40 z-[8999]"
          style="display: none;"
          x-cloak></div>
 
