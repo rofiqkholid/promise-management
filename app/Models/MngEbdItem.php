@@ -20,6 +20,7 @@ class MngEbdItem extends Model
         'part_name',
         'pcs_month',
         'sketch',
+        'material_layout',
         // Part dimensions
         'qty_unit',
         'width',

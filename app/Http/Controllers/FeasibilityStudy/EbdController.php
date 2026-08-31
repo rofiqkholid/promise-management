@@ -310,12 +310,19 @@ class EbdController extends Controller
                 $sketchPath = $file->storeAs('ebd/sketches', $filename, 'public');
             }
 
+            $materialLayoutPath = null;
+            if ($request->hasFile('material_layout')) {
+                $mlFile = $request->file('material_layout');
+                $mlFilename = uniqid() . '_' . $mlFile->getClientOriginalName();
+                $materialLayoutPath = $mlFile->storeAs('ebd/material_layouts', $mlFilename, 'public');
+            }
+
             $item = MngEbdItem::create([
                 'ebd_header_id'   => $ebdHeaderId,
                 'parent_id'       => $parentId ?: null,
                 'active_level'    => $level,
                 'part_no'         => $request->input('part_no'),
-                'part_name'         => $request->input('part_name'),
+                'part_name'       => $request->input('part_name'),
                 'pcs_month'       => (int) str_replace('.', '', $request->input('pcs_month', 0)),
                 'qty_unit'        => (int) $request->input('qty_unit', 1),
                 'width'           => (float) $request->input('width', 0),
@@ -338,6 +345,7 @@ class EbdController extends Controller
                 'packing_type'    => $request->input('packing_type'),
                 'pcs_packing'     => (int) $request->input('pcs_packing', 0),
                 'sketch'          => $sketchPath,
+                'material_layout' => $materialLayoutPath,
             ]);
 
             return response()->json([
@@ -376,6 +384,16 @@ class EbdController extends Controller
                 $sketchPath = $file->storeAs('ebd/sketches', $filename, 'public');
             }
 
+            $materialLayoutPath = $item->material_layout;
+            if ($request->hasFile('material_layout')) {
+                if ($materialLayoutPath && Storage::disk('public')->exists($materialLayoutPath)) {
+                    Storage::disk('public')->delete($materialLayoutPath);
+                }
+                $mlFile = $request->file('material_layout');
+                $mlFilename = uniqid() . '_' . $mlFile->getClientOriginalName();
+                $materialLayoutPath = $mlFile->storeAs('ebd/material_layouts', $mlFilename, 'public');
+            }
+
             $item->update([
                 'part_no'         => $request->input('part_no'),
                 'part_name'       => $request->input('part_name'),
@@ -401,6 +419,7 @@ class EbdController extends Controller
                 'packing_type'    => $request->input('packing_type'),
                 'pcs_packing'     => (int) $request->input('pcs_packing', 0),
                 'sketch'          => $sketchPath,
+                'material_layout' => $materialLayoutPath,
             ]);
 
             return response()->json([
@@ -424,9 +443,12 @@ class EbdController extends Controller
         try {
             $item = MngEbdItem::findOrFail($itemId);
             
-            // Delete sketch file
+            // Delete sketch and material layout file
             if ($item->sketch && Storage::disk('public')->exists($item->sketch)) {
                 Storage::disk('public')->delete($item->sketch);
+            }
+            if ($item->material_layout && Storage::disk('public')->exists($item->material_layout)) {
+                Storage::disk('public')->delete($item->material_layout);
             }
 
             // Sub items delete (recursive)
@@ -452,6 +474,9 @@ class EbdController extends Controller
         foreach ($children as $child) {
             if ($child->sketch && Storage::disk('public')->exists($child->sketch)) {
                 Storage::disk('public')->delete($child->sketch);
+            }
+            if ($child->material_layout && Storage::disk('public')->exists($child->material_layout)) {
+                Storage::disk('public')->delete($child->material_layout);
             }
             $this->deleteChildItems($child->id);
             $child->delete();
@@ -482,6 +507,8 @@ class EbdController extends Controller
                 'output'         => $request->filled('output') ? (int) $request->input('output') : null,
                 'output_type'    => $request->input('output_type') ?: null,
                 'stroke'         => $request->filled('stroke') ? (float) $request->input('stroke') : null,
+                'jph_gsph'        => $request->filled('jph_gsph') ? (float) str_replace(',', '.', $request->input('jph_gsph')) : null,
+                'man_power'       => $request->filled('man_power') ? (float) str_replace(',', '.', $request->input('man_power')) : null,
                 'qty'            => (int) $request->input('qty', 1),
                 'price_idr'      => $request->input('price_idr') ? (float) str_replace('.', '', $request->input('price_idr')) : null,
                 'tooling_status' => $request->input('tooling_status') ?: null,
@@ -521,6 +548,8 @@ class EbdController extends Controller
                 'output'         => $request->filled('output') ? (int) $request->input('output') : null,
                 'output_type'    => $request->input('output_type') ?: null,
                 'stroke'         => $request->filled('stroke') ? (float) $request->input('stroke') : null,
+                'jph_gsph'        => $request->filled('jph_gsph') ? (float) str_replace(',', '.', $request->input('jph_gsph')) : null,
+                'man_power'       => $request->filled('man_power') ? (float) str_replace(',', '.', $request->input('man_power')) : null,
                 'qty'            => (int) $request->input('qty', 1),
                 'price_idr'      => $request->input('price_idr') ? (float) str_replace('.', '', $request->input('price_idr')) : null,
                 'tooling_status' => $request->input('tooling_status') ?: null,

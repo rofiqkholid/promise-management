@@ -41,6 +41,9 @@ class SystemFieldsSeeder extends Seeder
             ['field_key' => 'height', 'label' => 'Part Height (mm)', 'group' => 'ebd_item', 'data_type' => 'decimal', 'target_table' => 'mng_ebd_items', 'target_column' => 'height', 'is_required' => false],
             ['field_key' => 'weight', 'label' => 'Part Weight (kg)', 'group' => 'ebd_item', 'data_type' => 'decimal', 'target_table' => 'mng_ebd_items', 'target_column' => 'weight', 'is_required' => false],
             
+            // Status
+            ['field_key' => 'status', 'label' => 'Part Status', 'group' => 'ebd_item', 'data_type' => 'string', 'target_table' => 'mng_ebd_items', 'target_column' => 'status', 'is_required' => false],
+
             // Material Specification
             ['field_key' => 'mat_spec', 'label' => 'Material Spec', 'group' => 'ebd_item', 'data_type' => 'string', 'target_table' => 'mng_ebd_items', 'target_column' => 'mat_spec', 'is_required' => false],
             ['field_key' => 'mat_thick', 'label' => 'Material Thickness (mm)', 'group' => 'ebd_item', 'data_type' => 'decimal', 'target_table' => 'mng_ebd_items', 'target_column' => 'mat_thick', 'is_required' => false],
@@ -56,8 +59,9 @@ class SystemFieldsSeeder extends Seeder
             ['field_key' => 'std_qty', 'label' => 'Standard Part Qty', 'group' => 'ebd_item', 'data_type' => 'numeric', 'target_table' => 'mng_ebd_items', 'target_column' => 'std_qty', 'is_required' => false],
             ['field_key' => 'std_uom', 'label' => 'Standard Part Unit', 'group' => 'ebd_item', 'data_type' => 'string', 'target_table' => 'mng_ebd_items', 'target_column' => 'std_uom', 'is_required' => false],
 
-            // Packing & Transport
+            // Packing & Transport & Drawings
             ['field_key' => 'sketch', 'label' => 'Part Sketch Image / Path', 'group' => 'ebd_item', 'data_type' => 'string', 'target_table' => 'mng_ebd_items', 'target_column' => 'sketch', 'is_required' => false],
+            ['field_key' => 'material_layout', 'label' => 'Material Layout Image / Path', 'group' => 'ebd_item', 'data_type' => 'string', 'target_table' => 'mng_ebd_items', 'target_column' => 'material_layout', 'is_required' => false],
             ['field_key' => 'packing_type', 'label' => 'Packing Type', 'group' => 'ebd_item', 'data_type' => 'string', 'target_table' => 'mng_ebd_items', 'target_column' => 'packing_type', 'is_required' => false],
             ['field_key' => 'pcs_packing', 'label' => 'Pcs / Packing', 'group' => 'ebd_item', 'data_type' => 'numeric', 'target_table' => 'mng_ebd_items', 'target_column' => 'pcs_packing', 'is_required' => false],
             ['field_key' => 'part_vol_m2', 'label' => 'Part Volume (m2)', 'group' => 'ebd_item', 'data_type' => 'decimal', 'target_table' => 'mng_ebd_items', 'target_column' => 'part_vol_m2', 'is_required' => false],
@@ -99,6 +103,8 @@ class SystemFieldsSeeder extends Seeder
             ['field_key' => 'tooling_status', 'label' => 'Tooling Status (NEW/MODIF)', 'group' => 'ebd_process', 'data_type' => 'string', 'target_table' => 'mng_ebd_tooling_processes', 'target_column' => 'tooling_status', 'is_required' => false],
             ['field_key' => 'information', 'label' => 'Process Notes / Information', 'group' => 'ebd_process', 'data_type' => 'string', 'target_table' => 'mng_ebd_tooling_processes', 'target_column' => 'information', 'is_required' => false],
             ['field_key' => 'stroke', 'label' => 'Press Stroke', 'group' => 'ebd_process', 'data_type' => 'decimal', 'target_table' => 'mng_ebd_tooling_processes', 'target_column' => 'stroke', 'is_required' => false],
+            ['field_key' => 'jph_gsph', 'label' => 'JPH / GSPH', 'group' => 'ebd_process', 'data_type' => 'decimal', 'target_table' => 'mng_ebd_tooling_processes', 'target_column' => 'jph_gsph', 'is_required' => false],
+            ['field_key' => 'man_power', 'label' => 'Man Power (MP)', 'group' => 'ebd_process', 'data_type' => 'decimal', 'target_table' => 'mng_ebd_tooling_processes', 'target_column' => 'man_power', 'is_required' => false],
             ['field_key' => 'machine_type', 'label' => 'Machine Type (Tandem/Transfer/Prog)', 'group' => 'ebd_process', 'data_type' => 'string', 'target_table' => 'mng_ebd_tooling_processes', 'target_column' => 'machine_type', 'is_required' => false],
             ['field_key' => 'cost_rate', 'label' => 'Cost Rate / Menit (Master)', 'group' => 'ebd_process', 'data_type' => 'decimal', 'target_table' => 'mng_mfg_process_stp_costs', 'target_column' => 'std_cost_rate', 'is_required' => false],
             ['field_key' => 'std_cost_rate', 'label' => 'Standard Cost Rate (Master)', 'group' => 'ebd_process', 'data_type' => 'decimal', 'target_table' => 'mng_mfg_process_stp_costs', 'target_column' => 'std_cost_rate', 'is_required' => false],

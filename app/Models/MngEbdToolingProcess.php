@@ -24,6 +24,8 @@ class MngEbdToolingProcess extends Model
         'output',
         'output_type',
         'stroke',
+        'jph_gsph',
+        'man_power',
         'qty',
         'price_idr',
         'tooling_status',
@@ -36,6 +38,8 @@ class MngEbdToolingProcess extends Model
         'die_height' => 'decimal:2',
         'output'     => 'integer',
         'stroke'     => 'decimal:2',
+        'jph_gsph'   => 'decimal:2',
+        'man_power'  => 'decimal:2',
         'qty'        => 'integer',
         'price_idr'  => 'decimal:2',
     ];

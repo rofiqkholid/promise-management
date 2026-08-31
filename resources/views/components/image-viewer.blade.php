@@ -1,4 +1,4 @@
-﻿@props([
+@props([
     'id' => 'image-viewer',
     'src' => '',
     'alt' => 'Image',
@@ -44,10 +44,13 @@
 <script>
     (function() {
         let viewerInstance = null;
+        const targetId = '{{ $id }}';
+        const targetPlaceholder = '{{ $placeholderId }}';
+        const fnName = 'initializeImageViewer_' + targetId.replace(/[^a-zA-Z0-9_]/g, '_');
 
-        window.initializeImageViewer = function (srcVal) {
-            const imgElement = document.getElementById('{{ $id }}');
-            const placeholder = document.getElementById('{{ $placeholderId }}');
+        window[fnName] = function (srcVal) {
+            const imgElement = document.getElementById(targetId);
+            const placeholder = document.getElementById(targetPlaceholder);
             if (!imgElement) return;
 
             if (viewerInstance) {
@@ -89,5 +92,18 @@
                 if (placeholder) placeholder.classList.remove('hidden');
             }
         };
+
+        // If generic initializeImageViewer is not defined, define it to route to this or specific element
+        if (!window.initializeImageViewer) {
+            window.initializeImageViewer = function (srcVal, explicitId) {
+                if (explicitId) {
+                    const explicitFn = 'initializeImageViewer_' + explicitId.replace(/[^a-zA-Z0-9_]/g, '_');
+                    if (typeof window[explicitFn] === 'function') {
+                        return window[explicitFn](srcVal);
+                    }
+                }
+                return window[fnName](srcVal);
+            };
+        }
     })();
 </script>

@@ -261,37 +261,37 @@
                         <div class="flex-1 space-y-6 w-full">
                             {{-- Part Specs Grid --}}
                             <div>
-                                <h4 class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3 border-b border-slate-300 dark:border-slate-600 pb-1.5">Part Dimensions & Quantities</h4>
-                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-sm">
+                                <h4 class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3 border-b border-slate-300 dark:border-slate-600 pb-1.5">Part Dimensions, Quantities & Status</h4>
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5 text-xs">
+                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-sm">
                                         <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">PART RANK</span>
                                         <span id="info-part-rank" class="font-medium text-slate-900 dark:text-slate-100 text-sm">—</span>
                                     </div>
-                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-sm">
+                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-sm">
                                         <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">PART STATUS</span>
                                         <span id="info-part-status" class="font-medium text-slate-900 dark:text-slate-100 text-sm">—</span>
                                     </div>
-                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-sm">
+                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-sm">
                                         <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">QTY/UNIT</span>
                                         <span id="spec-qty-unit" class="font-medium text-slate-900 dark:text-slate-100 text-sm">—</span>
                                     </div>
-                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-sm">
+                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-sm">
                                         <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">PCS/MONTH</span>
                                         <span id="spec-pcs-month" class="font-medium text-slate-900 dark:text-slate-100 text-sm">—</span>
                                     </div>
-                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-sm">
+                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-sm">
                                         <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">WIDTH (mm)</span>
                                         <span id="spec-width" class="font-medium text-slate-900 dark:text-slate-100 text-sm font-mono">—</span>
                                     </div>
-                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-sm">
+                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-sm">
                                         <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">LENGTH (mm)</span>
                                         <span id="spec-length" class="font-medium text-slate-900 dark:text-slate-100 text-sm font-mono">—</span>
                                     </div>
-                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-sm">
+                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-sm">
                                         <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">HEIGHT (mm)</span>
                                         <span id="spec-height" class="font-medium text-slate-900 dark:text-slate-100 text-sm font-mono">—</span>
                                     </div>
-                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-sm">
+                                    <div class="p-3 bg-slate-100/50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-sm">
                                         <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">WEIGHT (kg)</span>
                                         <span id="spec-weight" class="font-medium text-slate-900 dark:text-slate-100 text-sm font-mono">—</span>
                                     </div>
@@ -334,16 +334,34 @@
                             </div>
                         </div>
 
-                        {{-- Sketch / Drawing (Right Side) --}}
-                        <div class="w-full lg:w-[320px] flex-shrink-0">
-                            <div id="sketch-card" class="border border-slate-200 dark:border-slate-700 bg-slate-100/50 dark:bg-slate-900/30 p-4 rounded-sm w-full flex flex-col min-h-[300px]">
-                                <h4 class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3 border-b border-slate-350 dark:border-slate-650 pb-1.5">Sketch / Drawing</h4>
-                                <div id="sketch-wrapper" class="flex-1 flex items-center justify-center bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-sm p-3 min-h-[220px]">
+                        {{-- Drawings & Layout (Right Side) --}}
+                        <div class="w-full lg:w-[340px] flex-shrink-0 space-y-4">
+                            {{-- Card 1: Part Sketch / Drawing --}}
+                            <div id="sketch-card" class="border border-slate-200 dark:border-slate-700 bg-slate-100/50 dark:bg-slate-900/30 p-3.5 rounded-sm w-full flex flex-col min-h-[220px]">
+                                <h4 class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-350 dark:border-slate-650 pb-1.5 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-pen-ruler text-indigo-500"></i> Part Sketch / Drawing
+                                </h4>
+                                <div id="sketch-wrapper" class="flex-1 flex items-center justify-center bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-sm p-2 min-h-[160px]">
                                     <x-image-viewer 
                                         id="sketch-img"
                                         placeholderId="sketch-placeholder"
                                         placeholderText="No sketch available"
-                                        placeholderSubtext="Import EBD spreadsheet containing drawing files"
+                                        placeholderSubtext="Upload or import part drawing"
+                                    />
+                                </div>
+                            </div>
+
+                            {{-- Card 2: Material Layout --}}
+                            <div id="matlayout-card" class="border border-slate-200 dark:border-slate-700 bg-slate-100/50 dark:bg-slate-900/30 p-3.5 rounded-sm w-full flex flex-col min-h-[220px]">
+                                <h4 class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-350 dark:border-slate-650 pb-1.5 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-layer-group text-emerald-500"></i> Material Layout
+                                </h4>
+                                <div id="matlayout-wrapper" class="flex-1 flex items-center justify-center bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-sm p-2 min-h-[160px]">
+                                    <x-image-viewer 
+                                        id="matlayout-img"
+                                        placeholderId="matlayout-placeholder"
+                                        placeholderText="No material layout available"
+                                        placeholderSubtext="Upload material nesting / layout drawing"
                                     />
                                 </div>
                             </div>
@@ -403,6 +421,8 @@
                                     <th class="p-2.5 text-center">Output</th>
                                     <th class="p-2.5 text-center">Output Type</th>
                                     <th class="p-2.5 text-right">Stroke</th>
+                                    <th class="p-2.5 text-right">JPH/GSPH</th>
+                                    <th class="p-2.5 text-center">MP</th>
                                     <th class="p-2.5 text-center">Qty</th>
                                     <th class="p-2.5 text-right">Price</th>
                                     <th class="p-2.5">Status</th>
@@ -857,9 +877,9 @@
                     </div>
                 </div>
 
-                <!-- Section 4: Packing & Standard Parts & Sketch Drawing -->
+                <!-- Section 4: Packing & Standard Parts -->
                 <div>
-                    <h3 class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-2.5 pb-1 border-b border-slate-200 dark:border-slate-700">Packing & Drawings</h3>
+                    <h3 class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-2.5 pb-1 border-b border-slate-200 dark:border-slate-700">Packing & Standard Components</h3>
                     <div class="grid grid-cols-2 sm:grid-cols-6 gap-3">
                         <div>
                             <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Packing Type</label>
@@ -888,27 +908,58 @@
                     </div>
                 </div>
 
-                <!-- Sketch File Upload -->
+                <!-- Section 5: Drawings & Layout Images -->
                 <div>
-                    <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Sketch Image (PNG/JPG)</label>
-                    <div id="sketch-dropzone" class="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-400 rounded-sm p-4 flex flex-col items-center justify-center transition-colors cursor-pointer bg-slate-50/50 dark:bg-slate-900/50 min-h-[100px] relative">
-                        <input type="file" name="sketch" id="part-input-sketch" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20">
-                        <div class="flex flex-col items-center justify-center gap-1.5 text-center pointer-events-none text-slate-500 dark:text-slate-400" id="sketch-dropzone-prompt">
-                            <i class="fa-solid fa-cloud-arrow-up text-xl text-slate-400 dark:text-slate-500"></i>
-                            <p class="text-xs font-medium">Drag & drop, paste, or click to upload</p>
-                            <p class="text-[9px] text-slate-400">PNG or JPG, max 5MB</p>
-                        </div>
-                        <div class="hidden flex items-center justify-between gap-3 w-full p-1 text-left relative z-30" id="sketch-dropzone-preview">
-                            <div class="flex items-center gap-3 min-w-0">
-                                <img src="" alt="Sketch Preview" id="sketch-preview-img" class="w-12 h-12 rounded-sm border border-slate-300 dark:border-slate-700 object-cover flex-shrink-0">
-                                <div class="min-w-0">
-                                    <p class="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate" id="sketch-file-name">filename.png</p>
-                                    <p class="text-[10px] text-slate-400" id="sketch-file-size">1.2 MB</p>
+                    <h3 class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-2.5 pb-1 border-b border-slate-200 dark:border-slate-700">Drawings & Layout Images</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Sketch File Upload -->
+                        <div>
+                            <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Part Sketch Drawing (PNG/JPG)</label>
+                            <div id="sketch-dropzone" class="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-400 rounded-sm p-3 flex flex-col items-center justify-center transition-colors cursor-pointer bg-slate-50/50 dark:bg-slate-900/50 min-h-[90px] relative">
+                                <input type="file" name="sketch" id="part-input-sketch" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20">
+                                <div class="flex flex-col items-center justify-center gap-1 text-center pointer-events-none text-slate-500 dark:text-slate-400" id="sketch-dropzone-prompt">
+                                    <i class="fa-solid fa-cloud-arrow-up text-lg text-slate-400 dark:text-slate-500"></i>
+                                    <p class="text-xs font-medium">Upload Part Sketch</p>
+                                    <p class="text-[9px] text-slate-400">PNG or JPG, max 5MB</p>
+                                </div>
+                                <div class="hidden flex items-center justify-between gap-3 w-full p-1 text-left relative z-30" id="sketch-dropzone-preview">
+                                    <div class="flex items-center gap-2.5 min-w-0">
+                                        <img src="" alt="Sketch Preview" id="sketch-preview-img" class="w-10 h-10 rounded-sm border border-slate-300 dark:border-slate-700 object-cover flex-shrink-0">
+                                        <div class="min-w-0">
+                                            <p class="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate" id="sketch-file-name">filename.png</p>
+                                            <p class="text-[10px] text-slate-400" id="sketch-file-size">1.2 MB</p>
+                                        </div>
+                                    </div>
+                                    <button type="button" onclick="clearSketchInput(event)" class="w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600 border border-slate-200 hover:border-rose-200 dark:bg-slate-800 dark:hover:bg-rose-950/30 dark:border-slate-700 transition-all pointer-events-auto cursor-pointer" title="Remove image">
+                                        <i class="fa-solid fa-xmark text-[10px]"></i>
+                                    </button>
                                 </div>
                             </div>
-                            <button type="button" onclick="clearSketchInput(event)" class="w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600 border border-slate-200 hover:border-rose-200 dark:bg-slate-800 dark:hover:bg-rose-950/30 dark:border-slate-700 transition-all pointer-events-auto cursor-pointer" title="Remove image">
-                                <i class="fa-solid fa-xmark text-[10px]"></i>
-                            </button>
+                        </div>
+
+                        <!-- Material Layout File Upload -->
+                        <div>
+                            <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Material Layout Drawing (PNG/JPG)</label>
+                            <div id="matlayout-dropzone" class="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-400 rounded-sm p-3 flex flex-col items-center justify-center transition-colors cursor-pointer bg-slate-50/50 dark:bg-slate-900/50 min-h-[90px] relative">
+                                <input type="file" name="material_layout" id="part-input-material-layout" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20">
+                                <div class="flex flex-col items-center justify-center gap-1 text-center pointer-events-none text-slate-500 dark:text-slate-400" id="matlayout-dropzone-prompt">
+                                    <i class="fa-solid fa-layer-group text-lg text-slate-400 dark:text-slate-500"></i>
+                                    <p class="text-xs font-medium">Upload Material Layout</p>
+                                    <p class="text-[9px] text-slate-400">PNG or JPG, max 5MB</p>
+                                </div>
+                                <div class="hidden flex items-center justify-between gap-3 w-full p-1 text-left relative z-30" id="matlayout-dropzone-preview">
+                                    <div class="flex items-center gap-2.5 min-w-0">
+                                        <img src="" alt="Material Layout Preview" id="matlayout-preview-img" class="w-10 h-10 rounded-sm border border-slate-300 dark:border-slate-700 object-cover flex-shrink-0">
+                                        <div class="min-w-0">
+                                            <p class="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate" id="matlayout-file-name">layout.png</p>
+                                            <p class="text-[10px] text-slate-400" id="matlayout-file-size">1.2 MB</p>
+                                        </div>
+                                    </div>
+                                    <button type="button" onclick="clearMatLayoutInput(event)" class="w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600 border border-slate-200 hover:border-rose-200 dark:bg-slate-800 dark:hover:bg-rose-950/30 dark:border-slate-700 transition-all pointer-events-auto cursor-pointer" title="Remove image">
+                                        <i class="fa-solid fa-xmark text-[10px]"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1001,10 +1052,10 @@
                     </div>
                 </div>
 
-                <!-- Section 3: Output, Quantity & Cost -->
+                <!-- Section 3: Output, Production & Cost -->
                 <div>
-                    <h3 class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-2.5 pb-1 border-b border-slate-200 dark:border-slate-700">Output, Quantities & Cost</h3>
-                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-3.5">
+                    <h3 class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-2.5 pb-1 border-b border-slate-200 dark:border-slate-700">Output, Production Parameters & Cost</h3>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
                         <div>
                             <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Output</label>
                             <input type="number" name="output" id="tooling-input-output" min="1" placeholder="e.g. 1" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
@@ -1015,13 +1066,21 @@
                         </div>
                         <div>
                             <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Stroke</label>
-                            <input type="number" step="0.01" name="stroke" id="tooling-input-stroke" min="0.01" value="1.00" placeholder="1.00" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                            <input type="number" step="0.01" name="stroke" id="tooling-input-stroke" placeholder="e.g. 1.00" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-1">JPH / GSPH</label>
+                            <input type="number" step="0.01" name="jph_gsph" id="tooling-input-jph-gsph" placeholder="e.g. 120" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-indigo-300 dark:border-indigo-700 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-1">Man Power (MP)</label>
+                            <input type="number" step="0.1" name="man_power" id="tooling-input-manpower" placeholder="e.g. 1 or 1.5" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-indigo-300 dark:border-indigo-700 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                         </div>
                         <div>
                             <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Qty</label>
-                            <input type="number" name="qty" id="tooling-input-qty" min="1" value="1" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
+                            <input type="number" name="qty" id="tooling-input-qty" placeholder="e.g. 1" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                         </div>
-                        <div class="col-span-2 sm:col-span-1">
+                        <div class="col-span-2">
                             <label class="block text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Price (IDR)</label>
                             <input type="text" name="price_idr" id="tooling-input-price" placeholder="0" class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-500">
                         </div>
@@ -1188,38 +1247,42 @@ $(function () {
         $('#part-vol-m2').text(item.part_vol_m2 ? Number(item.part_vol_m2).toFixed(4) : '—');
         $('#truck-vol-m2').text(item.truck_vol_m2 ? Number(item.truck_vol_m2).toFixed(4) : '—');
 
-        // Display sketch card if image path is present in DB
-        if (item.sketch && item.sketch.trim() !== '') {
-            let sketchPath = item.sketch.trim();
-            if (sketchPath.startsWith('http://') || sketchPath.startsWith('https://')) {
-                // Keep external URLs as-is
-            } else {
-                sketchPath = sketchPath.replace(/^\/+/, '');
-                if (sketchPath.startsWith('storage/')) {
-                    sketchPath = sketchPath.substring(8);
+        // Helper to format image URLs
+        function resolveEbdImageUrl(path) {
+            if (!path || path.trim() === '') return '';
+            let p = path.trim();
+            if (p.startsWith('http://') || p.startsWith('https://')) {
+                if (window.location.protocol === 'https:' && p.startsWith('http://')) {
+                    p = p.replace('http://', 'https://');
                 }
-                const storageBase = '{{ asset("storage") }}';
-                sketchPath = storageBase + '/' + sketchPath;
+                return p;
             }
+            p = p.replace(/^\/+/, '');
+            if (p.startsWith('storage/')) {
+                p = p.substring(8);
+            }
+            const storageBase = '{{ asset("storage") }}';
+            let finalUrl = storageBase + '/' + p;
+            if (window.location.protocol === 'https:' && finalUrl.startsWith('http://')) {
+                finalUrl = finalUrl.replace('http://', 'https://');
+            }
+            return finalUrl;
+        }
 
-            // Ensure protocol matches current page to avoid mixed content / firewall blocks
-            if (window.location.protocol === 'https:' && sketchPath.startsWith('http://')) {
-                sketchPath = sketchPath.replace('http://', 'https://');
-            }
+        // Display sketch card image
+        const sketchUrl = resolveEbdImageUrl(item.sketch);
+        if (typeof window.initializeImageViewer_sketch_img === 'function') {
+            window.initializeImageViewer_sketch_img(sketchUrl);
+        } else if (typeof window.initializeImageViewer === 'function') {
+            window.initializeImageViewer(sketchUrl, 'sketch-img');
+        }
 
-            if (typeof window.initializeImageViewer === 'function') {
-                window.initializeImageViewer(sketchPath);
-            } else {
-                $('#sketch-img').attr('src', sketchPath).removeClass('hidden');
-                $('#sketch-placeholder').addClass('hidden');
-            }
-        } else {
-            if (typeof window.initializeImageViewer === 'function') {
-                window.initializeImageViewer('');
-            } else {
-                $('#sketch-img').addClass('hidden').attr('src', '');
-                $('#sketch-placeholder').removeClass('hidden');
-            }
+        // Display material layout card image
+        const matLayoutUrl = resolveEbdImageUrl(item.material_layout);
+        if (typeof window.initializeImageViewer_matlayout_img === 'function') {
+            window.initializeImageViewer_matlayout_img(matLayoutUrl);
+        } else if (typeof window.initializeImageViewer === 'function') {
+            window.initializeImageViewer(matLayoutUrl, 'matlayout-img');
         }
 
         // Tooling list count badge
@@ -1233,6 +1296,11 @@ $(function () {
                 const tonnageVal = tp.tonnage !== null ? tp.tonnage + ' T' : '—';
                 const heightVal = tp.die_height !== null ? Number(tp.die_height).toFixed(1) + ' mm' : '—';
                 const priceVal = tp.price_idr ? 'Rp ' + Number(tp.price_idr).toLocaleString('id-ID') : '—';
+                const strokeVal = tp.stroke !== null && tp.stroke !== undefined && tp.stroke !== '' ? Number(tp.stroke).toFixed(2).replace(/\.00$/, '') : '—';
+                const jphVal = tp.jph_gsph !== null && tp.jph_gsph !== undefined && tp.jph_gsph !== '' ? Number(tp.jph_gsph).toFixed(2).replace(/\.00$/, '') : '—';
+                const mpVal = tp.man_power !== null && tp.man_power !== undefined && tp.man_power !== '' ? Number(tp.man_power).toFixed(2).replace(/\.00$/, '') : '—';
+                const qtyVal = tp.qty !== null && tp.qty !== undefined && tp.qty !== '' ? tp.qty : '—';
+
                 toolingHtml += `
                     <tr class="hover:bg-slate-100/50 dark:hover:bg-slate-700/30 divide-x divide-slate-200 dark:divide-slate-700 border-b border-slate-200 dark:border-slate-700">
                         <td class="p-2 text-slate-400 font-mono text-[10px] text-center">${idx + 1}</td>
@@ -1240,14 +1308,16 @@ $(function () {
                         <td class="p-2 text-slate-600 dark:text-slate-400">${tp.category || '—'}</td>
                         <td class="p-2 font-bold text-rose-600 dark:text-rose-400">${tp.op || '—'}</td>
                         <td class="p-2 font-semibold text-slate-800 dark:text-slate-200">${tp.process_name || '—'}</td>
-                        <td class="p-2 text-slate-600 dark:text-slate-400 text-[11px] font-medium">${tp.machine_type || 'Tandem'}</td>
+                        <td class="p-2 text-slate-600 dark:text-slate-400 text-[11px] font-medium">${tp.machine_type || '—'}</td>
                         <td class="p-2 text-slate-600 dark:text-slate-400">${tp.prod_homeline || '—'}</td>
                         <td class="p-2 text-right font-mono">${tonnageVal}</td>
                         <td class="p-2 text-right font-mono">${heightVal}</td>
                         <td class="p-2 text-center font-mono">${tp.output !== null && tp.output !== undefined && tp.output !== '' ? tp.output : '—'}</td>
                         <td class="p-2 text-center font-semibold text-slate-600 dark:text-slate-400">${tp.output_type || '—'}</td>
-                        <td class="p-2 text-right font-mono text-slate-600 dark:text-slate-400">${tp.stroke !== null && tp.stroke !== undefined ? Number(tp.stroke).toFixed(2) : '1.00'}</td>
-                        <td class="p-2 text-center">${tp.qty ?? 1}</td>
+                        <td class="p-2 text-right font-mono text-slate-600 dark:text-slate-400">${strokeVal}</td>
+                        <td class="p-2 text-right font-mono font-semibold text-indigo-600 dark:text-indigo-400">${jphVal}</td>
+                        <td class="p-2 text-center font-mono font-semibold text-slate-700 dark:text-slate-300">${mpVal}</td>
+                        <td class="p-2 text-center font-mono">${qtyVal}</td>
                         <td class="p-2 text-right font-bold font-mono text-slate-800 dark:text-slate-300">${priceVal}</td>
                         <td class="p-2">
                             ${tp.tooling_status ? `<span class="px-1.5 py-0.5 text-[9px] font-bold bg-amber-100/70 text-amber-700 dark:bg-amber-955/40 dark:text-amber-400 rounded-sm">${tp.tooling_status}</span>` : '—'}
@@ -1267,7 +1337,7 @@ $(function () {
                 `;
             });
         } else {
-            toolingHtml = '<tr><td colspan="14" class="p-4 text-center text-slate-400 border border-slate-200 dark:border-slate-700">No tooling process data.</td></tr>';
+            toolingHtml = '<tr><td colspan="19" class="p-4 text-center text-slate-400 border border-slate-200 dark:border-slate-700">No tooling process data.</td></tr>';
         }
         $('#tooling-tbody').html(toolingHtml);
 
@@ -1563,7 +1633,7 @@ $(function () {
     });
 
     // =========================================================================
-    // SKETCH DROPZONE & PASTE HANDLERS
+    // SKETCH & MATERIAL LAYOUT DROPZONE & PASTE HANDLERS
     // =========================================================================
     const $sketchInput = $('#part-input-sketch');
     const $sketchDropzone = $('#sketch-dropzone');
@@ -1572,6 +1642,14 @@ $(function () {
     const $sketchPreviewImg = $('#sketch-preview-img');
     const $sketchFileName = $('#sketch-file-name');
     const $sketchFileSize = $('#sketch-file-size');
+
+    const $matLayoutInput = $('#part-input-material-layout');
+    const $matLayoutDropzone = $('#matlayout-dropzone');
+    const $matLayoutPrompt = $('#matlayout-dropzone-prompt');
+    const $matLayoutPreview = $('#matlayout-dropzone-preview');
+    const $matLayoutPreviewImg = $('#matlayout-preview-img');
+    const $matLayoutFileName = $('#matlayout-file-name');
+    const $matLayoutFileSize = $('#matlayout-file-size');
 
     window.resetSketchDropzone = function() {
         $sketchInput.val('');
@@ -1629,6 +1707,64 @@ $(function () {
         $sketchDropzone.removeClass('border-indigo-500 dark:border-indigo-400 bg-indigo-50/25 dark:bg-indigo-950/25');
     });
 
+    // Material Layout Dropzone Handlers
+    window.resetMatLayoutDropzone = function() {
+        $matLayoutInput.val('');
+        $matLayoutPreview.addClass('hidden');
+        $matLayoutPrompt.removeClass('hidden');
+        $matLayoutPreviewImg.attr('src', '');
+        $matLayoutFileName.text('');
+        $matLayoutFileSize.text('');
+        $matLayoutDropzone.removeClass('border-indigo-500 dark:border-indigo-400 bg-indigo-50/20 dark:bg-indigo-950/20');
+    };
+
+    window.clearMatLayoutInput = function(e) {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        resetMatLayoutDropzone();
+    };
+
+    function handleMatLayoutFile(file) {
+        if (!file || !file.type.startsWith('image/')) {
+            showToast('Please select a valid image file (PNG/JPG).', 'warning');
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            showToast('Image size exceeds 5MB limit.', 'warning');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            $matLayoutPreviewImg.attr('src', e.target.result);
+            $matLayoutFileName.text(file.name || 'Layout Image');
+            const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+            $matLayoutFileSize.text(`${sizeMB} MB`);
+            $matLayoutPrompt.addClass('hidden');
+            $matLayoutPreview.removeClass('hidden');
+        };
+        reader.readAsDataURL(file);
+    }
+
+    $matLayoutInput.on('change', function() {
+        const file = this.files[0];
+        if (file) {
+            handleMatLayoutFile(file);
+        } else {
+            resetMatLayoutDropzone();
+        }
+    });
+
+    $matLayoutInput.on('dragenter dragover', function() {
+        $matLayoutDropzone.addClass('border-indigo-500 dark:border-indigo-400 bg-indigo-50/25 dark:bg-indigo-950/25');
+    });
+    $matLayoutInput.on('dragleave drop', function() {
+        $matLayoutDropzone.removeClass('border-indigo-500 dark:border-indigo-400 bg-indigo-50/25 dark:bg-indigo-950/25');
+    });
+
+    // Paste handler for modal
     $(document).on('paste', function(e) {
         if (!$('#part-modal').is(':visible')) return;
 
@@ -1641,15 +1777,47 @@ $(function () {
             if (file.type.startsWith('image/')) {
                 e.preventDefault();
                 
+                // If focus is near matlayout or user was interacting with matlayout, paste to matlayout, else sketch
+                const isNearMatLayout = $(document.activeElement).closest('#matlayout-dropzone').length > 0 ||
+                                        $('#matlayout-dropzone:hover').length > 0;
+                
                 const dt = new DataTransfer();
                 dt.items.add(file);
-                $sketchInput[0].files = dt.files;
-                
-                handleSketchFile(file);
-                showToast('Image pasted from clipboard!', 'success');
+
+                if (isNearMatLayout) {
+                    $matLayoutInput[0].files = dt.files;
+                    handleMatLayoutFile(file);
+                    showToast('Material layout pasted from clipboard!', 'success');
+                } else {
+                    $sketchInput[0].files = dt.files;
+                    handleSketchFile(file);
+                    showToast('Sketch image pasted from clipboard!', 'success');
+                }
             }
         }
     });
+
+    // Helper to format image URLs
+    function formatImageUrl(path) {
+        if (!path || path.trim() === '') return '';
+        let p = path.trim();
+        if (p.startsWith('http://') || p.startsWith('https://')) {
+            if (window.location.protocol === 'https:' && p.startsWith('http://')) {
+                p = p.replace('http://', 'https://');
+            }
+            return p;
+        }
+        p = p.replace(/^\/+/, '');
+        if (p.startsWith('storage/')) {
+            p = p.substring(8);
+        }
+        const storageBase = '{{ asset("storage") }}';
+        let finalUrl = storageBase + '/' + p;
+        if (window.location.protocol === 'https:' && finalUrl.startsWith('http://')) {
+            finalUrl = finalUrl.replace('http://', 'https://');
+        }
+        return finalUrl;
+    }
 
     // =========================================================================
     // PART MODAL HANDLERS (ADD/EDIT PART)
@@ -1657,6 +1825,7 @@ $(function () {
     function openPartModal(mode, data = {}) {
         $('#form-part-ebd')[0].reset();
         resetSketchDropzone();
+        resetMatLayoutDropzone();
         $('#part-modal').removeClass('hidden').addClass('flex');
         
         if (mode === 'edit') {
@@ -1697,6 +1866,25 @@ $(function () {
             $('#part-input-std-name').val(data.std_part_name || '');
             $('#part-input-std-qty').val(data.std_qty || '0');
             $('#part-input-std-uom').val(data.std_uom || '');
+
+            // Previews for existing images if any
+            if (data.sketch && data.sketch.trim() !== '') {
+                const sUrl = formatImageUrl(data.sketch);
+                $sketchPreviewImg.attr('src', sUrl);
+                $sketchFileName.text(data.sketch.split('/').pop());
+                $sketchFileSize.text('Existing Drawing');
+                $sketchPrompt.addClass('hidden');
+                $sketchPreview.removeClass('hidden');
+            }
+
+            if (data.material_layout && data.material_layout.trim() !== '') {
+                const mlUrl = formatImageUrl(data.material_layout);
+                $matLayoutPreviewImg.attr('src', mlUrl);
+                $matLayoutFileName.text(data.material_layout.split('/').pop());
+                $matLayoutFileSize.text('Existing Layout');
+                $matLayoutPrompt.addClass('hidden');
+                $matLayoutPreview.removeClass('hidden');
+            }
         } else {
             // Add mode
             $('#part-modal-title').text(data.parent_id ? 'Add Sub-Part' : 'Add Root Part');
@@ -1826,8 +2014,10 @@ $(function () {
             $('#tooling-input-status').val(data.tooling_status || '');
             $('#tooling-input-output').val(data.output !== null && data.output !== undefined ? data.output : '');
             $('#tooling-input-output-type').val(data.output_type || '');
-            $('#tooling-input-stroke').val(data.stroke !== null && data.stroke !== undefined ? Number(data.stroke).toFixed(2) : '');
-            $('#tooling-input-qty').val(data.qty ?? 1);
+            $('#tooling-input-stroke').val(data.stroke !== null && data.stroke !== undefined && data.stroke !== '' ? Number(data.stroke).toFixed(2).replace(/\.00$/, '') : '');
+            $('#tooling-input-jph-gsph').val(data.jph_gsph !== null && data.jph_gsph !== undefined && data.jph_gsph !== '' ? Number(data.jph_gsph).toFixed(2).replace(/\.00$/, '') : '');
+            $('#tooling-input-manpower').val(data.man_power !== null && data.man_power !== undefined && data.man_power !== '' ? Number(data.man_power).toFixed(2).replace(/\.00$/, '') : '');
+            $('#tooling-input-qty').val(data.qty !== null && data.qty !== undefined && data.qty !== '' ? data.qty : '');
             $('#tooling-input-price').val(data.price_idr ? Number(data.price_idr).toLocaleString('id-ID') : '0');
         } else {
             $('#tooling-modal-title').text('Add Tooling Process');
@@ -1836,7 +2026,9 @@ $(function () {
             $('#tooling-input-output').val('');
             $('#tooling-input-output-type').val('');
             $('#tooling-input-stroke').val('');
-            $('#tooling-input-qty').val(1);
+            $('#tooling-input-jph-gsph').val('');
+            $('#tooling-input-manpower').val('');
+            $('#tooling-input-qty').val('');
         }
     }
 
