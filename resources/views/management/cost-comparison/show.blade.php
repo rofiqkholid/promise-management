@@ -589,7 +589,7 @@
                             <th class="px-3 py-2.5 border-r border-slate-200 dark:border-slate-700">Part No & Name</th>
                             <th class="px-2 py-2.5 text-center border-r border-slate-200 dark:border-slate-700">Rank</th>
                             <th class="px-2 py-2.5 text-center border-r border-slate-200 dark:border-slate-700">Category</th>
-                            <th class="px-3 py-2.5 border-r border-slate-200 dark:border-slate-700">OP & Process Name</th>
+                            <th class="px-3 py-2.5 border-r border-slate-200 dark:border-slate-700">OP / ST & Process Name</th>
                             <th class="px-2 py-2.5 text-center border-r border-slate-200 dark:border-slate-700">Machine / Tons</th>
                             <th class="px-2 py-2.5 text-center border-r border-slate-200 dark:border-slate-700">Qty</th>
                             <th class="px-3 py-2.5 text-right border-r border-slate-200 dark:border-slate-700">
@@ -632,7 +632,27 @@
                                     </span>
                                 </td>
                                 <td class="px-3 py-2 border-r border-slate-100 dark:border-slate-800">
-                                    <span class="font-bold text-slate-800 dark:text-slate-200">OP {{ $tItem['op'] }}: {{ $tItem['process_name'] }}</span>
+                                    @php
+                                        $tCat = strtoupper(trim($tItem['category'] ?? ''));
+                                        $tProcName = trim($tItem['process_name'] ?? '');
+                                        $tOp = trim((string)($tItem['op'] ?? ''));
+                                        $hasOpVal = ($tOp !== '' && $tOp !== '-');
+
+                                        if ($tCat === 'JIG' || str_contains(strtoupper($tProcName), 'JIG')) {
+                                            $opPrefix = $hasOpVal ? "ST {$tOp}" : "ST";
+                                        } elseif ($tCat === 'CF' || str_contains(strtoupper($tProcName), 'CF')) {
+                                            $opPrefix = "-";
+                                        } else {
+                                            $opPrefix = $hasOpVal ? "OP {$tOp}" : "OP";
+                                        }
+
+                                        if ($opPrefix === '-') {
+                                            $displayProc = $tProcName ?: '-';
+                                        } else {
+                                            $displayProc = $opPrefix . ($tProcName !== '' && $tProcName !== '-' ? ': ' . $tProcName : '');
+                                        }
+                                    @endphp
+                                    <span class="font-bold text-slate-800 dark:text-slate-200">{{ $displayProc }}</span>
                                 </td>
                                 <td class="px-2 py-2 text-center border-r border-slate-100 dark:border-slate-800 text-[11px] text-slate-600 dark:text-slate-300">
                                     {{ $tItem['machine_type'] }} @if($tItem['tonnage']) ({{ $tItem['tonnage'] }}T) @endif

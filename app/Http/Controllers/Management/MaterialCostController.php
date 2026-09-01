@@ -142,7 +142,7 @@ class MaterialCostController extends Controller
             'is_active' => 'nullable|boolean',
         ]);
 
-        $validated['is_active'] = $request->has('is_active') ? true : false;
+        $validated['is_active'] = $request->has('is_active') ? $request->boolean('is_active') : true;
         if (!isset($validated['scrap_price_per_kg'])) {
             $validated['scrap_price_per_kg'] = 0;
         }
@@ -172,7 +172,7 @@ class MaterialCostController extends Controller
             'is_active' => 'nullable|boolean',
         ]);
 
-        $validated['is_active'] = $request->has('is_active') ? true : false;
+        $validated['is_active'] = $request->has('is_active') ? $request->boolean('is_active') : true;
         if (!isset($validated['scrap_price_per_kg'])) {
             $validated['scrap_price_per_kg'] = 0;
         }

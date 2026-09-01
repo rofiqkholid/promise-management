@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', 'Master Data Manufacturing Process Cost · Promise Management')
 
@@ -11,7 +11,7 @@
         <div>
             <h1 class="text-lg font-bold tracking-tight text-slate-800 dark:text-white">Manufacturing Process Cost</h1>
             <p class="text-xs text-slate-500 dark:text-slate-400">
-                Manage master manufacturing process cost rates (Category, Group, Control Point, UOM, Min/Std Rate & Rate Source).
+                Manage master manufacturing process cost rates (Customer Scope, Category, Group, Control Point, UOM, Min/Std Rate & Rate Source).
             </p>
         </div>
 
@@ -87,6 +87,20 @@
     <x-table id="mfg-cost-table" class="w-full text-xs text-left border-collapse">
         <x-slot:filters>
             <div class="space-y-3">
+                {{-- Customer Filter --}}
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Customer Scope</label>
+                    <select id="filter-customer" class="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-sm text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus:border-blue-500">
+                        <option value="">All Scopes</option>
+                        <option value="global">🌐 Global Only</option>
+                        @if(isset($customers))
+                            @foreach($customers as $cust)
+                                <option value="{{ $cust->id }}">[{{ $cust->code }}] {{ $cust->name }}</option>
+                            @endforeach
+                        @endif
+                    </select>
+                </div>
+
                 {{-- Category Filter --}}
                 <div>
                     <label class="block text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">Category</label>
@@ -123,6 +137,7 @@
             {{-- Header Row 1 (Group Headers) --}}
             <tr class="border-b border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900 text-[10px] font-extrabold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
                 <th rowspan="2" class="px-3 py-2.5 w-12 text-center border-r border-slate-200 dark:border-slate-700">No.</th>
+                <th rowspan="2" class="px-3 py-2.5 border-r border-slate-200 dark:border-slate-700">Customer Scope</th>
                 <th rowspan="2" class="px-4 py-2.5 border-r border-slate-200 dark:border-slate-700">Category</th>
                 <th rowspan="2" class="px-4 py-2.5 border-r border-slate-200 dark:border-slate-700">Group Mfg Process</th>
                 <th rowspan="2" class="px-4 py-2.5 border-r border-slate-200 dark:border-slate-700">Mfg Process Name</th>
@@ -202,15 +217,18 @@
 </div>
 
 <script>
+    const customersData = @json($customers ?? []);
+
     document.addEventListener('DOMContentLoaded', function () {
         const dataTable = window.defaultDataTable('#mfg-cost-table', {
             serverSide: true,
             processing: true,
             ordering: true,
-            order: [[1, 'asc']],
+            order: [[2, 'asc']],
             ajax: {
                 url: '{{ route("management.mfg-process-cost.data") }}',
                 data: function(d) {
+                    d.customer_id = $('#filter-customer').val();
                     d.category = $('#filter-category').val();
                     d.process_group = $('#filter-group').val();
                     d.rate_source = $('#filter-source').val();
@@ -223,6 +241,17 @@
                     className: 'text-center font-bold text-slate-500',
                     render: function (data, type, row, meta) {
                         return meta.row + 1 + meta.settings._iDisplayStart;
+                    }
+                },
+                {
+                    data: 'customer',
+                    orderable: true,
+                    className: 'font-semibold',
+                    render: function (data, type, row) {
+                        if (row.customer) {
+                            return `<span class="px-2 py-0.5 text-[10px] font-bold rounded-sm bg-purple-100 text-purple-800 dark:bg-purple-950/40 dark:text-purple-300">[${row.customer.code}] ${row.customer.name}</span>`;
+                        }
+                        return `<span class="px-2 py-0.5 text-[10px] font-bold rounded-sm bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">🌐 Global</span>`;
                     }
                 },
                 {
@@ -297,11 +326,12 @@
             ]
         });
 
-        $('#filter-category, #filter-group, #filter-source').on('change', function() {
+        $('#filter-customer, #filter-category, #filter-group, #filter-source').on('change', function() {
             dataTable.ajax.reload();
         });
 
         $('#btn-reset-filters').on('click', function() {
+            $('#filter-customer').val('');
             $('#filter-category').val('');
             $('#filter-group').val('');
             $('#filter-source').val('');
@@ -321,11 +351,38 @@
         const editForm = document.getElementById('edit-form');
         editForm.action = `{{ url('management/mfg-process-cost') }}/${item.id}`;
 
+        let customerOptions = `<option value="">🌐 Global (All Customers / Standard)</option>`;
+        customersData.forEach(c => {
+            const isSelected = item.customer_id == c.id ? 'selected' : '';
+            customerOptions += `<option value="${c.id}" ${isSelected}>[${c.code}] ${c.name}</option>`;
+        });
+
         const editFormContent = document.getElementById('edit-form-content');
         editFormContent.innerHTML = `
             @csrf
             @method('PUT')
             <div class="space-y-4 text-xs">
+                <div class="p-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-sm space-y-2">
+                    <span class="block font-extrabold text-[11px] uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-sliders text-blue-500"></i> Scope & Rate Source Configuration
+                    </span>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Customer Scope</label>
+                            <select name="customer_id" class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-sm font-medium">
+                                ${customerOptions}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Rate Source <span class="text-rose-500">*</span></label>
+                            <select name="rate_source" required class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-sm font-medium">
+                                <option value="Sales" ${item.rate_source === 'Sales' ? 'selected' : ''}>Sales</option>
+                                <option value="Engineering" ${item.rate_source === 'Engineering' ? 'selected' : ''}>Engineering</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Category <span class="text-rose-500">*</span></label>
@@ -369,13 +426,6 @@
                             <input type="number" step="0.01" name="std_cost_rate" value="${item.std_cost_rate !== null ? item.std_cost_rate : ''}" required class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-sm font-semibold">
                         </div>
                     </div>
-                </div>
-                <div>
-                    <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Rate Source <span class="text-rose-500">*</span></label>
-                    <select name="rate_source" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-sm font-medium">
-                        <option value="Sales" ${item.rate_source === 'Sales' ? 'selected' : ''}>Sales</option>
-                        <option value="Engineering" ${item.rate_source === 'Engineering' ? 'selected' : ''}>Engineering</option>
-                    </select>
                 </div>
             </div>
         `;

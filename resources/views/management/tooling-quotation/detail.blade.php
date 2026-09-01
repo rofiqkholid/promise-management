@@ -784,7 +784,7 @@
                             <table class="w-full text-xs text-left border-collapse">
                                 <thead class="bg-slate-50 dark:bg-slate-900/80 border-b border-slate-300 dark:border-slate-800 text-[10px] uppercase font-semibold text-slate-500 dark:text-slate-400">
                                     <tr>
-                                        <th class="p-3 border-r border-slate-300 dark:border-slate-800 text-center w-16">OP No</th>
+                                        <th class="p-3 border-r border-slate-300 dark:border-slate-800 text-center w-16">OP / ST</th>
                                         <th class="p-3 border-r border-slate-300 dark:border-slate-800 w-32 font-bold text-slate-600 dark:text-slate-300">Parameter</th>
                                         <th class="p-3 border-r border-slate-300 dark:border-slate-800 w-48 bg-slate-100/80 dark:bg-slate-800/80 text-slate-800 dark:text-slate-100 font-bold">
                                             <div class="flex items-center gap-1.5">
@@ -831,7 +831,19 @@
                                         @php
                                             $isOp = str_starts_with($opKey, 'OP_');
                                             $rawOpNo = $isOp ? substr($opKey, 3) : null;
-                                            $opLabel = $isOp ? 'OP ' . $rawOpNo : (str_contains(strtoupper($procsInOp->pluck('process_name')->first() ?? ''), 'JIG') ? 'JIG' : 'CF');
+                                            
+                                            $firstProc = $procsInOp->first();
+                                            $catUpper = strtoupper(trim($procsInOp->pluck('category')->filter()->first() ?? ''));
+                                            $firstProcName = strtoupper(trim($firstProc->process_name ?? ''));
+
+                                            if ($catUpper === 'JIG' || str_contains($firstProcName, 'JIG')) {
+                                                $opLabel = ($rawOpNo !== null && $rawOpNo !== '') ? 'ST ' . $rawOpNo : 'ST';
+                                            } elseif ($catUpper === 'CF' || str_contains($firstProcName, 'CF')) {
+                                                $opLabel = '-';
+                                            } else {
+                                                // Default DIE
+                                                $opLabel = ($rawOpNo !== null && $rawOpNo !== '') ? 'OP ' . $rawOpNo : 'OP';
+                                            }
 
                                             $ebdProcNames = $procsInOp->pluck('process_name')->filter()->implode(' + ');
                                             $ebdTypes = $procsInOp->pluck('category')->filter()->unique()->implode(' / ') ?: ($isOp ? 'DIE' : $opLabel);

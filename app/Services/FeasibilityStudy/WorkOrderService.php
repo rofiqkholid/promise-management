@@ -57,23 +57,9 @@ class WorkOrderService
                 $data['inquiry_id'] = null;
             }
 
-            // Ensure wo_number is unique for revision_no = 0
-            if (empty($data['wo_number']) || \App\Models\WorkOrder::withTrashed()->where('wo_number', $data['wo_number'])->where('revision_no', 0)->exists()) {
-                $currentYear = now()->year;
-                $count = \App\Models\WorkOrder::withTrashed()->whereYear('created_at', $currentYear)->where('revision_no', 0)->count() + 1;
-                $romans = [
-                    1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV', 5 => 'V', 6 => 'VI',
-                    7 => 'VII', 8 => 'VIII', 9 => 'IX', 10 => 'X', 11 => 'XI', 12 => 'XII'
-                ];
-                $romanMonth = $romans[now()->month] ?? 'I';
-                do {
-                    $uniqueNo = sprintf("%03d/MKT-SPK/SAI/%s/%02d", $count, $romanMonth, now()->year % 100);
-                    $exists = \App\Models\WorkOrder::withTrashed()->where('wo_number', $uniqueNo)->where('revision_no', 0)->exists();
-                    if ($exists) {
-                        $count++;
-                    }
-                } while ($exists);
-                $data['wo_number'] = $uniqueNo;
+            // Ensure wo_number is set and unique
+            if (empty($data['wo_number']) || \App\Models\WorkOrder::withTrashed()->where('wo_number', $data['wo_number'])->exists()) {
+                $data['wo_number'] = \App\Models\WorkOrder::generateNextWoNumber();
             }
 
             $workOrder = $this->workOrderRepo->create($data);
@@ -518,6 +504,7 @@ class WorkOrderService
                 'updated_at'
             ]);
 
+            $newRevision->wo_number = \App\Models\WorkOrder::generateNextWoNumber();
             $newRevision->status = 'Draft';
             $newRevision->created_by = auth()->user() ? auth()->user()->name : 'System';
             $newRevision->is_latest = true;

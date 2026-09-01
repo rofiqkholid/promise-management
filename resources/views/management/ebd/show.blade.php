@@ -255,14 +255,14 @@
                 
                 {{-- TAB: SPECS & MATERIAL --}}
                 <div id="card-tab-specs" class="card-tab-panel">
-                    <div class="flex flex-col lg:flex-row gap-6 items-start">
+                    <div class="flex flex-col xl:flex-row gap-6 items-start">
                         
-                        {{-- Specs Details (Left Side) --}}
-                        <div class="flex-1 space-y-6 w-full">
+                        {{-- Specs Details (Left Side: 3 Columns Grid) --}}
+                        <div class="flex-1 space-y-6 w-full min-w-0">
                             {{-- Part Specs Grid --}}
                             <div>
                                 <h4 class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3 border-b border-slate-300 dark:border-slate-600 pb-1.5">Part Dimensions, Quantities & Status</h4>
-                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5 text-xs">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 text-xs">
                                     <div class="p-3 bg-slate-100/50 dark:bg-slate-850 border border-slate-200 dark:border-slate-750 rounded-sm">
                                         <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">PART RANK</span>
                                         <span id="info-part-rank" class="font-medium text-slate-900 dark:text-slate-100 text-sm">—</span>
@@ -301,7 +301,7 @@
                             {{-- Material Specifications --}}
                             <div>
                                 <h4 class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3 border-b border-slate-300 dark:border-slate-600 pb-1.5">Material Details</h4>
-                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 text-xs">
                                     <div class="p-3 bg-slate-100/50 dark:bg-slate-800/40 border border-slate-300 dark:border-slate-600 rounded-sm">
                                         <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase mb-1">MATERIAL SPEC</span>
                                         <span id="mat-spec" class="font-semibold text-emerald-700 dark:text-emerald-300 text-sm">—</span>
@@ -334,35 +334,40 @@
                             </div>
                         </div>
 
-                        {{-- Drawings & Layout (Right Side) --}}
-                        <div class="w-full lg:w-[340px] flex-shrink-0 space-y-4">
-                            {{-- Card 1: Part Sketch / Drawing --}}
-                            <div id="sketch-card" class="border border-slate-200 dark:border-slate-700 bg-slate-100/50 dark:bg-slate-900/30 p-3.5 rounded-sm w-full flex flex-col min-h-[220px]">
-                                <h4 class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-350 dark:border-slate-650 pb-1.5 flex items-center gap-1.5">
-                                    <i class="fa-solid fa-pen-ruler text-indigo-500"></i> Part Sketch / Drawing
-                                </h4>
-                                <div id="sketch-wrapper" class="flex-1 flex items-center justify-center bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-sm p-2 min-h-[160px]">
-                                    <x-image-viewer 
-                                        id="sketch-img"
-                                        placeholderId="sketch-placeholder"
-                                        placeholderText="No sketch available"
-                                        placeholderSubtext="Upload or import part drawing"
-                                    />
+                        {{-- Drawings & Layout (Right Side: Part Sketch & Material Layout Side-by-Side) --}}
+                        <div class="w-full xl:w-[480px] 2xl:w-[560px] flex-shrink-0">
+                            <h4 class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3 border-b border-slate-300 dark:border-slate-600 pb-1.5 flex items-center gap-1.5">
+                                <i class="fa-solid fa-images text-indigo-500"></i> Part Drawings & Layout
+                            </h4>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                {{-- Card 1: Part Sketch / Drawing --}}
+                                <div id="sketch-card" class="border border-slate-200 dark:border-slate-700 bg-slate-100/50 dark:bg-slate-900/30 p-3 rounded-sm flex flex-col min-h-[220px]">
+                                    <h4 class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-350 dark:border-slate-650 pb-1.5 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-pen-ruler text-indigo-500"></i> Part Sketch
+                                    </h4>
+                                    <div id="sketch-wrapper" class="flex-1 flex items-center justify-center bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-sm p-1.5 min-h-[160px]">
+                                        <x-image-viewer 
+                                            id="sketch-img"
+                                            placeholderId="sketch-placeholder"
+                                            placeholderText="No sketch"
+                                            placeholderSubtext="Upload or import drawing"
+                                        />
+                                    </div>
                                 </div>
-                            </div>
 
-                            {{-- Card 2: Material Layout --}}
-                            <div id="matlayout-card" class="border border-slate-200 dark:border-slate-700 bg-slate-100/50 dark:bg-slate-900/30 p-3.5 rounded-sm w-full flex flex-col min-h-[220px]">
-                                <h4 class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-350 dark:border-slate-650 pb-1.5 flex items-center gap-1.5">
-                                    <i class="fa-solid fa-layer-group text-emerald-500"></i> Material Layout
-                                </h4>
-                                <div id="matlayout-wrapper" class="flex-1 flex items-center justify-center bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-sm p-2 min-h-[160px]">
-                                    <x-image-viewer 
-                                        id="matlayout-img"
-                                        placeholderId="matlayout-placeholder"
-                                        placeholderText="No material layout available"
-                                        placeholderSubtext="Upload material nesting / layout drawing"
-                                    />
+                                {{-- Card 2: Material Layout --}}
+                                <div id="matlayout-card" class="border border-slate-200 dark:border-slate-700 bg-slate-100/50 dark:bg-slate-900/30 p-3 rounded-sm flex flex-col min-h-[220px]">
+                                    <h4 class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-350 dark:border-slate-650 pb-1.5 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-layer-group text-emerald-500"></i> Material Layout
+                                    </h4>
+                                    <div id="matlayout-wrapper" class="flex-1 flex items-center justify-center bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-sm p-1.5 min-h-[160px]">
+                                        <x-image-viewer 
+                                            id="matlayout-img"
+                                            placeholderId="matlayout-placeholder"
+                                            placeholderText="No layout"
+                                            placeholderSubtext="Upload nesting drawing"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>

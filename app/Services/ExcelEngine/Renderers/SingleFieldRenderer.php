@@ -343,12 +343,15 @@ class SingleFieldRenderer
         // Standard value setter with formatting
         $cell = $sheet->getCell($cellCoordinate);
 
+        if ($value === null || $value === '') {
+            $cell->setValueExplicit('', DataType::TYPE_STRING);
+            return;
+        }
+
         switch (strtolower($format)) {
             case 'currency':
-                if ($value !== null) {
-                    $numericVal = is_numeric($value) ? (float)$value : (float)str_replace([',', ' '], '', $value);
-                    $cell->setValueExplicit($numericVal, DataType::TYPE_NUMERIC);
-                }
+                $numericVal = is_numeric($value) ? (float)$value : (float)str_replace([',', ' '], '', $value);
+                $cell->setValueExplicit($numericVal, DataType::TYPE_NUMERIC);
                 $currencyFormat = $options['currency_format'] ?? '_($* #,##0_);_($* (#,##0);_($* "-"_);_(@_)';
                 $sheet->getStyle($cellCoordinate)->getNumberFormat()->setFormatCode($currencyFormat);
                 break;
@@ -430,6 +433,45 @@ class SingleFieldRenderer
                         $cell->setValueExplicit((string)$value, DataType::TYPE_STRING);
                     }
                 }
+                break;
+        }
+    }
+
+    /**
+     * Apply number format / style without modifying the existing cell formula or value
+     */
+    public function applyFormatOnly(Worksheet $sheet, string $cellCoordinate, string $format, array $options = []): void
+    {
+        switch (strtolower($format)) {
+            case 'currency':
+                $currencyFormat = $options['currency_format'] ?? '_($* #,##0_);_($* (#,##0);_($* "-"_);_(@_)';
+                $sheet->getStyle($cellCoordinate)->getNumberFormat()->setFormatCode($currencyFormat);
+                break;
+
+            case 'number':
+            case 'numeric':
+                if (isset($options['decimal_places'])) {
+                    $decimals = (int)$options['decimal_places'];
+                    $numFormat = $decimals > 0 ? '#,##0.' . str_repeat('0', $decimals) : '#,##0';
+                } else {
+                    $numFormat = '#,##0.##';
+                }
+                $sheet->getStyle($cellCoordinate)->getNumberFormat()->setFormatCode($numFormat);
+                break;
+
+            case 'percentage':
+            case 'percent':
+                if (isset($options['decimal_places'])) {
+                    $decimals = (int)$options['decimal_places'];
+                    $pctFormat = $decimals > 0 ? '0.' . str_repeat('0', $decimals) . '%' : '0%';
+                } else {
+                    $pctFormat = '0.##%';
+                }
+                $sheet->getStyle($cellCoordinate)->getNumberFormat()->setFormatCode($pctFormat);
+                break;
+
+            case 'date':
+                $sheet->getStyle($cellCoordinate)->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_DATE_YYYYMMDD);
                 break;
         }
     }

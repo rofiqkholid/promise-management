@@ -143,9 +143,7 @@
             width: '100%',
             dropdownParent: $('#mainStudioCanvas')
         }).on('change', function() {
-            const val = $(this).val();
-            document.getElementById('btnAssignSingle').disabled = !val;
-            document.getElementById('btnAssignLoop').disabled = !val;
+            updateAssignButtonsState();
 
             if (isProgrammaticChange) return;
 
@@ -239,6 +237,29 @@
         const staticValueInput = document.getElementById('staticValueInput');
         let currentDataSourceMode = 'variable';
 
+        function updateAssignButtonsState() {
+            const btnSingle = document.getElementById('btnAssignSingle');
+            const btnLoop = document.getElementById('btnAssignLoop');
+            if (!btnSingle || !btnLoop) return;
+
+            if (!currentSelectedCell) {
+                btnSingle.disabled = true;
+                btnLoop.disabled = true;
+                return;
+            }
+
+            if (currentDataSourceMode === 'static') {
+                const hasStaticVal = !!(staticValueInput && staticValueInput.value.trim().length > 0);
+                btnSingle.disabled = !hasStaticVal;
+                btnLoop.disabled = !hasStaticVal;
+            } else {
+                const fieldVal = $('#globalFieldSelect').val();
+                const hasFieldVal = !!(fieldVal && String(fieldVal).trim().length > 0);
+                btnSingle.disabled = !hasFieldVal;
+                btnLoop.disabled = !hasFieldVal;
+            }
+        }
+
         function setDataSourceMode(mode) {
             currentDataSourceMode = mode;
             if (mode === 'static') {
@@ -246,23 +267,85 @@
                 if (sourceTypeVariableBtn) sourceTypeVariableBtn.className = "py-1 px-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-800 rounded-sm flex items-center justify-center gap-1 text-[10px] transition-all";
                 if (staticSourceBox) staticSourceBox.classList.remove('hidden');
                 if (variableSourceBox) variableSourceBox.classList.add('hidden');
-                if (staticValueInput) {
-                    document.getElementById('btnAssignSingle').disabled = !staticValueInput.value.trim();
-                    document.getElementById('btnAssignLoop').disabled = !staticValueInput.value.trim();
-                }
             } else {
                 if (sourceTypeVariableBtn) sourceTypeVariableBtn.className = "py-1 px-1.5 bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 font-bold shadow-2xs rounded-sm flex items-center justify-center gap-1 text-[10px] transition-all ring-1 ring-blue-500/30";
                 if (sourceTypeStaticBtn) sourceTypeStaticBtn.className = "py-1 px-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-800 rounded-sm flex items-center justify-center gap-1 text-[10px] transition-all";
                 if (variableSourceBox) variableSourceBox.classList.remove('hidden');
                 if (staticSourceBox) staticSourceBox.classList.add('hidden');
-                const val = $('#globalFieldSelect').val();
-                document.getElementById('btnAssignSingle').disabled = !val;
-                document.getElementById('btnAssignLoop').disabled = !val;
             }
+            updateAssignButtonsState();
         }
 
         if (sourceTypeVariableBtn) sourceTypeVariableBtn.addEventListener('click', () => setDataSourceMode('variable'));
         if (sourceTypeStaticBtn) sourceTypeStaticBtn.addEventListener('click', () => setDataSourceMode('static'));
+
+        if (staticValueInput) {
+            ['input', 'keyup', 'change', 'paste'].forEach(evt => {
+                staticValueInput.addEventListener(evt, () => {
+                    updateAssignButtonsState();
+                    if (typeof highlightFormulaReferencedCells === 'function') {
+                        highlightFormulaReferencedCells(staticValueInput.value);
+                    }
+                });
+            });
+        }
+
+        const btnConvertDynamicFormula = document.getElementById('btnConvertDynamicFormula');
+        if (btnConvertDynamicFormula && staticValueInput) {
+            btnConvertDynamicFormula.addEventListener('click', () => {
+                let val = staticValueInput.value.trim();
+                if (!val) {
+                    if (window.showToast) window.showToast('Please enter a formula or cell reference first', 'warning');
+                    return;
+                }
+
+                // Determine base row from currently selected cell or from first coordinate in formula
+                let baseRow = (typeof currentSelectedCell !== 'undefined' && currentSelectedCell && currentSelectedCell.row) 
+                    ? parseInt(currentSelectedCell.row, 10) 
+                    : null;
+
+                if (!baseRow) {
+                    const rowMatch = val.match(/[A-Za-z]+(\d+)/);
+                    if (rowMatch) {
+                        baseRow = parseInt(rowMatch[1], 10);
+                    }
+                }
+
+                if (!baseRow) {
+                    if (window.showToast) window.showToast('Please select a cell or enter a valid formula (e.g. =I14+(I14*I13))', 'warning');
+                    return;
+                }
+
+                // Convert cell coordinates (e.g. I14 -> I{row}, I13 -> I{row-1}, I15 -> I{row+1})
+                const converted = val.replace(/(\$?[A-Za-z]+)(\$?)(\d+)/g, (match, colPart, dollarRow, rowNumStr) => {
+                    // If row has absolute symbol '$' (e.g. I$14), keep it static
+                    if (dollarRow === '$') {
+                        return match;
+                    }
+
+                    const targetRow = parseInt(rowNumStr, 10);
+                    const offset = targetRow - baseRow;
+
+                    if (offset === 0) {
+                        return `${colPart}{row}`;
+                    } else if (offset > 0) {
+                        return `${colPart}{row+${offset}}`;
+                    } else {
+                        return `${colPart}{row${offset}}`; // e.g. -1 => {row-1}
+                    }
+                });
+
+                staticValueInput.value = converted;
+                staticValueInput.dispatchEvent(new Event('input', { bubbles: true }));
+                if (typeof highlightFormulaReferencedCells === 'function') {
+                    highlightFormulaReferencedCells(converted);
+                }
+
+                if (window.showToast) {
+                    window.showToast(`Converted formula to: ${converted}`, 'success');
+                }
+            });
+        }
 
         function updateRenderTypeCards(activeVal) {
             if (!activeVal) activeVal = 'default';
@@ -381,31 +464,46 @@
         if (singleRenderType) singleRenderType.addEventListener('change', toggleImageSizeVisibility);
 
         function extractFormulaCellReferences(formulaStr) {
-            if (!formulaStr || !formulaStr.trim().startsWith('=')) return [];
+            if (!formulaStr || typeof formulaStr !== 'string') return [];
+            const trimmed = formulaStr.trim();
+            if (!trimmed.startsWith('=')) return [];
 
             const references = [];
-            const rangeRegex = /([A-Z]{1,3})(\d+|\{row(?:[+-]\d+)?\})\s*:\s*([A-Z]{1,3})(\d+|\{row(?:[+-]\d+)?\})/gi;
-            let match;
             const processedRanges = [];
 
-            while ((match = rangeRegex.exec(formulaStr)) !== null) {
+            const parseRowSpec = (spec) => {
+                if (!spec) return null;
+                spec = spec.toString().trim();
+                if (spec.startsWith('{')) {
+                    const match = spec.match(/\{(row|parent_row|start_row|end_row|block_start_row|block_end_row)(?:([+-])(\d+))?\}/i);
+                    if (match) {
+                        const sign = match[2] || '+';
+                        const offsetNum = match[3] ? parseInt(match[3], 10) : 0;
+                        let baseRow = (typeof currentSelectedCell !== 'undefined' && currentSelectedCell && currentSelectedCell.row) 
+                            ? parseInt(currentSelectedCell.row, 10) 
+                            : 1;
+                        return sign === '+' ? (baseRow + offsetNum) : (baseRow - offsetNum);
+                    }
+                    return (typeof currentSelectedCell !== 'undefined' && currentSelectedCell && currentSelectedCell.row) 
+                        ? parseInt(currentSelectedCell.row, 10) 
+                        : null;
+                }
+                return parseInt(spec, 10);
+            };
+
+            // 1. Match Ranges e.g. I13:I15 or I{row-2}:I{row} or $I$13:$I$15
+            const rangeRegex = /(?:\$)?([A-Z]{1,3})(?:\$)?(\d+|\{(?:row|parent_row|start_row|end_row|block_start_row|block_end_row)(?:[+-]\d+)?\})\s*:\s*(?:\$)?([A-Z]{1,3})(?:\$)?(\d+|\{(?:row|parent_row|start_row|end_row|block_start_row|block_end_row)(?:[+-]\d+)?\})/gi;
+            let match;
+
+            while ((match = rangeRegex.exec(trimmed)) !== null) {
                 processedRanges.push(match[0]);
                 const startCol = match[1].toUpperCase();
                 const startRowSpec = match[2];
                 const endCol = match[3].toUpperCase();
                 const endRowSpec = match[4];
 
-                const parseRow = (spec) => {
-                    if (spec.startsWith('{row')) {
-                        const offset = spec.replace(/\{row|\}/g, '');
-                        const offsetNum = offset ? parseInt(offset) : 0;
-                        return currentSelectedCell ? (currentSelectedCell.row + offsetNum) : null;
-                    }
-                    return parseInt(spec);
-                };
-
-                const startRowNum = parseRow(startRowSpec);
-                const endRowNum = parseRow(endRowSpec);
+                const startRowNum = parseRowSpec(startRowSpec);
+                const endRowNum = parseRowSpec(endRowSpec);
 
                 if (startRowNum && endRowNum && startCol === endCol) {
                     const minR = Math.min(startRowNum, endRowNum);
@@ -416,23 +514,17 @@
                 }
             }
 
-            const singleCellRegex = /\b([A-Z]{1,3})(\d+|\{row(?:[+-]\d+)?\})\b/gi;
-            while ((match = singleCellRegex.exec(formulaStr)) !== null) {
+            // 2. Match Single Cells e.g. I14, I{row}, I{row-1}, $I14, $I$14
+            const singleCellRegex = /(?:\$)?([A-Z]{1,3})(?:\$)?(\d+|\{(?:row|parent_row|start_row|end_row|block_start_row|block_end_row)(?:[+-]\d+)?\})/gi;
+            while ((match = singleCellRegex.exec(trimmed)) !== null) {
                 const fullMatch = match[0];
                 const isInsideRange = processedRanges.some(rng => rng.includes(fullMatch));
                 if (!isInsideRange) {
                     const col = match[1].toUpperCase();
                     const rowSpec = match[2];
-                    let rowNum = null;
-                    if (rowSpec.startsWith('{row')) {
-                        const offset = rowSpec.replace(/\{row|\}/g, '');
-                        const offsetNum = offset ? parseInt(offset) : 0;
-                        rowNum = currentSelectedCell ? (currentSelectedCell.row + offsetNum) : null;
-                    } else {
-                        rowNum = parseInt(rowSpec);
-                    }
+                    const rowNum = parseRowSpec(rowSpec);
 
-                    if (rowNum) {
+                    if (rowNum && rowNum > 0) {
                         references.push({ col: col, rowNumber: rowNum });
                     }
                 }
@@ -446,13 +538,15 @@
                 c.classList.remove('cell-formula-ref');
             });
 
-            if (!formulaStr || !formulaStr.trim().startsWith('=')) return;
+            if (!formulaStr || typeof formulaStr !== 'string') return;
+            const trimmed = formulaStr.trim();
+            if (!trimmed.startsWith('=')) return;
 
-            const refs = extractFormulaCellReferences(formulaStr);
+            const refs = extractFormulaCellReferences(trimmed);
             const currentSelectedTd = document.querySelector('#excelGrid td.cell-selected');
 
             refs.forEach(ref => {
-                if (ref.rowNumber && ref.rowNumber > 0) {
+                if (ref.col && ref.rowNumber && ref.rowNumber > 0) {
                     const selector = `#excelGrid td[data-col="${ref.col}"][data-row="${ref.rowNumber}"]`;
                     const targetTd = document.querySelector(selector);
                     if (targetTd && targetTd !== currentSelectedTd) {
@@ -1344,6 +1438,7 @@
                 btnUnsetLoop.classList.add('hidden');
             }
 
+            updateAssignButtonsState();
             toggleStopConditionVisibility();
         });
 

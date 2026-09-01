@@ -161,30 +161,9 @@ class TableLoopRenderer
                 $items = $this->resolveDataSource($sec, $payload);
             }
 
-            // Collect process / sub-item column mappings across the sections
-            $mappings = $sec['mappings'] ?? $sec['columns'] ?? [];
-            $renderTypes = $sec['render_types'] ?? [];
-            foreach ($mappings as $key => $mappingDef) {
-                $colLetter = is_array($mappingDef) ? ($mappingDef['column'] ?? null) : $mappingDef;
-                if ($colLetter && in_array(strtoupper($colLetter), $conditionalTargetCols)) {
-                    // Managed exclusively by conditional rules
-                    continue;
-                }
-
-                $cleanKey = str_contains($key, '__') ? explode('__', $key)[0] : $key;
-                if (
-                    str_contains($cleanKey, 'process') ||
-                    str_contains($cleanKey, 'tool') ||
-                    str_contains($cleanKey, 'proc') ||
-                    str_contains($cleanKey, 'cost_rate') ||
-                    str_contains($cleanKey, 'rate') ||
-                    in_array($cleanKey, ['stroke', 'tonnage', 'machine_type', 'die_height', 'output', 'price_idr', 'cost_idr', 'remarks', 'add_qty', 'add_unit', 'add_cost_idr', 'category'])
-                ) {
-                    $processMappings[$key] = $mappingDef;
-                    if (isset($renderTypes[$key])) {
-                        $processRenderTypes[$key] = $renderTypes[$key];
-                    }
-                }
+            $loopMode = $sec['loop_mode'] ?? 'flat';
+            if ($loopMode === 'nested_block') {
+                $nestedSections[] = $sec;
             }
 
             if (!empty($sec['footer_formulas'])) {
@@ -209,6 +188,36 @@ class TableLoopRenderer
         $maxStartRow = max($distinctStartRows);
         $templateBlockSize = max(1, ($maxStartRow - $minStartRow + 1));
 
+        // Determine where child nested blocks begin and collect their column ranges
+        $minProcessStartRow = $minStartRow;
+        $nestedBlockRanges = [];
+        foreach ($sheetSections as $sec) {
+            $secLoopMode = $sec['loop_mode'] ?? 'flat';
+            $secStart = (int)($sec['start_row'] ?? $minStartRow);
+            if ($secLoopMode === 'nested_block') {
+                if ($minProcessStartRow === $minStartRow || $secStart < $minProcessStartRow) {
+                    $minProcessStartRow = $secStart;
+                }
+                $mappings = $sec['mappings'] ?? $sec['columns'] ?? [];
+                $colIndices = [];
+                foreach ($mappings as $mDef) {
+                    $colLetter = is_array($mDef) ? ($mDef['column'] ?? null) : $mDef;
+                    if ($colLetter) {
+                        $colIndices[] = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($colLetter);
+                    }
+                }
+                if (!empty($colIndices)) {
+                    $nestedBlockRanges[] = [
+                        'start_row' => $secStart,
+                        'min_col' => min($colIndices),
+                        'max_col' => max($colIndices) + 2,
+                        'formulas' => $sec['row_formulas'] ?? $sec['formulas'] ?? [],
+                    ];
+                }
+            }
+        }
+        $processStartOffsetInBlock = max(0, $minProcessStartRow - $minStartRow);
+
         $actualMinStartRow = $shiftTracker->getShiftedRow($sheetIdentifier, $minStartRow);
 
         $blankRowsAfter = 0;
@@ -218,25 +227,35 @@ class TableLoopRenderer
             }
         }
 
-        // 2. Calculate dynamic height for each parent item
+        // 2. Calculate dynamic height for each parent item by checking all nested child arrays
         $itemRowHeights = [];
         foreach ($items as $i => $itemData) {
-            $childProcesses = (!empty($itemData['processes']) && is_array($itemData['processes'])) ? count($itemData['processes']) : 0;
-            $childAddProcesses = (!empty($itemData['additional_processes']) && is_array($itemData['additional_processes'])) 
-                ? count($itemData['additional_processes']) 
-                : ((!empty($itemData['add_processes']) && is_array($itemData['add_processes'])) ? count($itemData['add_processes']) : 0);
-            $maxChildCount = max($childProcesses, $childAddProcesses, 1);
+            $maxChildCount = 1;
+            foreach ($itemData as $k => $v) {
+                if (is_array($v) && !empty($v)) {
+                    $maxChildCount = max($maxChildCount, count($v));
+                }
+            }
             
-            // Item height is at least the template block size, or expanded to fit all child processes
-            $itemRowHeights[$i] = max($templateBlockSize, $maxChildCount);
+            // Item height is at least the template block size, or expanded to fit all child items
+            $itemRowHeights[$i] = max($templateBlockSize, $maxChildCount + $processStartOffsetInBlock);
         }
 
         $totalBlankRows = $totalItems * $blankRowsAfter;
         $totalRequiredRows = array_sum($itemRowHeights) + $totalBlankRows;
 
+        // Determine if this cluster uses overwrite behavior (static pre-existing rows)
+        $isOverwrite = false;
+        foreach ($sheetSections as $sec) {
+            if (($sec['insert_behavior'] ?? '') === 'overwrite') {
+                $isOverwrite = true;
+                break;
+            }
+        }
+
         // 3. Pre-insert rows dynamically for all items and their children
         $expansionKey = "{$sheetIdentifier}_{$minStartRow}_{$maxStartRow}";
-        if ($totalRequiredRows > $templateBlockSize && empty($this->expandedRows[$expansionKey])) {
+        if (!$isOverwrite && $totalRequiredRows > $templateBlockSize && empty($this->expandedRows[$expansionKey])) {
             $totalNewRows = $totalRequiredRows - $templateBlockSize;
             $templateBottomRow = $actualMinStartRow + $templateBlockSize - 1;
 
@@ -257,13 +276,31 @@ class TableLoopRenderer
                 $currentRowNum = $runningStartRow + $offset;
                 $targetTemplateRow = $minStartRow + min($offset, $templateBlockSize - 1);
 
-                // Clone style if this is a newly inserted row
+                // Clone style & replicate native template formulas if this is a newly inserted row
                 if ($currentRowNum > ($actualMinStartRow + $templateBlockSize - 1)) {
                     $templateSrcRow = $actualMinStartRow + min($offset, $templateBlockSize - 1);
                     $this->styleCloner->cloneRowStyle($sheet, $templateSrcRow, $currentRowNum);
-                    $this->styleCloner->cloneMergedCellsInRow($sheet, $templateSrcRow, $currentRowNum);
 
-                    // Clear any cloned formula values in child rows 3+ (offset >= templateBlockSize)
+                    // Auto-replicate and shift native template formulas from templateSrcRow to currentRowNum
+                    if ($offset < $templateBlockSize) {
+                        $rowShift = $currentRowNum - $templateSrcRow;
+                        $highestColumn = $sheet->getHighestDataColumn($templateSrcRow);
+                        $highestColIndex = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestColumn);
+                        for ($c = 1; $c <= $highestColIndex; $c++) {
+                            $cLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($c);
+                            $srcCell = $sheet->getCell($cLetter . $templateSrcRow);
+                            if ($srcCell->isFormula()) {
+                                $srcFormula = $srcCell->getValue();
+                                $shiftedFormula = $this->formulaCompiler->shiftFormulaRows($srcFormula, $rowShift);
+                                $sheet->getCell($cLetter . $currentRowNum)->setValueExplicit(
+                                    $shiftedFormula,
+                                    \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_FORMULA
+                                );
+                            }
+                        }
+                    }
+
+                    // Clear any cloned formula values in child rows (offset >= templateBlockSize)
                     if ($offset >= $templateBlockSize) {
                         $highestColumn = $sheet->getHighestDataColumn($currentRowNum);
                         $highestColIndex = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestColumn);
@@ -297,6 +334,10 @@ class TableLoopRenderer
                 $renderedColumnsThisRow = [];
 
                 foreach ($matchingSections as $section) {
+                    $secStartRow = (int)($section['start_row'] ?? $minStartRow);
+                    $secRelativeOffset = max(0, $targetTemplateRow - $secStartRow);
+                    $secLoopMode = $section['loop_mode'] ?? 'flat';
+
                     $mappings = $section['mappings'] ?? $section['columns'] ?? [];
                     $rowFormulas = $section['row_formulas'] ?? $section['formulas'] ?? [];
                     $staticValues = $section['static_values'] ?? [];
@@ -309,16 +350,36 @@ class TableLoopRenderer
                         }
                     }
 
+                    $targetDataForSection = $itemData;
+                    $lookupOffset = $secRelativeOffset;
+
+                    if ($secLoopMode === 'nested_block') {
+                        $childArr = $this->resolveSectionChildArray($section, $itemData);
+                        if (!empty($childArr) && isset($childArr[$secRelativeOffset])) {
+                            $targetDataForSection = $childArr[$secRelativeOffset];
+                            $lookupOffset = 0; // Direct lookup on child array item
+                        } else {
+                            // If no child data exists on this row for this nested section, clear mapped cells
+                            foreach ($mappings as $k => $mDef) {
+                                $colLetter = is_array($mDef) ? ($mDef['column'] ?? null) : $mDef;
+                                if ($colLetter && (empty($conditionalTargetCols) || !in_array(strtoupper($colLetter), $conditionalTargetCols))) {
+                                    $sheet->setCellValue($colLetter . $currentRowNum, null);
+                                }
+                            }
+                            continue;
+                        }
+                    }
+
                     $this->renderRowMappings(
                         $sheet,
                         $mappings,
-                        $itemData,
+                        $targetDataForSection,
                         $currentRowNum,
                         $autoIdx,
                         $staticValues,
                         $renderTypes,
                         $context,
-                        $offset,
+                        $lookupOffset,
                         $conditionalTargetCols
                     );
 
@@ -326,14 +387,32 @@ class TableLoopRenderer
                     $this->renderRowFormulas($sheet, $rowFormulas, $context);
                 }
 
-                // Automatic process cascading for child processes (OP10, OP20, OP30, OP40, additional processes...)
-                $hasChildAtOffset = (!empty($itemData['processes']) && count($itemData['processes']) > $offset) ||
-                                    (!empty($itemData['additional_processes']) && count($itemData['additional_processes']) > $offset) ||
-                                    (!empty($itemData['add_processes']) && count($itemData['add_processes']) > $offset);
+                // Automatic child cascading for each nested section independently
+                foreach ($nestedSections as $nSec) {
+                    $nStartRow = (int)($nSec['start_row'] ?? $minStartRow);
+                    $nStartOffset = max(0, $nStartRow - $minStartRow);
+                    
+                    if ($offset < $nStartOffset) {
+                        continue;
+                    }
 
-                if ($offset > 0 && !empty($processMappings) && $hasChildAtOffset) {
+                    $childOffset = $offset - $nStartOffset;
+                    $nMappings = $nSec['mappings'] ?? $nSec['columns'] ?? [];
+                    $nRenderTypes = $nSec['render_types'] ?? [];
+
+                    $targetChildArray = $this->resolveSectionChildArray($nSec, $itemData);
+                    if (empty($targetChildArray) || !isset($targetChildArray[$childOffset])) {
+                        continue;
+                    }
+
+                    $childItemData = $targetChildArray[$childOffset];
+                    if (!is_array($childItemData)) {
+                        continue;
+                    }
+
+                    // Render mappings for this child row if not yet rendered this row
                     $cascadeMappings = [];
-                    foreach ($processMappings as $pKey => $pDef) {
+                    foreach ($nMappings as $pKey => $pDef) {
                         $pCol = is_array($pDef) ? ($pDef['column'] ?? null) : $pDef;
                         if ($pCol && empty($renderedColumnsThisRow[$pCol])) {
                             $cascadeMappings[$pKey] = $pDef;
@@ -344,33 +423,59 @@ class TableLoopRenderer
                         $this->renderRowMappings(
                             $sheet,
                             $cascadeMappings,
-                            $itemData,
+                            $childItemData,
                             $currentRowNum,
                             $autoIdx,
                             [],
-                            $processRenderTypes,
+                            $nRenderTypes,
                             $context,
-                            $offset,
+                            0, // Direct lookup on childItemData
                             $conditionalTargetCols
                         );
                     }
                 }
 
-                // Conditional rules
-                if (!empty($conditionalRules)) {
-                    $this->renderRowConditionalRules($sheet, $conditionalRules, $itemData, $currentRowNum, $context, $offset);
-                }
-            }
+                // Safely replicate formulas strictly belonging to nested block column ranges (e.g. Cost in Col AA)
+                if (!empty($nestedBlockRanges)) {
+                    foreach ($nestedBlockRanges as $secRange) {
+                        $secStartOffset = max(0, $secRange['start_row'] - $minStartRow);
+                        if ($offset > $secStartOffset) {
+                            $secTemplateSrcRow = $actualMinStartRow + $secStartOffset;
+                            $rowShift = $currentRowNum - $secTemplateSrcRow;
 
-            // If parent height > 1, ensure parent cells (like No in A, Part No in C, Part Name in E, Qty in G) are vertically merged
-            if ($currentParentHeight > 1) {
-                $this->mergeParentColumnsVertically($sheet, $runningStartRow, $currentParentHeight, $sheetSections);
+                            for ($c = $secRange['min_col']; $c <= $secRange['max_col']; $c++) {
+                                $cLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($c);
+                                if (empty($renderedColumnsThisRow[$cLetter])) {
+                                    $srcCell = $sheet->getCell($cLetter . $secTemplateSrcRow);
+                                    if ($srcCell->isFormula()) {
+                                        $srcFormula = $srcCell->getValue();
+                                        $shiftedFormula = $this->formulaCompiler->shiftFormulaRows($srcFormula, $rowShift);
+                                        $sheet->getCell($cLetter . $currentRowNum)->setValueExplicit(
+                                            $shiftedFormula,
+                                            \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_FORMULA
+                                        );
+                                    }
+                                }
+                            }
+
+                            if (!empty($secRange['formulas'])) {
+                                $this->renderRowFormulas($sheet, $secRange['formulas'], $context);
+                            }
+                        }
+                    }
+                }
+
+                // Conditional rules (only evaluate on rows starting from the process block row, e.g. row 14+)
+                if (!empty($conditionalRules) && $offset >= $processStartOffsetInBlock) {
+                    $ruleOffset = $offset - $processStartOffsetInBlock;
+                    $this->renderRowConditionalRules($sheet, $conditionalRules, $itemData, $currentRowNum, $context, $ruleOffset);
+                }
             }
 
             $runningStartRow += $currentParentHeight;
 
             // Insert Blank Rows Between Items if configured
-            if ($blankRowsAfter > 0 && ($itemIdx < $totalItems - 1)) {
+            if (!$isOverwrite && $blankRowsAfter > 0 && ($itemIdx < $totalItems - 1)) {
                 $sheet->insertNewRowBefore($runningStartRow, $blankRowsAfter);
                 $shiftTracker->recordShift($sheetIdentifier, $runningStartRow - 1, $blankRowsAfter);
                 $runningStartRow += $blankRowsAfter;
@@ -379,12 +484,37 @@ class TableLoopRenderer
         }
 
         // Insert Blank Rows After Final Item / Loop if configured
-        if ($blankRowsAfter > 0) {
+        if (!$isOverwrite && $blankRowsAfter > 0) {
             $lastDataRow = $runningStartRow - 1;
             $sheet->insertNewRowBefore($lastDataRow + 1, $blankRowsAfter);
             $shiftTracker->recordShift($sheetIdentifier, $lastDataRow, $blankRowsAfter);
             $runningStartRow += $blankRowsAfter;
             $totalRequiredRows += $blankRowsAfter;
+        }
+
+        // Auto-expand native template footer formulas referencing the template loop end row (e.g. $AM$13:$AM$15 -> $AM$13:$AM$31)
+        if ($totalRequiredRows > $templateBlockSize) {
+            $templateBottomRow = $actualMinStartRow + $templateBlockSize - 1;
+            $finalEndRow = $actualMinStartRow + $totalRequiredRows - 1;
+
+            $highestRow = $sheet->getHighestRow();
+            $highestCol = $sheet->getHighestColumn();
+            $highestColIdx = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestCol);
+
+            for ($r = $finalEndRow + 1; $r <= $highestRow; $r++) {
+                for ($c = 1; $c <= $highestColIdx; $c++) {
+                    $cLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($c);
+                    $cell = $sheet->getCell("{$cLetter}{$r}");
+                    if ($cell->isFormula()) {
+                        $formula = $cell->getValue();
+                        $pattern = '/(:\\$?([A-Z]{1,3})\\$?)' . $templateBottomRow . '(?![0-9])/i';
+                        if (preg_match($pattern, $formula)) {
+                            $updatedFormula = preg_replace($pattern, '${1}' . $finalEndRow, $formula);
+                            $cell->setValueExplicit($updatedFormula, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_FORMULA);
+                        }
+                    }
+                }
+            }
         }
 
         // Render Footer Formulas if defined
@@ -398,24 +528,6 @@ class TableLoopRenderer
             ];
 
             $this->renderFooterFormulas($sheet, $footerFormulas, $footerContext, $shiftTracker, $sheetIdentifier);
-        }
-    }
-
-    /**
-     * Merge parent-level columns vertically across the parent's expanded child rows
-     */
-    protected function mergeParentColumnsVertically(Worksheet $sheet, int $startRow, int $height, array $sheetSections): void
-    {
-        $endRow = $startRow + $height - 1;
-        $parentColumns = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
-
-        foreach ($parentColumns as $col) {
-            $mergeRange = "{$col}{$startRow}:{$col}{$endRow}";
-            try {
-                $sheet->mergeCells($mergeRange);
-            } catch (\Throwable $e) {
-                // Ignore if already merged
-            }
         }
     }
 
@@ -466,7 +578,7 @@ class TableLoopRenderer
                     $compiledFormula = $this->formulaCompiler->compile(trim($val), $context);
                     $sheet->getCell($cellCoordinate)->setValueExplicit($compiledFormula, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_FORMULA);
                     if ($format !== 'default') {
-                        $this->fieldRenderer->applyValueAndFormat($sheet, $cellCoordinate, null, $format, is_array($mappingDef) ? $mappingDef : []);
+                        $this->fieldRenderer->applyFormatOnly($sheet, $cellCoordinate, $format, is_array($mappingDef) ? $mappingDef : []);
                     }
                     continue;
                 }
@@ -475,30 +587,74 @@ class TableLoopRenderer
                 if ($rowOffset === 0 && array_key_exists($cleanKey, $itemData)) {
                     $val = $itemData[$cleanKey];
                 } else {
-                    $val = $this->resolveNestedFieldValue($itemData, $cleanKey, $rowOffset);
+                    $preferredSource = $context['preferred_source'] ?? null;
+                    $val = $this->resolveNestedFieldValue($itemData, $cleanKey, $rowOffset, $preferredSource);
                 }
             }
 
-            if ($val !== null) {
-                $opts = is_array($mappingDef) ? $mappingDef : [];
-                $this->fieldRenderer->applyValueAndFormat($sheet, $cellCoordinate, $val, $format, $opts);
-            }
+            $opts = is_array($mappingDef) ? $mappingDef : [];
+            $this->fieldRenderer->applyValueAndFormat($sheet, $cellCoordinate, $val, $format, $opts);
         }
     }
 
     /**
-     * Resolve field value from nested arrays on itemData (matching rowOffset for processes)
+     * Resolve child array for a specific nested block section
      */
-    protected function resolveNestedFieldValue(array $itemData, string $key, int $rowOffset = 0)
+    protected function resolveSectionChildArray(array $section, array $itemData): ?array
     {
-        $nestedKeys = ['processes', 'additional_processes', 'add_processes', 'tooling_processes', 'details', 'items'];
-        foreach ($nestedKeys as $nestedKey) {
-            if (!empty($itemData[$nestedKey]) && is_array($itemData[$nestedKey])) {
-                $subItems = array_values($itemData[$nestedKey]);
-                
-                // 1. Try matching exact rowOffset for multi-row process items (Row 1 gets OP1, Row 2 gets OP2, Row 3 gets OP3...)
-                if (isset($subItems[$rowOffset]) && is_array($subItems[$rowOffset]) && isset($subItems[$rowOffset][$key])) {
+        $source = $section['source'] ?? ($section['data_source'] ?? null);
+        if ($source && isset($itemData[$source]) && is_array($itemData[$source])) {
+            return array_values($itemData[$source]);
+        }
+
+        $group = strtolower($section['group'] ?? '');
+        if (str_contains($group, 'add') && isset($itemData['additional_processes']) && is_array($itemData['additional_processes'])) {
+            return array_values($itemData['additional_processes']);
+        }
+        if (str_contains($group, 'add') && isset($itemData['add_processes']) && is_array($itemData['add_processes'])) {
+            return array_values($itemData['add_processes']);
+        }
+        if (!str_contains($group, 'add') && isset($itemData['processes']) && is_array($itemData['processes'])) {
+            return array_values($itemData['processes']);
+        }
+
+        return null;
+    }
+
+    /**
+     * Resolve field value from nested arrays on itemData (matching rowOffset for child items)
+     */
+    protected function resolveNestedFieldValue(array $itemData, string $key, int $rowOffset = 0, ?string $preferredSource = null)
+    {
+        $cleanKey = str_contains($key, '__') ? explode('__', $key)[0] : $key;
+
+        // If a preferred nested array source is given, check it first
+        if ($preferredSource && isset($itemData[$preferredSource]) && is_array($itemData[$preferredSource])) {
+            $subItems = array_values($itemData[$preferredSource]);
+            if (isset($subItems[$rowOffset]) && is_array($subItems[$rowOffset])) {
+                if (array_key_exists($key, $subItems[$rowOffset])) {
                     return $subItems[$rowOffset][$key];
+                }
+                if (array_key_exists($cleanKey, $subItems[$rowOffset])) {
+                    return $subItems[$rowOffset][$cleanKey];
+                }
+            }
+        }
+
+        // Dynamically inspect any nested arrays present on itemData
+        foreach ($itemData as $nestedKey => $nestedVal) {
+            if (is_array($nestedVal) && !empty($nestedVal)) {
+                $subItems = array_values($nestedVal);
+                
+                // 1. Try matching exact rowOffset for multi-row child items
+                if (isset($subItems[$rowOffset]) && is_array($subItems[$rowOffset])) {
+                    $item = $subItems[$rowOffset];
+                    if (array_key_exists($key, $item)) {
+                        return $item[$key];
+                    }
+                    if (array_key_exists($cleanKey, $item)) {
+                        return $item[$cleanKey];
+                    }
                 }
 
                 // 2. If rowOffset > 0 and no item exists at that offset, do not overwrite with item 0
@@ -507,8 +663,14 @@ class TableLoopRenderer
                 }
 
                 // 3. Fallback for rowOffset 0: check first sub-item
-                if ($rowOffset === 0 && isset($subItems[0]) && is_array($subItems[0]) && isset($subItems[0][$key])) {
-                    return $subItems[0][$key];
+                if ($rowOffset === 0 && isset($subItems[0]) && is_array($subItems[0])) {
+                    $item0 = $subItems[0];
+                    if (array_key_exists($key, $item0)) {
+                        return $item0[$key];
+                    }
+                    if (array_key_exists($cleanKey, $item0)) {
+                        return $item0[$cleanKey];
+                    }
                 }
             }
         }
@@ -642,14 +804,13 @@ class TableLoopRenderer
     }
 
     /**
-     * Resolve field value from itemData or child process matching rowOffset
+     * Resolve field value from itemData or child items matching rowOffset
      */
     protected function resolveConditionFieldValue(array $itemData, string $fieldKey, int $rowOffset = 0, &$sourceItemRef = null)
     {
-        $nestedKeys = ['processes', 'additional_processes', 'add_processes', 'tooling_processes', 'details', 'items'];
-        foreach ($nestedKeys as $nestedKey) {
-            if (!empty($itemData[$nestedKey]) && is_array($itemData[$nestedKey])) {
-                $subItems = array_values($itemData[$nestedKey]);
+        foreach ($itemData as $nestedKey => $nestedVal) {
+            if (is_array($nestedVal) && !empty($nestedVal)) {
+                $subItems = array_values($nestedVal);
                 if (isset($subItems[$rowOffset]) && is_array($subItems[$rowOffset]) && array_key_exists($fieldKey, $subItems[$rowOffset])) {
                     $sourceItemRef = $subItems[$rowOffset];
                     return $subItems[$rowOffset][$fieldKey];

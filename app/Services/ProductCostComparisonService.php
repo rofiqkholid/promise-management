@@ -658,7 +658,7 @@ class ProductCostComparisonService
             $match = $rates->where('rate_source', $rateSource)
                 ->where('customer_id', $customerId)
                 ->filter(function($r) use ($machineType, $partRank, $tonnage) {
-                    $machineMatch = empty($machineType) || strcasecmp($r->machine_type, $machineType) === 0;
+                    $machineMatch = empty($machineType) || \App\Helpers\MachineTypeHelper::isMatch($r->machine_type, $machineType);
                     $rankMatch = empty($partRank) ||
                         strcasecmp($r->complexity_alias, $partRank) === 0 ||
                         stripos($r->process_complexity, $partRank) !== false;
@@ -687,7 +687,7 @@ class ProductCostComparisonService
         $match = $rates->where('rate_source', $rateSource)
             ->whereNull('customer_id')
             ->filter(function($r) use ($machineType, $partRank, $tonnage) {
-                $machineMatch = empty($machineType) || strcasecmp($r->machine_type, $machineType) === 0;
+                $machineMatch = empty($machineType) || \App\Helpers\MachineTypeHelper::isMatch($r->machine_type, $machineType);
                 $rankMatch = empty($partRank) ||
                     strcasecmp($r->complexity_alias, $partRank) === 0 ||
                     stripos($r->process_complexity, $partRank) !== false;

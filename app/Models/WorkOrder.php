@@ -117,6 +117,56 @@ class WorkOrder extends Model
         return $this->wo_number;
     }
 
+    /**
+     * Generate the next running sequence WO/SPK number.
+     * The counter increments continuously for all new WOs and revisions,
+     * and resets back to 1 every new year.
+     *
+     * Format: {001}/MKT-SPK/SAI/{ROMAN_MONTH}/{2_DIGIT_YEAR}
+     */
+    public static function generateNextWoNumber(): string
+    {
+        $currentYear = now()->year;
+        $year2Digit  = sprintf("%02d", $currentYear % 100);
+
+        $romans = [
+            1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV', 5 => 'V', 6 => 'VI',
+            7 => 'VII', 8 => 'VIII', 9 => 'IX', 10 => 'X', 11 => 'XI', 12 => 'XII'
+        ];
+        $romanMonth = $romans[now()->month] ?? 'I';
+
+        // Retrieve existing WO numbers for the current year
+        $existingWos = self::withTrashed()
+            ->where(function ($q) use ($currentYear, $year2Digit) {
+                $q->whereYear('created_at', $currentYear)
+                  ->orWhere('wo_number', 'LIKE', "%/{$year2Digit}")
+                  ->orWhere('wo_number', 'LIKE', "%/{$year2Digit}-%");
+            })
+            ->pluck('wo_number');
+
+        $maxSeq = 0;
+        foreach ($existingWos as $woNum) {
+            if (preg_match('/^(\d+)\/MKT-SPK\/SAI\//i', $woNum, $matches)) {
+                $num = (int)$matches[1];
+                if ($num > $maxSeq) {
+                    $maxSeq = $num;
+                }
+            }
+        }
+
+        $nextSeq = $maxSeq + 1;
+
+        do {
+            $candidate = sprintf("%03d/MKT-SPK/SAI/%s/%s", $nextSeq, $romanMonth, $year2Digit);
+            $exists = self::withTrashed()->where('wo_number', $candidate)->exists();
+            if ($exists) {
+                $nextSeq++;
+            }
+        } while ($exists);
+
+        return $candidate;
+    }
+
     protected static $departmentsCache = null;
 
     public function getSupportDepartmentsAttribute()

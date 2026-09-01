@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Management;
 
 use App\Http\Controllers\Controller;
 use App\Models\MfgProcessCost;
+use App\Models\Customer;
 use Illuminate\Http\Request;
 
 class MfgProcessCostController extends Controller
@@ -16,6 +17,7 @@ class MfgProcessCostController extends Controller
         $categories = ['Product', 'Tooling'];
         $processGroups = MfgProcessCost::select('process_group')->distinct()->pluck('process_group')->filter()->values();
         $rateSources = ['Engineering', 'Sales'];
+        $customers = Customer::orderBy('name')->get(['id', 'code', 'name']);
 
         // Calculate KPI summary stats
         $totalItems = MfgProcessCost::count();
@@ -27,6 +29,7 @@ class MfgProcessCostController extends Controller
             'categories',
             'processGroups',
             'rateSources',
+            'customers',
             'totalItems',
             'productCount',
             'toolingCount',
@@ -45,7 +48,7 @@ class MfgProcessCostController extends Controller
 
         $totalRecords = MfgProcessCost::count();
 
-        $query = MfgProcessCost::query();
+        $query = MfgProcessCost::with('customer');
 
         // Dropdown Filters
         if ($request->filled('category')) {
@@ -60,6 +63,14 @@ class MfgProcessCostController extends Controller
             $query->where('rate_source', $request->rate_source);
         }
 
+        if ($request->filled('customer_id')) {
+            if ($request->customer_id === 'global') {
+                $query->whereNull('customer_id');
+            } else {
+                $query->where('customer_id', $request->customer_id);
+            }
+        }
+
         // Global Search
         $searchValue = $request->input('search.value');
         if (!empty($searchValue)) {
@@ -70,24 +81,29 @@ class MfgProcessCostController extends Controller
                   ->orWhere('control_point', 'like', "%{$searchValue}%")
                   ->orWhere('uom', 'like', "%{$searchValue}%")
                   ->orWhere('rate_unit', 'like', "%{$searchValue}%")
-                  ->orWhere('rate_source', 'like', "%{$searchValue}%");
+                  ->orWhere('rate_source', 'like', "%{$searchValue}%")
+                  ->orWhereHas('customer', function ($cq) use ($searchValue) {
+                      $cq->where('name', 'like', "%{$searchValue}%")
+                         ->orWhere('code', 'like', "%{$searchValue}%");
+                  });
             });
         }
 
         $filteredRecords = $query->count();
 
-        // Sorting map matching DataTables column indices (0-10)
+        // Sorting map matching DataTables column indices
         $columnsMap = [
             0 => 'id',
-            1 => 'category',
-            2 => 'process_group',
-            3 => 'process_name',
-            4 => 'control_point',
-            5 => 'uom',
-            6 => 'rate_unit',
-            7 => 'min_cost_rate',
-            8 => 'std_cost_rate',
-            9 => 'rate_source',
+            1 => 'customer_id',
+            2 => 'category',
+            3 => 'process_group',
+            4 => 'process_name',
+            5 => 'control_point',
+            6 => 'uom',
+            7 => 'rate_unit',
+            8 => 'min_cost_rate',
+            9 => 'std_cost_rate',
+            10 => 'rate_source',
         ];
 
         $orderColumnIndex = $request->input('order.0.column');
@@ -120,6 +136,7 @@ class MfgProcessCostController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'customer_id' => 'nullable|exists:customers,id',
             'category' => 'required|string|in:Product,Tooling',
             'process_group' => 'required|string|max:100',
             'process_name' => 'required|string|max:150',
@@ -132,7 +149,7 @@ class MfgProcessCostController extends Controller
             'is_active' => 'nullable|boolean',
         ]);
 
-        $validated['is_active'] = $request->has('is_active') ? true : false;
+        $validated['is_active'] = $request->has('is_active') ? $request->boolean('is_active') : true;
         if (empty($validated['rate_unit']) && !empty($validated['uom'])) {
             $validated['rate_unit'] = 'Idr / ' . strtolower($validated['uom']);
         }
@@ -151,6 +168,7 @@ class MfgProcessCostController extends Controller
         $item = MfgProcessCost::findOrFail($id);
 
         $validated = $request->validate([
+            'customer_id' => 'nullable|exists:customers,id',
             'category' => 'required|string|in:Product,Tooling',
             'process_group' => 'required|string|max:100',
             'process_name' => 'required|string|max:150',
@@ -163,7 +181,7 @@ class MfgProcessCostController extends Controller
             'is_active' => 'nullable|boolean',
         ]);
 
-        $validated['is_active'] = $request->has('is_active') ? true : false;
+        $validated['is_active'] = $request->has('is_active') ? $request->boolean('is_active') : true;
         if (empty($validated['rate_unit']) && !empty($validated['uom'])) {
             $validated['rate_unit'] = 'Idr / ' . strtolower($validated['uom']);
         }
@@ -196,7 +214,7 @@ class MfgProcessCostController extends Controller
     public function export()
     {
         $fileName = 'Mfg_Process_Cost_Master_' . date('Y-m-d_H-i-s') . '.csv';
-        $items = MfgProcessCost::orderBy('id', 'asc')->get();
+        $items = MfgProcessCost::with('customer')->orderBy('id', 'asc')->get();
 
         $headers = array(
             "Content-type"        => "text/csv; charset=UTF-8",
@@ -206,7 +224,7 @@ class MfgProcessCostController extends Controller
             "Expires"             => "0"
         );
 
-        $columns = array('No', 'Category', 'Group Mfg Process', 'Mfg Process Name', 'Control Point', 'UOM', 'Rate Unit (Idr/Units)', 'Min Cost Rate', 'Std Cost Rate', 'Rate Source');
+        $columns = array('No', 'Customer', 'Category', 'Group Mfg Process', 'Mfg Process Name', 'Control Point', 'UOM', 'Rate Unit (Idr/Units)', 'Min Cost Rate', 'Std Cost Rate', 'Rate Source');
 
         $callback = function () use ($items, $columns) {
             $file = fopen('php://output', 'w');
@@ -217,17 +235,19 @@ class MfgProcessCostController extends Controller
             foreach ($items as $item) {
                 fputcsv($file, array(
                     $no++,
+                    $item->customer ? '[' . $item->customer->code . '] ' . $item->customer->name : 'Global',
                     $item->category,
                     $item->process_group,
                     $item->process_name,
                     $item->control_point,
                     $item->uom,
                     $item->rate_unit,
-                    $item->min_cost_rate !== null ? number_format($item->min_cost_rate, 1, '.', '') : '',
-                    number_format($item->std_cost_rate, 1, '.', ''),
+                    $item->min_cost_rate,
+                    $item->std_cost_rate,
                     $item->rate_source
                 ));
             }
+
             fclose($file);
         };
 

@@ -13,6 +13,7 @@ class MfgProcessCost extends Model
     protected $table = 'mng_mfg_process_costs';
 
     protected $fillable = [
+        'customer_id',
         'category',
         'process_group',
         'process_name',
@@ -26,10 +27,16 @@ class MfgProcessCost extends Model
     ];
 
     protected $casts = [
+        'customer_id'   => 'integer',
         'min_cost_rate' => 'float',
         'std_cost_rate' => 'float',
-        'is_active' => 'boolean',
+        'is_active'     => 'boolean',
     ];
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class, 'customer_id');
+    }
 
     public function scopeActive($query)
     {

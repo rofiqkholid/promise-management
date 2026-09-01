@@ -76,4 +76,41 @@ class FormulaCompiler
         $temp = $this->compile($cellPattern, $context);
         return ltrim($temp, '=');
     }
+
+    /**
+     * Shift row references in a native Excel formula by a specified row delta.
+     *
+     * E.g. "=N13-O13" shifted by +4 becomes "=N17-O17"
+     * Absolute row references like "$A$13" or "A$13" are preserved.
+     *
+     * @param string $formula
+     * @param int $rowShift
+     * @return string
+     */
+    public function shiftFormulaRows(string $formula, int $rowShift): string
+    {
+        if ($rowShift === 0 || empty($formula)) {
+            return $formula;
+        }
+
+        return preg_replace_callback(
+            '/(?:(\'?[\w\s\.\-]+\'?\!)?)(\$?)([A-Z]{1,3})(\$?)(\d+)(?![A-Za-z0-9_])/i',
+            function ($matches) use ($rowShift) {
+                $sheetPrefix = $matches[1] ?? '';
+                $colDollar = $matches[2] ?? '';
+                $colLetter = $matches[3];
+                $rowDollar = $matches[4] ?? '';
+                $rowNum = (int)$matches[5];
+
+                // If row has $, it's absolute ($A$13), don't shift
+                if ($rowDollar === '$') {
+                    return $sheetPrefix . $colDollar . $colLetter . $rowDollar . $rowNum;
+                }
+
+                $newRowNum = $rowNum + $rowShift;
+                return $sheetPrefix . $colDollar . $colLetter . $newRowNum;
+            },
+            $formula
+        );
+    }
 }

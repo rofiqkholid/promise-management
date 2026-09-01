@@ -187,7 +187,7 @@ class MfgProcessStpCostController extends Controller
             'is_active' => 'nullable|boolean',
         ]);
 
-        $validated['is_active'] = $request->has('is_active') ? true : false;
+        $validated['is_active'] = $request->has('is_active') ? $request->boolean('is_active') : true;
 
         MfgProcessStpCost::create($validated);
 
@@ -218,7 +218,7 @@ class MfgProcessStpCostController extends Controller
             'is_active' => 'nullable|boolean',
         ]);
 
-        $validated['is_active'] = $request->has('is_active') ? true : false;
+        $validated['is_active'] = $request->has('is_active') ? $request->boolean('is_active') : true;
 
         $item->update($validated);
 

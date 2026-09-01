@@ -1,5 +1,40 @@
-﻿@csrf
+@csrf
 <div class="space-y-4 text-xs">
+    {{-- Section 0: Scope & Rate Context --}}
+    <div class="p-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-sm space-y-2">
+        <span class="block font-extrabold text-[11px] uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+            <i class="fa-solid fa-sliders text-blue-500"></i> Scope & Rate Source Configuration
+        </span>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Customer Scope <span class="text-slate-400 font-normal">(Global / Umum atau Khusus Customer)</span>
+                </label>
+                <select name="customer_id" id="field-customer_id"
+                    class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-sm focus:ring-2 focus:ring-blue-500 font-medium text-slate-800 dark:text-slate-200">
+                    <option value="">🌐 Global (All Customers / Standard)</option>
+                    @if(isset($customers))
+                        @foreach($customers as $cust)
+                            <option value="{{ $cust->id }}" {{ (old('customer_id', $item->customer_id ?? '') == $cust->id) ? 'selected' : '' }}>
+                                [{{ $cust->code }}] {{ $cust->name }}
+                            </option>
+                        @endforeach
+                    @endif
+                </select>
+            </div>
+            <div>
+                <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Rate Source <span class="text-rose-500">*</span>
+                </label>
+                <select name="rate_source" id="field-rate_source" required
+                    class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-sm focus:ring-2 focus:ring-blue-500 font-medium text-slate-800 dark:text-slate-200">
+                    <option value="Sales" {{ (old('rate_source', $item->rate_source ?? 'Sales') == 'Sales') ? 'selected' : '' }}>Sales</option>
+                    <option value="Engineering" {{ (old('rate_source', $item->rate_source ?? '') == 'Engineering') ? 'selected' : '' }}>Engineering</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {{-- Category --}}
         <div>
@@ -119,18 +154,6 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    {{-- Rate Source --}}
-    <div>
-        <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-            Rate Source <span class="text-rose-500">*</span>
-        </label>
-        <select name="rate_source" id="field-rate_source" required
-            class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-sm focus:ring-2 focus:ring-blue-500 font-medium text-slate-800 dark:text-slate-200">
-            <option value="Sales" {{ (old('rate_source', $item->rate_source ?? 'Sales') == 'Sales') ? 'selected' : '' }}>Sales</option>
-            <option value="Engineering" {{ (old('rate_source', $item->rate_source ?? '') == 'Engineering') ? 'selected' : '' }}>Engineering</option>
-        </select>
     </div>
 </div>
 
