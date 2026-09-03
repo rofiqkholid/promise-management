@@ -48,8 +48,8 @@
                 <th class="px-4 py-2.5 border-r border-slate-200 dark:border-slate-700">Customer / Project Model</th>
                 <th class="px-3 py-2.5 border-r border-slate-200 dark:border-slate-700">Work Order Ref</th>
                 <th class="px-3 py-2.5 text-center border-r border-slate-200 dark:border-slate-700">Status</th>
-                <th class="px-3 py-2.5 text-center border-r border-slate-200 dark:border-slate-700">Quotes (Cust / Supp)</th>
-                <th class="px-3 py-2.5 text-center w-28">Actions</th>
+                <th class="px-3 py-2.5 text-center border-r border-slate-200 dark:border-slate-700">Supplier Quotes</th>
+                <th class="px-3 py-2.5 text-center w-16">Actions</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
@@ -168,10 +168,9 @@
                             return `
                                 <div class="flex items-center justify-center gap-1.5">
                                     <a href="${row.compare_url}"
-                                       title="Open Quotation Comparison (EBD > Customer > Supplier)"
-                                       class="inline-flex items-center justify-center gap-1.5 px-3 h-7 bg-indigo-600 hover:bg-indigo-700 text-white rounded-sm text-xs font-semibold shadow-xs transition-all cursor-pointer">
-                                        <i class="fa-solid fa-code-compare text-xs"></i>
-                                        <span>Compare</span>
+                                       title="Open Quotation Comparison"
+                                       class="inline-flex items-center justify-center w-7 h-7 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-sm border border-slate-300 dark:border-slate-600 transition-colors">
+                                        <i class="fa-solid fa-arrow-right text-xs"></i>
                                     </a>
                                 </div>
                             `;

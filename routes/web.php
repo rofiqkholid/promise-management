@@ -11,6 +11,7 @@ use App\Http\Controllers\FeasibilityStudy\WorkOrderFastenerController;
 use App\Http\Controllers\Management\ApprovalConfigController;
 use App\Http\Controllers\Management\CalendarController;
 use App\Http\Controllers\FeasibilityStudy\EbdController;
+use App\Http\Controllers\FeasibilityStudy\EbdRequestController;
 use App\Http\Controllers\Management\MfgProcessCostController;
 use App\Http\Controllers\Management\MfgProcessStpCostController;
 use App\Http\Controllers\Management\MaterialCostController;
@@ -184,6 +185,7 @@ Route::middleware('auth')->prefix('management')->name('management.')->group(func
     Route::get('ebd/{id}', [EbdController::class, 'show'])->name('ebd.show');
     Route::post('ebd/import', [EbdController::class, 'import'])->name('ebd.import');
     Route::post('ebd/{id}/update', [EbdController::class, 'updateHeader'])->name('ebd.update');
+    Route::post('ebd/{id}/create-revision', [EbdController::class, 'createRevision'])->name('ebd.create-revision');
     Route::post('ebd/{id}/delete', [EbdController::class, 'destroy'])->name('ebd.destroy');
 
     // EBD Items CRUD
@@ -200,6 +202,14 @@ Route::middleware('auth')->prefix('management')->name('management.')->group(func
     Route::post('ebd/items/{itemId}/addprocess', [EbdController::class, 'storeAddProcess'])->name('ebd.store-addprocess');
     Route::post('ebd/addprocess/{id}/update', [EbdController::class, 'updateAddProcess'])->name('ebd.update-addprocess');
     Route::post('ebd/addprocess/{id}/delete', [EbdController::class, 'destroyAddProcess'])->name('ebd.destroy-addprocess');
+
+    // EBD Request Routes (Sales/Marketing -> Engineering Revision Request)
+    Route::get('ebd-request', [EbdRequestController::class, 'index'])->name('ebd-request.index');
+    Route::post('ebd-request', [EbdRequestController::class, 'store'])->name('ebd-request.store');
+    Route::post('ebd-request/{id}/update', [EbdRequestController::class, 'update'])->name('ebd-request.update');
+    Route::get('ebd-request/get-ebd-by-wo/{woId?}', [EbdRequestController::class, 'getEbdByWo'])->name('ebd-request.get-ebd');
+    Route::post('ebd-request/{id}/update-status', [EbdRequestController::class, 'updateStatus'])->name('ebd-request.update-status');
+    Route::post('ebd-request/{id}/delete', [EbdRequestController::class, 'destroy'])->name('ebd-request.destroy');
 
     // Dynamic Excel Template Engine & Visual Mapping Studio Routes
     Route::get('excel-templates', [\App\Http\Controllers\Admin\ExcelTemplateController::class, 'index'])->name('excel-templates.index');
@@ -264,6 +274,7 @@ Route::middleware('auth')->prefix('management')->name('management.')->group(func
         Route::get('product-cost-comparison/{id}', [ProductCostComparisonController::class, 'show'])->name('product-cost-comparison.show');
         Route::get('product-cost-comparison/{id}/quotation', [ProductCostComparisonController::class, 'exportQuotation'])->name('product-cost-comparison.quotation');
         Route::get('product-cost-comparison/{id}/items-data', [ProductCostComparisonController::class, 'itemsData'])->name('product-cost-comparison.items-data');
+        Route::post('product-cost-comparison/import', [ProductCostComparisonController::class, 'importQuotation'])->name('product-cost-comparison.import');
     });
 });
 

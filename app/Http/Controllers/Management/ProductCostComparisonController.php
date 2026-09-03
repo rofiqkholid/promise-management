@@ -20,23 +20,25 @@ class ProductCostComparisonController extends Controller
 
     public function index(Request $request)
     {
-        // 1. Only fetch Customers that have actual EBD records
-        $customerIdsWithEbd = MngEbdHeader::whereNotNull('customer_id')->distinct()->pluck('customer_id');
+        // 1. Only fetch Customers that have actual EBD records (latest revision)
+        $customerIdsWithEbd = MngEbdHeader::whereNotNull('customer_id')->where('is_latest', true)->distinct()->pluck('customer_id');
         $customers = Customer::whereIn('id', $customerIdsWithEbd)->orderBy('name', 'asc')->get();
 
         $selectedCustomerId = $request->input('customer_id');
         $selectedModelId = $request->input('model_id');
 
         // 2. Only fetch Project Models that have actual EBD records (and matching customer if selected)
-        $modelIdsWithEbd = MngEbdHeader::whereNotNull('model_id');
+        $modelIdsWithEbd = MngEbdHeader::whereNotNull('model_id')->where('is_latest', true);
         if ($selectedCustomerId) {
             $modelIdsWithEbd->where('customer_id', $selectedCustomerId);
         }
         $modelIds = $modelIdsWithEbd->distinct()->pluck('model_id');
         $models = ProjectModel::whereIn('id', $modelIds)->orderBy('name', 'asc')->get();
 
-        // Query EBD Headers
-        $ebdQuery = MngEbdHeader::with(['customer', 'projectModel', 'items.toolingProcesses', 'items.addProcesses'])->orderByDesc('id');
+        // Query EBD Headers (Only latest revision per EBD, matching EBD Index)
+        $ebdQuery = MngEbdHeader::with(['customer', 'projectModel', 'items.toolingProcesses', 'items.addProcesses'])
+            ->where('is_latest', true)
+            ->orderByDesc('id');
         if ($selectedCustomerId) {
             $ebdQuery->where('customer_id', $selectedCustomerId);
         }
@@ -99,9 +101,9 @@ class ProductCostComparisonController extends Controller
     /**
      * Display Detailed Comparison Matrix & Per-Part Breakdown for a specific EBD.
      */
-    public function show($id)
+    public function show($id, Request $request)
     {
-        $comparisonResult = $this->comparisonService->calculateForEbdHeader($id);
+        $comparisonResult = $this->comparisonService->calculateForEbdHeader($id, $request);
         $customerId = $comparisonResult['customer']->id ?? null;
 
         $exportTemplates = \App\Models\MngCfgTemplate::where('direction', 'export')
@@ -127,7 +129,34 @@ class ProductCostComparisonController extends Controller
             $defaultTemplateId = $exportTemplates->first()->id;
         }
 
-        return view('management.cost-comparison.show', compact('comparisonResult', 'exportTemplates', 'defaultTemplateId'));
+        // Import templates for quotation import
+        $importTemplates = \App\Models\MngCfgTemplate::where('is_active', true)
+            ->where('direction', 'import')
+            ->whereIn('template_type', ['tooling_quotation', 'quotation'])
+            ->with('customer')
+            ->get();
+
+        $defaultImportTemplateId = null;
+        if ($customerId) {
+            $custTemplate = $importTemplates->firstWhere('customer_id', $customerId);
+            if ($custTemplate) {
+                $defaultImportTemplateId = $custTemplate->id;
+            }
+        }
+        if (!$defaultImportTemplateId && $importTemplates->isNotEmpty()) {
+            $defaultImportTemplateId = $importTemplates->first()->id;
+        }
+
+        $suppliers = \App\Models\Suppliers::where('is_active', 1)->orderBy('name', 'asc')->get();
+
+        return view('management.cost-comparison.show', compact(
+            'comparisonResult',
+            'exportTemplates',
+            'defaultTemplateId',
+            'importTemplates',
+            'defaultImportTemplateId',
+            'suppliers'
+        ));
     }
 
     /**
@@ -586,5 +615,201 @@ class ProductCostComparisonController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Import Quotation Excel (Revisi Sales, Quotation Customer, or Quotation Supplier).
+     */
+    public function importQuotation(Request $request)
+    {
+        $request->validate([
+            'ebd_header_id'  => 'required|exists:mng_ebd_headers,id',
+            'source_type'    => 'required|in:sales,customer,supplier',
+            'supplier_id'    => 'nullable|required_if:source_type,supplier|exists:suppliers,id',
+            'customer_id'    => 'nullable|required_if:source_type,customer|exists:customers,id',
+            'quotation_file' => 'required|file|mimes:xlsx,xls,csv',
+            'template_id'    => 'nullable|exists:mng_cfg_templates,id',
+            'import_mode'    => 'nullable|in:new_revision,overwrite',
+        ]);
+
+        \Illuminate\Support\Facades\DB::beginTransaction();
+        try {
+            $ebdHeaderId = $request->input('ebd_header_id');
+            $sourceType  = $request->input('source_type', 'sales');
+            $supplierId  = $request->input('supplier_id');
+            $customerId  = $request->input('customer_id');
+            $templateId  = $request->input('template_id');
+            $importMode  = $request->input('import_mode', 'new_revision');
+
+            $ebdHeader = MngEbdHeader::with(['items.toolingProcesses', 'customer'])->findOrFail($ebdHeaderId);
+
+            if ($sourceType === 'customer') {
+                $customerId = $customerId ?: $ebdHeader->customer_id;
+                $supplierId = null;
+            } elseif ($sourceType === 'sales') {
+                $customerId = $ebdHeader->customer_id;
+                $supplierId = null;
+            } else {
+                $customerId = null;
+            }
+
+            $file = $request->file('quotation_file');
+            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file->getPathname());
+
+            // 1. Resolve Revision & Header
+            $existingQuotes = \App\Models\ToolingQuotation::where('ebd_header_id', $ebdHeaderId)
+                ->where('source_type', $sourceType);
+            if ($sourceType === 'supplier') {
+                $existingQuotes->where('supplier_id', $supplierId);
+            }
+
+            $latestRevQuote = $existingQuotes->orderBy('revision', 'desc')->first();
+
+            if ($importMode === 'overwrite' && $latestRevQuote) {
+                $quotation = $latestRevQuote;
+                $quotation->productDetails()->delete();
+                $quotation->details()->delete();
+            } else {
+                $nextRev = 0;
+                if ($latestRevQuote) {
+                    $cleanRev = intval(preg_replace('/[^0-9]/', '', (string)$latestRevQuote->revision));
+                    $nextRev = $cleanRev + 1;
+                }
+                $quotation = new \App\Models\ToolingQuotation();
+                $quotation->ebd_header_id = $ebdHeaderId;
+                $quotation->source_type = $sourceType;
+                $quotation->supplier_id = $supplierId;
+                $quotation->customer_id = $customerId;
+                $quotation->revision = (string)$nextRev;
+                $quotation->quotation_no = strtoupper($sourceType) . '-QT-R' . $nextRev;
+            }
+
+            $quotation->currency_code = 'IDR';
+            $quotation->exchange_rate = 1.0;
+            $quotation->imported_by = auth()->id();
+            $quotation->imported_at = now();
+
+            // Save file path
+            $storedPath = $file->store('quotations', 'public');
+            $quotation->file_path = $storedPath;
+            $quotation->save();
+
+            // 2. Parse Sheets
+            $ebdItems = $ebdHeader->items;
+
+            $totalMaterialCost = 0.0;
+            $totalMfgCost = 0.0;
+            $totalProductCogs = 0.0;
+            $totalToolingCostIdr = 0.0;
+
+            // Check for Sheet 1 "Quotation Summary"
+            $summarySheet = $spreadsheet->getSheetByName('Quotation Summary') ?? $spreadsheet->getSheet(0);
+            if ($summarySheet) {
+                $highestSummaryRow = $summarySheet->getHighestRow();
+                for ($r = 1; $r <= $highestSummaryRow; $r++) {
+                    $colA = strtoupper(trim((string)$summarySheet->getCell("A{$r}")->getCalculatedValue()));
+                    $colB = strtoupper(trim((string)$summarySheet->getCell("B{$r}")->getCalculatedValue()));
+                    $colDVal = floatval($summarySheet->getCell("D{$r}")->getCalculatedValue());
+
+                    if (str_contains($colB, 'MATERIAL COST')) {
+                        $totalMaterialCost = $colDVal ?: $totalMaterialCost;
+                    } elseif (str_contains($colB, 'MANUFACTURING PROCESS COST') || str_contains($colB, 'MFG PROCESS')) {
+                        $totalMfgCost = $colDVal ?: $totalMfgCost;
+                    } elseif (str_contains($colB, 'FINAL QUOTATION') || str_contains($colA, 'TOTAL COGS')) {
+                        $totalProductCogs = $colDVal ?: $totalProductCogs;
+                    }
+                }
+            }
+
+            // Check for Sheet 2 "Part Details"
+            $partSheet = $spreadsheet->getSheetByName('Part Details');
+            if ($partSheet) {
+                $highestPartRow = $partSheet->getHighestRow();
+                for ($pr = 2; $pr <= $highestPartRow; $pr++) {
+                    $partNo = trim((string)$partSheet->getCell("B{$pr}")->getCalculatedValue());
+                    if (empty($partNo) || strtoupper($partNo) === 'TOTAL') continue;
+
+                    $matchedItem = $ebdItems->first(fn($i) => strtolower(trim($i->part_no)) === strtolower($partNo));
+                    $matCost = floatval($partSheet->getCell("H{$pr}")->getCalculatedValue());
+                    $stpCost = floatval($partSheet->getCell("I{$pr}")->getCalculatedValue());
+                    $addCost = floatval($partSheet->getCell("J{$pr}")->getCalculatedValue());
+                    $cogmVal = floatval($partSheet->getCell("K{$pr}")->getCalculatedValue());
+                    $cogsVal = floatval($partSheet->getCell("L{$pr}")->getCalculatedValue());
+
+                    \App\Models\ProductQuotationDetail::create([
+                        'tooling_quotation_id' => $quotation->id,
+                        'ebd_item_id'          => $matchedItem->id ?? null,
+                        'part_no'              => $partNo,
+                        'part_name'            => trim((string)$partSheet->getCell("C{$pr}")->getCalculatedValue()),
+                        'material_cost'        => $matCost,
+                        'stamping_cost'        => $stpCost,
+                        'add_proc_cost'        => $addCost,
+                        'mfg_process_cost'     => ($stpCost + $addCost),
+                        'cogm'                 => $cogmVal ?: ($matCost + $stpCost + $addCost),
+                        'cogs'                 => $cogsVal,
+                    ]);
+                }
+            }
+
+            // Also check for Tooling sheet / rows
+            $toolingSheet = $spreadsheet->getSheetByName('Tooling') ?? $spreadsheet->getSheetByName('Tooling Quotation');
+            if ($toolingSheet) {
+                $highestToolRow = $toolingSheet->getHighestRow();
+                for ($tr = 2; $tr <= $highestToolRow; $tr++) {
+                    $tPartNo = trim((string)$toolingSheet->getCell("B{$tr}")->getCalculatedValue());
+                    $opVal = $toolingSheet->getCell("E{$tr}")->getCalculatedValue();
+                    $tCost = floatval($toolingSheet->getCell("H{$tr}")->getCalculatedValue() ?: $toolingSheet->getCell("I{$tr}")->getCalculatedValue() ?: $toolingSheet->getCell("J{$tr}")->getCalculatedValue());
+
+                    if (empty($tPartNo) && empty($opVal)) continue;
+
+                    $matchedItem = $ebdItems->first(fn($i) => strtolower(trim($i->part_no)) === strtolower($tPartNo));
+                    $matchedProc = null;
+                    if ($matchedItem && is_numeric($opVal)) {
+                        $matchedProc = $matchedItem->toolingProcesses->first(fn($tp) => (int)$tp->op === (int)$opVal);
+                    }
+
+                    \App\Models\ToolingQuotationDetail::create([
+                        'tooling_quotation_id'   => $quotation->id,
+                        'ebd_item_id'            => $matchedItem->id ?? null,
+                        'ebd_tooling_process_id' => $matchedProc->id ?? null,
+                        'op'                     => is_numeric($opVal) ? (int)$opVal : null,
+                        'tooling_process_name'   => trim((string)$toolingSheet->getCell("F{$tr}")->getCalculatedValue()),
+                        'tooling_type'           => trim((string)$toolingSheet->getCell("D{$tr}")->getCalculatedValue()) ?: 'DIE',
+                        'cost_idr'               => $tCost,
+                    ]);
+
+                    $totalToolingCostIdr += $tCost;
+                }
+            }
+
+            // Update Header totals
+            $quotation->total_material_cost = $totalMaterialCost ?: $quotation->productDetails->sum('material_cost');
+            $quotation->total_mfg_cost = $totalMfgCost ?: $quotation->productDetails->sum('mfg_process_cost');
+            $quotation->total_product_cogs = $totalProductCogs ?: $quotation->productDetails->sum('cogs');
+            $quotation->total_cost_idr = $totalToolingCostIdr ?: $quotation->details->sum('cost_idr');
+            $quotation->save();
+
+            \Illuminate\Support\Facades\DB::commit();
+
+            $sourceLabel = match($sourceType) {
+                'sales' => 'Revisi Sales',
+                'customer' => 'Customer Target',
+                'supplier' => 'Supplier',
+            };
+
+            return response()->json([
+                'status' => 'success',
+                'message' => "Quotation {$sourceLabel} successfully imported as Rev {$quotation->revision}!",
+                'redirect_url' => route('management.product-cost-comparison.show', $ebdHeaderId)
+            ]);
+
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\DB::rollBack();
+            \Illuminate\Support\Facades\Log::error('Failed to import quotation', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Import failed: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

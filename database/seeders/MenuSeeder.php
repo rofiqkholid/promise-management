@@ -195,15 +195,9 @@ class MenuSeeder extends Seeder
             ->where('scope_id', 'app_management')
             ->delete();
 
-        // Remove obsolete parent routes if any
-        DB::table('menus')
-            ->where('route', 'management.ebd.parent')
-            ->where('scope_id', 'app_management')
-            ->delete();
-
-        // 4. Engineering Breakdown (EBD) (Standalone Level 1 Menu)
+        // 4. Engineering Breakdown (EBD) — parent group (dropdown header)
         DB::table('menus')->updateOrInsert(
-            ['route' => 'management.ebd.index', 'scope_id' => 'app_management'],
+            ['route' => 'management.ebd.parent', 'scope_id' => 'app_management'],
             [
                 'title'      => 'Engineering Breakdown (EBD)',
                 'icon'       => 'fa-solid fa-cubes',
@@ -216,6 +210,44 @@ class MenuSeeder extends Seeder
                 'updated_at' => now(),
             ]
         );
+        $ebdParentId = DB::table('menus')
+            ->where('route', 'management.ebd.parent')
+            ->where('scope_id', 'app_management')
+            ->value('id');
+
+        if ($ebdParentId) {
+            // 4a. EBD List (submenu)
+            DB::table('menus')->updateOrInsert(
+                ['route' => 'management.ebd.index', 'scope_id' => 'app_management'],
+                [
+                    'title'      => 'EBD List',
+                    'icon'       => 'fa-solid fa-folder-tree',
+                    'sort_order' => 1,
+                    'level'      => 2,
+                    'parent_id'  => $ebdParentId,
+                    'is_active'  => true,
+                    'is_visible' => true,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            );
+
+            // 4b. EBD Request (submenu)
+            DB::table('menus')->updateOrInsert(
+                ['route' => 'management.ebd-request.index', 'scope_id' => 'app_management'],
+                [
+                    'title'      => 'EBD Request',
+                    'icon'       => 'fa-solid fa-code-pull-request',
+                    'sort_order' => 2,
+                    'level'      => 2,
+                    'parent_id'  => $ebdParentId,
+                    'is_active'  => true,
+                    'is_visible' => true,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            );
+        }
 
         // 5. Cost Comparison — parent group (dropdown header)
         DB::table('menus')->updateOrInsert(
@@ -238,11 +270,11 @@ class MenuSeeder extends Seeder
             ->value('id');
 
         if ($compParentId) {
-            // 5a. Product Cost Comparison (submenu)
+            // 5a. Cost Comparison (submenu)
             DB::table('menus')->updateOrInsert(
                 ['route' => 'management.product-cost-comparison.index', 'scope_id' => 'app_management'],
                 [
-                    'title'      => 'Product Cost Comparison',
+                    'title'      => 'Cost Comparison',
                     'icon'       => 'fa-solid fa-calculator',
                     'sort_order' => 1,
                     'level'      => 2,

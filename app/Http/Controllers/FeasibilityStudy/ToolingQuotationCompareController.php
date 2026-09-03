@@ -127,9 +127,12 @@ class ToolingQuotationCompareController extends Controller
             $length = $request->input('length', 10);
             $search = $request->input('search.value');
 
-            // Query seluruh EBD Header
+            // Query EBD Header (Hanya revisi terbaru, persis seperti EBD Index)
             $query = MngEbdHeader::with(['customer', 'projectModel', 'workOrder', 'quotations'])
+                ->where('is_latest', true)
                 ->orderBy('id', 'desc');
+
+            $totalRecords = MngEbdHeader::where('is_latest', true)->count();
 
             if ($search) {
                 $query->where(function($q) use ($search) {
@@ -140,7 +143,7 @@ class ToolingQuotationCompareController extends Controller
                 });
             }
 
-            $totalRecords = $query->count();
+            $filteredRecords = $query->count();
             $ebdHeaders = $query->skip($start)->take($length)->get();
 
             $data = [];
@@ -149,16 +152,11 @@ class ToolingQuotationCompareController extends Controller
                 $modelName = $ebd->projectModel->name ?? '—';
                 
                 $suppCount = $ebd->quotations->where('source_type', 'supplier')->count();
-                $custCount = $ebd->quotations->where('source_type', 'customer')->count();
 
                 $quotesSummary = [];
-                if ($custCount > 0) {
-                    $quotesSummary[] = "<span class='px-1.5 py-0.5 text-[9px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 rounded-sm border border-amber-200 dark:border-amber-800'>Target Customer</span>";
-                }
                 if ($suppCount > 0) {
-                    $quotesSummary[] = "<span class='font-semibold text-slate-700 dark:text-slate-300'>{$suppCount} Supplier</span>";
-                }
-                if (empty($quotesSummary)) {
+                    $quotesSummary[] = "<span class='font-semibold text-slate-700 dark:text-slate-300'>{$suppCount} Supplier" . ($suppCount > 1 ? 's' : '') . "</span>";
+                } else {
                     $quotesSummary[] = "<span class='text-slate-400 italic text-[11px]'>0 Quote</span>";
                 }
 
@@ -179,7 +177,7 @@ class ToolingQuotationCompareController extends Controller
             return response()->json([
                 'draw' => intval($draw),
                 'recordsTotal' => $totalRecords,
-                'recordsFiltered' => $totalRecords,
+                'recordsFiltered' => $filteredRecords,
                 'data' => $data
             ]);
         }
@@ -221,21 +219,18 @@ class ToolingQuotationCompareController extends Controller
         $availableEbdRevisions = collect();
 
         if ($selectedEbd) {
-            // Find all EBD headers for this Customer & Model (or tied to this WorkOrder)
-            $availableEbdRevisions = MngEbdHeader::where(function($q) use ($selectedEbd) {
-                    if ($selectedEbd->customer_id && $selectedEbd->model_id) {
-                        $q->where('customer_id', $selectedEbd->customer_id)
-                          ->where('model_id', $selectedEbd->model_id);
-                    } else {
-                        $q->where('id', $selectedEbd->id);
-                    }
-                    if ($selectedEbd->wo_id) {
-                        $q->orWhere('wo_id', $selectedEbd->wo_id);
-                    }
-                })
-                ->orderBy('revision', 'desc')
-                ->orderBy('id', 'desc')
-                ->get();
+            // Get all revisions in this specific EBD lineage (prevents pulling unrelated records of same customer/model)
+            $availableEbdRevisions = $selectedEbd->getAllRevisions();
+            if ($availableEbdRevisions->count() <= 1 && $selectedEbd->wo_id) {
+                $availableEbdRevisions = MngEbdHeader::where('wo_id', $selectedEbd->wo_id)
+                    ->with(['workOrder', 'customer', 'projectModel'])
+                    ->orderBy('revision', 'desc')
+                    ->get();
+            } else {
+                $availableEbdRevisions = $availableEbdRevisions->sortByDesc(function($item) {
+                    return (int)$item->revision;
+                })->values();
+            }
         }
 
         $selectedEbdId = $request->query('ebd_id');
@@ -245,36 +240,25 @@ class ToolingQuotationCompareController extends Controller
 
         $quotations = collect();
         $ebdItems = collect();
-        $activeCustomerQuote = null;
         $supplierQuotations = collect();
 
         if ($selectedEbd) {
             $selectedEbd->load(['items.toolingProcesses', 'items.addProcesses', 'customer', 'projectModel', 'workOrder']);
             
-            // Get all quotations for this EBD sorted by revision
-            $allQuotations = ToolingQuotation::with(['details', 'importer', 'supplier', 'customer'])
+            // Get all supplier quotations for this EBD sorted by revision
+            $allQuotations = ToolingQuotation::with(['details', 'importer', 'supplier'])
                 ->where('ebd_header_id', $selectedEbd->id)
+                ->where(function($q) {
+                    $q->where('source_type', 'supplier')
+                      ->orWhereNotNull('supplier_id');
+                })
                 ->orderBy('revision', 'desc')
                 ->orderBy('id', 'desc')
                 ->get();
 
-            // 1. Separate Customer Quotations vs Supplier Quotations
-            $customerQuotes = $allQuotations->filter(function($q) {
-                return $q->source_type === 'customer' || (!empty($q->customer_id) && empty($q->supplier_id));
-            });
+            $supplierQuotes = $allQuotations;
 
-            $supplierQuotes = $allQuotations->filter(function($q) {
-                return $q->source_type === 'supplier' || !empty($q->supplier_id);
-            });
-
-            // 2. Active Customer Quote (with revision switcher if multiple revisions exist)
-            if ($customerQuotes->isNotEmpty()) {
-                $selectedCustQuoteId = $request->query("cust_quote");
-                $activeCustomerQuote = $selectedCustQuoteId ? ($customerQuotes->firstWhere('id', $selectedCustQuoteId) ?? $customerQuotes->first()) : $customerQuotes->first();
-                $activeCustomerQuote->all_revisions = $customerQuotes;
-            }
-
-            // 3. Group supplier quotations by supplier_id and attach all_revisions to activeQuote for dropdown switcher
+            // Group supplier quotations by supplier_id and attach all_revisions to activeQuote for dropdown switcher
             $groupedBySupplier = $supplierQuotes->groupBy('supplier_id');
             foreach ($groupedBySupplier as $supplierId => $suppQuotes) {
                 $selectedQuoteId = $request->query("supp_quote_{$supplierId}");
@@ -283,7 +267,7 @@ class ToolingQuotationCompareController extends Controller
                 $supplierQuotations->push($activeQuote);
             }
 
-            // 4. Sort supplier columns by user selection ('worth' / 'cheapest' / best price first, 'highest', 'name')
+            // Sort supplier columns by user selection ('worth' / 'cheapest' / best price first, 'highest', 'name')
             $sortMode = $request->query('sort', 'worth');
             if ($sortMode === 'highest') {
                 $supplierQuotations = $supplierQuotations->sortByDesc('total_cost_idr')->values();
@@ -298,14 +282,8 @@ class ToolingQuotationCompareController extends Controller
                 $q->worth_rank = $rankIdx + 1;
             }
 
-            // 5. Sequence columns strictly: EBD > Customer (if imported) > Suppliers (Ranked by Best Price)
-            $quotations = collect();
-            if ($activeCustomerQuote) {
-                $quotations->push($activeCustomerQuote);
-            }
-            foreach ($supplierQuotations as $sq) {
-                $quotations->push($sq);
-            }
+            // Strictly Supplier Quotations (Ranked by Best Price)
+            $quotations = $supplierQuotations;
 
             $ebdItems = $selectedEbd->items;
         }
@@ -346,7 +324,6 @@ class ToolingQuotationCompareController extends Controller
             'selectedEbd',
             'availableEbdRevisions',
             'quotations',
-            'activeCustomerQuote',
             'supplierQuotations',
             'ebdItems',
             'encryptedWoId',

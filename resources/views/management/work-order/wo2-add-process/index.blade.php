@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', 'SPK 2 Additional Process · Promise Management')
 
@@ -127,8 +127,8 @@
                 <th class="px-3 py-2.5 border-r border-slate-200 dark:border-slate-700">Revision</th>
                 <th class="px-3 py-2.5 border-r border-slate-200 dark:border-slate-700">Customer &amp; Model</th>
                 <th class="px-3 py-2.5 text-center border-r border-slate-200 dark:border-slate-700">Priority</th>
-                <th class="px-3 py-2.5 w-56 border-r border-slate-200 dark:border-slate-700">Task Progress</th>
                 <th class="px-3 py-2.5 w-44 border-r border-slate-200 dark:border-slate-700">Approval Status</th>
+                <th class="px-3 py-2.5 w-56 border-r border-slate-200 dark:border-slate-700">Task Progress</th>
                 <th class="px-3 py-2.5 text-right w-40">Actions</th>
             </tr>
         </thead>
@@ -336,31 +336,6 @@
                     }
                 },
                 {
-                    data: 'dept_progress',
-                    orderable: false,
-                    searchable: false,
-                    render: function (data, type, row) {
-                        const items = Array.isArray(data) ? data : (data ? Object.values(data) : []);
-                        if (!items || items.length === 0) {
-                            return '<span class="text-slate-400">—</span>';
-                        }
-                        let html = '<div class="flex flex-col gap-2">';
-                        items.forEach(function (dp) {
-                            html += `
-                                <div class="flex items-center gap-2">
-                                    <span class="text-[10px] font-bold font-mono text-slate-500 dark:text-slate-455 w-8 tracking-wider">${dp.code}</span>
-                                    <div class="w-32 bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden border border-slate-200 dark:border-slate-700/40">
-                                        <div class="bg-indigo-600 h-full rounded-full transition-all" style="width: ${dp.percent}%"></div>
-                                    </div>
-                                    <span class="text-[10px] font-mono font-bold text-slate-600 dark:text-slate-400 whitespace-nowrap">${dp.completed}/${dp.total}</span>
-                                </div>
-                            `;
-                        });
-                        html += '</div>';
-                        return html;
-                    }
-                },
-                {
                     data: 'display_status',
                     orderable: true,
                     searchable: false,
@@ -391,6 +366,31 @@
                                 ${progressHtml}
                             </div>
                         `;
+                    }
+                },
+                {
+                    data: 'dept_progress',
+                    orderable: false,
+                    searchable: false,
+                    render: function (data, type, row) {
+                        const items = Array.isArray(data) ? data : (data ? Object.values(data) : []);
+                        if (!items || items.length === 0) {
+                            return '<span class="text-slate-400">—</span>';
+                        }
+                        let html = '<div class="flex flex-col gap-2">';
+                        items.forEach(function (dp) {
+                            html += `
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[10px] font-bold font-mono text-slate-500 dark:text-slate-455 w-8 tracking-wider">${dp.code}</span>
+                                    <div class="w-32 bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden border border-slate-200 dark:border-slate-700/40">
+                                        <div class="bg-indigo-600 h-full rounded-full transition-all" style="width: ${dp.percent}%"></div>
+                                    </div>
+                                    <span class="text-[10px] font-mono font-bold text-slate-600 dark:text-slate-400 whitespace-nowrap">${dp.completed}/${dp.total}</span>
+                                </div>
+                            `;
+                        });
+                        html += '</div>';
+                        return html;
                     }
                 },
                 {

@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', 'Engineering Breakdown (EBD) · Promise Management')
 @section('page_title', 'Engineering Breakdown (EBD)')
@@ -16,6 +16,16 @@
             <p class="text-xs text-slate-500 dark:text-slate-400">Manage engineering breakdown specifications and BOM lists</p>
         </div>
         <div class="mt-4 sm:mt-0 flex gap-2">
+            <button type="button" id="btn-open-incoming-requests-modal"
+                    class="relative inline-flex items-center justify-center gap-2 px-3.5 h-9 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-750 border border-slate-300 dark:border-slate-600 rounded-sm text-xs font-semibold text-slate-700 dark:text-slate-200 shadow-xs transition-all cursor-pointer">
+                <i class="fa-solid fa-bell text-amber-500 text-xs"></i>
+                <span>Incoming Requests</span>
+                @if(isset($pendingRequestsCount) && $pendingRequestsCount > 0)
+                    <span class="inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold font-mono leading-none bg-amber-500 text-white rounded-full">
+                        {{ $pendingRequestsCount }}
+                    </span>
+                @endif
+            </button>
             <button type="button" id="btn-open-import-modal"
                     class="inline-flex items-center justify-center gap-2 px-4 h-9 bg-indigo-600 hover:bg-indigo-700 border border-transparent rounded-sm text-xs font-medium text-white active:scale-[0.98] transition-all cursor-pointer">
                 <i class="fa-solid fa-file-import"></i>
@@ -44,243 +54,322 @@
     </x-table>
 </div>
 
-{{-- ===== IMPORT MODAL ===== --}}
-<div id="import-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm">
-    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm shadow-2xl w-full max-w-lg mx-4 animate-fade-in">
-
-        {{-- Modal Header --}}
-        <div class="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-700">
-            <div>
-                <h2 class="text-sm font-bold text-slate-800 dark:text-white">Import EBD File</h2>
-                <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">Upload an XLSX file to create a new EBD document</p>
-            </div>
-            <button type="button" id="btn-close-import-modal"
-                    class="w-7 h-7 flex items-center justify-center rounded-sm text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
-                <i class="fa-solid fa-xmark text-sm"></i>
-            </button>
-        </div>
-
-        {{-- Modal Body --}}
-        <form id="form-import-ebd" enctype="multipart/form-data">
-            @csrf
-            <div class="px-5 py-4 space-y-4">
-
-                {{-- WO Selection --}}
-                <div>
-                    <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
-                        Work Order (SPK) <span class="text-slate-400 font-normal normal-case">(Optional)</span>
-                    </label>
-                    <select name="wo_id" id="input-wo-id"
-                            class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
-                        <option value="">— No Work Order —</option>
-                        @foreach($workOrders as $wo)
-                            <option value="{{ $wo->id }}"
-                                    data-customer-id="{{ $wo->inquiry->customer_id ?? '' }}"
-                                    data-model-id="{{ $wo->inquiry->model_id ?? '' }}">
-                                {{ $wo->wo_number }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                {{-- Customer --}}
-                <div>
-                    <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
-                        Customer <span class="text-rose-500">*</span>
-                    </label>
-                    <select name="customer_id" id="input-customer-id" required
-                            class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
-                        <option value="">— Select Customer —</option>
-                        @foreach($customers as $customer)
-                            <option value="{{ $customer->id }}">{{ $customer->code }} — {{ $customer->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                {{-- Model --}}
-                <div>
-                    <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
-                        Model <span class="text-rose-500">*</span>
-                    </label>
-                    <select name="model_id" id="input-model-id" required
-                            class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
-                        <option value="">— Select Model —</option>
-                        @foreach($models as $model)
-                            <option value="{{ $model->id }}">{{ $model->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                {{-- Date & Revision --}}
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
-                            EBD Date <span class="text-rose-500">*</span>
-                        </label>
-                        <input type="date" name="date" id="input-date" required
-                               value="{{ date('Y-m-d') }}"
-                               class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+{{-- ===== INCOMING REQUESTS MODAL ===== --}}
+<x-modal id="incoming-requests-modal" title="Incoming Revision Requests" subtitle="Pending change requests submitted by Sales for Engineering review" maxWidth="max-w-2xl">
+    @if(isset($incomingRequests) && $incomingRequests->isNotEmpty())
+        <div class="space-y-3.5">
+            @foreach($incomingRequests as $req)
+                <div class="p-4 bg-white dark:bg-slate-850 border border-slate-200 dark:border-slate-700 rounded-sm space-y-3 shadow-xs">
+                    {{-- Request Header Line --}}
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-700/60">
+                        <span class="font-mono font-bold text-sm text-indigo-700 dark:text-indigo-400">{{ $req->request_no }}</span>
+                        <span class="text-[11px] text-slate-400 font-mono">
+                            {{ $req->request_date ? $req->request_date->format('d M Y') : '—' }}
+                        </span>
                     </div>
-                    <div>
-                        <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+
+                    {{-- Metadata Grid --}}
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs text-slate-600 dark:text-slate-400">
+                        <div>
+                            <span class="text-slate-400 block text-[10px]">Work Order</span>
+                            <strong class="text-slate-700 dark:text-slate-200 font-mono">{{ $req->workOrder->wo_number ?? '—' }}</strong>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[10px]">Customer</span>
+                            <strong class="text-slate-700 dark:text-slate-200" title="{{ $req->customer->name ?? '' }}">{{ $req->customer->code ?? '—' }}</strong>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[10px]">Model</span>
+                            <strong class="text-slate-700 dark:text-slate-200 truncate block">{{ $req->projectModel->name ?? '—' }}</strong>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block text-[10px]">Target Base EBD</span>
+                            <strong class="text-slate-700 dark:text-slate-200 font-mono">
+                                {{ $req->baseEbd ? 'Rev. ' . $req->baseEbd->revision : 'New EBD' }}
+                            </strong>
+                        </div>
+                    </div>
+
+                    {{-- Unified Subject & Body Layout (No Indent) --}}
+                    <div class="border border-slate-200 dark:border-slate-700 rounded-sm overflow-hidden bg-slate-50/50 dark:bg-slate-900/50">
+                        <div class="px-3.5 py-2 bg-slate-100/70 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider flex-shrink-0">Request Type :</span>
+                                <span class="font-bold text-slate-800 dark:text-slate-100 text-xs">{{ $req->request_type }}</span>
+                            </div>
+                            <span class="text-[10px] text-slate-400">by {{ $req->requested_by }}</span>
+                        </div>
+                        <div class="p-3 text-slate-700 dark:text-slate-200 leading-relaxed font-sans text-xs whitespace-pre-line text-left">{{ trim($req->description) }}</div>
+                    </div>
+
+                    {{-- Customer Attachment --}}
+                    @if($req->attachment_path)
+                        <div>
+                            <a href="{{ asset('storage/' . $req->attachment_path) }}" target="_blank"
+                               class="flex items-center justify-between p-2.5 bg-indigo-50/60 hover:bg-indigo-100/70 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/50 border border-indigo-200 dark:border-indigo-800 rounded-sm text-indigo-700 dark:text-indigo-300 font-semibold transition-colors text-xs">
+                                <span class="flex items-center gap-2">
+                                    <i class="fa-solid fa-paperclip text-sm"></i>
+                                    <span>{{ basename($req->attachment_path) }}</span>
+                                </span>
+                                <span class="text-[11px] bg-indigo-600 text-white px-2 py-0.5 rounded-xs font-bold flex items-center gap-1">
+                                    <i class="fa-solid fa-download text-[9px]"></i> Download
+                                </span>
+                            </a>
+                        </div>
+                    @endif
+
+                    {{-- Bottom Action Row --}}
+                    <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-700">
+                        @if($req->ebd_header_id)
+                            <a href="{{ route('management.ebd.show', $req->ebd_header_id) }}"
+                               class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 rounded-sm text-xs font-semibold transition-colors">
+                                <i class="fa-solid fa-eye text-[10px]"></i> View EBD
+                            </a>
+                        @endif
+                        <button type="button"
+                                onclick="startImportForRequest({{ $req->id }}, {{ $req->ebd_header_id ?? 'null' }}, {{ $req->wo_id ?? 'null' }}, {{ $req->customer_id ?? 'null' }}, {{ $req->model_id ?? 'null' }}, '{{ $req->request_no }}', '{{ addslashes($req->request_type) }}', '{{ $req->baseEbd->revision ?? '0' }}')"
+                                class="inline-flex items-center gap-1.5 px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-sm text-xs font-bold shadow-xs transition-colors cursor-pointer">
+                            <i class="fa-solid fa-file-import text-[10px]"></i> Import Revision
+                        </button>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    @else
+        <div class="py-12 px-4 text-center">
+            <div class="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto mb-3">
+                <i class="fa-solid fa-circle-check text-2xl"></i>
+            </div>
+            <h3 class="text-sm font-bold text-slate-800 dark:text-white">No Incoming Requests</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">All EBD revision requests from Sales have been processed.</p>
+        </div>
+    @endif
+
+    <x-slot:footer>
+        <button type="button" class="btn-close-modal px-4 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600 rounded-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
+            Close
+        </button>
+    </x-slot:footer>
+</x-modal>
+
+{{-- ===== IMPORT MODAL ===== --}}
+<x-modal id="import-modal" title="Import EBD File" subtitle="Upload an XLSX file to create a new EBD document" closeButtonId="btn-close-import-modal">
+    <form id="form-import-ebd" enctype="multipart/form-data">
+        @csrf
+        <input type="hidden" name="ebd_id" id="input-ebd-id" value="">
+        <input type="hidden" name="ebd_request_id" id="input-ebd-request-id" value="">
+        <input type="hidden" name="import_mode" id="input-import-mode" value="new_header">
+        
+        <div class="space-y-4">
+            {{-- WO Selection --}}
+            <div>
+                <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                    Work Order (SPK) <span class="text-slate-400 font-normal normal-case">(Optional)</span>
+                </label>
+                <select name="wo_id" id="input-wo-id"
+                        class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                    <option value="">— No Work Order —</option>
+                    @foreach($workOrders as $wo)
+                        <option value="{{ $wo->id }}"
+                                data-customer-id="{{ $wo->inquiry->customer_id ?? '' }}"
+                                data-model-id="{{ $wo->inquiry->model_id ?? '' }}">
+                            {{ $wo->wo_number }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- Customer --}}
+            <div>
+                <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                    Customer <span class="text-rose-500">*</span>
+                </label>
+                <select name="customer_id" id="input-customer-id" required
+                        class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                    <option value="">— Select Customer —</option>
+                    @foreach($customers as $customer)
+                        <option value="{{ $customer->id }}">{{ $customer->code }} — {{ $customer->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- Model --}}
+            <div>
+                <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                    Model <span class="text-rose-500">*</span>
+                </label>
+                <select name="model_id" id="input-model-id" required
+                        class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                    <option value="">— Select Model —</option>
+                    @foreach($models as $model)
+                        <option value="{{ $model->id }}">{{ $model->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- Date & Revision --}}
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                        EBD Date <span class="text-rose-500">*</span>
+                    </label>
+                    <input type="date" name="date" id="input-date" required
+                           value="{{ date('Y-m-d') }}"
+                           class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                </div>
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
                             Revision
                         </label>
-                        <input type="text" name="revision" id="input-revision"
-                               value="0" placeholder="e.g. 0, 1, A"
-                               class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                        <span id="hint-rev-increment" class="hidden text-[10px] font-medium normal-case text-indigo-600 dark:text-indigo-400"></span>
                     </div>
+                    <input type="text" name="revision" id="input-revision"
+                           value="0" placeholder="e.g. 0, 1, A"
+                           class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
                 </div>
-
-                {{-- File Upload --}}
-                <div>
-                    <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
-                        EBD File (XLSX) <span class="text-rose-500">*</span>
-                    </label>
-                    <div id="drop-zone"
-                         class="relative border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-sm p-5 text-center cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/30 dark:hover:bg-indigo-950/20 transition-all group">
-                        <input type="file" name="file_ebd" id="input-file-ebd" required
-                               accept=".xlsx,.zip"
-                               class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
-                        <div id="drop-zone-content">
-                            <i class="fa-solid fa-cloud-arrow-up text-2xl text-slate-300 dark:text-slate-600 group-hover:text-indigo-400 transition-colors mb-2 block"></i>
-                            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                                Drop your XLSX file here, or <span class="text-indigo-500">browse</span>
-                            </p>
-                            <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Accepts .xlsx or .zip (max 20 MB)</p>
-                        </div>
-                        <div id="file-selected-info" class="hidden">
-                            <i class="fa-solid fa-file-excel text-2xl text-emerald-500 mb-1 block"></i>
-                            <p class="text-xs font-bold text-slate-700 dark:text-slate-200" id="file-selected-name"></p>
-                            <p class="text-[10px] text-slate-400 dark:text-slate-500" id="file-selected-size"></p>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Import Result Alert Container (Errors/Warnings) --}}
-                <div id="importResult" class="hidden text-xs rounded-sm border"></div>
-
             </div>
 
-            {{-- Modal Footer --}}
-            <div class="px-5 py-3.5 bg-slate-50 dark:bg-slate-900/30 border-t border-slate-200 dark:border-slate-700 flex items-center justify-end gap-2 rounded-b-xs">
-                <button type="button" id="btn-cancel-import"
-                        class="px-4 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600 rounded-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
-                    Cancel
-                </button>
-                <button type="submit" id="btn-submit-import"
-                        class="px-4 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-sm shadow-sm hover:shadow transition-all flex items-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed">
-                    <i class="fa-solid fa-file-import text-[10px]"></i>
-                    <span id="btn-submit-text">Start Import</span>
-                    <span id="btn-submit-spinner" class="hidden">
-                        <i class="fa-solid fa-spinner animate-spin text-[10px]"></i>
-                    </span>
-                </button>
+            {{-- Revision Note (Optional) --}}
+            <div id="container-import-revision-note" class="hidden">
+                <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                    Revision Note <span class="text-slate-400 font-normal normal-case">(Optional)</span>
+                </label>
+                <textarea name="revision_note" id="input-import-revision-note" rows="2" placeholder="e.g. Reason for revision..."
+                          class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"></textarea>
             </div>
-        </form>
-    </div>
-</div>
+
+            {{-- File Upload --}}
+            <div>
+                <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                    EBD File (XLSX) <span class="text-rose-500">*</span>
+                </label>
+                <div id="drop-zone"
+                     class="relative border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-sm p-5 text-center cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/30 dark:hover:bg-indigo-950/20 transition-all group">
+                    <input type="file" name="file_ebd" id="input-file-ebd" required
+                           accept=".xlsx,.zip"
+                           class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                    <div id="drop-zone-content">
+                        <i class="fa-solid fa-cloud-arrow-up text-2xl text-slate-300 dark:text-slate-600 group-hover:text-indigo-400 transition-colors mb-2 block"></i>
+                        <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                            Drop your XLSX file here, or <span class="text-indigo-500">browse</span>
+                        </p>
+                        <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Accepts .xlsx or .zip (max 20 MB)</p>
+                    </div>
+                    <div id="file-selected-info" class="hidden">
+                        <i class="fa-solid fa-file-excel text-2xl text-emerald-500 mb-1 block"></i>
+                        <p class="text-xs font-bold text-slate-700 dark:text-slate-200" id="file-selected-name"></p>
+                        <p class="text-[10px] text-slate-400 dark:text-slate-500" id="file-selected-size"></p>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Import Result Alert Container (Errors/Warnings) --}}
+            <div id="importResult" class="hidden text-xs rounded-sm border"></div>
+        </div>
+    </form>
+
+    <x-slot:footer>
+        <button type="button" id="btn-cancel-import"
+                class="px-4 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600 rounded-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
+            Cancel
+        </button>
+        <button type="button" id="btn-submit-import" onclick="$('#form-import-ebd').submit()"
+                class="px-4 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-sm shadow-sm hover:shadow transition-all flex items-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed">
+            <i class="fa-solid fa-file-import text-[10px]"></i>
+            <span id="btn-submit-text">Start Import</span>
+            <span id="btn-submit-spinner" class="hidden">
+                <i class="fa-solid fa-spinner animate-spin text-[10px]"></i>
+            </span>
+        </button>
+    </x-slot:footer>
+</x-modal>
 
 {{-- ===== EDIT MODAL ===== --}}
-<div id="edit-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 backdrop-blur-sm">
-    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm shadow-2xl w-full max-w-lg mx-4 animate-fade-in">
-        {{-- Modal Header --}}
-        <div class="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-700">
+<x-modal id="edit-modal" title="Edit EBD Document" subtitle="Update EBD header metadata" closeButtonId="btn-close-edit-modal">
+    <form id="form-edit-ebd">
+        @csrf
+        <input type="hidden" id="edit-ebd-id">
+        <div class="space-y-4">
+            {{-- WO Selection --}}
             <div>
-                <h2 class="text-sm font-bold text-slate-850 dark:text-white">Edit EBD Document</h2>
-                <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">Update EBD header metadata</p>
+                <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                    Work Order (SPK) <span class="text-slate-400 font-normal normal-case">(Optional)</span>
+                </label>
+                <select name="wo_id" id="edit-wo-id"
+                        class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                    <option value="">— No Work Order —</option>
+                    @foreach($workOrders as $wo)
+                        <option value="{{ $wo->id }}"
+                                data-customer-id="{{ $wo->inquiry->customer_id ?? '' }}"
+                                data-model-id="{{ $wo->inquiry->model_id ?? '' }}">
+                            {{ $wo->wo_number }}
+                        </option>
+                    @endforeach
+                </select>
             </div>
-            <button type="button" id="btn-close-edit-modal"
-                    class="w-7 h-7 flex items-center justify-center rounded-sm text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
-                <i class="fa-solid fa-xmark text-sm"></i>
-            </button>
+
+            {{-- Customer --}}
+            <div>
+                <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                    Customer <span class="text-rose-500">*</span>
+                </label>
+                <select name="customer_id" id="edit-customer-id" required
+                        class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                    <option value="">— Select Customer —</option>
+                    @foreach($customers as $customer)
+                        <option value="{{ $customer->id }}">{{ $customer->code }} — {{ $customer->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- Model --}}
+            <div>
+                <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                    Model <span class="text-rose-500">*</span>
+                </label>
+                <select name="model_id" id="edit-model-id" required
+                        class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                    <option value="">— Select Model —</option>
+                    @foreach($models as $model)
+                        <option value="{{ $model->id }}">{{ $model->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- Date & Revision --}}
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                        EBD Date <span class="text-rose-500">*</span>
+                    </label>
+                    <input type="date" name="date" id="edit-date" required
+                           class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                        Revision <span class="text-rose-500">*</span>
+                    </label>
+                    <input type="text" name="revision" id="edit-revision" required
+                           placeholder="e.g. 0, 1, A"
+                           class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                </div>
+            </div>
         </div>
+    </form>
 
-        {{-- Modal Body --}}
-        <form id="form-edit-ebd">
-            @csrf
-            <input type="hidden" id="edit-ebd-id">
-            <div class="px-5 py-4 space-y-4">
-                {{-- WO Selection --}}
-                <div>
-                    <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
-                        Work Order (SPK) <span class="text-slate-400 font-normal normal-case">(Optional)</span>
-                    </label>
-                    <select name="wo_id" id="edit-wo-id"
-                            class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
-                        <option value="">— No Work Order —</option>
-                        @foreach($workOrders as $wo)
-                            <option value="{{ $wo->id }}"
-                                    data-customer-id="{{ $wo->inquiry->customer_id ?? '' }}"
-                                    data-model-id="{{ $wo->inquiry->model_id ?? '' }}">
-                                {{ $wo->wo_number }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                {{-- Customer --}}
-                <div>
-                    <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
-                        Customer <span class="text-rose-500">*</span>
-                    </label>
-                    <select name="customer_id" id="edit-customer-id" required
-                            class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
-                        <option value="">— Select Customer —</option>
-                        @foreach($customers as $customer)
-                            <option value="{{ $customer->id }}">{{ $customer->code }} — {{ $customer->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                {{-- Model --}}
-                <div>
-                    <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
-                        Model <span class="text-rose-500">*</span>
-                    </label>
-                    <select name="model_id" id="edit-model-id" required
-                            class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
-                        <option value="">— Select Model —</option>
-                        @foreach($models as $model)
-                            <option value="{{ $model->id }}">{{ $model->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                {{-- Date & Revision --}}
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
-                            EBD Date <span class="text-rose-500">*</span>
-                        </label>
-                        <input type="date" name="date" id="edit-date" required
-                               class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
-                            Revision <span class="text-rose-500">*</span>
-                        </label>
-                        <input type="text" name="revision" id="edit-revision" required
-                               placeholder="e.g. 0, 1, A"
-                               class="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
-                    </div>
-                </div>
-            </div>
-
-            {{-- Modal Footer --}}
-            <div class="px-5 py-3.5 bg-slate-50 dark:bg-slate-900/30 border-t border-slate-200 dark:border-slate-700 flex items-center justify-end gap-2 rounded-b-xs">
-                <button type="button" id="btn-cancel-edit"
-                        class="px-4 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600 rounded-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
-                    Cancel
-                </button>
-                <button type="submit" id="btn-submit-edit"
-                        class="px-4 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-sm shadow-sm hover:shadow transition-all flex items-center gap-2 cursor-pointer">
-                    <i class="fa-solid fa-floppy-disk text-[10px]"></i>
-                    <span>Save Changes</span>
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
+    <x-slot:footer>
+        <button type="button" id="btn-cancel-edit"
+                class="px-4 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-600 rounded-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
+            Cancel
+        </button>
+        <button type="button" id="btn-submit-edit" onclick="$('#form-edit-ebd').submit()"
+                class="px-4 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-sm shadow-sm hover:shadow transition-all flex items-center gap-2 cursor-pointer">
+            <i class="fa-solid fa-floppy-disk text-[10px]"></i>
+            <span>Save Changes</span>
+        </button>
+    </x-slot:footer>
+</x-modal>
 
 <x-sweetalert />
 
@@ -317,9 +406,13 @@ $(function () {
             { 
                 data: 'revision', 
                 name: 'revision', 
-                className: 'text-center font-mono text-slate-600 dark:text-slate-300',
-                render: function(data) {
-                    return 'Rev. ' + data;
+                className: 'text-center font-mono',
+                render: function(data, type, row) {
+                    let revHtml = `<span class="inline-flex items-center px-2.5 py-0.5 text-[10px] font-bold border rounded-sm bg-indigo-50/80 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800">Rev. ${data}</span>`;
+                    if (row.pending_requests_count > 0) {
+                        revHtml += `<div class="mt-1"><span class="inline-flex items-center gap-1 px-1.5 py-0.2 text-[9px] font-bold rounded-xs bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800" title="${row.pending_requests_count} Sales Revision Request(s) Pending"><i class="fa-solid fa-bell text-[8px]"></i> ${row.pending_requests_count} Req</span></div>`;
+                    }
+                    return revHtml;
                 }
             },
             { 
@@ -391,9 +484,69 @@ $(function () {
         $('#input-model-id').select2({ dropdownParent: $('#import-modal'), width: '100%' });
     }
 
+    const existingEbds = @json($existingEbds ?? []);
+
+    function checkAndIncrementRevision() {
+        const woId = $('#input-wo-id').val();
+        const customerId = $('#input-customer-id').val();
+        const modelId = $('#input-model-id').val();
+
+        if (!customerId || !modelId) {
+            $('#input-revision').val('0');
+            $('#input-ebd-id').val('');
+            $('#input-import-mode').val('new_header');
+            $('#container-import-revision-note').addClass('hidden');
+            return;
+        }
+
+        // Look for matching latest EBD:
+        // Prioritize match with WO + Customer + Model; if none, match Customer + Model
+        let match = null;
+        if (woId) {
+            match = existingEbds.find(e => String(e.wo_id) === String(woId) && String(e.customer_id) === String(customerId) && String(e.model_id) === String(modelId));
+        }
+        if (!match) {
+            match = existingEbds.find(e => String(e.customer_id) === String(customerId) && String(e.model_id) === String(modelId));
+        }
+
+        if (match) {
+            const curRev = String(match.revision ?? '0').trim();
+            let nextRev = '1';
+            if (/^\d+$/.test(curRev)) {
+                nextRev = String(parseInt(curRev, 10) + 1);
+            } else if (/\d+/.test(curRev)) {
+                nextRev = curRev.replace(/\d+/, m => parseInt(m, 10) + 1);
+            } else {
+                nextRev = curRev + ' Rev.1';
+            }
+
+            $('#input-revision').val(nextRev);
+            $('#input-ebd-id').val(match.id);
+            $('#input-import-mode').val('new_revision');
+            $('#hint-rev-increment').removeClass('hidden').text(`(Incremented from Rev. ${curRev})`);
+            $('#container-import-revision-note').removeClass('hidden');
+        } else {
+            $('#input-revision').val('0');
+            $('#input-ebd-id').val('');
+            $('#input-import-mode').val('new_header');
+            $('#hint-rev-increment').addClass('hidden').text('');
+            $('#container-import-revision-note').addClass('hidden');
+        }
+    }
+
+    $('#input-wo-id, #input-customer-id, #input-model-id').on('change select2:select', function() {
+        setTimeout(checkAndIncrementRevision, 60);
+    });
+
     function closeImportModal() {
         $('#import-modal').addClass('hidden').removeClass('flex');
         $('#form-import-ebd')[0].reset();
+        $('#input-ebd-id').val('');
+        $('#input-import-mode').val('new_header');
+        $('#input-revision').val('0');
+        $('#hint-rev-increment').addClass('hidden').text('');
+        $('#container-import-revision-note').addClass('hidden');
+        $('#input-import-revision-note').val('');
         resetDropZone();
         setSubmitLoading(false);
         $('#importResult').addClass('hidden').removeClass('bg-rose-50 text-rose-900 border-rose-100 p-4').html('');
@@ -405,6 +558,52 @@ $(function () {
     // Close on backdrop click
     $('#import-modal').on('click', function (e) {
         if ($(e.target).is('#import-modal')) closeImportModal();
+    });
+
+    // =========================================================================
+    // INCOMING REQUESTS MODAL
+    // =========================================================================
+    $('#btn-open-incoming-requests-modal').on('click', function () {
+        $('#incoming-requests-modal').removeClass('hidden').addClass('flex');
+    });
+
+    window.startImportForRequest = function (reqId, ebdId, woId, customerId, modelId, reqNo, reqType, baseRev) {
+        $('#incoming-requests-modal').addClass('hidden').removeClass('flex');
+        openImportModal();
+
+        if (woId) {
+            $('#input-wo-id').val(woId).trigger('change');
+        }
+        if (customerId) {
+            $('#input-customer-id').val(customerId).trigger('change');
+        }
+        if (modelId) {
+            $('#input-model-id').val(modelId);
+        }
+
+        if (ebdId) {
+            $('#input-ebd-id').val(ebdId);
+            $('#input-import-mode').val('new_revision');
+            let nextRev = '1';
+            if (baseRev) {
+                const num = String(baseRev).replace(/[^0-9]/g, '');
+                if (num) nextRev = String(parseInt(num, 10) + 1);
+            }
+            $('#input-revision').val(nextRev);
+        }
+
+        $('#input-ebd-request-id').val(reqId);
+        $('#container-import-revision-note').removeClass('hidden');
+        $('#input-import-revision-note').val(`Fulfillment for ${reqNo}: ${reqType}`);
+    };
+
+    // Universal close button handler for all modals in index page
+    $(document).on('click', '.btn-close-modal', function () {
+        $(this).closest('.fixed.inset-0').addClass('hidden').removeClass('flex');
+    });
+
+    $(document).on('click', '#incoming-requests-modal', function (e) {
+        if ($(e.target).is(this)) $(this).addClass('hidden').removeClass('flex');
     });
 
     // =========================================================================

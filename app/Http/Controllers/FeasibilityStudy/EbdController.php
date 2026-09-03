@@ -31,7 +31,8 @@ class EbdController extends Controller
             
             $search = $request->input('search.value');
             
-            $query = MngEbdHeader::with(['workOrder', 'customer', 'projectModel']);
+            $query = MngEbdHeader::with(['workOrder', 'customer', 'projectModel'])
+                ->where('is_latest', true);
             
             if ($search) {
                 $query->where(function($q) use ($search) {
@@ -42,7 +43,7 @@ class EbdController extends Controller
                 });
             }
             
-            $totalRecords = MngEbdHeader::count();
+            $totalRecords = MngEbdHeader::where('is_latest', true)->count();
             $filteredRecords = $query->count();
             
             $orderColumnIndex = $request->input('order.0.column');
@@ -61,6 +62,13 @@ class EbdController extends Controller
             }
             
             $ebdHeaders = $query->skip($start)->take($length)->get();
+
+            $headerIds = $ebdHeaders->pluck('id');
+            $pendingReqCounts = \App\Models\MngEbdRequest::whereIn('ebd_header_id', $headerIds)
+                ->whereIn('status', ['Submitted', 'In Progress'])
+                ->selectRaw('ebd_header_id, count(*) as total')
+                ->groupBy('ebd_header_id')
+                ->pluck('total', 'ebd_header_id');
             
             $data = [];
             foreach ($ebdHeaders as $ebd) {
@@ -70,6 +78,7 @@ class EbdController extends Controller
                     'date' => $ebd->date ? $ebd->date->format('d M Y') : '—',
                     'date_raw' => $ebd->date ? $ebd->date->format('Y-m-d') : '',
                     'revision' => $ebd->revision ?? '0',
+                    'pending_requests_count' => (int)($pendingReqCounts[$ebd->id] ?? 0),
                     'wo_number' => $ebd->workOrder->wo_number ?? '—',
                     'wo_id' => $ebd->wo_id,
                     'customer_code' => $ebd->customer->code ?? '—',
@@ -78,6 +87,9 @@ class EbdController extends Controller
                     'model_name' => $ebd->projectModel->name ?? '—',
                     'model_id' => $ebd->model_id,
                     'status' => $ebd->status,
+                    'is_latest' => (bool)($ebd->is_latest ?? true),
+                    'revised_from_id' => $ebd->revised_from_id,
+                    'revision_note' => $ebd->revision_note,
                     'created_by' => $ebd->created_by ?? '—',
                     'hashed_id' => $ebd->hashed_id,
                     'show_url' => route('management.ebd.show', $ebd->id),
@@ -98,8 +110,17 @@ class EbdController extends Controller
         }])->select('id', 'wo_number', 'inquiry_id')->orderByDesc('id')->get();
         $customers  = Customer::select('id', 'name', 'code')->orderBy('name')->get();
         $models     = ProjectModel::select('id', 'name')->orderBy('name')->get()->unique('name');
+        $existingEbds = MngEbdHeader::where('is_latest', true)
+            ->select('id', 'wo_id', 'customer_id', 'model_id', 'revision')
+            ->get();
 
-        return view('management.ebd.index', compact('workOrders', 'customers', 'models'));
+        $incomingRequests = \App\Models\MngEbdRequest::with(['workOrder', 'customer', 'projectModel', 'baseEbd'])
+            ->whereIn('status', ['Submitted', 'In Progress'])
+            ->orderByDesc('id')
+            ->get();
+        $pendingRequestsCount = $incomingRequests->count();
+
+        return view('management.ebd.index', compact('workOrders', 'customers', 'models', 'existingEbds', 'incomingRequests', 'pendingRequestsCount'));
     }
 
     // =========================================================================
@@ -121,7 +142,157 @@ class EbdController extends Controller
             ->orderBy('id')
             ->get();
 
-        return view('management.ebd.show', compact('ebdHeader', 'allItems'));
+        // Get full revision lineage history
+        $allRevisions = $ebdHeader->getAllRevisions();
+
+        // Get any open change requests for this EBD from Sales
+        $openRequests = \App\Models\MngEbdRequest::where('ebd_header_id', $id)
+            ->whereIn('status', ['Submitted', 'In Progress'])
+            ->get();
+
+        return view('management.ebd.show', compact('ebdHeader', 'allItems', 'allRevisions', 'openRequests'));
+    }
+
+    // =========================================================================
+    // CREATE REVISION — Deep clone EBD header, BOM tree, and processes
+    // =========================================================================
+
+    public function createRevision(Request $request, $id)
+    {
+        $request->validate([
+            'revision_note' => 'nullable|string|max:500',
+        ]);
+
+        \DB::beginTransaction();
+
+        try {
+            $original = MngEbdHeader::with([
+                'items.toolingProcesses',
+                'items.addProcesses'
+            ])->findOrFail($id);
+
+            // 1. Calculate next revision number
+            $currentRevStr = trim((string)$original->revision);
+            if (preg_match('/^(\d+)$/', $currentRevStr, $m)) {
+                $nextRev = (string)((int)$m[1] + 1);
+            } elseif (preg_match('/(\d+)/', $currentRevStr, $m)) {
+                $num = (int)$m[1] + 1;
+                $nextRev = preg_replace('/\d+/', (string)$num, $currentRevStr);
+            } else {
+                $nextRev = $currentRevStr . ' Rev.1';
+            }
+
+            // 2. Mark previous revisions in this lineage as not latest
+            $original->is_latest = false;
+            $original->save();
+
+            $lineageRevisions = $original->getAllRevisions();
+            foreach ($lineageRevisions as $rev) {
+                if ($rev->id !== $original->id && $rev->is_latest) {
+                    $rev->is_latest = false;
+                    $rev->save();
+                }
+            }
+
+            // 3. Create New Header Revision
+            $newHeader = MngEbdHeader::create([
+                'wo_id'           => $original->wo_id,
+                'revised_from_id' => $original->id,
+                'customer_id'     => $original->customer_id,
+                'model_id'        => $original->model_id,
+                'date'            => now()->toDateString(),
+                'revision'        => $nextRev,
+                'is_latest'       => true,
+                'status'          => 'Draft',
+                'revision_note'   => $request->input('revision_note'),
+                'created_by'      => Auth::user() ? Auth::user()->name : ($original->created_by ?? 'System'),
+            ]);
+
+            // 4. Hierarchical cloning of mng_ebd_items
+            $allItems = $original->items;
+            $idMap = [];
+
+            $cloneItem = function ($item, $newParentId = null) use (&$idMap, $newHeader) {
+                $itemData = $item->toArray();
+                
+                unset(
+                    $itemData['id'],
+                    $itemData['created_at'],
+                    $itemData['updated_at'],
+                    $itemData['tooling_processes'],
+                    $itemData['add_processes'],
+                    $itemData['children'],
+                    $itemData['parent'],
+                    $itemData['header']
+                );
+
+                $itemData['ebd_header_id'] = $newHeader->id;
+                $itemData['parent_id'] = $newParentId;
+
+                $newItem = MngEbdItem::create($itemData);
+                $idMap[$item->id] = $newItem->id;
+
+                // Clone tooling processes
+                foreach ($item->toolingProcesses as $tp) {
+                    $tpData = $tp->toArray();
+                    unset($tpData['id'], $tpData['created_at'], $tpData['updated_at'], $tpData['item']);
+                    $tpData['ebd_item_id'] = $newItem->id;
+                    MngEbdToolingProcess::create($tpData);
+                }
+
+                // Clone additional processes
+                foreach ($item->addProcesses as $ap) {
+                    $apData = $ap->toArray();
+                    unset($apData['id'], $apData['created_at'], $apData['updated_at'], $apData['item']);
+                    $apData['ebd_item_id'] = $newItem->id;
+                    MngEbdAddProcess::create($apData);
+                }
+
+                return $newItem;
+            };
+
+            // First clone root items (parent_id is null)
+            $rootItems = $allItems->whereNull('parent_id');
+            foreach ($rootItems as $rootItem) {
+                $cloneItem($rootItem, null);
+            }
+
+            // Then clone non-root items level by level
+            $nonRootItems = $allItems->whereNotNull('parent_id')->sortBy('active_level');
+            foreach ($nonRootItems as $subItem) {
+                if (!isset($idMap[$subItem->id])) {
+                    $mappedParentId = $idMap[$subItem->parent_id] ?? null;
+                    $cloneItem($subItem, $mappedParentId);
+                }
+            }
+
+            \DB::commit();
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => "Successfully created revision Rev. {$nextRev}",
+                    'redirect_url' => route('management.ebd.show', $newHeader->id),
+                    'new_id' => $newHeader->id
+                ]);
+            }
+
+            return redirect()->route('management.ebd.show', $newHeader->id)
+                ->with('success', "New revision Rev. {$nextRev} created successfully as Draft.");
+
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            Log::error('Failed to create EBD revision: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to create revision: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->back()->with('error', 'Failed to create revision: ' . $e->getMessage());
+        }
     }
 
     // =========================================================================
@@ -132,17 +303,21 @@ class EbdController extends Controller
     {
         // 1. Validate form input
         $request->validate([
-            'file_ebd'    => ['required', 'file', 'max:20480', new \App\Rules\SecureFileExtension('excel')],
-            'wo_id'       => 'nullable|integer',
-            'customer_id' => 'required|integer',
-            'model_id'    => 'required|integer',
-            'date'        => 'required|date',
-            'revision'    => 'nullable|string|max:20',
-            'ebd_id'      => 'nullable|integer',
+            'file_ebd'      => ['required', 'file', 'max:20480', new \App\Rules\SecureFileExtension('excel')],
+            'wo_id'         => 'nullable|integer',
+            'customer_id'   => 'required|integer',
+            'model_id'      => 'required|integer',
+            'date'          => 'required|date',
+            'revision'      => 'nullable|string|max:20',
+            'ebd_id'         => 'nullable|integer',
+            'ebd_request_id' => 'nullable|integer',
+            'import_mode'    => 'nullable|string|in:overwrite,new_revision',
+            'revision_note'  => 'nullable|string|max:500',
         ]);
 
         $ebdId = $request->input('ebd_id');
-        $isOverwrite = !empty($ebdId);
+        $ebdRequestId = $request->input('ebd_request_id');
+        $importMode = $request->input('import_mode', !empty($ebdId) ? 'overwrite' : 'new_header');
         
         \DB::beginTransaction();
 
@@ -153,27 +328,68 @@ class EbdController extends Controller
             $fullPath = Storage::disk('local')->path($tempPath);
 
             // 3. Create or Update EBD Header record
-            if ($isOverwrite) {
+            if ($importMode === 'overwrite' && !empty($ebdId)) {
                 $ebdHeader = MngEbdHeader::findOrFail($ebdId);
                 $ebdHeader->update([
-                    'wo_id'      => $request->input('wo_id') ?: null,
-                    'customer_id'=> $request->input('customer_id') ?: null,
-                    'model_id'   => $request->input('model_id') ?: null,
-                    'date'       => $request->input('date'),
-                    'revision'   => $request->input('revision', '0'),
-                    'status'     => 'Draft',
+                    'wo_id'         => $request->input('wo_id') ?: null,
+                    'customer_id'   => $request->input('customer_id') ?: null,
+                    'model_id'      => $request->input('model_id') ?: null,
+                    'date'          => $request->input('date'),
+                    'revision'      => $request->input('revision', '0'),
+                    'status'        => 'Draft',
+                    'revision_note' => $request->input('revision_note', $ebdHeader->revision_note),
                 ]);
                 // Delete existing BOM items, cascades to tooling and add processes
                 MngEbdItem::where('ebd_header_id', $ebdHeader->id)->delete();
+            } elseif ($importMode === 'new_revision' && !empty($ebdId)) {
+                $originalHeader = MngEbdHeader::findOrFail($ebdId);
+                
+                // Mark previous revisions in lineage as is_latest = false
+                $originalHeader->is_latest = false;
+                $originalHeader->save();
+
+                $lineageRevisions = $originalHeader->getAllRevisions();
+                foreach ($lineageRevisions as $rev) {
+                    if ($rev->id !== $originalHeader->id && $rev->is_latest) {
+                        $rev->is_latest = false;
+                        $rev->save();
+                    }
+                }
+
+                // Determine next revision string
+                $nextRev = $request->input('revision');
+                if (empty($nextRev)) {
+                    $curRev = trim((string)$originalHeader->revision);
+                    if (preg_match('/^(\d+)$/', $curRev, $m)) {
+                        $nextRev = (string)((int)$m[1] + 1);
+                    } else {
+                        $nextRev = $curRev . ' Rev.1';
+                    }
+                }
+
+                $ebdHeader = MngEbdHeader::create([
+                    'wo_id'           => $request->input('wo_id') ?: $originalHeader->wo_id,
+                    'revised_from_id' => $originalHeader->id,
+                    'customer_id'     => $request->input('customer_id') ?: $originalHeader->customer_id,
+                    'model_id'        => $request->input('model_id') ?: $originalHeader->model_id,
+                    'date'            => $request->input('date', now()->toDateString()),
+                    'revision'        => $nextRev,
+                    'is_latest'       => true,
+                    'status'          => 'Draft',
+                    'revision_note'   => $request->input('revision_note'),
+                    'created_by'      => Auth::user() ? Auth::user()->name : ($originalHeader->created_by ?? 'System'),
+                ]);
             } else {
                 $ebdHeader = MngEbdHeader::create([
-                    'wo_id'      => $request->input('wo_id') ?: null,
-                    'customer_id'=> $request->input('customer_id') ?: null,
-                    'model_id'   => $request->input('model_id') ?: null,
-                    'date'       => $request->input('date'),
-                    'revision'   => $request->input('revision', '0'),
-                    'status'     => 'Draft',
-                    'created_by' => Auth::user()->name ?? Auth::user()->username ?? 'System',
+                    'wo_id'         => $request->input('wo_id') ?: null,
+                    'customer_id'   => $request->input('customer_id') ?: null,
+                    'model_id'      => $request->input('model_id') ?: null,
+                    'date'          => $request->input('date'),
+                    'revision'      => $request->input('revision', '0'),
+                    'is_latest'     => true,
+                    'status'        => 'Draft',
+                    'revision_note' => $request->input('revision_note'),
+                    'created_by'    => Auth::user() ? Auth::user()->name : 'System',
                 ]);
             }
 
@@ -194,6 +410,18 @@ class EbdController extends Controller
                     'message' => 'Import completed with errors. Please check the file format.',
                     'errors'  => $importer->getErrors()
                 ], 422);
+            }
+
+            // 7. Auto-link to EBD Request if submitted from request context
+            if ($ebdRequestId) {
+                $reqObj = \App\Models\MngEbdRequest::find($ebdRequestId);
+                if ($reqObj) {
+                    $reqObj->revised_ebd_id = $ebdHeader->id;
+                    $reqObj->status = 'Completed';
+                    $reqObj->processed_by = Auth::user()->name ?? Auth::user()->username ?? 'Engineering';
+                    $reqObj->processed_at = now();
+                    $reqObj->save();
+                }
             }
 
             \DB::commit();

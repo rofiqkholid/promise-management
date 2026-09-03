@@ -17,10 +17,17 @@ class ToolingQuotation extends Model
         'supplier_id',
         'customer_id',
         'source_type',
+        'quotation_type',
         'quotation_no',
         'revision',
         'currency_code',
         'exchange_rate',
+        'admin_matrl_pct',
+        'admin_mfg_pct',
+        'oh_profit_pct',
+        'total_material_cost',
+        'total_mfg_cost',
+        'total_product_cogs',
         'total_cost_foreign',
         'total_cost_idr',
         'file_path',
@@ -31,6 +38,12 @@ class ToolingQuotation extends Model
 
     protected $casts = [
         'exchange_rate' => 'decimal:2',
+        'admin_matrl_pct' => 'decimal:2',
+        'admin_mfg_pct' => 'decimal:2',
+        'oh_profit_pct' => 'decimal:2',
+        'total_material_cost' => 'decimal:2',
+        'total_mfg_cost' => 'decimal:2',
+        'total_product_cogs' => 'decimal:2',
         'total_cost_foreign' => 'decimal:2',
         'total_cost_idr' => 'decimal:2',
         'imported_at' => 'datetime',
@@ -61,11 +74,19 @@ class ToolingQuotation extends Model
     }
 
     /**
-     * Relasi ke Detail Penawaran Supplier
+     * Relasi ke Detail Penawaran Supplier (Tooling)
      */
     public function details()
     {
         return $this->hasMany(ToolingQuotationDetail::class, 'tooling_quotation_id');
+    }
+
+    /**
+     * Relasi ke Detail Penawaran Produk (Part Breakdown)
+     */
+    public function productDetails()
+    {
+        return $this->hasMany(ProductQuotationDetail::class, 'tooling_quotation_id');
     }
 
     /**
@@ -89,6 +110,9 @@ class ToolingQuotation extends Model
      */
     public function getSupplierNameAttribute()
     {
+        if ($this->source_type === 'sales') {
+            return 'Sales Revision';
+        }
         if ($this->source_type === 'customer' || $this->customer_id) {
             return $this->customer ? ($this->customer->code ?? $this->customer->name) : 'Customer Target';
         }

@@ -16,16 +16,20 @@ class MngEbdHeader extends Model
 
     protected $fillable = [
         'wo_id',
+        'revised_from_id',
         'customer_id',
         'model_id',
         'date',
         'revision',
+        'is_latest',
         'status',
+        'revision_note',
         'created_by',
     ];
 
     protected $casts = [
         'date' => 'date',
+        'is_latest' => 'boolean',
     ];
 
     // -------------------------------------------------------------------------
@@ -35,6 +39,16 @@ class MngEbdHeader extends Model
     public function workOrder()
     {
         return $this->belongsTo(WorkOrder::class, 'wo_id', 'id');
+    }
+
+    public function revisedFrom()
+    {
+        return $this->belongsTo(MngEbdHeader::class, 'revised_from_id', 'id');
+    }
+
+    public function revisions()
+    {
+        return $this->hasMany(MngEbdHeader::class, 'revised_from_id', 'id');
     }
 
     public function inquiry()
@@ -80,5 +94,43 @@ class MngEbdHeader extends Model
         return $this->hasMany(MngEbdItem::class, 'ebd_header_id', 'id')
                     ->whereNull('parent_id')
                     ->with('children');
+    }
+
+    /**
+     * Get the root ancestor header of this EBD revision lineage.
+     */
+    public function getRootHeader(): self
+    {
+        $curr = $this;
+        while ($curr->revised_from_id && $curr->revisedFrom) {
+            $curr = $curr->revisedFrom;
+        }
+        return $curr;
+    }
+
+    /**
+     * Get all revisions in the lineage ordered by revision.
+     */
+    public function getAllRevisions()
+    {
+        $root = $this->getRootHeader();
+        $allIds = collect([$root->id]);
+        
+        $queue = [$root->id];
+        while (!empty($queue)) {
+            $next = self::whereIn('revised_from_id', $queue)->pluck('id')->toArray();
+            $queue = [];
+            foreach ($next as $nId) {
+                if (!$allIds->contains($nId)) {
+                    $allIds->push($nId);
+                    $queue[] = $nId;
+                }
+            }
+        }
+
+        return self::whereIn('id', $allIds)
+            ->with(['workOrder', 'customer', 'projectModel'])
+            ->orderBy('id', 'asc')
+            ->get();
     }
 }

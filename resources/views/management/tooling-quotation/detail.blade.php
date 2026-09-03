@@ -22,10 +22,6 @@
                             class="inline-flex items-center justify-center gap-1.5 px-3 h-8 bg-emerald-600 hover:bg-emerald-700 border border-transparent rounded-sm text-xs font-semibold text-white shadow-xs transition-all active:scale-98 cursor-pointer" title="Download Excel Template">
                         <i class="fa-solid fa-file-excel text-[10px]"></i> Template
                     </button>
-                    <button type="button" onclick="$('#import-customer-modal').removeClass('hidden').addClass('flex')"
-                            class="inline-flex items-center justify-center gap-1.5 px-3 h-8 bg-amber-600 hover:bg-amber-700 border border-transparent rounded-sm text-xs font-semibold text-white shadow-xs transition-all active:scale-98 cursor-pointer" title="Import Customer Target Quotation">
-                        <i class="fa-solid fa-building-user text-[10px]"></i> Customer
-                    </button>
                     <button type="button" onclick="$('#import-supplier-modal').removeClass('hidden').addClass('flex')"
                             class="inline-flex items-center justify-center gap-1.5 px-3 h-8 bg-indigo-600 hover:bg-indigo-700 border border-transparent rounded-sm text-xs font-semibold text-white shadow-xs transition-all active:scale-98 cursor-pointer" title="Import Supplier Quotation">
                         <i class="fa-solid fa-file-import text-[10px]"></i> Supplier
@@ -159,78 +155,54 @@
             {{-- TOP NAVIGATION BAR (MULTI-SELECT CHECKBOXES + SUMMARY vs DETAILED COMPARISON) --}}
             <div class="px-6 py-0 bg-slate-50 dark:bg-slate-900/80 border-b border-slate-300 dark:border-slate-800 flex items-center justify-between flex-shrink-0 gap-4 relative z-20">
                 
-                {{-- CUSTOM DROPDOWN MULTI-SELECT WITH REVISIONS, SEARCH & CHECKBOXES --}}
-                <div class="relative min-w-[240px] py-2">
-                    <button type="button" 
-                            id="btn-custom-supplier-dropdown"
-                            class="w-full flex items-center justify-between gap-2 px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-sm text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-750 transition-all cursor-pointer">
-                        <span id="lbl-custom-supplier-dropdown" class="truncate font-semibold text-slate-700 dark:text-slate-200">
-                            <i class="fa-solid fa-filter text-[10px] text-slate-500 mr-1"></i> Filter & Revisions
-                        </span>
-                        <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
-                    </button>
-
-                    {{-- DROPDOWN MENU PANEL (FLOATING) --}}
-                    <div id="panel-custom-supplier-dropdown" class="hidden absolute top-full left-0 mt-1 w-72 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-sm shadow-2xl z-50 overflow-hidden">
-                        
-                        {{-- 1. EBD REVISION SELECTOR --}}
-                        <div class="p-2.5 bg-slate-100/70 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-700">
-                            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-                                1. Target EBD Revision
-                            </label>
-                            @if(isset($availableEbdRevisions) && $availableEbdRevisions->count() > 1)
-                                <select onchange="window.location.href='?ebd_id=' + this.value" class="w-full text-xs font-mono font-bold px-2 py-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-indigo-500 cursor-pointer">
-                                    @foreach($availableEbdRevisions as $revEbd)
-                                        <option value="{{ $revEbd->id }}" {{ $revEbd->id == ($selectedEbd?->id ?? null) ? 'selected' : '' }}>
-                                            Rev {{ $revEbd->revision }} {{ $revEbd->id == ($workOrder?->ebd_header_id ?? null) ? '★ (Active WO)' : '' }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            @else
-                                <div class="text-xs font-mono font-semibold text-slate-700 dark:text-slate-300 px-2 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-sm">
-                                    Rev {{ $selectedEbd?->revision ?? '0' }} (Latest)
-                                </div>
-                            @endif
-                        </div>
-
-                        {{-- 2. CUSTOMER TARGET QUOTATION SELECTOR (IF IMPORTED) --}}
-                        @if(isset($activeCustomerQuote))
-                            <div class="p-2.5 bg-amber-50/70 dark:bg-amber-950/40 border-b border-amber-200 dark:border-amber-800/60">
-                                <div class="flex items-center justify-between mb-1">
-                                    <label class="text-[10px] font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300 flex items-center gap-1">
-                                        <i class="fa-solid fa-building-user text-[10px]"></i> 2. Customer Target
-                                    </label>
-                                    <span class="px-1.5 py-0.2 text-[9px] font-bold bg-amber-200 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200 rounded-sm">
-                                        Rev {{ $activeCustomerQuote->revision }}
-                                    </span>
-                                </div>
-                                @if(isset($activeCustomerQuote->all_revisions) && count($activeCustomerQuote->all_revisions) > 1)
-                                    <select onchange="switchCustomerRevision(this.value)" class="w-full text-[10px] font-mono font-bold px-2 py-1 bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 rounded-sm text-amber-800 dark:text-amber-200 focus:outline-none cursor-pointer">
-                                        @foreach($activeCustomerQuote->all_revisions as $cRev)
-                                            <option value="{{ $cRev->id }}" {{ $cRev->id == $activeCustomerQuote->id ? 'selected' : '' }}>
-                                                Rev {{ $cRev->revision }} (Rp {{ number_format($cRev->total_cost_idr, 0, ',', '.') }})
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                @else
-                                    <div class="text-[11px] font-semibold text-slate-700 dark:text-slate-200 truncate">
-                                        {{ $activeCustomerQuote->supplier_name }}
-                                    </div>
-                                @endif
-                            </div>
-                        @endif
-
-                        {{-- 3. SORT SUPPLIERS BY --}}
-                        <div class="p-2.5 bg-slate-100/70 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-700">
-                            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-                                3. Sort Suppliers By
-                            </label>
-                            <select onchange="window.location.href=updateQueryStringParam('sort', this.value)" class="w-full text-xs font-semibold px-2 py-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-indigo-500 cursor-pointer">
-                                <option value="worth" {{ request('sort', 'worth') == 'worth' ? 'selected' : '' }}>Lowest Cost (Best Price #1)</option>
-                                <option value="highest" {{ request('sort') == 'highest' ? 'selected' : '' }}>Highest Cost</option>
-                                <option value="name" {{ request('sort') == 'name' ? 'selected' : '' }}>Supplier Name (A-Z)</option>
+                <div class="flex items-center gap-3 py-2 flex-wrap">
+                    {{-- 1. Dedicated EBD Revision Selector --}}
+                    <div class="flex items-center gap-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 px-2.5 h-8 rounded-sm shadow-2xs">
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">EBD Rev:</span>
+                        @if(isset($availableEbdRevisions) && $availableEbdRevisions->count() > 1)
+                            <select onchange="window.location.href='?ebd_id=' + this.value" class="text-xs font-mono font-bold py-0.5 bg-transparent text-slate-800 dark:text-slate-100 focus:outline-none cursor-pointer">
+                                @foreach($availableEbdRevisions as $revEbd)
+                                    <option value="{{ $revEbd->id }}" {{ $revEbd->id == ($selectedEbd?->id ?? null) ? 'selected' : '' }}>
+                                        Rev {{ $revEbd->revision }} {{ $revEbd->id == ($workOrder?->ebd_header_id ?? null) ? '★ (Active WO)' : '' }}
+                                    </option>
+                                @endforeach
                             </select>
-                        </div>
+                        @else
+                            <span class="text-xs font-mono font-bold text-slate-700 dark:text-slate-200">
+                                Rev {{ $selectedEbd?->revision ?? '0' }} (Latest)
+                            </span>
+                        @endif
+                    </div>
+
+                    {{-- Vertical Divider --}}
+                    <div class="w-px h-5 bg-slate-300 dark:bg-slate-700"></div>
+
+                    {{-- 2. Dedicated Supplier Filter Dropdown --}}
+                    <div class="relative min-w-[200px]">
+                        <button type="button" 
+                                id="btn-custom-supplier-dropdown"
+                                class="w-full flex items-center justify-between gap-2 px-3 h-8 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-sm text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-750 transition-all cursor-pointer shadow-2xs">
+                            <span id="lbl-custom-supplier-dropdown" class="truncate font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                                <i class="fa-solid fa-filter text-[10px] text-slate-400"></i>
+                                <span>{{ $quotations->count() > 0 ? 'All Suppliers (' . $quotations->count() . ')' : 'No Suppliers' }}</span>
+                            </span>
+                            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
+                        </button>
+
+                        {{-- DROPDOWN MENU PANEL (FLOATING) --}}
+                        <div id="panel-custom-supplier-dropdown" class="hidden absolute top-full left-0 mt-1 w-72 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-sm shadow-2xl z-50 overflow-hidden">
+                            
+                            {{-- SORT SUPPLIERS BY --}}
+                            <div class="p-2.5 bg-slate-100/70 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-700">
+                                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+                                    Sort Suppliers By
+                                </label>
+                                <select onchange="window.location.href=updateQueryStringParam('sort', this.value)" class="w-full text-xs font-semibold px-2 py-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:border-indigo-500 cursor-pointer">
+                                    <option value="worth" {{ request('sort', 'worth') == 'worth' ? 'selected' : '' }}>Lowest Cost (Best Price #1)</option>
+                                    <option value="highest" {{ request('sort') == 'highest' ? 'selected' : '' }}>Highest Cost</option>
+                                    <option value="name" {{ request('sort') == 'name' ? 'selected' : '' }}>Supplier Name (A-Z)</option>
+                                </select>
+                            </div>
 
                         {{-- 4. SUPPLIER FILTER SEARCH & HEADER --}}
                         <div class="p-2 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 flex items-center justify-between gap-2">
@@ -248,24 +220,16 @@
                         <div class="max-h-64 overflow-y-auto p-1.5 space-y-1">
                             <div id="supplier-items-container" class="space-y-1">
                                 @forelse($quotations as $q)
-                                    @php
-                                        $isCustomer = ($q->source_type === 'customer' || (!empty($q->customer_id) && empty($q->supplier_id)));
-                                    @endphp
-                                    <div class="supp-item-label p-2 rounded-sm hover:bg-slate-50 dark:hover:bg-slate-750/60 border {{ $isCustomer ? 'border-amber-200 dark:border-amber-800/60 bg-amber-50/30 dark:bg-amber-950/20' : 'border-slate-100 dark:border-slate-750 bg-slate-50/30 dark:bg-slate-900/30' }} space-y-1">
+                                    <div class="supp-item-label p-2 rounded-sm hover:bg-slate-50 dark:hover:bg-slate-750/60 border border-slate-100 dark:border-slate-750 bg-slate-50/30 dark:bg-slate-900/30 space-y-1">
                                         <div class="flex items-center justify-between gap-2">
-                                            <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold {{ $isCustomer ? 'text-amber-900 dark:text-amber-200' : 'text-slate-800 dark:text-slate-100' }} min-w-0">
+                                            <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-800 dark:text-slate-100 min-w-0">
                                                 <input type="checkbox" class="chk-supp-filter rounded-sm border-slate-300 text-indigo-600 focus:ring-indigo-500" data-supp-id="{{ $q->id }}" data-supp-name="{{ $q->supplier_name }}" checked>
                                                 <span class="supp-name-text truncate">
-                                                    @if($isCustomer)
-                                                        <i class="fa-solid fa-building-user text-amber-500 text-[10px] mr-0.5"></i>
-                                                    @endif
                                                     {{ $q->supplier_name }}
                                                 </span>
                                             </label>
                                             <div class="flex items-center gap-1 flex-shrink-0">
-                                                @if($isCustomer)
-                                                    <span class="px-1.5 py-0.5 text-[9px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800 rounded-sm">Customer</span>
-                                                @elseif(isset($q->worth_rank))
+                                                @if(isset($q->worth_rank))
                                                     @if($q->worth_rank === 1)
                                                         <span class="px-1.5 py-0.5 text-[9px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 rounded-sm">Best Price #1</span>
                                                     @else
@@ -279,23 +243,13 @@
                                         @if(isset($q->all_revisions) && count($q->all_revisions) > 1)
                                             <div class="flex items-center gap-1.5 pl-6">
                                                 <span class="text-[9px] font-medium text-slate-400 uppercase">Rev:</span>
-                                                @if($isCustomer)
-                                                    <select onchange="switchCustomerRevision(this.value)" class="w-full text-[10px] font-mono font-bold px-1.5 py-0.5 bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 rounded-sm text-amber-700 dark:text-amber-300 focus:outline-none cursor-pointer">
-                                                        @foreach($q->all_revisions as $revQuote)
-                                                            <option value="{{ $revQuote->id }}" {{ $revQuote->id == $q->id ? 'selected' : '' }}>
-                                                                Rev {{ $revQuote->revision }} ({{ $revQuote->created_at ? $revQuote->created_at->format('d/m') : '' }})
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-                                                @else
-                                                    <select onchange="switchSupplierRevision('{{ $q->supplier_id }}', this.value)" class="w-full text-[10px] font-mono font-bold px-1.5 py-0.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-sm text-indigo-600 dark:text-indigo-400 focus:outline-none cursor-pointer">
-                                                        @foreach($q->all_revisions as $revQuote)
-                                                            <option value="{{ $revQuote->id }}" {{ $revQuote->id == $q->id ? 'selected' : '' }}>
-                                                                Rev {{ $revQuote->revision }} ({{ $revQuote->created_at ? $revQuote->created_at->format('d/m') : '' }})
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-                                                @endif
+                                                <select onchange="switchSupplierRevision('{{ $q->supplier_id }}', this.value)" class="w-full text-[10px] font-mono font-bold px-1.5 py-0.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-sm text-indigo-600 dark:text-indigo-400 focus:outline-none cursor-pointer">
+                                                    @foreach($q->all_revisions as $revQuote)
+                                                        <option value="{{ $revQuote->id }}" {{ $revQuote->id == $q->id ? 'selected' : '' }}>
+                                                            Rev {{ $revQuote->revision }} ({{ $revQuote->created_at ? $revQuote->created_at->format('d/m') : '' }})
+                                                        </option>
+                                                    @endforeach
+                                                </select>
                                             </div>
                                         @else
                                             <div class="pl-6 text-[10px] font-mono text-slate-400">
@@ -305,13 +259,14 @@
                                     </div>
                                 @empty
                                     <div class="p-4 text-center text-xs text-slate-400">
-                                        No customer or supplier quotations imported yet.
+                                        No supplier quotations imported yet.
                                     </div>
                                 @endforelse
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
                 {{-- UNDERLINED TABS (SUMMARY vs DETAILED COMPARISON) --}}
                 <div class="flex items-center gap-6 self-stretch">
@@ -340,11 +295,11 @@
                 <div id="part-container-all-summary" class="part-container space-y-4">
                     <div class="px-4 py-3 bg-slate-100/80 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-sm flex items-center justify-between">
                         <div>
-                            <span class="text-[10px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">Global Comparison Matrix (EBD &gt; Customer &gt; Supplier Best Price)</span>
+                            <span class="text-[10px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">Global Comparison Matrix (EBD &gt; Supplier Best Price)</span>
                             <div class="flex items-center gap-2">
                                 <span class="font-bold text-slate-900 dark:text-slate-100 text-sm">ALL PARTS SUMMARY</span>
                                 <span class="text-slate-400">•</span>
-                                <span class="text-slate-600 dark:text-slate-300 text-xs font-normal">Perbandingan biaya total proses EBD, target Customer, dan Quotation Supplier</span>
+                                <span class="text-slate-600 dark:text-slate-300 text-xs font-normal">Perbandingan biaya total proses EBD dan penawaran Supplier</span>
                             </div>
                         </div>
                         <span class="text-xs font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-3 py-1 rounded-sm">
@@ -366,28 +321,19 @@
                                         </div>
                                     </th>
                                     
-                                    {{-- 2. Customer Target & 3. Suppliers (Ranked by Best Price) --}}
+                                    {{-- 2. Suppliers (Ranked by Best Price) --}}
                                     @foreach($quotations as $q)
-                                        @php
-                                            $isCustomer = ($q->source_type === 'customer' || (!empty($q->customer_id) && empty($q->supplier_id)));
-                                        @endphp
-                                        <th class="col-supp-{{ $q->id }} p-3 border-r border-slate-300 dark:border-slate-800 {{ $isCustomer ? 'bg-amber-50/80 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 border-b-2 border-b-amber-500' : 'bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-200 border-b-2 border-b-indigo-500' }} min-w-[200px]">
+                                        <th class="col-supp-{{ $q->id }} p-3 border-r border-slate-300 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-200 border-b-2 border-b-indigo-500 min-w-[200px]">
                                             <div class="flex items-center justify-between">
                                                 <div>
-                                                    @if($isCustomer)
-                                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.2 text-[9px] font-extrabold uppercase tracking-wider rounded-sm bg-amber-200 text-amber-900 dark:bg-amber-800 dark:text-amber-100 mb-0.5">
-                                                            <i class="fa-solid fa-building-user text-[8px]"></i> Customer Target
+                                                    @if(isset($q->worth_rank) && $q->worth_rank === 1)
+                                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.2 text-[9px] font-extrabold uppercase tracking-wider rounded-sm bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 mb-0.5">
+                                                            <i class="fa-solid fa-trophy text-[8px] text-amber-500"></i> Best Price #1
                                                         </span>
                                                     @else
-                                                        @if(isset($q->worth_rank) && $q->worth_rank === 1)
-                                                            <span class="inline-flex items-center gap-1 px-1.5 py-0.2 text-[9px] font-extrabold uppercase tracking-wider rounded-sm bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 mb-0.5">
-                                                                <i class="fa-solid fa-trophy text-[8px] text-amber-500"></i> Best Price #1
-                                                            </span>
-                                                        @else
-                                                            <span class="inline-flex items-center gap-1 px-1.5 py-0.2 text-[9px] font-bold uppercase tracking-wider rounded-sm bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300 mb-0.5">
-                                                                Supplier #{{ $q->worth_rank ?? '' }}
-                                                            </span>
-                                                        @endif
+                                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.2 text-[9px] font-bold uppercase tracking-wider rounded-sm bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300 mb-0.5">
+                                                            Supplier #{{ $q->worth_rank ?? '' }}
+                                                        </span>
                                                     @endif
                                                     <div class="font-bold text-xs">{{ $q->supplier_name }}</div>
                                                 </div>
@@ -580,27 +526,12 @@
                                         </th>
                                         
                                         @foreach($quotations as $q)
-                                            @php
-                                                $isCustomer = ($q->source_type === 'customer' || (!empty($q->customer_id) && empty($q->supplier_id)));
-                                            @endphp
-                                            <th class="col-supp-{{ $q->id }} p-3 border-r border-slate-300 dark:border-slate-800 {{ $isCustomer ? 'bg-amber-50/80 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 border-b-2 border-b-amber-500' : 'bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-200 border-b-2 border-b-indigo-500' }} min-w-[200px]">
+                                            <th class="col-supp-{{ $q->id }} p-3 border-r border-slate-300 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-200 border-b-2 border-b-indigo-500 min-w-[200px]">
                                                 <div class="flex items-center justify-between">
                                                     <div>
-                                                        @if($isCustomer)
-                                                            <span class="inline-flex items-center gap-1 px-1.5 py-0.2 text-[9px] font-extrabold uppercase tracking-wider rounded-sm bg-amber-200 text-amber-900 dark:bg-amber-800 dark:text-amber-100 mb-0.5">
-                                                                <i class="fa-solid fa-building-user text-[8px]"></i> Customer Target
-                                                            </span>
-                                                        @else
-                                                            @if(isset($q->worth_rank) && $q->worth_rank === 1)
-                                                                <span class="inline-flex items-center gap-1 px-1.5 py-0.2 text-[9px] font-extrabold uppercase tracking-wider rounded-sm bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 mb-0.5">
-                                                                    <i class="fa-solid fa-trophy text-[8px] text-amber-500"></i> Best Price #1
-                                                                </span>
-                                                            @else
-                                                                <span class="inline-flex items-center gap-1 px-1.5 py-0.2 text-[9px] font-bold uppercase tracking-wider rounded-sm bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300 mb-0.5">
-                                                                    Supplier #{{ $q->worth_rank ?? '' }}
-                                                                </span>
-                                                            @endif
-                                                        @endif
+                                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.2 text-[9px] font-bold uppercase tracking-wider rounded-sm bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300 mb-0.5">
+                                                            Supplier #{{ $q->worth_rank ?? '' }}
+                                                        </span>
                                                         <div class="font-bold text-xs">{{ $q->supplier_name }}</div>
                                                     </div>
                                                     <form action="{{ route('management.tooling-quotation.destroy', $q->id) }}" method="POST" onsubmit="return confirm('Remove this quotation?')" class="inline">
@@ -794,25 +725,16 @@
                                         </th>
                                         
                                         @foreach($quotations as $q)
-                                            @php
-                                                $isCustomer = ($q->source_type === 'customer' || (!empty($q->customer_id) && empty($q->supplier_id)));
-                                            @endphp
-                                            <th class="col-supp-{{ $q->id }} p-3 border-r border-slate-300 dark:border-slate-800 {{ $isCustomer ? 'bg-amber-50/80 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 border-b-2 border-b-amber-500' : 'bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-200 border-b-2 border-b-indigo-500' }} min-w-[200px]">
+                                            <th class="col-supp-{{ $q->id }} p-3 border-r border-slate-300 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-200 border-b-2 border-b-indigo-500 min-w-[200px]">
                                                 <div>
-                                                    @if($isCustomer)
-                                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.2 text-[9px] font-extrabold uppercase tracking-wider rounded-sm bg-amber-200 text-amber-900 dark:bg-amber-800 dark:text-amber-100 mb-0.5">
-                                                            <i class="fa-solid fa-building-user text-[8px]"></i> Customer Target
+                                                    @if(isset($q->worth_rank) && $q->worth_rank === 1)
+                                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.2 text-[9px] font-extrabold uppercase tracking-wider rounded-sm bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 mb-0.5">
+                                                            <i class="fa-solid fa-trophy text-[8px] text-amber-500"></i> Best Price #1
                                                         </span>
                                                     @else
-                                                        @if(isset($q->worth_rank) && $q->worth_rank === 1)
-                                                            <span class="inline-flex items-center gap-1 px-1.5 py-0.2 text-[9px] font-extrabold uppercase tracking-wider rounded-sm bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 mb-0.5">
-                                                                <i class="fa-solid fa-trophy text-[8px] text-amber-500"></i> Best Price #1
-                                                            </span>
-                                                        @else
-                                                            <span class="inline-flex items-center gap-1 px-1.5 py-0.2 text-[9px] font-bold uppercase tracking-wider rounded-sm bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300 mb-0.5">
-                                                                Supplier #{{ $q->worth_rank ?? '' }}
-                                                            </span>
-                                                        @endif
+                                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.2 text-[9px] font-bold uppercase tracking-wider rounded-sm bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300 mb-0.5">
+                                                            Supplier #{{ $q->worth_rank ?? '' }}
+                                                        </span>
                                                     @endif
                                                     <div class="font-bold text-xs">{{ $q->supplier_name }}</div>
                                                 </div>
@@ -946,151 +868,7 @@
     </div>
 </div>
 
-{{-- ===== 1. IMPORT CUSTOMER TARGET MODAL ===== --}}
-@if($selectedEbd)
-<div id="import-customer-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
-    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm shadow-2xl w-full max-w-md mx-4 overflow-hidden animate-fade-in">
-        <div class="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-700">
-            <div>
-                <h3 class="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                    <i class="fa-solid fa-building-user text-amber-500"></i> Import Customer Target Quotation
-                </h3>
-                <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">Upload completed Excel quotation file from customer</p>
-            </div>
-            <button type="button" onclick="$('#import-customer-modal').addClass('hidden').removeClass('flex')" class="w-7 h-7 flex items-center justify-center rounded-sm text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">
-                <i class="fa-solid fa-xmark text-sm"></i>
-            </button>
-        </div>
-
-        <form class="form-import-quotation" action="{{ route('management.tooling-quotation.import') }}" method="POST" enctype="multipart/form-data">
-            @csrf
-            <input type="hidden" name="ebd_header_id" value="{{ $selectedEbd->id }}">
-            <input type="hidden" name="source_type" value="customer">
-            <input type="hidden" name="customer_id" value="{{ $selectedEbd->customer_id ?? '' }}">
-
-            <div class="px-5 py-4 space-y-4">
-                {{-- Customer Info Box --}}
-                <div class="p-3 bg-amber-50/70 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-sm flex items-center justify-between">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-8 h-8 rounded-sm bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 flex items-center justify-center">
-                            <i class="fa-solid fa-building text-sm"></i>
-                        </div>
-                        <div>
-                            <span class="text-[10px] text-amber-700 dark:text-amber-300 font-semibold uppercase tracking-wider block">Target Customer:</span>
-                            <span class="text-xs font-bold text-slate-800 dark:text-slate-100">{{ $selectedEbd?->customer?->code ? "[{$selectedEbd->customer->code}] " : "" }}{{ $selectedEbd?->customer?->name ?? 'Customer' }}</span>
-                        </div>
-                    </div>
-                    <span class="text-[9px] font-bold bg-amber-200 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200 px-2 py-0.5 rounded-sm">CUSTOMER</span>
-                </div>
-
-                {{-- Template Configuration --}}
-                <div>
-                    <div class="flex items-center justify-between mb-1">
-                        <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                            Import Mapping Template <span class="text-rose-500">*</span>
-                        </label>
-                        @if($defaultImportTemplateId)
-                            <span class="text-[9px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 px-1.5 py-0.5 rounded-sm border border-amber-200 dark:border-amber-800">
-                                <i class="fa-solid fa-wand-magic-sparkles text-[8px]"></i> Auto-Selected by Customer
-                            </span>
-                        @endif
-                    </div>
-                    <select name="template_id" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 px-3 py-2 text-xs font-medium text-slate-800 dark:text-slate-100 rounded-sm focus:ring-2 focus:ring-amber-500">
-                        <option value="">-- Standard System Template (Default Format) --</option>
-                        @foreach($importTemplates ?? [] as $tpl)
-                            @php
-                                $isCustomerMatch = ($selectedEbd?->customer_id && $tpl->customer_id == $selectedEbd->customer_id);
-                                $isSelected = ($tpl->id == ($defaultImportTemplateId ?? null));
-                            @endphp
-                            <option value="{{ $tpl->id }}" {{ $isSelected ? 'selected' : '' }}>
-                                {{ $tpl->template_name }} (Rev {{ $tpl->revision ?? '0' }})
-                                @if($tpl->customer)
-                                    [{{ $tpl->customer->code ?? $tpl->customer->name }}]
-                                @else
-                                    [Universal]
-                                @endif
-                                @if($isCustomerMatch)
-                                    ★ (Matched Customer)
-                                @endif
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                {{-- Mode Import --}}
-                <div>
-                    <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">
-                        Import Mode <span class="text-rose-500">*</span>
-                    </label>
-                    <div class="grid grid-cols-2 gap-2 text-xs">
-                        <label class="flex items-center gap-2 p-2.5 border border-amber-200 dark:border-amber-800 rounded-sm bg-amber-50/40 dark:bg-amber-950/40 cursor-pointer hover:border-amber-400">
-                            <input type="radio" name="import_mode" value="new_revision" checked class="text-amber-600 focus:ring-amber-500">
-                            <div>
-                                <span class="block font-bold text-slate-800 dark:text-slate-100 text-[11px]">New Revision</span>
-                                <span class="block text-[9px] text-slate-500">Save as Rev 1, Rev 2...</span>
-                            </div>
-                        </label>
-                        <label class="flex items-center gap-2 p-2.5 border border-slate-200 dark:border-slate-700 rounded-sm bg-white dark:bg-slate-900 cursor-pointer hover:border-amber-400">
-                            <input type="radio" name="import_mode" value="overwrite" class="text-amber-600 focus:ring-amber-500">
-                            <div>
-                                <span class="block font-bold text-slate-800 dark:text-slate-100 text-[11px]">Overwrite</span>
-                                <span class="block text-[9px] text-slate-500">Update active revision</span>
-                            </div>
-                        </label>
-                    </div>
-                </div>
-
-                {{-- File Upload --}}
-                <div>
-                    <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">
-                        Customer Quotation File (.xlsx) <span class="text-rose-500">*</span>
-                    </label>
-                    <div class="dropzone-area relative flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-sm bg-slate-50/50 dark:bg-slate-900/50 hover:bg-slate-100/70 dark:hover:bg-slate-800/60 transition-all cursor-pointer group text-center">
-                        <input type="file" name="quotation_file" accept=".xlsx,.xls,.csv" class="input-quotation-file absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" required>
-                        
-                        <div class="dropzone-prompt flex flex-col items-center justify-center space-y-2 pointer-events-none">
-                            <div class="w-9 h-9 rounded-full bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                <i class="fa-solid fa-cloud-arrow-up text-base"></i>
-                            </div>
-                            <div class="text-xs text-slate-600 dark:text-slate-300">
-                                <span class="font-semibold text-amber-600 dark:text-amber-400">Click to browse file</span> or drag & drop here
-                            </div>
-                            <p class="text-[10px] text-slate-400 dark:text-slate-500">Supported formats: Excel (.xlsx, .xls, .csv)</p>
-                        </div>
-
-                        <div class="dropzone-file-info hidden flex items-center gap-3 p-2 pl-3 pr-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm shadow-xs relative z-20 max-w-full">
-                            <div class="w-7 h-7 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
-                                <i class="fa-solid fa-file-excel text-sm"></i>
-                            </div>
-                            <div class="min-w-0 text-left pr-2">
-                                <p class="dropzone-file-name text-xs font-semibold text-slate-700 dark:text-slate-200 truncate max-w-[180px]"></p>
-                                <p class="dropzone-file-size text-[10px] text-slate-400 dark:text-slate-500"></p>
-                            </div>
-                            <button type="button" class="btn-remove-file w-6 h-6 rounded-full hover:bg-rose-50 dark:hover:bg-rose-950/60 text-slate-400 hover:text-rose-600 flex items-center justify-center transition-colors cursor-pointer ml-auto flex-shrink-0 z-30" title="Remove File">
-                                <i class="fa-solid fa-xmark text-xs"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Result Alert --}}
-                <div class="importResult hidden text-xs font-medium p-3.5 rounded-sm border"></div>
-            </div>
-
-            <div class="flex items-center justify-end gap-2 px-5 py-3.5 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-200 dark:border-slate-700">
-                <button type="button" onclick="$('#import-customer-modal').addClass('hidden').removeClass('flex')" class="px-3.5 h-8 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-sm transition-colors cursor-pointer">
-                    Cancel
-                </button>
-                <button type="submit" class="btn-submit-import inline-flex items-center justify-center gap-1.5 px-4 h-8 bg-amber-600 hover:bg-amber-700 text-white rounded-sm text-xs font-semibold shadow-xs active:scale-98 transition-all cursor-pointer">
-                    <i class="fa-solid fa-cloud-arrow-up text-xs"></i>
-                    <span>Import Customer Target</span>
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-{{-- ===== 2. IMPORT SUPPLIER QUOTATION MODAL ===== --}}
+{{-- ===== IMPORT SUPPLIER QUOTATION MODAL ===== --}}
 <div id="import-supplier-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
     <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm shadow-2xl w-full max-w-md mx-4 overflow-hidden animate-fade-in">
         <div class="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-700">
@@ -1216,31 +994,10 @@
         </form>
     </div>
 </div>
-@endif
 
 @push('scripts')
 <script>
-    function toggleSourceType(type) {
-        if (type === 'customer') {
-            $('#container-source-customer').removeClass('hidden');
-            $('#container-source-supplier').addClass('hidden');
-            $('#supplier_id').prop('required', false);
-            $('#lbl-source-customer').addClass('border-amber-400 bg-amber-50/40 dark:bg-amber-950/40').removeClass('border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900');
-            $('#lbl-source-supplier').removeClass('border-indigo-400 bg-indigo-50/40 dark:bg-indigo-950/40').addClass('border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900');
-        } else {
-            $('#container-source-customer').addClass('hidden');
-            $('#container-source-supplier').removeClass('hidden');
-            $('#supplier_id').prop('required', true);
-            $('#lbl-source-supplier').addClass('border-indigo-400 bg-indigo-50/40 dark:bg-indigo-950/40').removeClass('border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900');
-            $('#lbl-source-customer').removeClass('border-amber-400 bg-amber-50/40 dark:bg-amber-950/40').addClass('border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900');
-        }
-    }
 
-    function switchCustomerRevision(quoteId) {
-        const urlParams = new URLSearchParams(window.location.search);
-        urlParams.set('cust_quote', quoteId);
-        window.location.search = urlParams.toString();
-    }
     $(function() {
         // Part Selection Logic
         $('.btn-select-part').on('click', function() {
@@ -1330,16 +1087,16 @@
             const checked = $('.chk-supp-filter:checked').length;
 
             if (total === 0) {
-                $('#lbl-custom-supplier-dropdown').text('No Suppliers');
+                $('#lbl-custom-supplier-dropdown').html('<i class="fa-solid fa-filter text-[10px] text-slate-400 mr-1.5"></i><span>No Suppliers</span>');
                 $('#chk-toggle-all-suppliers').prop('checked', false);
             } else if (checked === total) {
-                $('#lbl-custom-supplier-dropdown').text('All Suppliers Selected');
+                $('#lbl-custom-supplier-dropdown').html(`<i class="fa-solid fa-filter text-[10px] text-slate-400 mr-1.5"></i><span>All Suppliers (${total})</span>`);
                 $('#chk-toggle-all-suppliers').prop('checked', true);
             } else if (checked === 0) {
-                $('#lbl-custom-supplier-dropdown').text('No Suppliers Selected');
+                $('#lbl-custom-supplier-dropdown').html('<i class="fa-solid fa-filter text-[10px] text-slate-400 mr-1.5"></i><span>0 Suppliers Selected</span>');
                 $('#chk-toggle-all-suppliers').prop('checked', false);
             } else {
-                $('#lbl-custom-supplier-dropdown').text(`${checked} of ${total} Selected`);
+                $('#lbl-custom-supplier-dropdown').html(`<i class="fa-solid fa-filter text-[10px] text-slate-400 mr-1.5"></i><span>${checked} of ${total} Selected</span>`);
                 $('#chk-toggle-all-suppliers').prop('checked', false);
             }
         }
