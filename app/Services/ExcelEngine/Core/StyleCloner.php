@@ -27,7 +27,7 @@ class StyleCloner
 
         // 2. Clone cell styles across columns in the row
         $highestColumn = $sheet->getHighestDataColumn($sourceRow);
-        $highestColIndex = max(Coordinate::columnIndexFromString($highestColumn), $maxColumnIndex);
+        $highestColIndex = min(Coordinate::columnIndexFromString($highestColumn), $maxColumnIndex);
 
         for ($col = 1; $col <= $highestColIndex; $col++) {
             $colLetter = Coordinate::stringFromColumnIndex($col);

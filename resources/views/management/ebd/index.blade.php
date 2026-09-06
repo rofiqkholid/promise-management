@@ -647,7 +647,9 @@ $(function () {
     $('#form-import-ebd').on('submit', function (e) {
         e.preventDefault();
         setSubmitLoading(true);
-        $('#importResult').addClass('hidden').removeClass('bg-rose-50 text-rose-900 border-rose-100 p-4').html('');
+        $('.field-error-msg').remove();
+        $('.border-rose-500').removeClass('border-rose-500');
+        $('#importResult').addClass('hidden').removeClass('bg-rose-50 dark:bg-rose-950/40 text-rose-900 dark:text-rose-200 border-rose-200 dark:border-rose-800/60 p-3.5').html('');
 
         const formData = new FormData(this);
 
@@ -673,26 +675,65 @@ $(function () {
             error: function (xhr) {
                 setSubmitLoading(false);
                 const res = xhr.responseJSON;
-                let errorHtml = `<div class="font-bold mb-1"><i class="fa-solid fa-circle-exclamation mr-1"></i> ${res?.message || 'Import failed. Please check the file format.'}</div>`;
+                
+                // Clear any previous field errors
+                $('.field-error-msg').remove();
+                $('.border-rose-500').removeClass('border-rose-500');
 
-                if (res?.errors && Array.isArray(res.errors)) {
-                    errorHtml += '<ul class="list-disc pl-5 mt-2 space-y-1">';
-                    res.errors.forEach(function (err) {
-                        if (err.errors && Array.isArray(err.errors)) {
-                            err.errors.forEach(function (msg) {
-                                errorHtml += `<li>Row ${err.row || '?'}: ${msg}</li>`;
-                            });
-                        }
+                let errorHtml = `<div class="font-bold text-rose-800 dark:text-rose-300 flex items-center gap-1.5"><i class="fa-solid fa-circle-exclamation text-sm text-rose-500"></i> <span>${res?.message || 'Import failed. Please check the file format or required fields.'}</span></div>`;
+
+                let errorItems = [];
+
+                if (res?.errors) {
+                    if (Array.isArray(res.errors)) {
+                        // Custom array format (e.g. row-level import errors)
+                        res.errors.forEach(function (err) {
+                            if (typeof err === 'string') {
+                                errorItems.push(err);
+                            } else if (err.errors && Array.isArray(err.errors)) {
+                                err.errors.forEach(function (msg) {
+                                    errorItems.push(`Row ${err.row || '?'}: ${msg}`);
+                                });
+                            }
+                        });
+                    } else if (typeof res.errors === 'object') {
+                        // Laravel standard validation error format: { field: ["msg1", "msg2"] }
+                        Object.keys(res.errors).forEach(function (field) {
+                            const msgs = res.errors[field];
+                            const label = field.replace(/_/g, ' ').toUpperCase();
+                            const msgStr = Array.isArray(msgs) ? msgs.join(', ') : msgs;
+                            errorItems.push(`<strong>${label}:</strong> ${msgStr}`);
+
+                            // Highlight field and show message below it
+                            const $field = $(`[name="${field}"]`);
+                            if ($field.length) {
+                                $field.addClass('border-rose-500 dark:border-rose-500');
+                                $field.closest('div').append(`<p class="field-error-msg text-[10px] text-rose-500 mt-1"><i class="fa-solid fa-circle-exclamation text-[9px] mr-1"></i>${msgStr}</p>`);
+                            }
+                        });
+                    }
+                }
+
+                if (errorItems.length > 0) {
+                    errorHtml += '<ul class="list-disc pl-5 mt-2 space-y-1 text-[11px] text-rose-700 dark:text-rose-400">';
+                    errorItems.forEach(function (item) {
+                        errorHtml += `<li>${item}</li>`;
                     });
                     errorHtml += '</ul>';
                 }
 
                 $('#importResult')
                     .removeClass('hidden')
-                    .addClass('bg-rose-50 text-rose-900 border-rose-100 p-4')
+                    .addClass('bg-rose-50 dark:bg-rose-950/40 text-rose-900 dark:text-rose-200 border-rose-200 dark:border-rose-800/60 p-3.5')
                     .html(errorHtml);
 
-                showToast('Import failed - check error details', 'error');
+                // Scroll error alert into view
+                const container = $('#importResult')[0];
+                if (container) {
+                    container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+
+                showToast(res?.message || 'Import failed. Please check the error details.', 'error');
             }
         });
     });

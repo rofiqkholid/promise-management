@@ -218,6 +218,10 @@ class TableLoopRenderer
         }
         $processStartOffsetInBlock = max(0, $minProcessStartRow - $minStartRow);
 
+        $nestedSections = array_values(array_filter($sheetSections, function ($sec) {
+            return ($sec['loop_mode'] ?? 'flat') === 'nested_block';
+        }));
+
         $actualMinStartRow = $shiftTracker->getShiftedRow($sheetIdentifier, $minStartRow);
 
         $blankRowsAfter = 0;
@@ -285,17 +289,19 @@ class TableLoopRenderer
                     if ($offset < $templateBlockSize) {
                         $rowShift = $currentRowNum - $templateSrcRow;
                         $highestColumn = $sheet->getHighestDataColumn($templateSrcRow);
-                        $highestColIndex = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestColumn);
+                        $highestColIndex = min(\PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestColumn), 60);
                         for ($c = 1; $c <= $highestColIndex; $c++) {
                             $cLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($c);
-                            $srcCell = $sheet->getCell($cLetter . $templateSrcRow);
-                            if ($srcCell->isFormula()) {
-                                $srcFormula = $srcCell->getValue();
-                                $shiftedFormula = $this->formulaCompiler->shiftFormulaRows($srcFormula, $rowShift);
-                                $sheet->getCell($cLetter . $currentRowNum)->setValueExplicit(
-                                    $shiftedFormula,
-                                    \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_FORMULA
-                                );
+                            if ($sheet->cellExists($cLetter . $templateSrcRow)) {
+                                $srcCell = $sheet->getCell($cLetter . $templateSrcRow);
+                                if ($srcCell->isFormula()) {
+                                    $srcFormula = $srcCell->getValue();
+                                    $shiftedFormula = $this->formulaCompiler->shiftFormulaRows($srcFormula, $rowShift);
+                                    $sheet->getCell($cLetter . $currentRowNum)->setValueExplicit(
+                                        $shiftedFormula,
+                                        \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_FORMULA
+                                    );
+                                }
                             }
                         }
                     }
@@ -303,12 +309,14 @@ class TableLoopRenderer
                     // Clear any cloned formula values in child rows (offset >= templateBlockSize)
                     if ($offset >= $templateBlockSize) {
                         $highestColumn = $sheet->getHighestDataColumn($currentRowNum);
-                        $highestColIndex = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestColumn);
+                        $highestColIndex = min(\PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestColumn), 60);
                         for ($c = 1; $c <= $highestColIndex; $c++) {
                             $cLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($c);
-                            $cell = $sheet->getCell($cLetter . $currentRowNum);
-                            if ($cell->isFormula() || $cell->getValue() !== null) {
-                                $cell->setValue('');
+                            if ($sheet->cellExists($cLetter . $currentRowNum)) {
+                                $cell = $sheet->getCell($cLetter . $currentRowNum);
+                                if ($cell->isFormula() || $cell->getValue() !== null) {
+                                    $cell->setValue('');
+                                }
                             }
                         }
                     }
@@ -493,24 +501,26 @@ class TableLoopRenderer
         }
 
         // Auto-expand native template footer formulas referencing the template loop end row (e.g. $AM$13:$AM$15 -> $AM$13:$AM$31)
-        if ($totalRequiredRows > $templateBlockSize) {
+        if (!$isOverwrite && $totalRequiredRows > $templateBlockSize) {
             $templateBottomRow = $actualMinStartRow + $templateBlockSize - 1;
             $finalEndRow = $actualMinStartRow + $totalRequiredRows - 1;
 
-            $highestRow = $sheet->getHighestRow();
-            $highestCol = $sheet->getHighestColumn();
-            $highestColIdx = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestCol);
+            $highestRow = min($sheet->getHighestDataRow(), 300);
+            $highestCol = $sheet->getHighestDataColumn();
+            $highestColIdx = min(\PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestCol), 60);
 
             for ($r = $finalEndRow + 1; $r <= $highestRow; $r++) {
                 for ($c = 1; $c <= $highestColIdx; $c++) {
                     $cLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($c);
-                    $cell = $sheet->getCell("{$cLetter}{$r}");
-                    if ($cell->isFormula()) {
-                        $formula = $cell->getValue();
-                        $pattern = '/(:\\$?([A-Z]{1,3})\\$?)' . $templateBottomRow . '(?![0-9])/i';
-                        if (preg_match($pattern, $formula)) {
-                            $updatedFormula = preg_replace($pattern, '${1}' . $finalEndRow, $formula);
-                            $cell->setValueExplicit($updatedFormula, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_FORMULA);
+                    if ($sheet->cellExists("{$cLetter}{$r}")) {
+                        $cell = $sheet->getCell("{$cLetter}{$r}");
+                        if ($cell->isFormula()) {
+                            $formula = $cell->getValue();
+                            $pattern = '/(:\\$?([A-Z]{1,3})\\$?)' . $templateBottomRow . '(?![0-9])/i';
+                            if (preg_match($pattern, $formula)) {
+                                $updatedFormula = preg_replace($pattern, '${1}' . $finalEndRow, $formula);
+                                $cell->setValueExplicit($updatedFormula, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_FORMULA);
+                            }
                         }
                     }
                 }

@@ -143,12 +143,99 @@ class ExcelExportEngineService
         array $conditionalRules,
         array $conditions
     ): void {
-        $masterSheet = $spreadsheet->getSheet(0);
+        $targetSheetIndex = $sheetLoopSection['sheet_index'] ?? null;
+        $targetSheetName = $sheetLoopSection['sheet_name'] ?? null;
+
+        $masterSheet = null;
+        if (!empty($targetSheetName) && $spreadsheet->sheetNameExists($targetSheetName)) {
+            $masterSheet = $spreadsheet->getSheetByName($targetSheetName);
+        } elseif ($targetSheetIndex !== null && is_numeric($targetSheetIndex) && (int)$targetSheetIndex < $spreadsheet->getSheetCount()) {
+            $masterSheet = $spreadsheet->getSheet((int)$targetSheetIndex);
+        } else {
+            $masterSheet = $spreadsheet->getSheet(0);
+        }
+
+        $masterSheetTitle = $masterSheet->getTitle();
+        $masterSheetIdx = $spreadsheet->getIndex($masterSheet);
+
+        // Helper to check if a rule/section/field belongs to the split master sheet
+        $belongsToSplitSheet = function ($item) use ($masterSheetTitle, $masterSheetIdx) {
+            if (!empty($item['split_sheet_per_parent']) || !empty($item['sheet_loop'])) {
+                return true;
+            }
+            $sName = $item['sheet_name'] ?? null;
+            if ($sName !== null && $sName === $masterSheetTitle) {
+                return true;
+            }
+            $sIdx = $item['sheet_index'] ?? $item['sheet'] ?? null;
+            if ($sIdx !== null && is_numeric($sIdx) && (int)$sIdx === $masterSheetIdx) {
+                return true;
+            }
+            return false;
+        };
+
+        // Partition sections
+        $splitSections = [];
+        $nonSplitSections = [];
+        foreach ($sections as $sec) {
+            if ($belongsToSplitSheet($sec)) {
+                $splitSections[] = $sec;
+            } else {
+                $nonSplitSections[] = $sec;
+            }
+        }
+
+        // Partition single fields
+        $splitSingleFields = [];
+        $nonSplitSingleFields = [];
+        foreach ($singleFields as $field) {
+            if ($belongsToSplitSheet($field)) {
+                $splitSingleFields[] = $field;
+            } else {
+                $nonSplitSingleFields[] = $field;
+            }
+        }
+
+        // Partition conditional rules
+        $splitConditionalRules = [];
+        $nonSplitConditionalRules = [];
+        foreach ($conditionalRules as $rule) {
+            if ($belongsToSplitSheet($rule)) {
+                $splitConditionalRules[] = $rule;
+            } else {
+                $nonSplitConditionalRules[] = $rule;
+            }
+        }
+
+        $sheetNameMap = [];
+        if (!empty($mappingConfig['sheets']) && is_array($mappingConfig['sheets'])) {
+            foreach ($mappingConfig['sheets'] as $s) {
+                if (isset($s['key']) && isset($s['name'])) {
+                    $sheetNameMap[$s['key']] = $s['name'];
+                }
+            }
+        }
+
+        // 1. Render all non-split sheets first using global payload
+        if (!empty($nonSplitSingleFields)) {
+            $this->singleFieldRenderer->render($spreadsheet, $nonSplitSingleFields, $payloadData, $sheetNameMap, $nonSplitConditionalRules);
+        }
+        if (!empty($nonSplitSections)) {
+            $this->tableLoopRenderer->render($spreadsheet, $nonSplitSections, $payloadData, $this->shiftTracker, $sheetNameMap, $nonSplitConditionalRules);
+        }
+
+        // 2. Clone master sheet for each parent item and render split sections
         $clonedTemplate = clone $masterSheet;
         $nameField = $sheetLoopSection['sheet_name_field'] ?? 'part_no';
         $items = array_values($items);
 
         $usedTitles = [];
+        // Reserve existing sheet names in spreadsheet to prevent collisions
+        foreach ($spreadsheet->getSheetNames() as $sn) {
+            if ($sn !== $masterSheetTitle) {
+                $usedTitles[strtolower($sn)] = true;
+            }
+        }
 
         foreach ($items as $p => $parentItem) {
             // Parent specific payload
@@ -158,7 +245,7 @@ class ExcelExportEngineService
                 'cost_comparison_items' => [$parentItem]
             ]);
 
-            // Determine unique clean sheet title (max 30 chars, no forbidden chars)
+            // Determine unique clean sheet title (max 26 chars, no forbidden chars)
             $rawTitle = (string)($parentItem[$nameField] ?? $parentItem['part_no'] ?? $parentItem['part_name'] ?? ('Item ' . ($p + 1)));
             $cleanTitle = substr(preg_replace('/[\/\\\\\\?\\*:\\[\\]]/', '_', trim($rawTitle)), 0, 26);
             if (empty($cleanTitle)) $cleanTitle = 'Item ' . ($p + 1);
@@ -180,13 +267,13 @@ class ExcelExportEngineService
             }
 
             // Render single fields for this sheet
-            if (!empty($singleFields)) {
-                $this->singleFieldRenderer->renderOnSheet($currentSheet, $singleFields, $parentPayload);
+            if (!empty($splitSingleFields)) {
+                $this->singleFieldRenderer->renderOnSheet($currentSheet, $splitSingleFields, $parentPayload);
             }
 
             // Render loop for this single parent item
             $sheetTracker = new RowShiftTracker();
-            $this->tableLoopRenderer->renderOnSheet($currentSheet, $sections, $parentPayload, $sheetTracker, $conditionalRules);
+            $this->tableLoopRenderer->renderOnSheet($currentSheet, $splitSections, $parentPayload, $sheetTracker, $splitConditionalRules);
         }
     }
 

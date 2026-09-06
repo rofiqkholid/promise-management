@@ -311,7 +311,7 @@ class EbdController extends Controller
             'revision'      => 'nullable|string|max:20',
             'ebd_id'         => 'nullable|integer',
             'ebd_request_id' => 'nullable|integer',
-            'import_mode'    => 'nullable|string|in:overwrite,new_revision',
+            'import_mode'    => 'nullable|string|in:overwrite,new_revision,new_header',
             'revision_note'  => 'nullable|string|max:500',
         ]);
 
